@@ -1,0 +1,98 @@
+import React from "react";
+import InventoryHeader from "./_components/InventoryHeader";
+import { Shirt } from "lucide-react";
+import { GiClothes } from "react-icons/gi";
+import { TbComponents, TbRulerMeasure } from "react-icons/tb";
+import Link from "next/link";
+import { BiCategory } from "react-icons/bi";
+import { FaWarehouse } from "react-icons/fa";
+
+export default function Inventario() {
+  return (
+    <div className="flex flex-col gap-4">
+      <InventoryHeader />
+      <div className="grid grid-cols-2 gap-6 maxmd:grid-cols-1 ">
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Marcas</h3>
+          <TbComponents strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Crea multiples variantes del mismo articulo usando artículos
+            agrupados
+          </p>
+          <Link
+            href={"/sistema/inventario/marcas/nueva"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Marca Nueva
+          </Link>
+        </div>
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Articulo</h3>
+          <Shirt strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Crea un articulo individual y servicio que puedes comprar y vender.
+          </p>
+          <Link
+            href={"/sistema/inventario/articulos/nuevo"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Articulo Nuevo
+          </Link>
+        </div>
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Artículos Compuestos</h3>
+          <GiClothes strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Agrupa varios artículos y véndelos en paquetes.
+          </p>
+          <Link
+            href={"/sistema/inventario/articulos/nuevo"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Articulo Nuevo
+          </Link>
+        </div>
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Unidades de Medida</h3>
+          <TbRulerMeasure strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Modifica los precios de tus articulos para contratos o transacciones
+            espesificas.
+          </p>
+          <Link
+            href={"/sistema/inventario/unidades/nueva"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Nueva Unidad
+          </Link>
+        </div>
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Categoría</h3>
+          <BiCategory strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Crea una nueva categoría para clasificar tus artículos o servicios.
+          </p>
+          <Link
+            href={"/sistema/inventario/categorias/nueva"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Categoría Nueva
+          </Link>
+        </div>
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Bodegas</h3>
+          <FaWarehouse strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Agrega nueva bodega para mantener tu inventario organizado.
+          </p>
+          <Link
+            href={"/sistema/inventario/bodegas/nueva"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Nueva Bodega
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
