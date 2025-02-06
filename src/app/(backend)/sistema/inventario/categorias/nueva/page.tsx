@@ -6,7 +6,7 @@ export default function NewCategory() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Nueva Categoría"} />
+      <FormHeader title={"Categoría"} />
       {/* Form */}
       <CategoryForm />
     </div>

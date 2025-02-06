@@ -5,7 +5,7 @@ import GroupForm from "../../_components/BrandForm";
 export default function NewGroup() {
   return (
     <div>
-      <FormHeader title={"Nuevo Grupo"} />
+      <FormHeader title={"Grupo"} />
       <GroupForm />
     </div>
   );

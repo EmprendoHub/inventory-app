@@ -9,8 +9,6 @@ import {
   Group,
   Home,
   PlusCircle,
-  Receipt,
-  SaveAll,
   Truck,
   Users2,
   Warehouse,
@@ -21,7 +19,6 @@ import { FaAdjust, FaDolly, FaDollyFlatbed } from "react-icons/fa";
 import { FaShop } from "react-icons/fa6";
 import { MdPayment, MdSell } from "react-icons/md";
 import { VscDebugDisconnect } from "react-icons/vsc";
-import SubscriptionCard from "./SubscriptionCard";
 import {
   Collapsible,
   CollapsibleContent,
@@ -31,6 +28,7 @@ import { usePathname } from "next/navigation";
 import { PiInvoice } from "react-icons/pi";
 import { GoSingleSelect } from "react-icons/go";
 import { TbBrandAmigo } from "react-icons/tb";
+import { BiSupport } from "react-icons/bi";
 
 export default function SideBar({
   setHidden,
@@ -102,82 +100,123 @@ export default function SideBar({
                 <PlusCircle className="hidden group-hover:block" size={16} />
               </Link>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                } ${
-                  path === "/sistema/inventario/categorias" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/inventario/categorias"}
-              >
-                <Group size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Categorías
-                </span>
-              </Link>
-              <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
                   path === "/sistema/inventario/articulos" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/inventario/articulos"}
               >
-                <Boxes size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Artículos
-                </span>
+                <div className="flex items-center gap-1">
+                  <Boxes size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Productos
+                  </span>
+                </div>
+                <PlusCircle className="hidden group-hover:block" size={16} />
               </Link>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                } ${
+                  path === "/sistema/inventario/categorias" ? "bg-blue-600" : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/inventario/categorias"}
+              >
+                <div className="flex items-center gap-1">
+                  <Group size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Categorías
+                  </span>
+                </div>
+
+                <PlusCircle className="hidden group-hover:block" size={16} />
+              </Link>
+              <Link
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                } ${
+                  path === "/sistema/inventario/proveedores"
+                    ? "bg-blue-600"
+                    : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/inventario/proveedores"}
+              >
+                <div className="flex items-center gap-1">
+                  <BiSupport size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Proveedores
+                  </span>
+                </div>
+
+                <PlusCircle className="hidden group-hover:block" size={16} />
+              </Link>
+
+              <Link
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
                   path === "/sistema/inventario/marcas" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/inventario/marcas"}
               >
-                <TbBrandAmigo size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Marcas
-                </span>
+                <div className="flex items-center gap-1">
+                  <TbBrandAmigo size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Marcas
+                  </span>
+                </div>
+                <PlusCircle className="hidden group-hover:block" size={16} />
               </Link>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
                   path === "/sistema/inventario/bodegas" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/inventario/bodegas"}
               >
-                <Warehouse size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Bodegas
-                </span>
+                <div className="flex items-center gap-1">
+                  <Warehouse size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Bodegas
+                  </span>
+                </div>
+                <PlusCircle className="hidden group-hover:block" size={16} />
               </Link>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
                   path === "/sistema/inventario/unidades" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/inventario/unidades"}
               >
-                <GoSingleSelect size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Unidades
-                </span>
+                <div className="flex items-center gap-1">
+                  <GoSingleSelect size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Unidades
+                  </span>
+                </div>
+                <PlusCircle className="hidden group-hover:block" size={16} />
               </Link>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
+                className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
-                  path === "/sistema/inventario/ajustes" ? "bg-blue-600" : ""
+                  path === "/sistema/inventario/ajustes/nuevo"
+                    ? "bg-blue-600"
+                    : ""
                 } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/inventario/ajustes"}
+                href={"/sistema/inventario/ajustes/nuevo"}
               >
-                <FaAdjust size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Ajustes inventario
-                </span>
+                <div className="flex items-center gap-1">
+                  <FaAdjust size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Ajustes inventario
+                  </span>
+                </div>
+                <PlusCircle className="hidden group-hover:block" size={16} />
               </Link>
             </CollapsibleContent>
           </Collapsible>
@@ -263,19 +302,19 @@ export default function SideBar({
                   Facturas
                 </span>
               </Link>
-              <Link
+              {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
-                  path === "/sistema/ventas/receipts" ? "bg-blue-600" : ""
+                  path === "/sistema/ventas/recibos" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/receipts"}
+                href={"/sistema/ventas/recibos"}
               >
                 <Receipt size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                   Recibos
                 </span>
-              </Link>
+              </Link> */}
               <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -287,19 +326,6 @@ export default function SideBar({
                 <MdPayment size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                   Pagos
-                </span>
-              </Link>
-              <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                } ${
-                  path === "/sistema/ventas/apartados" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/apartados"}
-              >
-                <SaveAll size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Apartados
                 </span>
               </Link>
             </CollapsibleContent>
@@ -353,9 +379,9 @@ export default function SideBar({
 
       {/* Bottom */}
       <div className="flex flex-col gap-4 w-full">
-        <SubscriptionCard
+        {/* <SubscriptionCard
           className={`text-xs ${hidden ? "hidden" : "block"}`}
-        />
+        /> */}
         {/*   Logo  */}
         <button
           onClick={() => setHidden((prev) => !prev)}
@@ -364,7 +390,6 @@ export default function SideBar({
           {hidden ? <ChevronRight size={30} /> : <ChevronLeft size={30} />}
         </button>
       </div>
-      {/*   Subscription Card  */}
       {/*   Footer Icon*/}
     </aside>
   );

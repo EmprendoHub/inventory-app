@@ -1,0 +1,652 @@
+"use server";
+
+import { uploadToBucket } from "@/app/_actions";
+import prisma from "@/lib/db";
+import {
+  AddInventorySchema,
+  AdjustmentSchema,
+  BrandSchema,
+  CategorySchema,
+  ProductSchema,
+  SupplierSchema,
+  UnitSchema,
+  WarehouseSchema,
+} from "@/lib/schemas";
+import { unlink, writeFile } from "fs/promises";
+import { join } from "path";
+
+export const createWarehouse = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    title: formData.get("title"),
+    location: formData.get("location"),
+    type: formData.get("type"),
+    description: formData.get("description"),
+  };
+
+  console.log(rawData);
+
+  // Validate the data using Zod
+  const validatedData = WarehouseSchema.safeParse(rawData);
+
+  if (!validatedData.success) {
+    // Format Zod errors into a field-specific error object
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  const newWarehouseData = {
+    title: validatedData.data.title,
+    description: validatedData.data.description,
+    location: validatedData.data.location,
+    type: validatedData.data.type,
+  };
+
+  const newWarehouse = await prisma.warehouse.create({
+    data: newWarehouseData,
+  });
+  console.log("Creating Warehouse", newWarehouse);
+
+  return { success: true, message: "Bodega creada exitosamente!" };
+};
+
+export const createAdjustment = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    articulo: formData.get("articulo"),
+    transAmount: parseFloat(formData.get("transAmount") as string),
+    sendingWarehouse: formData.get("sendingWarehouse"),
+    receivingWarehouse: formData.get("receivingWarehouse"),
+    formType: formData.get("formType"),
+    notes: formData.get("notes"),
+  };
+
+  console.log(rawData);
+  if (rawData.formType === "add") {
+    const validatedData = AddInventorySchema.safeParse(rawData);
+    if (!validatedData.success) {
+      // Format Zod errors into a field-specific error object
+      const errors = validatedData.error.flatten().fieldErrors;
+      return {
+        errors,
+        success: false,
+        message: "Validation failed. Please check the fields.",
+      };
+    }
+    const addInventory = await prisma.stock.update({
+      where: {
+        itemId_warehouseId: {
+          itemId: validatedData.data.articulo,
+          warehouseId: validatedData.data.sendingWarehouse,
+        },
+      },
+      data: { quantity: { increment: validatedData.data.transAmount } },
+    });
+    console.log("Inventory add:", addInventory);
+  } else {
+    // Validate the data using Zod
+    const validatedAdjustData = AdjustmentSchema.safeParse(rawData);
+    if (!validatedAdjustData.success) {
+      // Format Zod errors into a field-specific error object
+      const errors = validatedAdjustData.error.flatten().fieldErrors;
+      return {
+        errors,
+        success: false,
+        message: "Validation failed. Please check the fields.",
+      };
+    }
+
+    await prisma.stock.update({
+      where: {
+        itemId_warehouseId: {
+          itemId: validatedAdjustData.data.articulo,
+          warehouseId: validatedAdjustData.data.sendingWarehouse,
+        },
+      },
+      data: { quantity: { decrement: validatedAdjustData.data.transAmount } },
+    });
+    // Check if stock exists in the receiving warehouse
+    const existingStock = await prisma.stock.findUnique({
+      where: {
+        itemId_warehouseId: {
+          itemId: validatedAdjustData.data.articulo,
+          warehouseId: validatedAdjustData.data.receivingWarehouse,
+        },
+      },
+    });
+
+    // If stock exists, update it; otherwise, create a new stock entry
+    if (existingStock) {
+      await prisma.stock.update({
+        where: {
+          itemId_warehouseId: {
+            itemId: validatedAdjustData.data.articulo,
+            warehouseId: validatedAdjustData.data.receivingWarehouse,
+          },
+        },
+        data: { quantity: { increment: validatedAdjustData.data.transAmount } },
+      });
+    } else {
+      await prisma.stock.create({
+        data: {
+          itemId: validatedAdjustData.data.articulo,
+          warehouseId: validatedAdjustData.data.receivingWarehouse,
+          quantity: validatedAdjustData.data.transAmount, // Set initial stock amount
+        },
+      });
+    }
+  }
+
+  return { success: true, message: "Ajuste de inventario exitoso!" };
+};
+
+export const createUnit = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    title: formData.get("title"),
+    abbreviation: formData.get("abbreviation"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = UnitSchema.safeParse(rawData);
+
+  if (!validatedData.success) {
+    // Format Zod errors into a field-specific error object
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  const newUnitData = {
+    title: validatedData.data.title,
+    abbreviation: validatedData.data.abbreviation,
+  };
+
+  const newUnit = await prisma.unit.create({ data: newUnitData });
+  console.log("Creating unit", newUnit);
+
+  return { success: true, message: "Unidad creada exitosamente!" };
+};
+
+export const createBrand = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = BrandSchema.safeParse(rawData);
+
+  if (!validatedData.success) {
+    // Format Zod errors into a field-specific error object
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  const newBrandData = {
+    name: validatedData.data.name,
+    description: validatedData.data.description,
+  };
+
+  const newBrand = await prisma.brand.create({ data: newBrandData });
+  console.log("Creating Brand", newBrand);
+
+  return { success: true, message: "Marca creada exitosamente!" };
+};
+
+export const createCategory = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    title: formData.get("title"),
+    description: formData.get("description"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = CategorySchema.safeParse(rawData);
+
+  if (!validatedData.success) {
+    // Format Zod errors into a field-specific error object
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  // Simulate saving to a database or API
+  const newCatData = {
+    title: validatedData.data.title,
+    description: validatedData.data.description,
+  };
+
+  const newCategory = await prisma.category.create({ data: newCatData });
+  console.log("Creating category:", newCategory);
+  return { success: true, message: "Categoría creada exitosamente!" };
+};
+
+export const createProduct = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    name: formData.get("name"),
+    description: formData.get("description"),
+    warehouse: formData.get("warehouse"),
+    category: formData.get("category"),
+    brand: formData.get("brand"),
+    unit: formData.get("unit"),
+    dimensions: formData.get("dimensions"),
+    sku: formData.get("sku"),
+    barcode: formData.get("barcode"),
+    cost: parseFloat(formData.get("cost") as string),
+    price: parseFloat(formData.get("price") as string),
+    minStock: parseInt(formData.get("minStock") as string),
+    tax: parseInt(formData.get("tax") as string),
+    supplier: formData.get("supplier"),
+    notes: formData.get("notes"),
+    stock: parseInt(formData.get("stock") as string), // Stock is now stored separately
+    image: formData.get("image") as File,
+  };
+
+  // Validate the data using Zod
+  const validatedData = ProductSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  // Convert the image file to Base64
+  let base64Image = "";
+  if (
+    rawData.image &&
+    rawData.image instanceof File &&
+    rawData.image.size > 0
+  ) {
+    const arrayBuffer = await rawData.image.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    base64Image = buffer.toString("base64");
+  }
+
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+  const imageBuffer = Buffer.from(base64Data, "base64");
+
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.png`;
+  const path = join("/", "tmp", newFilename);
+
+  // Save to temporary file
+  const uint8Array = new Uint8Array(imageBuffer);
+  await writeFile(path, uint8Array);
+
+  await uploadToBucket("inventario", "products/" + newFilename, path);
+  const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
+
+  try {
+    const result = await prisma.$transaction(async (prisma) => {
+      // Step 1: Create Product
+      const newProduct = await prisma.item.create({
+        data: {
+          name: validatedData.data.name,
+          description: validatedData.data.description,
+          categoryId: validatedData.data.category,
+          brandId: validatedData.data.brand,
+          unitId: validatedData.data.unit,
+          dimensions: validatedData.data.dimensions,
+          sku: validatedData.data.sku,
+          barcode: validatedData.data.barcode,
+          cost: validatedData.data.cost,
+          price: validatedData.data.price,
+          minStock: validatedData.data.minStock,
+          tax: validatedData.data.tax,
+          supplierId: validatedData.data.supplier,
+          notes: validatedData.data.notes,
+          image: savedImageUrl,
+        },
+      });
+
+      // Step 2: Create Stock Entry for the Warehouse
+      await prisma.stock.create({
+        data: {
+          itemId: newProduct.id,
+          warehouseId: validatedData.data.warehouse,
+          quantity: validatedData.data.stock, // Store stock in the Stock table
+        },
+      });
+
+      return newProduct;
+    });
+
+    // Clean up the temporary file
+    await unlink(path);
+
+    return {
+      success: true,
+      message: "Producto creado exitosamente!",
+      product: result,
+    };
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return { success: false, message: "Error al crear producto." };
+  }
+};
+
+export const createSupplier = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+) => {
+  const rawData = {
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    address: formData.get("address"),
+    contactPerson: formData.get("contactPerson"),
+    supplierCode: formData.get("supplierCode"),
+    paymentTerms: formData.get("paymentTerms"),
+    taxId: formData.get("taxId"),
+    notes: formData.get("notes"),
+    image: formData.get("image") as File,
+  };
+
+  // Validate the data using Zod
+  const validatedData = SupplierSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  // Convert the image file to Base64
+  let base64Image = "";
+  if (
+    rawData.image &&
+    rawData.image instanceof File &&
+    rawData.image.size > 0
+  ) {
+    const arrayBuffer = await rawData.image.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    base64Image = buffer.toString("base64");
+  }
+
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+  const imageBuffer = Buffer.from(base64Data, "base64");
+
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.png`;
+  const path = join("/", "tmp", newFilename);
+
+  // Save to temporary file
+  const uint8Array = new Uint8Array(imageBuffer);
+  await writeFile(path, uint8Array);
+
+  await uploadToBucket("inventario", "suppliers/" + newFilename, path);
+  const savedImageUrl = `${process.env.MINIO_URL}suppliers/${newFilename}`;
+
+  try {
+    const result = await prisma.$transaction(async (prisma) => {
+      // Step 1: Create Supplier
+      const newSupplier = await prisma.supplier.create({
+        data: {
+          name: validatedData.data.name,
+          phone: validatedData.data.phone,
+          email: validatedData.data.email,
+          address: validatedData.data.address,
+          contactPerson: validatedData.data.contactPerson,
+          supplierCode: validatedData.data.supplierCode,
+          paymentTerms: validatedData.data.paymentTerms,
+          taxId: validatedData.data.taxId,
+          notes: validatedData.data.notes,
+          image: savedImageUrl,
+        },
+      });
+
+      return newSupplier;
+    });
+
+    // Clean up the temporary file
+    await unlink(path);
+
+    return {
+      success: true,
+      message: "Supplier creado exitosamente!",
+      product: result,
+    };
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return { success: false, message: "Error al crear producto." };
+  }
+};
+
+export async function processPayment(
+  state: {
+    errors: { [key: string]: string[] };
+    success: boolean;
+    message: string;
+  },
+  formData: FormData
+) {
+  "use server";
+
+  const amount = Number(formData.get("amount"));
+  const method = formData.get("method") as string;
+  const reference = formData.get("reference") as string;
+
+  // Validate inputs
+  const errors: { [key: string]: string[] } = {};
+
+  if (!amount || amount <= 0) {
+    errors.amount = ["Amount must be greater than zero"];
+  }
+
+  if (!method) {
+    errors.method = ["Payment method is required"];
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      errors,
+      success: false,
+      message: "Please fix the errors before submitting.",
+    };
+  }
+
+  try {
+    const payment = await prisma.payment.create({
+      data: {
+        amount: Math.round(amount * 100), // convert to cents
+        method,
+        reference: reference || undefined,
+        status: "Paid",
+        order: {
+          connect: { id: formData.get("orderId") as string },
+        },
+      },
+    });
+
+    console.log("new payment", payment);
+
+    return {
+      errors: {},
+      success: true,
+      message: "Payment processed successfully!",
+    };
+  } catch (error) {
+    console.error("Error processing payment:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to process payment",
+    };
+  }
+}
+
+export async function createClient(
+  state: {
+    errors: { [key: string]: string[] };
+    success: boolean;
+    message: string;
+  },
+  formData: FormData
+) {
+  "use server";
+
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const address = formData.get("address") as string;
+  const image = formData.get("image") as File;
+
+  // Validate inputs
+  const errors: { [key: string]: string[] } = {};
+
+  if (!name || name.trim() === "") {
+    errors.name = ["Name is required"];
+  }
+
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    errors.email = ["Valid email is required"];
+  }
+
+  if (!phone || !/^\+?[1-9]\d{1,14}$/.test(phone)) {
+    errors.phone = ["Valid phone number is required"];
+  }
+
+  if (!address || address.trim() === "") {
+    errors.address = ["Address is required"];
+  }
+
+  // Convert the image file to Base64
+  let base64Image = "";
+  if (image && image instanceof File && image.size > 0) {
+    const arrayBuffer = await image.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    base64Image = buffer.toString("base64");
+  }
+
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+  const imageBuffer = Buffer.from(base64Data, "base64");
+
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.png`;
+  const path = join("/", "tmp", newFilename);
+
+  // Save to temporary file
+  const uint8Array = new Uint8Array(imageBuffer);
+  await writeFile(path, uint8Array);
+
+  await uploadToBucket("inventario", "products/" + newFilename, path);
+  const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      errors,
+      success: false,
+      message: "Please fix the errors before submitting.",
+    };
+  }
+
+  try {
+    const client = await prisma.client.create({
+      data: {
+        name,
+        email,
+        phone,
+        address,
+        image: savedImageUrl,
+      },
+    });
+
+    console.log("new client", client);
+
+    return {
+      errors: {},
+      success: true,
+      message: "Client created successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating client:", error);
+
+    // Handle unique constraint errors
+    if (error instanceof Error && error.message.includes("Unique constraint")) {
+      return {
+        errors: {
+          email: ["Email or phone number already exists"],
+        },
+        success: false,
+        message: "Client creation failed",
+      };
+    }
+
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to create client",
+    };
+  }
+}

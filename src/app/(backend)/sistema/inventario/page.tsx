@@ -1,6 +1,5 @@
 import React from "react";
-import InventoryHeader from "./_components/InventoryHeader";
-import { Shirt } from "lucide-react";
+import { Shirt, UserPlus } from "lucide-react";
 import { GiClothes } from "react-icons/gi";
 import { TbComponents, TbRulerMeasure } from "react-icons/tb";
 import Link from "next/link";
@@ -10,7 +9,6 @@ import { FaWarehouse } from "react-icons/fa";
 export default function Inventario() {
   return (
     <div className="flex flex-col gap-4">
-      <InventoryHeader />
       <div className="grid grid-cols-2 gap-6 maxmd:grid-cols-1 ">
         <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
           <h3 className="font-semibold">Marcas</h3>
@@ -90,6 +88,19 @@ export default function Inventario() {
             className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
           >
             Nueva Bodega
+          </Link>
+        </div>
+        <div className="shadow-xl items-center bg-white p-8 rounded-md flex flex-col">
+          <h3 className="font-semibold">Proveedor</h3>
+          <UserPlus strokeWidth={".5px"} size={140} />
+          <p className="text-sm text-muted text-center">
+            Agrega nuevo Proveedor para mantener tu inventario organizado.
+          </p>
+          <Link
+            href={"/sistema/inventario/proveedores/nuevo"}
+            className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm mt-2 hover:bg-primary"
+          >
+            Nuevo Proveedor
           </Link>
         </div>
       </div>

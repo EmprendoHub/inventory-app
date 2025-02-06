@@ -6,7 +6,7 @@ export default function NewWarehouse() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Nueva Bodega"} />
+      <FormHeader title={"Bodega"} />
       {/* Form */}
       <WarehouseForm />
     </div>

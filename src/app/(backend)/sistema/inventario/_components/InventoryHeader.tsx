@@ -4,16 +4,22 @@ import React from "react";
 import { BiQuestionMark } from "react-icons/bi";
 import { BsThreeDots } from "react-icons/bs";
 
-export default function InventoryHeader() {
+export default function InventoryHeader({
+  title,
+  link,
+}: {
+  title?: string;
+  link?: string;
+}) {
   return (
     <div className="flex w-full items-center justify-between">
-      <span className="text-sm">Artículos</span>{" "}
+      <h2 className="text-base capitalize">{title}</h2>{" "}
       <div className="flex items-center gap-3">
         <Link
-          href={"/sistema/inventario/articulos/nuevo"}
+          href={`/sistema/inventario/${link}`}
           className="flex gap-2 items-center text-white bg-primary rounded-md py-1.5 px-2 text-xs hover:bg-blue-900"
         >
-          + New
+          + Nuevo
         </Link>
         <div className="flex items-center gap-.5 text-gray-500">
           <button className="bg-gray-200 p-1 rounded-md">

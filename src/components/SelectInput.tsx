@@ -14,14 +14,10 @@ type SelectType = {
 export default function SelectInput({
   label,
   name,
-  className = "col-span-1 maxsm:col-span-2",
+  className = "w-full col-span-1 maxsm:col-span-2",
   options = [],
   state,
 }: SelectType) {
-  console.log("state.errors?.[`${name}`] ", state.errors);
-
-  console.log("name", name);
-
   return (
     <div className={className}>
       <label
@@ -37,11 +33,7 @@ export default function SelectInput({
       >
         {options.map(
           (option: { name: string; value: string }, index: number) => (
-            <option
-              key={index}
-              selected={index === 0 ? true : false}
-              value={option.value}
-            >
+            <option key={index} value={option.value}>
               {option.name}
             </option>
           )

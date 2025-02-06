@@ -1,12 +1,4 @@
-import {
-  Bell,
-  ChevronDown,
-  History,
-  LayoutGrid,
-  Plus,
-  Settings,
-  User2,
-} from "lucide-react";
+import { Bell, ChevronDown, LogOut, Settings } from "lucide-react";
 import React from "react";
 import { SearchInput } from "./SearchInput";
 import {
@@ -16,45 +8,22 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import Image from "next/image";
+import { signOut } from "next-auth/react";
 
 const SystemHeader = () => {
   return (
-    <div className="bg-slate-200 h-10 flex items-center justify-between px-4">
-      <div className="flex gap-3 items-center">
-        <div>
-          <History className="w-5 h-5" />
-        </div>
+    <div className="bg-slate-200 h-10 flex items-center justify-between px-4 maxsm:px-2">
+      <div className="flex items-center maxsm:w-[65%] maxsm:pr-2">
         <SearchInput />
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center  maxsm:w-full">
         <TooltipProvider>
-          {/* <!-- Plus Icon --> */}
-          <div className="flex">
-            <Tooltip>
-              <TooltipTrigger>
-                <div className=" text-white bg-blue-700 hover:bg-blue-800 p-1 rounded-lg mr-3">
-                  <Plus size={18} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Nuevo</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          {/* <!-- User --> */}
-          <div className="flex">
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="  bg-gray-200 hover:text-blue-800 p-1 rounded-lg">
-                  <User2 size={18} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Usuario</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
           {/* <!-- Notification --> */}
+          <LogOut
+            size={20}
+            onClick={() => signOut()}
+            className=" cursor-pointer"
+          />
           <div className="flex">
             <Tooltip>
               <TooltipTrigger>
@@ -110,19 +79,6 @@ const SystemHeader = () => {
               </TooltipTrigger>
               <TooltipContent>
                 <p>Cuenta</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          {/*  User Info  */}
-          <div className="flex">
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="flex items-center bg-gray-200  p-1 rounded-lg">
-                  <LayoutGrid size={18} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Dashboard</p>
               </TooltipContent>
             </Tooltip>
           </div>

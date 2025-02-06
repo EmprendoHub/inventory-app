@@ -1,5 +1,19 @@
+import prisma from "@/lib/db";
 import React from "react";
+import { WarehouseList } from "./_components/WarehouseList";
+import InventoryHeader from "../_components/InventoryHeader";
 
-export default function Warehouse() {
-  return <div>Warehouse</div>;
+export default async function Warehouse() {
+  const warehousesWithProductCount = await prisma.warehouse.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return (
+    <div className="flex flex-col items-start justify-start bg-white">
+      <InventoryHeader title={"bodegas"} link={`bodegas/nueva`} />
+      <WarehouseList warehouses={warehousesWithProductCount} />
+    </div>
+  );
 }

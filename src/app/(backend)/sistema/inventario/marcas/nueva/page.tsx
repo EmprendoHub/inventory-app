@@ -5,7 +5,7 @@ import BrandForm from "../../_components/BrandForm";
 export default function NewBrand() {
   return (
     <div>
-      <FormHeader title={"Nueva Marca"} />
+      <FormHeader title={"Marca"} />
       <BrandForm />
     </div>
   );

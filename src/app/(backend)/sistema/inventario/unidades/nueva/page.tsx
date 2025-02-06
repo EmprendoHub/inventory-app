@@ -6,7 +6,7 @@ export default function NewUnit() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Nueva Unidad"} />
+      <FormHeader title={"Unidad"} />
       {/* Form */}
       <UnitForm />
     </div>

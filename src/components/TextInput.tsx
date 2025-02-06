@@ -11,7 +11,7 @@ export default function TextInput({
   label,
   name,
   state,
-  className = "col-span-1 maxsm:col-span-2",
+  className = "col-span-1 maxsm:col-span-2 w-full",
 }: TextType) {
   return (
     <div className={className}>
