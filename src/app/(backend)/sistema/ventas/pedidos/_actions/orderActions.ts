@@ -65,7 +65,6 @@ export async function createNewOrder(
       0
     );
 
-    console.log(client.id, items);
     const dueDate = new Date();
     const orderNo = await generateOrderId(prisma);
 
@@ -90,7 +89,6 @@ export async function createNewOrder(
       },
     });
 
-    console.log("new order", order);
     revalidatePath("/sistema/ventas/pedidos");
 
     return {
@@ -288,7 +286,6 @@ export async function deletePaymentAction(formData: FormData) {
       },
     });
 
-    console.log("payment deleted", payment);
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
     revalidatePath(`/sistema/ventas/pedidos/${validatedData.data.id}`);

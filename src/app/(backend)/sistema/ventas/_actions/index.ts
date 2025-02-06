@@ -528,8 +528,6 @@ export async function processPayment(
       },
     });
 
-    console.log("new payment", payment);
-
     return {
       errors: {},
       success: true,
@@ -621,8 +619,6 @@ export async function createClient(
         image: savedImageUrl,
       },
     });
-
-    console.log("new client", client);
 
     return {
       errors: {},

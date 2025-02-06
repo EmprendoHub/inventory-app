@@ -29,8 +29,8 @@ export default function OrderView({ order }: { order: FullOderType }) {
     0
   );
 
-  const tax = subtotal * 0.16;
-  console.log(tax);
+  // const tax = subtotal * 0.16;
+  // console.log(tax);
   const grandTotal = subtotal;
   const { showModal } = useModal();
 

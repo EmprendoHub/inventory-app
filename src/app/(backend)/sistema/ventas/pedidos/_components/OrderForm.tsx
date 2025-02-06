@@ -67,7 +67,6 @@ export default function OrderForm({
   };
 
   useEffect(() => {
-    console.log("sate", state);
     if (state.success) {
       router.push("/sistema/ventas/pedidos");
     }
