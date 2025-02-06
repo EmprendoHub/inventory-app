@@ -81,7 +81,7 @@ export async function POST(request: any) {
           const sender_email = "invetamexapp@gmail.com";
           const fromName = "Yunuen Company";
 
-          var transporter = nodemailer.createTransport({
+          const transporter = nodemailer.createTransport({
             service: "gmail",
             auth: {
               user: process.env.GOOGLE_MAIL,

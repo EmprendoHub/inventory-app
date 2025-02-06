@@ -16,7 +16,6 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
   useEffect(() => {
     if (session?.status === "authenticated") {
       router.replace("/");
-      console.log(notification);
     }
   }, [session, router]);
 
@@ -31,7 +30,9 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
     e.preventDefault();
 
     if (username === "") {
-      console.log("Por favor complete el nombre de usuario para registrarse.");
+      console.log(
+        `Por favor complete el nombre de usuario para registrarse. ${error} ${notification}`
+      );
       return;
     }
 
