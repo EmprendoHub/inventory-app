@@ -516,7 +516,7 @@ export async function processPayment(
   }
 
   try {
-    const payment = await prisma.payment.create({
+    await prisma.payment.create({
       data: {
         amount: Math.round(amount * 100), // convert to cents
         method,
@@ -610,7 +610,7 @@ export async function createClient(
   }
 
   try {
-    const client = await prisma.client.create({
+    await prisma.client.create({
       data: {
         name,
         email,
