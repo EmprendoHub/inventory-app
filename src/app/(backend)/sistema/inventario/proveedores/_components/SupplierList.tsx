@@ -35,9 +35,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { supplierAndProductType } from "@/types/categories";
+import { supplierType } from "@/types/categories";
 
-export const columns: ColumnDef<supplierAndProductType>[] = [
+export const columns: ColumnDef<supplierType>[] = [
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -115,11 +115,7 @@ export const columns: ColumnDef<supplierAndProductType>[] = [
   },
 ];
 
-export function SupplierList({
-  suppliers,
-}: {
-  suppliers: supplierAndProductType[];
-}) {
+export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -128,7 +124,7 @@ export function SupplierList({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const table = useReactTable<supplierAndProductType>({
+  const table = useReactTable<supplierType>({
     data: suppliers,
     columns,
     onSortingChange: setSorting,

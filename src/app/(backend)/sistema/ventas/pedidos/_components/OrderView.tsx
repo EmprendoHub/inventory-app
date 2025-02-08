@@ -239,7 +239,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 <TableCell className="font-medium">
                   <Image
                     className="h-20 w-20 grayscale"
-                    src={item.image}
+                    src={item.image || coImage}
                     width={150}
                     height={150}
                     alt="img"

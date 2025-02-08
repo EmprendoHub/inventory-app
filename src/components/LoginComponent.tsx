@@ -79,21 +79,19 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
           <Image
             src={"/images/product-placeholder.jpg"}
             alt="producto"
-            width={1000}
-            height={1000}
-            className="w-[500px] h-[500px]"
+            width={500}
+            height={500}
+            className="w-[500px] h-auto"
           />
         </div>
         <div className="w-full bg-background h-screen p-20 maxsm:p-8 shadow-xl text-center text-primary mx-auto flex flex-col items-center justify-center">
-          <WhiteLogoComponent
-            className={"ml-5 mt-4 w-[200px] maxsm:w-[120px]"}
-          />
-          <h2 className="flex justify-center py-5 text-foreground">
+          <WhiteLogoComponent className={" w-[200px] maxsm:w-[120px]"} />
+          <h2 className="flex text-xs justify-center py-5 text-foreground">
             Iniciar Session
           </h2>
 
           <button
-            className="w-full hover:text-foreground hover:bg-slate-300 duration-500 ease-in-out text-foreground text-xs bg-black mb-4 flex flex-row gap-4 items-center py-4 justify-center"
+            className="w-auto px-8 hover:text-foreground rounded-md text-white hover:bg-slate-300 duration-500 ease-in-out text-xs bg-black mb-4 flex flex-row gap-4 items-center py-4 justify-center"
             onClick={() => {
               signIn("google");
             }}
@@ -101,31 +99,31 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
             <IoLogoGoogle />
             Iniciar con Google
           </button>
-          <div className="text-center text-slate-900 my-4 ">- O -</div>
+          <div className="text-center text-slate-900 mb-2 ">- o -</div>
           <form
             className="flex flex-col justify-center items-center text-center gap-y-4"
             onSubmit={handleSubmit}
           >
             <input
-              className="text-center py-2"
+              className="text-center py-2 rounded-sm"
               type="email"
               placeholder="Correo Electrónico..."
               onChange={(e) => setEmail(e.target.value)}
             />
             <input
               hidden
-              className="text-center py-2"
+              className="text-center py-2 rounded-sm"
               type="text"
               placeholder="Honeypot"
               onChange={(e) => setHoneypot(e.target.value)}
             />
             <input
-              className="text-center py-2"
+              className="text-center py-2 rounded-sm"
               type="password"
               placeholder="contraseña..."
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button className="bg-primary text-white w-[150px] p-2 rounded-sm mt-5">
+            <button className="bg-primary text-xs text-white w-[150px] p-2 rounded-sm mt-5">
               Iniciar
             </button>
           </form>

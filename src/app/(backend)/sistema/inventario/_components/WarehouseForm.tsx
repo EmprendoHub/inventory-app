@@ -3,6 +3,7 @@ import React from "react";
 import { useFormState } from "react-dom";
 import { createWarehouse } from "../_actions";
 import SelectInput from "@/components/SelectInput";
+import TextInput from "@/components/TextInput";
 
 export default function WarehouseForm() {
   const [state, formAction] = useFormState(createWarehouse, {
@@ -12,84 +13,33 @@ export default function WarehouseForm() {
   });
 
   const options = [
-    { name: "Principal", value: "principal" },
-    { name: "Sucursal", value: "sucursal" },
+    { name: "Principal", value: "PRINCIPAL" },
+    { name: "Sucursal", value: "SUCURSAL" },
   ];
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="flex gap-4 items-center">
-        <div className="w-full">
-          <label
-            htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
-          >
-            Titulo
-          </label>
-          <input
-            name="title"
-            id="title"
-            type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          />
-          {state.errors?.title && (
-            <p className="text-sm text-red-500">
-              {state.errors.title.join(", ")}
-            </p>
-          )}
-        </div>
+      <div className="flex items-center gap-3">
+        <TextInput name="title" label="Titulo" state={state} />
+        <TextInput name="code" label="Código" state={state} />
+      </div>
 
-        <div className="w-full">
-          <SelectInput
-            className="w-full"
-            name="type"
-            label="Tipo de Bodega"
-            options={options}
-            state={state}
-          />
-          {state.errors?.type && (
-            <p className="text-sm text-red-500">
-              {state.errors.type.join(", ")}
-            </p>
-          )}
-        </div>
+      <SelectInput
+        className="w-full"
+        name="type"
+        label="Tipo de Bodega"
+        options={options}
+        state={state}
+      />
+
+      <TextInput name="street" label="Calle" state={state} />
+      <div className="flex items-center gap-3">
+        <TextInput name="city" label="Ciudad" state={state} />
+        <TextInput name="state" label="Estado" state={state} />
       </div>
-      <div className="w-full">
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Ubicación
-        </label>
-        <input
-          name="location"
-          id="location"
-          type="text"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-        {state.errors?.location && (
-          <p className="text-sm text-red-500">
-            {state.errors.location.join(", ")}
-          </p>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Description
-        </label>
-        <textarea
-          name="description"
-          id="description"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-        {state.errors?.description && (
-          <p className="text-sm text-red-500">
-            {state.errors.description.join(", ")}
-          </p>
-        )}
+      <div className="flex items-center gap-3">
+        <TextInput name="country" label="País" state={state} />
+        <TextInput name="postalCode" label="Código Postal" state={state} />
       </div>
 
       <button

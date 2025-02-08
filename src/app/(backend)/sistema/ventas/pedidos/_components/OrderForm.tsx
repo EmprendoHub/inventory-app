@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { useFormState } from "react-dom";
 import { createNewOrder } from "../_actions/orderActions";
-import { ProductType } from "@/types/products";
+import { ItemType } from "@/types/items";
 import { clientType } from "@/types/sales";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ export default function OrderForm({
   items,
 }: {
   clients: clientType[];
-  items: ProductType[];
+  items: ItemType[];
 }) {
   const router = useRouter();
   const [state, formAction] = useFormState(createNewOrder, {
@@ -39,7 +39,7 @@ export default function OrderForm({
     null
   );
   const [selectedItems, setSelectedItems] = React.useState<
-    Array<ProductType & { quantity: number }>
+    Array<ItemType & { quantity: number }>
   >([]);
   const [selectedItemId, setSelectedItemId] = React.useState("");
   const [quantity, setQuantity] = React.useState(1);

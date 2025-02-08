@@ -6,7 +6,7 @@ const LogoComponent = ({ className }: { className: string }) => {
       width={250}
       height={250}
       src={"/images/horizontal_logo.webp"}
-      alt="OfertazosMX"
+      alt="Yunuen Co"
       className={`main-logo-class ${className}`}
     />
   );

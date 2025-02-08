@@ -198,7 +198,7 @@ export const options = {
 
           const currentUser = {
             avatar: { url: user.image },
-            _id: existinguser.id,
+            id: existinguser.id,
             name: user.name,
             email: user.email,
             phone: user.phone,
@@ -209,13 +209,13 @@ export const options = {
           };
 
           token.accessToken = account.access_token;
-          token._id = currentUser._id;
+          token.id = currentUser.id;
           token.user = currentUser;
         }
       } else {
         if (user) {
           token.accessToken = user.accessToken;
-          token._id = user._id;
+          token.id = user.id;
           token.user = user;
 
           const updatedUser = await prisma.user.findUnique({
@@ -232,7 +232,7 @@ export const options = {
     },
     async session({ session, token }: { session: any; token: any }) {
       if (token) {
-        session.user._id = token._id;
+        session.user.id = token.id;
         session.user.accessToken = token.accessToken;
         session.user.createdAt = token.user.createdAt;
         session.user.role = token.user.role;

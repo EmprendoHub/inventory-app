@@ -9,7 +9,7 @@ export async function middleware(request: any) {
   let signInUrl;
 
   if (token?.user) {
-    if (token?.user?.role === "superadmin" && !pathname.includes("sistema")) {
+    if (!pathname.includes("sistema") && !pathname.includes("admin")) {
       signInUrl = new URL("/sistema/home", request.url);
       return NextResponse.redirect(signInUrl);
     }
@@ -23,7 +23,11 @@ export async function middleware(request: any) {
       return NextResponse.redirect(signInUrl);
     }
 
-    if (token?.user?.role !== "superadmin") {
+    if (
+      token?.user?.role !== "SUPER_ADMIN" &&
+      token?.user?.role !== "ADMIN" &&
+      token?.user?.role !== "GERENTE"
+    ) {
       signInUrl = new URL("/no-autorizado", request.url);
       return NextResponse.redirect(signInUrl);
     }
@@ -35,11 +39,6 @@ export async function middleware(request: any) {
     if (!token) {
       signInUrl = new URL("/api/auth/signin", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
-    }
-
-    if (token?.user?.role === "superadmin") {
-      signInUrl = new URL("/sistema/home", request.url);
       return NextResponse.redirect(signInUrl);
     }
   }

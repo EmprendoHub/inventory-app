@@ -3,6 +3,7 @@
 import prisma from "@/lib/db";
 import { idSchema, PaymentSchema, TwoIdSchema } from "@/lib/schemas";
 import { generateOrderId } from "@/lib/utils";
+import { OrderStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function createNewOrder(
@@ -29,7 +30,7 @@ export async function createNewOrder(
     name: string;
     description: string;
     notes: string;
-    image: string;
+    mainImage: string;
   }[] = [];
   try {
     items = JSON.parse(itemsInput || "[]");
@@ -68,11 +69,11 @@ export async function createNewOrder(
     const dueDate = new Date();
     const orderNo = await generateOrderId(prisma);
 
-    const order = await prisma.order.create({
+    await prisma.order.create({
       data: {
         orderNo,
         clientId: client.id,
-        status: "Pendiente",
+        status: "PENDIENTE" as OrderStatus,
         totalAmount,
         notes,
         dueDate,
@@ -83,7 +84,7 @@ export async function createNewOrder(
             description: item.description,
             quantity: item.quantity,
             price: item.price,
-            image: item.image,
+            image: item.mainImage,
           })),
         },
       },
@@ -233,11 +234,11 @@ export async function payOrderAction(formData: FormData) {
       data: {
         amount: Math.round(paymentAmount),
         method: method || "cash",
+        orderNo: order.orderNo,
+        orderId: order.id,
         reference,
         status: "Paid",
-        order: {
-          connect: { id: id as string },
-        },
+        invoiceId: "",
       },
     });
 
@@ -280,7 +281,7 @@ export async function deletePaymentAction(formData: FormData) {
     return { success: false, message: "Error al borrar pago" };
 
   try {
-    const payment = await prisma.payment.delete({
+    await prisma.payment.delete({
       where: {
         id: validatedData.data.id,
       },

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const ProductSchema = z.object({
+  id: z.string().nullable().optional(),
   name: z.string().min(1, "Name is required"),
   description: z.string(),
   category: z.string().min(1, "Se requiere la categoría"),
@@ -12,7 +13,12 @@ export const ProductSchema = z.object({
   dimensions: z.string(),
   price: z.number().positive("Price must be a positive number"),
   cost: z.number().positive("Price must be a positive number"),
-  stock: z.number().int().nonnegative("Stock must be a non-negative integer"),
+  stock: z
+    .number()
+    .int()
+    .nonnegative("Stock must be a non-negative integer")
+    .nullable()
+    .optional(),
   minStock: z
     .number()
     .int()
@@ -20,12 +26,15 @@ export const ProductSchema = z.object({
   supplier: z.string().min(1, "Se requiere el proveedor"),
   tax: z.number(),
   notes: z.string(),
-  image: z.object({
-    size: z.number(),
-    type: z.string(),
-    name: z.string(),
-    lastModified: z.number(),
-  }),
+  image: z
+    .object({
+      size: z.number(),
+      type: z.string(),
+      name: z.string(),
+      lastModified: z.number(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export const SupplierSchema = z.object({
@@ -58,9 +67,13 @@ export const CategorySchema = z.object({
 
 export const WarehouseSchema = z.object({
   title: z.string().min(3, "Se require un Titulo"),
-  location: z.string().min(3, "Se require una Ubicación"),
+  code: z.string().min(3, "Se require un código único"),
+  street: z.string().min(3, "Se require una calle"),
+  city: z.string().min(3, "Se require una ciudad"),
+  state: z.string().min(3, "Se require un estado"),
+  country: z.string().min(3, "Se require un país"),
+  postalCode: z.string().min(3, "Se require un código postal"),
   type: z.string().min(3, "Se require un tipo de bodega"),
-  description: z.string(),
 });
 
 export const AdjustmentSchema = z.object({
@@ -108,4 +121,26 @@ export const PaymentSchema = z.object({
   amount: z.string().min(1, "Se require una cantidad"),
   reference: z.string(),
   method: z.string(),
+});
+
+export const UserSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  phone: z.string(),
+  active: z.boolean(),
+  password: z.string(),
+  role: z.string(),
+  avatar: z
+    .object({
+      size: z.number(),
+      type: z.string(),
+      name: z.string(),
+      lastModified: z.number(),
+    })
+    .nullable()
+    .optional(),
+});
+
+export const VerifyEmailSchema = z.object({
+  email: z.string().min(5, { message: "Se requiere un correo electrónico" }),
 });

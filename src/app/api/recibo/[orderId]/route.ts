@@ -40,7 +40,7 @@ export async function GET(
     );
   }
 
-  const pdf = await createPDF(order);
+  const pdf = await createPDF(order as FullOderType);
   const pdfBuffer = Buffer.from(pdf.output("arraybuffer"));
 
   return new NextResponse(pdfBuffer, {

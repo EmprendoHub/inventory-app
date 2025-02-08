@@ -1,6 +1,6 @@
 import React from "react";
 import FormHeader from "../../_components/FormHeader";
-import ProductForm from "../_components/ProductForm";
+import ProductForm from "../_components/ItemForm";
 import prisma from "@/lib/db";
 
 export default async function NewItem() {

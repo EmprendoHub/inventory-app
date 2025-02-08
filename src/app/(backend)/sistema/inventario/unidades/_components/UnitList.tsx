@@ -35,9 +35,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { unitAndProductType } from "@/types/categories";
+import { unitType } from "@/types/categories";
 
-export const columns: ColumnDef<unitAndProductType>[] = [
+export const columns: ColumnDef<unitType>[] = [
   {
     accessorKey: "title",
     header: ({ column }) => {
@@ -109,7 +109,7 @@ export const columns: ColumnDef<unitAndProductType>[] = [
   },
 ];
 
-export function UnitList({ units }: { units: unitAndProductType[] }) {
+export function UnitList({ units }: { units: unitType[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -118,7 +118,7 @@ export function UnitList({ units }: { units: unitAndProductType[] }) {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const table = useReactTable<unitAndProductType>({
+  const table = useReactTable<unitType>({
     data: units,
     columns,
     onSortingChange: setSorting,

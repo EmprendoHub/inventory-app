@@ -1,7 +1,7 @@
 import prisma from "@/lib/db";
 import React from "react";
 import InventoryHeader from "../_components/InventoryHeader";
-import { ProductList } from "./_components/ProductList";
+import { ProductList } from "./_components/ItemList";
 
 export default async function ItemsGroups() {
   const getItemsWithTotalStock = async () => {
@@ -29,6 +29,9 @@ export default async function ItemsGroups() {
 
       return {
         ...item,
+        barcode: item.barcode || "", // Ensure barcode is a string
+        dimensions: item.dimensions || "", // Ensure dimensions is a string
+        notes: item.notes || "", // Ensure notes is a string
         stocks: itemStocks,
         totalStock, // Add total stock for the item
       };
@@ -39,8 +42,6 @@ export default async function ItemsGroups() {
 
   // Calculate total stock for each item
   const itemsWithTotalStock = await getItemsWithTotalStock();
-
-  console.log(itemsWithTotalStock);
 
   return (
     <div className="flex flex-col items-start justify-start bg-white">

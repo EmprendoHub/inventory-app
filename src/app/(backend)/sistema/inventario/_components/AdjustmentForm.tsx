@@ -13,17 +13,17 @@ type AdjustType = {
     name: string;
     description: string;
     sku: string;
-    barcode: string;
-    dimensions: string;
+    barcode: string | null;
+    dimensions: string | null;
     price: number;
     cost: number;
     minStock: number;
     tax: number;
     supplierId: string;
-    notes: string;
-    image: string;
+    notes: string | null;
+    image?: string;
   }[];
-  warehouses: { id: string; title: string; description: string }[];
+  warehouses: { id: string; title: string; description?: string }[];
 };
 
 export default function AdjustmentForm({ items, warehouses }: AdjustType) {
@@ -101,11 +101,11 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
                   (warehouse: {
                     id: string;
                     title: string;
-                    description: string;
+                    description?: string;
                   }) => ({
                     value: warehouse.id,
                     name: warehouse.title,
-                    description: warehouse.description,
+                    description: warehouse.description || "",
                   })
                 )}
                 state={state}
@@ -170,11 +170,11 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
                   (warehouse: {
                     id: string;
                     title: string;
-                    description: string;
+                    description?: string;
                   }) => ({
                     value: warehouse.id,
                     name: warehouse.title,
-                    description: warehouse.description,
+                    description: warehouse.description || "",
                   })
                 )}
                 state={state}
@@ -187,11 +187,11 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
                   (warehouse: {
                     id: string;
                     title: string;
-                    description: string;
+                    description?: string;
                   }) => ({
                     value: warehouse.id,
                     name: warehouse.title,
-                    description: warehouse.description,
+                    description: warehouse.description || "",
                   })
                 )}
                 state={state}

@@ -37,6 +37,7 @@ import {
 import { clientsAndProductType, clientType } from "@/types/sales";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import Image from "next/image";
+import Link from "next/link";
 
 export const columns: ColumnDef<clientType>[] = [
   {
@@ -107,10 +108,10 @@ export const columns: ColumnDef<clientType>[] = [
             >
               Recibir pago
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(item.id)}
-            >
-              Editar
+            <DropdownMenuItem>
+              <Link href={`/sistema/ventas/clientes/editar/${item.id}`}>
+                Editar
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Desactivar</DropdownMenuItem>

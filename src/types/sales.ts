@@ -125,12 +125,11 @@ export type ordersAndItem = {
   createdAt: Date;
   updatedAt: Date;
   invoiceId: string | null;
-  layawayId: string | null;
   orderItems: {
     id: string;
     orderId: string;
     itemId: string;
-    image: string;
+    image: string | null;
     name: string;
     description: string;
     quantity: number;
@@ -160,37 +159,9 @@ export type FullOderType = {
   updatedAt: Date;
   dueDate: Date;
   invoiceId: string | null;
-  layawayId: string | null;
-  orderItems: {
-    id: string;
-    orderId: string;
-    itemId: string;
-    image: string;
-    name: string;
-    description: string;
-    quantity: number;
-    price: number;
-  }[];
-  payments: {
-    id: string;
-    amount: number;
-    method: string;
-    reference: string | null;
-    status: string;
-    orderId: string;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
-  client: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    address: string;
-    image: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  orderItems: OrderItemsType[];
+  payments: PaymentType[];
+  client: clientType;
 };
 
 export type PaymentType = {
@@ -208,7 +179,7 @@ export type OrderItemsType = {
   id: string;
   orderId: string;
   itemId: string;
-  image: string;
+  image: string | null;
   name: string;
   description: string;
   quantity: number;

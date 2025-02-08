@@ -7,7 +7,7 @@ import { BsCurrencyExchange } from "react-icons/bs";
 type ModalOptions = {
   title: string;
   text: string;
-  type: "delete" | "payment";
+  type: "delete" | "payment" | "info";
   icon?: "warning" | "success" | "error";
   showCancelButton?: boolean;
   confirmButtonText?: string;
@@ -64,7 +64,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     <ModalContext.Provider value={{ showModal }}>
       {children}
       {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center min-w-full min-h-screen">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center min-w-full min-h-screen z-50">
           <div
             className={`${
               modal.icon === "warning" ? "bg-red-800" : "bg-white"

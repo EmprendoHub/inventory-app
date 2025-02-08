@@ -12,8 +12,8 @@ export default function WarehouseForm() {
   });
 
   const options = [
-    { name: "Principal", value: "principal" },
-    { name: "Sucursal", value: "sucursal" },
+    { name: "Principal", value: "PRINCIPAL" },
+    { name: "Sucursal", value: "SUCURSAL" },
   ];
 
   return (
@@ -53,43 +53,6 @@ export default function WarehouseForm() {
             </p>
           )}
         </div>
-      </div>
-      <div className="w-full">
-        <label
-          htmlFor="title"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Ubicación
-        </label>
-        <input
-          name="location"
-          id="location"
-          type="text"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-        {state.errors?.location && (
-          <p className="text-sm text-red-500">
-            {state.errors.location.join(", ")}
-          </p>
-        )}
-      </div>
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Description
-        </label>
-        <textarea
-          name="description"
-          id="description"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-        />
-        {state.errors?.description && (
-          <p className="text-sm text-red-500">
-            {state.errors.description.join(", ")}
-          </p>
-        )}
       </div>
 
       <button

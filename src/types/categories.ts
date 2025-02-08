@@ -21,9 +21,25 @@ export type categoryAndProductType = {
   title: string;
 };
 
+export type categoryType = {
+  id: string;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+  title: string;
+};
+
 export type unitAndProductType = {
   productCount: number;
   items: { id: string }[];
+  id: string;
+  abbreviation: string;
+  createdAt: Date;
+  updatedAt: Date;
+  title: string;
+};
+
+export type unitType = {
   id: string;
   abbreviation: string;
   createdAt: Date;
@@ -49,11 +65,27 @@ export type supplierAndProductType = {
   item: { id: string }[];
 };
 
+export type supplierType = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  contactPerson: string;
+  supplierCode: string;
+  paymentTerms: string;
+  taxId: string;
+  notes: string;
+  image: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type warehouseAndProductType = {
   id: string;
   title: string;
-  description: string;
-  location: string;
+  description?: string | null;
+  location?: string | null;
   type: string;
   createdAt: Date;
   updatedAt: Date;
@@ -69,19 +101,10 @@ export type brandAndProductType = {
   name: string;
 };
 
-export type userType = {
+export type brandType = {
   id: string;
-  active: boolean;
-  name: string;
-  email: string;
-  verificationToken?: string;
-  phone?: string;
-  stripeId?: string;
-  password?: string;
-  avatar?: string;
-  loginAttempts: number;
-  points?: number;
-  role: string;
+  description: string;
   createdAt: Date;
   updatedAt: Date;
+  name: string;
 };

@@ -10,6 +10,7 @@ import {
   Home,
   PlusCircle,
   Truck,
+  Users,
   Users2,
   Warehouse,
 } from "lucide-react";
@@ -264,15 +265,15 @@ export default function SideBar({
               </Link>
               <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  hidden ? "pl-2 pr-2" : "pl-6 adminpr-4"
                 } ${
-                  path === "/sistema/ventas/paquetes" ? "bg-blue-600" : ""
+                  path === "/sistema/admin/usuarios" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/paquetes"}
+                href={"/sistema/admin/usuarios"}
               >
-                <Box size={16} />
+                <Users size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Paquetes
+                  Usuarios
                 </span>
               </Link>
 

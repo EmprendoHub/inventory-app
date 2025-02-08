@@ -126,13 +126,13 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
     <main className="flex min-h-screen maxsm:min-h-[70vh] flex-col items-center justify-center">
       <div className="w-fit flex flex-col items-center bg-slate-200 maxsm:p-8 p-20 shadow-xl text-center mx-auto">
         {/* <LogoComponent /> */}
-        <WhiteLogoComponent className={"ml-5 mt-4 w-[200px] maxsm:w-[120px]"} />
-        <h2 className="my-4 text-foreground font-bold font-EB_Garamond text-2xl">
+        <WhiteLogoComponent className={"mt-4 w-[200px] maxsm:w-[120px]"} />
+        <h2 className="my-4 text-foreground font-bold font-EB_Garamond text-xs">
           Registro Nuevo
         </h2>
         <button
           className="w-full hover:text-foreground hover:bg-slate-300 duration-500 ease-in-out text-white bg-black mb-4 flex flex-row gap-4
-            items-center py-4 justify-center"
+            items-center py-4 justify-center text-xs"
           onClick={() => {
             signIn("google");
           }}
@@ -145,20 +145,20 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
           className="flex flex-col justify-center items-center text-center gap-y-4 text-foreground"
         >
           <input
-            className="text-center py-2"
+            className="text-center py-2 rounded-md text-sm"
             type="text"
             placeholder="Nombre y Apellidos..."
             onChange={(e) => setUsername(e.target.value)}
           />
           <input
-            className="text-center py-2"
+            className="text-center py-2 rounded-md text-sm"
             type="text"
             placeholder="Teléfono"
             value={phone}
             onChange={handlePhoneChange}
           />
           <input
-            className="text-center py-2"
+            className="text-center py-2 rounded-md text-sm"
             type="email"
             placeholder="Correo Electrónico..."
             onChange={(e) => setEmail(e.target.value)}
@@ -166,25 +166,28 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
 
           <input
             hidden
-            className="text-center py-2"
+            className="text-center py-2 rounded-md text-sm"
             type="text"
             placeholder="Honeypot"
             onChange={(e) => setHoneypot(e.target.value)}
           />
           <input
-            className="text-center py-2"
+            className="text-center py-2 rounded-md text-sm"
             type="password"
             placeholder="Contraseña..."
             onChange={(e) => setPassword(e.target.value)}
           />
           <button
             type="submit"
-            className={`bg-black text-white py-2 px-8 text-xl hover:bg-slate-200 hover:text-foreground ease-in-out duration-700 rounded-md`}
+            className={`bg-black text-white py-2 px-8 l hover:bg-slate-200 hover:text-foreground ease-in-out duration-700 rounded-md text-xs`}
           >
             Registrarme
           </button>
         </form>
-        <button className={`text-foreground mt-3`} onClick={() => signIn()}>
+        <button
+          className={`text-foreground mt-3 text-xs`}
+          onClick={() => signIn()}
+        >
           ¿Ya tienes cuenta? <br /> Iniciar Session
         </button>
       </div>
