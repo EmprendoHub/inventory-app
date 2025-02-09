@@ -11,7 +11,7 @@ export default async function Payments() {
   });
 
   return (
-    <div className="flex flex-col items-start justify-start bg-white">
+    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
       <InventoryHeader title={"pagos"} link={`pagos/nuevo`} />
       <PaymentList payments={paymentsWithProductCount} />
     </div>

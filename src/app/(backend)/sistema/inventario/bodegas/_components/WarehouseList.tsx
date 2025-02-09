@@ -58,7 +58,7 @@ export const columns: ColumnDef<warehouseAndProductType>[] = [
   },
   {
     accessorKey: "description",
-    header: () => <div className="text-right text-xs maxsm:hidden">Desc.</div>,
+    header: () => <div className="text-left text-xs maxsm:hidden">Desc.</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
         {row.getValue("description")}
@@ -68,7 +68,7 @@ export const columns: ColumnDef<warehouseAndProductType>[] = [
   {
     accessorKey: "location",
     header: () => (
-      <div className="text-right text-xs maxsm:hidden">Ubicación</div>
+      <div className="text-left text-xs maxsm:hidden">Ubicación</div>
     ),
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
@@ -78,7 +78,7 @@ export const columns: ColumnDef<warehouseAndProductType>[] = [
   },
   {
     accessorKey: "type",
-    header: () => <div className="text-right text-xs">Tipo</div>,
+    header: () => <div className="text-left text-xs">Tipo</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs">{row.getValue("type")}</div>
     ),
@@ -162,11 +162,6 @@ export function WarehouseList({
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -231,7 +226,7 @@ export function WarehouseList({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

@@ -27,7 +27,7 @@ export default async function EditUser({ params }: { params: { id: string } }) {
     },
   });
   const orders = await prisma.order.findMany();
-  const drivers = await prisma.driver.findMany();
+  const drivers = await prisma.user.findMany({ where: { role: "CHOFER" } });
   const trucks = await prisma.truck.findMany();
 
   if (!delivery) {

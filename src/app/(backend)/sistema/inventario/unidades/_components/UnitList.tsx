@@ -56,7 +56,7 @@ export const columns: ColumnDef<unitType>[] = [
   {
     accessorKey: "abbreviation",
     header: () => (
-      <div className="text-right text-xs maxsm:hidden">Abreviación</div>
+      <div className="text-left text-xs maxsm:hidden">Abreviación</div>
     ),
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
@@ -64,17 +64,7 @@ export const columns: ColumnDef<unitType>[] = [
       </div>
     ),
   },
-  {
-    accessorKey: "productCount",
-    header: () => <div className="text-right text-xs">Productos</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("productCount"));
 
-      // Format the amount as a dollar amount
-
-      return <div className="text-right text-xs font-medium">{amount}</div>;
-    },
-  },
   {
     id: "actions",
     enableHiding: false,
@@ -149,11 +139,6 @@ export function UnitList({ units }: { units: unitType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -218,7 +203,7 @@ export function UnitList({ units }: { units: unitType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

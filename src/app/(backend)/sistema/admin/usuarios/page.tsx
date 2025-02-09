@@ -41,7 +41,7 @@ export default async function ListUsers() {
   }
 
   return (
-    <div className="flex flex-col items-start justify-start bg-white">
+    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
       <AdminHeader title={"Usuarios"} link={`usuarios/nuevo`} />
       <UserList users={users} />
     </div>

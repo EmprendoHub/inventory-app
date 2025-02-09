@@ -49,7 +49,7 @@ export const columns: ColumnDef<clientType>[] = [
         alt="img"
         width={100}
         height={100}
-        className="capitalize text-xs min-w-8 w-8 h-auto "
+        className="capitalize text-xs min-w-8 w-8 h-auto rounded-full"
       />
     ),
   },
@@ -166,11 +166,6 @@ export function ClientList({ clients }: clientsAndProductType) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -235,7 +230,7 @@ export function ClientList({ clients }: clientsAndProductType) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

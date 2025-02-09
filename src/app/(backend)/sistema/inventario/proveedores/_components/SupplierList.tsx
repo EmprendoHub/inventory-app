@@ -66,14 +66,16 @@ export const columns: ColumnDef<supplierType>[] = [
     ),
   },
   {
-    accessorKey: "productCount",
-    header: () => <div className="text-right text-xs">Productos</div>,
+    accessorKey: "email",
+    header: () => <div className="text-left text-xs">Email</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("productCount"));
-
       // Format the amount as a dollar amount
 
-      return <div className="text-right text-xs font-medium">{amount}</div>;
+      return (
+        <div className="text-left text-xs font-medium">
+          {row.getValue("email")}
+        </div>
+      );
     },
   },
   {
@@ -116,6 +118,8 @@ export const columns: ColumnDef<supplierType>[] = [
 ];
 
 export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
+  console.log(suppliers);
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -155,11 +159,6 @@ export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -224,7 +223,7 @@ export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

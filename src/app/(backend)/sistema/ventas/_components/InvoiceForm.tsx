@@ -22,7 +22,7 @@ export default function WarehouseForm() {
         <div className="w-full">
           <label
             htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-muted"
           >
             Titulo
           </label>
@@ -30,7 +30,7 @@ export default function WarehouseForm() {
             name="title"
             id="title"
             type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
           />
           {state.errors?.title && (
             <p className="text-sm text-red-500">

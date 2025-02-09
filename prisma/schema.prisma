@@ -477,6 +477,7 @@ enum ExpenseType {
   SALARY
   EXTERNAL_SHIPPING
   OTHER
+  OFFICE
 }
 
 model Accounting {
@@ -514,7 +515,7 @@ model Payment {
   order     Order  @relation(fields: [orderId], references: [id])
   orderId   String   @db.ObjectId
   orderNo   String
-  invoiceId   String   @db.ObjectId
+  invoiceId   String?   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -611,4 +612,20 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   CANCELLED
+}
+
+
+model Report {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  type        String   // e.g., "sales", "inventory", "accounting"
+  startDate   DateTime // Start date for the report
+  endDate     DateTime // End date for the report
+  generatedAt DateTime @default(now()) // When the report was generated
+  pdfUrl      String   // URL or path to the generated PDF file
+  createdBy   String   @db.ObjectId // User who generated the report
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdByUser String
 }

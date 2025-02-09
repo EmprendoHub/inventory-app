@@ -162,7 +162,6 @@ export default function UserEdit({ roles, user }: UserGroupType) {
             state={state}
           />
           <PasswordInput
-            value={formData.password ?? ""}
             onChange={handleInputChange}
             name="password"
             label="Contraseña"

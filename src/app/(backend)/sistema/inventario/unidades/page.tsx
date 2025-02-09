@@ -11,7 +11,7 @@ export default async function Units() {
   });
 
   return (
-    <div className="flex flex-col items-start justify-start bg-white">
+    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
       <InventoryHeader title={"unidades"} link={`unidades/nueva`} />
       <UnitList units={units} />
     </div>

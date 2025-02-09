@@ -85,10 +85,10 @@ export function UserList({ users }: { users: UserType[] }) {
 
       {
         accessorKey: "email",
-        header: () => <div className="text-right text-xs">Email</div>,
+        header: () => <div className="text-left text-xs">Email</div>,
         cell: ({ row }) => {
           return (
-            <div className="text-right text-xs font-medium">
+            <div className="text-left text-xs font-medium">
               {row.getValue("email")}
             </div>
           );
@@ -97,11 +97,11 @@ export function UserList({ users }: { users: UserType[] }) {
       {
         accessorKey: "role",
         header: () => (
-          <div className="text-right text-xs  maxsm:hidden">Rol</div>
+          <div className="text-left text-xs  maxsm:hidden">Rol</div>
         ),
         cell: ({ row }) => {
           return (
-            <div className="text-right text-xs font-medium maxsm:hidden">
+            <div className="text-left text-xs font-medium maxsm:hidden">
               {row.getValue("role")}
             </div>
           );
@@ -227,11 +227,6 @@ export function UserList({ users }: { users: UserType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -296,7 +291,7 @@ export function UserList({ users }: { users: UserType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

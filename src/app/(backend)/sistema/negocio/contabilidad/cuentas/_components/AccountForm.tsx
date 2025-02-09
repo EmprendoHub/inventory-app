@@ -47,30 +47,37 @@ export default function AccountForm({ accounts }: AccountGroupType) {
       action={handleSubmit}
       className="space-y-4 flex flex-col gap-4"
     >
-      <TextInput name="code" label="Código" state={state} />
-      <TextInput name="name" label="Nombre" state={state} />
-      <SelectInput
-        label="Tipo"
-        name="type"
-        options={[
-          { value: "ASSET", name: "Activo" },
-          { value: "LIABILITY", name: "Pasivo" },
-          { value: "EQUITY", name: "Patrimonio" },
-          { value: "REVENUE", name: "Ingreso" },
-          { value: "EXPENSE", name: "Gasto" },
-        ]}
-        state={state}
-      />
+      <div className="flex items-center gap-4">
+        <TextInput name="code" label="Código" state={state} />
+        <TextInput name="name" label="Nombre" state={state} />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <SelectInput
+          label="Tipo"
+          name="type"
+          options={[
+            { value: "ASSET", name: "Activo" },
+            { value: "LIABILITY", name: "Pasivo" },
+            { value: "EQUITY", name: "Patrimonio" },
+            { value: "REVENUE", name: "Ingreso" },
+            { value: "EXPENSE", name: "Gasto" },
+          ]}
+          state={state}
+        />
+        <SelectInput
+          label="Cuenta Padre"
+          name="parentAccount"
+          options={accounts.map((account) => ({
+            value: account.id,
+            name: account.name,
+          }))}
+          state={state}
+        />
+      </div>
+
       <TextAreaInput name="description" label="Descripción" state={state} />
-      <SelectInput
-        label="Cuenta Padre"
-        name="parentAccount"
-        options={accounts.map((account) => ({
-          value: account.id,
-          name: account.name,
-        }))}
-        state={state}
-      />
+
       <button
         type="submit"
         disabled={sending}

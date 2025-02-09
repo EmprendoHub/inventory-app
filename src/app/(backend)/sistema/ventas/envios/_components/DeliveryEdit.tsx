@@ -105,6 +105,7 @@ export default function DeliveryEdit({
         </div>
         <div className="w-full">
           <TextInput
+            value={delivery.externalShipId ?? ""}
             name="externalShipId"
             label="External Shipping"
             state={state}
@@ -112,15 +113,25 @@ export default function DeliveryEdit({
         </div>
       </div>
 
-      <TextInput name="carrier" label="Carrier" state={state} />
+      <TextInput
+        value={delivery.carrier}
+        name="carrier"
+        label="Paqueteria"
+        state={state}
+      />
 
-      <TextInput name="otp" label="OTP" state={state} />
+      <TextInput value={delivery.otp} name="otp" label="OTP" state={state} />
 
-      <TextInput name="trackingNumber" label="Tracking Number" state={state} />
+      <TextInput
+        value={delivery.trackingNumber}
+        name="trackingNumber"
+        label="No. de rastreo"
+        state={state}
+      />
 
       <DateInput
         name="deliveryDate"
-        label="Delivery Date"
+        label="Fecha Entrega"
         defaultValue={delivery.deliveryDate}
         state={state}
       />
@@ -129,9 +140,10 @@ export default function DeliveryEdit({
         label="Status"
         name="status"
         options={[
-          { value: "Out for Delivery", name: "Out for Delivery" },
-          { value: "Delivered", name: "Delivered" },
-          { value: "Failed", name: "Failed" },
+          { value: "Procesando", name: "Procesando" },
+          { value: "Fuera para entrega", name: "Fuera para entrega" },
+          { value: "Entregado", name: "Entregado" },
+          { value: "Fallo el envió", name: "Fallo el envió" },
         ]}
         state={state}
       />
@@ -142,7 +154,7 @@ export default function DeliveryEdit({
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
       >
         {sending && <span className="loader"></span>}
-        Update Delivery
+        Actualizar Envió
       </button>
 
       {state.message && (

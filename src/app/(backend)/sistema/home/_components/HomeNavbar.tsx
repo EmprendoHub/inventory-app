@@ -7,7 +7,7 @@ import React from "react";
 export default function HomeNavbar() {
   const path = usePathname();
   return (
-    <div className="h-24 flex flex-col justify-between shadow-md bg-gray-100 mb-4">
+    <div className="h-24 flex flex-col justify-between shadow-md bg-secondary  mb-4 p-3">
       <div className="flex items-center justify-start rounded-md px-2 gap-3 ">
         <Building2 size={30} className="text-gray-500" />
         <div className="flex flex-col">

@@ -59,7 +59,7 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="text-xs"
           >
-            License Plate
+            Placa
             <ArrowUpDown />
           </Button>
         ),
@@ -69,12 +69,12 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-xs">Status</div>,
+        header: () => <div className="text-xs">Estado</div>,
         cell: ({ row }) => <div className="text-xs">{row.original.status}</div>,
       },
       {
         accessorKey: "createdAt",
-        header: () => <div className="text-xs">Created At</div>,
+        header: () => <div className="text-xs">Creado el</div>,
         cell: ({ row }) => (
           <div className="text-xs">
             {row.original.createdAt
@@ -85,7 +85,7 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
       },
       {
         accessorKey: "updatedAt",
-        header: () => <div className="text-xs">Updated At</div>,
+        header: () => <div className="text-xs">Actualizado</div>,
         cell: ({ row }) => (
           <div className="text-xs">
             {row.original.updatedAt
@@ -209,7 +209,7 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter by License Plate..."
+          placeholder="Filtro by License Plate..."
           value={
             (table.getColumn("licensePlate")?.getFilterValue() as string) ?? ""
           }
@@ -281,7 +281,7 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

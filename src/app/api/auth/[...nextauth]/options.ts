@@ -146,6 +146,7 @@ export const options = {
             select: {
               id: true,
               email: true,
+              avatar: true,
               role: true,
               stripeId: true,
               createdAt: true,
@@ -197,7 +198,7 @@ export const options = {
           }
 
           const currentUser = {
-            avatar: { url: user.image },
+            avatar: user.image,
             id: existinguser.id,
             name: user.name,
             email: user.email,
@@ -232,10 +233,11 @@ export const options = {
     },
     async session({ session, token }: { session: any; token: any }) {
       if (token) {
-        session.user.id = token.id;
+        session.user.id = token.user.id;
         session.user.accessToken = token.accessToken;
         session.user.createdAt = token.user.createdAt;
         session.user.role = token.user.role;
+        session.user.image = token.user.avatar;
         session.user.phone = token.user.phone;
         session.user.stripeId = token.user.stripe_id || token.user.stripeId;
       }

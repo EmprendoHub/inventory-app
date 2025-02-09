@@ -58,23 +58,12 @@ export const columns: ColumnDef<brandType>[] = [
   },
   {
     accessorKey: "description",
-    header: () => <div className="text-right text-xs maxsm:hidden">Desc.</div>,
+    header: () => <div className="text-left text-xs maxsm:hidden">Desc.</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
         {row.getValue("description")}
       </div>
     ),
-  },
-  {
-    accessorKey: "productCount",
-    header: () => <div className="text-right text-xs">Productos</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("productCount"));
-
-      // Format the amount as a dollar amount
-
-      return <div className="text-right text-xs font-medium">{amount}</div>;
-    },
   },
   {
     id: "actions",
@@ -155,11 +144,6 @@ export function BrandList({ brands }: { brands: brandType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -224,7 +208,7 @@ export function BrandList({ brands }: { brands: brandType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

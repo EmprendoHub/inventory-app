@@ -3,7 +3,7 @@ import { BsFillCreditCard2FrontFill } from "react-icons/bs";
 
 export default function DashboardBanner() {
   return (
-    <div className="flex maxmd:flex-col gap-2 items-center justify-between maxmd:items-end bg-blue-50  p-4 rounded-md max-w-3xl shadow-md mb-2">
+    <div className="flex bg-secondary maxmd:flex-col gap-2 items-center justify-between maxmd:items-end bg-blue-50  p-4 rounded-md max-w-3xl shadow-md mb-2">
       <div className="flex  gap-2 items-center">
         {/* Icons */}
         <BsFillCreditCard2FrontFill size={80} className="text-muted" />

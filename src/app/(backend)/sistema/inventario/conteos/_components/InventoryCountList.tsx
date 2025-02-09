@@ -75,18 +75,18 @@ export function InventoryCountList({
       },
       {
         accessorKey: "countDate",
-        header: () => <div className="text-right text-xs">Fecha de Conteo</div>,
+        header: () => <div className="text-left text-xs">Fecha de Conteo</div>,
         cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
+          <div className="text-left text-xs font-medium">
             {new Date(row.getValue("countDate")).toLocaleDateString()}
           </div>
         ),
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-right text-xs">Estado</div>,
+        header: () => <div className="text-left text-xs">Estado</div>,
         cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
+          <div className="text-left text-xs font-medium">
             {row.getValue("status")}
           </div>
         ),
@@ -214,11 +214,6 @@ export function InventoryCountList({
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -283,7 +278,7 @@ export function InventoryCountList({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

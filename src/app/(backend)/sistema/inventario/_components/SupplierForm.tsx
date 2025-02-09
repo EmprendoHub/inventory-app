@@ -52,11 +52,6 @@ export default function SupplierForm() {
       <div className="flex maxmd:flex-col gap-3 w-full">
         {/* Image Upload Section */}
         <div className="flex flex-col ">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-base font-semibold">
-              Step 1: Upload Supplier o Service Image (Optional)
-            </h3>
-          </div>
           <div
             {...getSupplierRootProps()}
             className={`relative flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-96 mb-5 ${
@@ -67,13 +62,12 @@ export default function SupplierForm() {
           >
             <input {...getSupplierInputProps()} />
             {isSupplierDragActive ? (
-              <p>Drop the image here...</p>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-3">
+              <div className="flex flex-col items-center justify-center gap-3 w-full">
                 <CloudUpload size={40} className="text-white" />
-                <p>
-                  Drag & drop a Supplier image here, or click to select one.
-                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 w-full">
+                <CloudUpload size={40} className="text-white" />
               </div>
             )}
             <Image

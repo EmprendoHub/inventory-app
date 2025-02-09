@@ -29,7 +29,7 @@ export default function SalesOverview() {
     },
   ];
   return (
-    <div className="bg-blue-100 border-b border-slate-300 p-8 flex maxxlg:flex-wrap items-center justify-between gap-12">
+    <div className="bg-secondary border-b border-slate-300 p-8 flex maxxlg:flex-wrap items-center justify-between gap-12 rounded-lg ">
       {/* Sales Activity */}
       <div className="flex flex-col gap-4">
         <div className="flex-1">

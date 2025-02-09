@@ -58,7 +58,7 @@ export const columns: ColumnDef<invoiceType>[] = [
   },
   {
     accessorKey: "description",
-    header: () => <div className="text-right text-xs maxsm:hidden">Desc.</div>,
+    header: () => <div className="text-left text-xs maxsm:hidden">Desc.</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
         {row.getValue("description")}
@@ -67,13 +67,13 @@ export const columns: ColumnDef<invoiceType>[] = [
   },
   {
     accessorKey: "productCount",
-    header: () => <div className="text-right text-xs">Productos</div>,
+    header: () => <div className="text-left text-xs">Productos</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("productCount"));
 
       // Format the amount as a dollar amount
 
-      return <div className="text-right text-xs font-medium">{amount}</div>;
+      return <div className="text-left text-xs font-medium">{amount}</div>;
     },
   },
   {
@@ -155,11 +155,6 @@ export function InvoiceList({ invoices }: { invoices: invoiceType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -224,7 +219,7 @@ export function InvoiceList({ invoices }: { invoices: invoiceType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

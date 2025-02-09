@@ -16,7 +16,7 @@ export default function SystemLayout({
       <ModalProvider>
         <SideBar setHidden={setHidden} hidden={hidden} />
         <main
-          className={` w-full bg-slate-100 min-h-screen ${
+          className={` w-full bg-background min-h-screen ${
             hidden ? "ml-10" : "ml-52"
           } duration-300 ease-in-out`}
         >

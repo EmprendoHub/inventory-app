@@ -108,13 +108,13 @@ export default function DeliveryForm({
         </div>
       </div>
 
-      <TextInput name="carrier" label="Carrier" state={state} />
+      <TextInput name="carrier" label="Paqueteria" state={state} />
       <TextInput name="otp" label="OTP" state={state} />
-      <TextInput name="trackingNumber" label="Tracking Number" state={state} />
+      <TextInput name="trackingNumber" label="No. de rastreo" state={state} />
       <DateInput
         defaultValue={new Date()}
         name="deliveryDate"
-        label="Delivery Date"
+        label="Fecha Entrega"
         state={state}
       />
 

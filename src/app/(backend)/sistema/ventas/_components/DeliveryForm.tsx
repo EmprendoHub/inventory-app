@@ -16,7 +16,7 @@ export default function UnitForm() {
         <div>
           <label
             htmlFor="title"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-muted"
           >
             Unidad de Medida
           </label>
@@ -24,7 +24,7 @@ export default function UnitForm() {
             name="title"
             id="title"
             type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
           />
           {state.errors?.title && (
             <p className="text-sm text-red-500">
@@ -36,7 +36,7 @@ export default function UnitForm() {
         <div>
           <label
             htmlFor="abbreviation"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-muted"
           >
             Abreviación de Unidad
           </label>
@@ -45,7 +45,7 @@ export default function UnitForm() {
             name="abbreviation"
             id="abbreviation"
             type="text"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
           />
           {state.errors?.abbreviation && (
             <p className="text-sm text-red-500">

@@ -40,18 +40,20 @@ export default function TruckForm() {
 
   return (
     <form action={handleSubmit} className="space-y-4 flex flex-col gap-4">
-      <TextInput name="licensePlate" label="License Plate" state={state} />
+      <div className="flex items-center gap-4">
+        <TextInput name="licensePlate" label="License Plate" state={state} />
 
-      <SelectInput
-        label="Status"
-        name="status"
-        options={[
-          { value: "DISPONIBLE", name: "Disponible" },
-          { value: "EN_USO", name: "En Uso" },
-          { value: "MANTENIMIENTO", name: "Mantenimiento" },
-        ]}
-        state={state}
-      />
+        <SelectInput
+          label="Status"
+          name="status"
+          options={[
+            { value: "DISPONIBLE", name: "Disponible" },
+            { value: "EN_USO", name: "En Uso" },
+            { value: "MANTENIMIENTO", name: "Mantenimiento" },
+          ]}
+          state={state}
+        />
+      </div>
 
       <button
         type="submit"
@@ -59,7 +61,7 @@ export default function TruckForm() {
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
       >
         {sending && <span className="loader"></span>}
-        Create Truck
+        Crear Vehículo
       </button>
 
       {state.message && (

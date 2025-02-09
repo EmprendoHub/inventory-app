@@ -65,28 +65,28 @@ export function CountItemList({ countItems }: { countItems: CountItemType[] }) {
       {
         accessorKey: "expectedQty",
         header: () => (
-          <div className="text-right text-xs">Cantidad Esperada</div>
+          <div className="text-left text-xs">Cantidad Esperada</div>
         ),
         cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
+          <div className="text-left text-xs font-medium">
             {row.getValue("expectedQty")}
           </div>
         ),
       },
       {
         accessorKey: "actualQty",
-        header: () => <div className="text-right text-xs">Cantidad Real</div>,
+        header: () => <div className="text-left text-xs">Cantidad Real</div>,
         cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
+          <div className="text-left text-xs font-medium">
             {row.getValue("actualQty")}
           </div>
         ),
       },
       {
         accessorKey: "difference",
-        header: () => <div className="text-right text-xs">Diferencia</div>,
+        header: () => <div className="text-left text-xs">Diferencia</div>,
         cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
+          <div className="text-left text-xs font-medium">
             {row.getValue("difference")}
           </div>
         ),
@@ -126,11 +126,6 @@ export function CountItemList({ countItems }: { countItems: CountItemType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -195,7 +190,7 @@ export function CountItemList({ countItems }: { countItems: CountItemType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

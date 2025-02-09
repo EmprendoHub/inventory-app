@@ -11,7 +11,7 @@ export default async function Brands() {
   });
 
   return (
-    <div className="flex flex-col items-start justify-start bg-white">
+    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
       <InventoryHeader title={"marcas"} link={`marcas/nueva`} />
 
       <BrandList brands={brands} />

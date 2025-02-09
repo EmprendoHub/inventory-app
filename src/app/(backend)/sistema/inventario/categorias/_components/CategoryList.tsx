@@ -58,23 +58,12 @@ export const columns: ColumnDef<categoryType>[] = [
   },
   {
     accessorKey: "description",
-    header: () => <div className="text-right text-xs maxsm:hidden">Desc.</div>,
+    header: () => <div className="text-left text-xs maxsm:hidden">Desc.</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
         {row.getValue("description")}
       </div>
     ),
-  },
-  {
-    accessorKey: "productCount",
-    header: () => <div className="text-right text-xs">Productos</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("productCount"));
-
-      // Format the amount as a dollar amount
-
-      return <div className="text-right text-xs font-medium">{amount}</div>;
-    },
   },
   {
     id: "actions",
@@ -95,18 +84,11 @@ export const columns: ColumnDef<categoryType>[] = [
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(cat.id)}
             >
-              Ajustar
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(cat.id)}
-            >
               Editar
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Desactivar</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="bg-red-800 text-white mt-2">
-              Eliminar
+            <DropdownMenuItem className="bg-slate-800 text-white mt-2">
+              Desactivar
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -155,11 +137,6 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -224,7 +201,7 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

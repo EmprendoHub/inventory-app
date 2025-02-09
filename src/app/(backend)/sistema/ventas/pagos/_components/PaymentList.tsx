@@ -58,7 +58,7 @@ export const columns: ColumnDef<paymentType>[] = [
   },
   {
     accessorKey: "method",
-    header: () => <div className="text-right text-xs maxsm:hidden">Método</div>,
+    header: () => <div className="text-left text-xs maxsm:hidden">Método</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
         {row.getValue("method")}
@@ -66,23 +66,23 @@ export const columns: ColumnDef<paymentType>[] = [
     ),
   },
   {
-    accessorKey: "orderId",
-    header: () => <div className="text-right text-xs maxsm:hidden">Pedido</div>,
+    accessorKey: "orderNo",
+    header: () => <div className="text-left text-xs maxsm:hidden">Pedido</div>,
     cell: ({ row }) => (
       <div className="lowercase text-xs maxsm:hidden">
-        {row.getValue("orderId")}
+        {row.getValue("orderNo")}
       </div>
     ),
   },
   {
     accessorKey: "amount",
-    header: () => <div className="text-right text-xs">Cantidad</div>,
+    header: () => <div className="text-left text-xs">Cantidad</div>,
     cell: ({ row }) => {
       const amount = parseFloat(row.getValue("amount"));
 
       // Format the amount as a dollar amount
 
-      return <div className="text-right text-xs font-medium">${amount}</div>;
+      return <div className="text-left text-xs font-medium">${amount}</div>;
     },
   },
   {
@@ -159,11 +159,6 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -228,7 +223,7 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

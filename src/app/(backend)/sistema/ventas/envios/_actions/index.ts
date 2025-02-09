@@ -13,9 +13,9 @@ const DeliverySchema = z.object({
   driverId: z.string().optional(),
   truckId: z.string().optional(),
   externalShipId: z.string().optional(),
-  carrier: z.string().min(1, "Carrier is required"),
+  carrier: z.string().min(1, "Paqueteria is required"),
   otp: z.string().min(1, "OTP is required"),
-  trackingNumber: z.string().min(1, "Tracking Number is required"),
+  trackingNumber: z.string().min(1, "No. de rastreo se requiere"),
   deliveryDate: z.string().optional(), // Will convert to Date in the action
   status: z.enum(["Out for Delivery", "Delivered", "Failed"]),
 });

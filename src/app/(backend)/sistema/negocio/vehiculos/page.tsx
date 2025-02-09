@@ -2,9 +2,9 @@ import prisma from "@/lib/db";
 import React from "react";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import SalesHeader from "../../ventas/_components/SalesHeader";
 import { TruckList } from "./_components/TruckList";
 import { TruckType } from "@/types/truck";
+import BusinessHeader from "../../_components/BusinessHeader";
 
 export default async function ListTrucks() {
   const session = await getServerSession(options);
@@ -32,8 +32,8 @@ export default async function ListTrucks() {
   }
 
   return (
-    <div className="flex flex-col items-start justify-start bg-white">
-      <SalesHeader title={"Envíos"} link={`envios/nuevo`} />
+    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
+      <BusinessHeader title={"Vehículos"} link={`vehiculos/nuevo`} />
       <TruckList trucks={trucks} />
     </div>
   );

@@ -14,17 +14,14 @@ export default function ItemGroupForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
-        >
+        <label htmlFor="name" className="block text-sm font-medium text-muted">
           Group Name
         </label>
         <input
           name="name"
           id="name"
           type="text"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
         />
         {state.errors?.name && (
           <p className="text-sm text-red-500">{state.errors.name.join(", ")}</p>
@@ -32,17 +29,14 @@ export default function ItemGroupForm() {
       </div>
 
       <div>
-        <label
-          htmlFor="items"
-          className="block text-sm font-medium text-gray-700"
-        >
+        <label htmlFor="items" className="block text-sm font-medium text-muted">
           Item IDs (comma-separated)
         </label>
         <input
           name="items"
           id="items"
           type="text"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+          className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
         />
         {state.errors?.items && (
           <p className="text-sm text-red-500">

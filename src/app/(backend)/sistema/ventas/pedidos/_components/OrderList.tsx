@@ -120,7 +120,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       {
         accessorKey: "status",
         header: () => (
-          <div className="text-right text-xs maxsm:hidden w-20">Estado</div>
+          <div className="text-left text-xs maxsm:hidden w-20">Estado</div>
         ),
         cell: ({ row }) => (
           <div className="lowercase text-xs text-center text-white maxsm:hidden bg-black rounded-md w-20 py-1.5">
@@ -130,7 +130,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "payments",
-        header: () => <div className="text-right text-xs">Pagado</div>,
+        header: () => <div className="text-left text-xs">Pagado</div>,
         cell: ({ row }) => {
           const amount = calculatePaymentsTotal(row.getValue("payments"));
           const formatted = new Intl.NumberFormat("en-US", {
@@ -138,13 +138,13 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             currency: "USD",
           }).format(amount);
           return (
-            <div className="text-right text-xs font-medium">{formatted}</div>
+            <div className="text-left text-xs font-medium">{formatted}</div>
           );
         },
       },
       {
         accessorKey: "totalAmount",
-        header: () => <div className="text-right text-xs">Total</div>,
+        header: () => <div className="text-left text-xs">Total</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalAmount"));
           const formatted = new Intl.NumberFormat("en-US", {
@@ -152,16 +152,16 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             currency: "USD",
           }).format(amount);
           return (
-            <div className="text-right text-xs font-medium">{formatted}</div>
+            <div className="text-left text-xs font-medium">{formatted}</div>
           );
         },
       },
       {
         accessorKey: "createdAt",
-        header: () => <div className="text-right text-xs">Fecha</div>,
+        header: () => <div className="text-left text-xs">Fecha</div>,
         cell: ({ row }) => {
           const date = new Date(row.getValue("createdAt")).toLocaleDateString();
-          return <div className="text-right text-xs font-medium">{date}</div>;
+          return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },
       {
@@ -352,11 +352,6 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -421,7 +416,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

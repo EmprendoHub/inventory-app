@@ -19,7 +19,7 @@ export default function PasswordInput({
 }: TextType) {
   return (
     <div className={className}>
-      <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+      <label htmlFor={name} className="block text-sm font-medium text-muted">
         {label}
       </label>
       <input
@@ -29,7 +29,7 @@ export default function PasswordInput({
         minLength={6}
         onChange={(e) => onChange && onChange(name, e.target.value)}
         type="password"
-        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+        className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
       />
       {state.errors?.[`${name}`] && (
         <p className="text-sm text-red-500">

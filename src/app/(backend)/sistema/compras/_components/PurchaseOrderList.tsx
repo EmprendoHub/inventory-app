@@ -33,13 +33,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { AccountType } from "@/types/accounting";
+import { PurchaseOrderType } from "@/types/purchaseOrders";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
-import { deleteAccountAction } from "../_actions";
+import { deletePurchaseOrderAction } from "../_actions";
 import { useModal } from "@/app/context/ ModalContext";
 
-export function AccountList({ accounts }: { accounts: AccountType[] }) {
+export function PurchaseOrderList({
+  purchaseOrders,
+}: {
+  purchaseOrders: PurchaseOrderType[];
+}) {
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -49,39 +53,41 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const columns = React.useMemo<ColumnDef<AccountType>[]>(
+  const columns = React.useMemo<ColumnDef<PurchaseOrderType>[]>(
     () => [
       {
-        accessorKey: "code",
+        accessorKey: "poNumber",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="text-xs w-20"
           >
-            Código
+            Número
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">{row.getValue("code")}</div>
-        ),
-      },
-      {
-        accessorKey: "name",
-        header: () => <div className="text-right text-xs">Nombre</div>,
-        cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
-            {row.getValue("name")}
+          <div className="lowercase text-xs w-20">
+            {row.getValue("poNumber")}
           </div>
         ),
       },
       {
-        accessorKey: "type",
-        header: () => <div className="text-right text-xs">Tipo</div>,
+        accessorKey: "supplierId",
+        header: () => <div className="text-left text-xs">Proveedor</div>,
         cell: ({ row }) => (
-          <div className="text-right text-xs font-medium">
-            {row.getValue("type")}
+          <div className="text-left text-xs font-medium">
+            {row.original.supplierId}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: () => <div className="text-left text-xs">Estado</div>,
+        cell: ({ row }) => (
+          <div className="text-left text-xs font-medium">
+            {row.getValue("status")}
           </div>
         ),
       },
@@ -92,11 +98,11 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
           const ActionCell = () => {
             const { showModal } = useModal();
 
-            const deleteAccount = React.useCallback(async () => {
+            const deletePurchaseOrder = React.useCallback(async () => {
               const result = await showModal({
                 title: "¿Estás seguro?, ¡No podrás revertir esto!",
                 type: "delete",
-                text: "Eliminar esta cuenta?",
+                text: "Eliminar esta orden de compra?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonText: "Sí, eliminar",
@@ -108,13 +114,13 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
                   const formData = new FormData();
                   formData.set("id", row.original.id);
 
-                  const response = await deleteAccountAction(formData);
+                  const response = await deletePurchaseOrderAction(formData);
 
                   if (!response.success) throw new Error("Error al eliminar");
                   await showModal({
                     title: "¡Eliminado!",
                     type: "delete",
-                    text: "La cuenta ha sido eliminada.",
+                    text: "La orden de compra ha sido eliminada.",
                     icon: "success",
                   });
                 } catch (error) {
@@ -123,17 +129,15 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
                   await showModal({
                     title: "Error",
                     type: "delete",
-                    text: "No se pudo eliminar la cuenta",
+                    text: "No se pudo eliminar la orden de compra",
                     icon: "error",
                   });
                 }
               }
             }, [showModal]);
 
-            const viewAccount = React.useCallback(async () => {
-              router.push(
-                `/sistema/contabilidad/cuentas/editar/${row.original.id}`
-              );
+            const viewPurchaseOrder = React.useCallback(async () => {
+              router.push(`/sistema/compras/editar/${row.original.id}`);
             }, []);
             return (
               <DropdownMenu>
@@ -148,7 +152,7 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
                     Acciones
                   </DropdownMenuLabel>
                   <DropdownMenuItem
-                    onClick={viewAccount}
+                    onClick={viewPurchaseOrder}
                     className="text-xs cursor-pointer"
                   >
                     <Eye />
@@ -157,7 +161,7 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={deleteAccount}
+                    onClick={deletePurchaseOrder}
                     className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                   >
                     <X />
@@ -176,8 +180,8 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
     []
   );
 
-  const table = useReactTable<AccountType>({
-    data: accounts,
+  const table = useReactTable<PurchaseOrderType>({
+    data: purchaseOrders,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -200,18 +204,15 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtrar..."
-          value={(table.getColumn("code")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn("poNumber")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("code")?.setFilterValue(event.target.value)
+            table.getColumn("poNumber")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -276,7 +277,7 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}
@@ -286,7 +287,7 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} cuenta(s) seleccionada(s).
+          {table.getFilteredRowModel().rows.length} orden(es) seleccionada(s).
         </div>
         <div className="space-x-2">
           <Button

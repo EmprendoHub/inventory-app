@@ -75,7 +75,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
         accessorKey: "mainImage",
         header: "Img",
         cell: ({ row }) => (
-          <div className="relative w-16 h-16 overflow-hidden">
+          <div className="relative w-12 h-12 overflow-hidden rounded-lg">
             <Image
               src={row.getValue("mainImage")}
               alt="img"
@@ -89,7 +89,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
 
       {
         accessorKey: "price",
-        header: () => <div className="text-right text-xs">Precio</div>,
+        header: () => <div className="text-left text-xs">Precio</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("price"));
           const formatted = new Intl.NumberFormat("en-US", {
@@ -97,14 +97,14 @@ export function ProductList({ items }: { items: ItemType[] }) {
             currency: "USD",
           }).format(amount);
           return (
-            <div className="text-right text-xs font-medium">{formatted}</div>
+            <div className="text-left text-xs font-medium">{formatted}</div>
           );
         },
       },
       {
         accessorKey: "totalStock",
         header: () => (
-          <div className="text-right text-xs  maxsm:hidden">Inventario</div>
+          <div className="text-left text-xs  maxsm:hidden">Inventario</div>
         ),
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalStock"));
@@ -112,7 +112,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
           // Format the amount as a dollar amount
 
           return (
-            <div className="text-right text-xs font-medium maxsm:hidden">
+            <div className="text-left text-xs font-medium maxsm:hidden">
               {amount}
             </div>
           );
@@ -240,11 +240,6 @@ export function ProductList({ items }: { items: ItemType[] }) {
           className="max-w-sm"
         />
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {table
               .getAllColumns()
@@ -309,7 +304,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}

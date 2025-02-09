@@ -69,19 +69,19 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
       },
       {
         accessorKey: "method",
-        header: "Method",
+        header: "Método",
         cell: ({ row }) => <div className="text-xs">{row.original.method}</div>,
       },
       {
         accessorKey: "carrier",
-        header: () => <div className="text-xs">Carrier</div>,
+        header: () => <div className="text-xs">Paqueteria</div>,
         cell: ({ row }) => (
           <div className="text-xs font-medium">{row.original.carrier}</div>
         ),
       },
       {
         accessorKey: "trackingNumber",
-        header: () => <div className="text-xs">Tracking Number</div>,
+        header: () => <div className="text-xs">No. de rastreo</div>,
         cell: ({ row }) => (
           <div className="text-xs font-medium">
             {row.original.trackingNumber}
@@ -90,14 +90,14 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-xs">Status</div>,
+        header: () => <div className="text-xs">Estado</div>,
         cell: ({ row }) => (
           <div className="text-xs font-medium">{row.original.status}</div>
         ),
       },
       {
         accessorKey: "deliveryDate",
-        header: () => <div className="text-xs">Delivery Date</div>,
+        header: () => <div className="text-xs">Fecha Entrega</div>,
         cell: ({ row }) => (
           <div className="text-xs font-medium">
             {row.original.deliveryDate
@@ -221,7 +221,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter..."
+          placeholder="Filtro..."
           value={(table.getColumn("orderId")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             table.getColumn("orderId")?.setFilterValue(event.target.value)
@@ -291,7 +291,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Sin resultafos.
                 </TableCell>
               </TableRow>
             )}
