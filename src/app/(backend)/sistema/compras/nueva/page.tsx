@@ -6,7 +6,6 @@ import FormHeader from "../../inventario/_components/FormHeader";
 export default async function NewItem() {
   const suppliers = await prisma.supplier.findMany();
   const items = await prisma.item.findMany();
-  const orders = await prisma.order.findMany();
 
   return (
     <div>

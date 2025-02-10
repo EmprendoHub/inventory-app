@@ -27,7 +27,6 @@ export default async function EditPurchaseOrder({
 
   const suppliers = await prisma.supplier.findMany();
   const items = await prisma.item.findMany();
-  const orders = await prisma.order.findMany();
 
   const purchaseOrder = await prisma.purchaseOrder.findUnique({
     where: {

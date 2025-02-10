@@ -112,14 +112,12 @@ export default function InventoryCountForm({
               name={`expectedQty-${index}`}
               label="Cantidad Esperada"
               state={state}
-              value={item.expectedQty}
             />
 
             <NumericInput
               name={`actualQty-${index}`}
               label="Cantidad Real"
               state={state}
-              value={item.actualQty}
             />
             <TextAreaInput
               name={`notes-${index}`}

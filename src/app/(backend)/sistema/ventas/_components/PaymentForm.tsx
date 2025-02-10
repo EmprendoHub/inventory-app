@@ -32,7 +32,7 @@ type AdjustType = {
 
 export default function AdjustmentForm({ items, warehouses }: AdjustType) {
   const { data: session } = useSession();
-
+  // eslint-disable-next-line
   const [state, formAction] = useFormState(createAdjustment, {
     errors: {},
     success: false,
@@ -42,6 +42,7 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
 
   const [formType, setFormType] = useState("add");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // eslint-disable-next-line
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

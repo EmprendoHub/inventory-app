@@ -14,8 +14,11 @@ import {
 } from "@/components/ui/select";
 
 export default function ReportsPage() {
+  // eslint-disable-next-line
   const [reportUrl, setReportUrl] = useState<string | null>(null);
+  // eslint-disable-next-line
   const [isLoading, setIsLoading] = useState(false);
+  // eslint-disable-next-line
   const [error, setError] = useState<string | null>(null);
 
   const handleGenerateReport = async (formData: FormData) => {

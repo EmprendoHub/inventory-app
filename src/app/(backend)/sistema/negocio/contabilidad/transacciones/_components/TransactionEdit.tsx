@@ -37,7 +37,7 @@ export default function TransactionEdit({
     expenseId: transaction?.expenseId || "",
   });
 
-  const handleInputChange = (name: string, value: string) => {
+  const handleInputChange = (name: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -78,8 +78,7 @@ export default function TransactionEdit({
         state={state}
       />
       <NumericInput
-        value={formData.amount}
-        onChange={handleInputChange}
+        onChange={(value) => handleInputChange("amount", value)}
         name="amount"
         label="Monto"
         state={state}

@@ -6,7 +6,6 @@ import { signIn, useSession } from "next-auth/react";
 import { IoLogoGoogle } from "react-icons/io";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import Image from "next/image";
-import WhiteLogoComponent from "./WhiteLogoComponent";
 
 const LoginComponent = ({ cookie }: { cookie: any }) => {
   const { executeRecaptcha } = useGoogleReCaptcha();

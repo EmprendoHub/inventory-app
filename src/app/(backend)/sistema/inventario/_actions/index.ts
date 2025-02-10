@@ -98,7 +98,7 @@ export const createAdjustment = async (
         message: "Validation failed. Please check the fields.",
       };
     }
-    const addInventory = await prisma.stock.update({
+    await prisma.stock.update({
       where: {
         itemId_warehouseId: {
           itemId: validatedData.data.articulo,

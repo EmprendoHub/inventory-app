@@ -1,8 +1,6 @@
-import { LayoutGrid, List } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { BiQuestionMark } from "react-icons/bi";
-import { BsThreeDots } from "react-icons/bs";
 
 export default function PurchaseHeader({
   title,
