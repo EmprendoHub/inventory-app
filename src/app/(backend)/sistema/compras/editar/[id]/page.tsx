@@ -52,7 +52,7 @@ export default async function EditPurchaseOrder({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar Articulo"} />
+      <FormHeader title={`Editar Orden de Compra: ${purchaseOrder.poNumber}`} />
       {/* Form */}
       <PurchaseOrderEdit
         suppliers={suppliers}

@@ -40,7 +40,7 @@ export default function SalesOverview() {
           {salesActivity.map((activity) => (
             <button
               key={activity.title}
-              className={`flex flex-col items-center gap-2 bg-white p-6 rounded-md shadow-md hover:border-${activity.color}-300 hover:border-1 border w-40`}
+              className={`flex flex-col items-center gap-2 bg-card p-6 rounded-md shadow-md hover:border-${activity.color}-300 hover:border-1 border w-40`}
             >
               <p className={`text-4xl text-${activity.color}-500`}>
                 {activity.qty}
@@ -62,14 +62,14 @@ export default function SalesOverview() {
         </div>
         <div className="flex flex-col  items-start gap-4">
           {/*  Card 1 */}
-          <div className="flex items-center justify-between bg-white p-4 rounded-md shadow-md w-full">
+          <div className="flex items-center justify-between bg-card p-4 rounded-md shadow-md w-full">
             <span className="text-xs text-muted flex items-center gap-1">
               Cantidades bodega
             </span>
             <p className="text-xl text-blue-500">0</p>
           </div>
           {/*  Card 2 */}
-          <div className="flex items-center justify-between bg-white p-4 rounded-md shadow-md w-full">
+          <div className="flex items-center justify-between bg-card p-4 rounded-md shadow-md w-full">
             <span className="text-xs text-muted flex items-center gap-1">
               Cantidades a recibir
             </span>

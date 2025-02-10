@@ -38,11 +38,13 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ ModalContext";
-import { deleteItemAction } from "../_actions";
+import { deactivateItemAction, deleteItemAction } from "../_actions";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function ProductList({ items }: { items: ItemType[] }) {
-  console.log(items);
-
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -136,7 +138,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
                 cancelButtonText: "Cancelar",
               });
 
-              if (result) {
+              if (result.confirmed) {
                 try {
                   const formData = new FormData();
                   formData.set("id", row.original.id);
@@ -157,6 +159,44 @@ export function ProductList({ items }: { items: ItemType[] }) {
                     title: "Error",
                     type: "delete",
                     text: "No se pudo eliminar el articulo",
+                    icon: "error",
+                  });
+                }
+              }
+            }, [showModal]);
+
+            const deactivateItem = React.useCallback(async () => {
+              const result = await showModal({
+                title: "¿Estás seguro?",
+                type: "delete",
+                text: "Desactivar este articulo?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, Desactivar",
+                cancelButtonText: "Cancelar",
+              });
+
+              if (result.confirmed) {
+                try {
+                  const formData = new FormData();
+                  formData.set("id", row.original.id);
+
+                  const response = await deactivateItemAction(formData);
+
+                  if (!response.success) throw new Error("Error al eliminar");
+                  await showModal({
+                    title: "¡Desactivado!",
+                    type: "delete",
+                    text: "El articulo ha sido Desactivado.",
+                    icon: "success",
+                  });
+                } catch (error) {
+                  console.log("error from modal", error);
+
+                  await showModal({
+                    title: "Error",
+                    type: "delete",
+                    text: "No se pudo Desactivar el articulo",
                     icon: "error",
                   });
                 }
@@ -189,13 +229,34 @@ export function ProductList({ items }: { items: ItemType[] }) {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteItem}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {user && user.role === "SUPER_ADMIN" ? (
+                    <div>
+                      <DropdownMenuItem
+                        onClick={deleteItem}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        onClick={deactivateItem}
+                        className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Desactivar
+                      </DropdownMenuItem>
+                    </div>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={deactivateItem}
+                      className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                    >
+                      <X />
+                      Desactivar
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

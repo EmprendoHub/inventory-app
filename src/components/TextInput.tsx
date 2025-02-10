@@ -6,6 +6,7 @@ type TextType = {
   className?: string;
   value?: string;
   state: { errors?: { [key: string]: string[] } };
+  disabled?: boolean | null;
   onChange?: (name: string, value: string) => void;
 };
 
@@ -13,6 +14,7 @@ export default function TextInput({
   label,
   name,
   state,
+  disabled,
   value,
   onChange,
   className = "col-span-1 maxsm:col-span-2 w-full",
@@ -23,6 +25,7 @@ export default function TextInput({
         {label}
       </label>
       <input
+        disabled={disabled || false}
         name={name}
         id={name}
         value={value}

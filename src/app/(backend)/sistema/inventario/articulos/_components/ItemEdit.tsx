@@ -54,12 +54,12 @@ export default function ProductEdit({
   });
 
   const [productImage, setProductImage] = useState<string>(
-    item?.mainImage || "/images/product-placeholder.jpg"
+    item?.mainImage || "/images/item_placeholder.png"
   );
   const [fileData, setFileData] = useState<File | null>(null);
 
   // Handle input changes
-  const handleInputChange = (name: string, value: string) => {
+  const handleInputChange = (name: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -260,15 +260,13 @@ export default function ProductEdit({
       {/* Numeric inputs */}
       <div className="flex maxsm:flex-col gap-3">
         <NumericInput
-          value={formData.cost}
-          onChange={handleInputChange}
+          onChange={(value) => handleInputChange("cost", value)}
           name="cost"
           label="Costo de Compra"
           state={state}
         />
         <NumericInput
-          value={Number(formData.price)}
-          onChange={handleInputChange}
+          onChange={(value) => handleInputChange("price", value)}
           name="price"
           label="Precio de Venta"
           state={state}
@@ -276,8 +274,7 @@ export default function ProductEdit({
       </div>
       <div className="flex maxsm:flex-col gap-3">
         <NumericInput
-          value={formData.minStock}
-          onChange={handleInputChange}
+          onChange={(value) => handleInputChange("minStock", value)}
           name="minStock"
           label="Stock Minio"
           state={state}
@@ -285,8 +282,7 @@ export default function ProductEdit({
       </div>
       <div className="flex maxsm:flex-col gap-3">
         <NumericInput
-          value={formData.tax}
-          onChange={handleInputChange}
+          onChange={(value) => handleInputChange("tax", value)}
           name="tax"
           label="Impuesto"
           state={state}

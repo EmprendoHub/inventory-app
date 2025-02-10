@@ -50,7 +50,7 @@ export default function PurchaseOrderEdit({
     }[]
   >(purchaseOrderItems || []);
 
-  const handleInputChange = (name: string, value: string) => {
+  const handleInputChange = (name: string, value: string | number) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -91,61 +91,66 @@ export default function PurchaseOrderEdit({
 
   return (
     <form action={handleSubmit} className="space-y-4 flex flex-col gap-4">
-      <TextInput
-        value={formData.poNumber}
-        onChange={handleInputChange}
-        name="poNumber"
-        label="Número de Orden"
-        state={state}
-      />
-      <SelectInput
-        label="Proveedor"
-        name="supplierId"
-        options={suppliers.map((supplier) => ({
-          value: supplier.id,
-          name: supplier.name,
-        }))}
-        state={state}
-      />
-      <SelectInput
-        label="Estado"
-        name="status"
-        options={[
-          { value: "DRAFT", name: "Borrador" },
-          { value: "SUBMITTED", name: "Enviado" },
-          { value: "APPROVED", name: "Aprobado" },
-          { value: "ORDERED", name: "Ordenado" },
-          { value: "PARTIALLY_RECEIVED", name: "Parcialmente Recibido" },
-          { value: "RECEIVED", name: "Recibido" },
-          { value: "CANCELLED", name: "Cancelado" },
-        ]}
-        state={state}
-      />
-      <NumericInput
-        value={formData.totalAmount}
-        onChange={handleInputChange}
-        name="totalAmount"
-        label="Monto Total"
-        state={state}
-      />
-      <NumericInput
-        value={formData.taxAmount}
-        onChange={handleInputChange}
-        name="taxAmount"
-        label="Impuesto"
-        state={state}
-      />
+      <div className="flex items-center gap-4">
+        <TextInput
+          disabled={true}
+          value={formData.poNumber}
+          onChange={(value) => handleInputChange("totalAmount", value)}
+          name="poNumber"
+          label="Número de Orden"
+          state={state}
+        />
+        <SelectInput
+          label="Proveedor"
+          name="supplierId"
+          options={suppliers.map((supplier) => ({
+            value: supplier.id,
+            name: supplier.name,
+          }))}
+          state={state}
+        />
+        <SelectInput
+          label="Estado"
+          name="status"
+          options={[
+            { value: "DRAFT", name: "Borrador" },
+            { value: "SUBMITTED", name: "Enviado" },
+            { value: "APPROVED", name: "Aprobado" },
+            { value: "ORDERED", name: "Ordenado" },
+            { value: "PARTIALLY_RECEIVED", name: "Parcialmente Recibido" },
+            { value: "RECEIVED", name: "Recibido" },
+            { value: "CANCELLED", name: "Cancelado" },
+          ]}
+          state={state}
+        />
+      </div>
+      <div className="flex items-center gap-4">
+        {" "}
+        <NumericInput
+          onChange={(value) => handleInputChange("totalAmount", value)}
+          name="totalAmount"
+          label="Monto Total"
+          state={state}
+        />
+        <NumericInput
+          onChange={(value) => handleInputChange("taxAmount", value)}
+          name="taxAmount"
+          label="Impuesto"
+          state={state}
+        />
+        <DateInput
+          defaultValue={formData.expectedDate}
+          name="expectedDate"
+          label="Fecha Esperada"
+          state={state}
+        />
+      </div>
+
       <TextAreaInput
         value={formData.notes}
-        onChange={handleInputChange}
+        onChange={(value) => handleInputChange("notes", value)}
         name="notes"
         label="Notas"
-        state={state}
-      />
-      <DateInput
-        defaultValue={formData.expectedDate}
-        name="expectedDate"
-        label="Fecha Esperada"
         state={state}
       />
 
@@ -163,29 +168,31 @@ export default function PurchaseOrderEdit({
               state={state}
             />
             <NumericInput
-              value={item.quantity}
-              onChange={handleInputChange}
+              onChange={(value) =>
+                handleInputChange(`quantity-${index}`, value)
+              }
               name={`quantity-${index}`}
               label="Cantidad"
               state={state}
             />
             <NumericInput
-              value={item.unitPrice}
-              onChange={handleInputChange}
+              onChange={(value) =>
+                handleInputChange(`unitPrice-${index}`, value)
+              }
               name={`unitPrice-${index}`}
               label="Precio Unitario"
               state={state}
             />
             <NumericInput
-              value={item.tax}
-              onChange={handleInputChange}
+              onChange={(value) => handleInputChange(`tax-${index}`, value)}
               name={`tax-${index}`}
               label="Impuesto"
               state={state}
             />
             <NumericInput
-              value={item.receivedQty}
-              onChange={handleInputChange}
+              onChange={(value) =>
+                handleInputChange(`receivedQty-${index}`, value)
+              }
               name={`receivedQty-${index}`}
               label="Cantidad Recibida"
               state={state}

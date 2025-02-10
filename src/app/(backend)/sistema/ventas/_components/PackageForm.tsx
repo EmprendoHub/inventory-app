@@ -16,7 +16,7 @@ export default function SupplierForm() {
   });
 
   const [SupplierImage, setSupplierImage] = useState<string>(
-    "/images/product-placeholder.jpg"
+    "/images/item_placeholder.png"
   );
   const [fileData, setFileData] = useState<File | null>(null);
 

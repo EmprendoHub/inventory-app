@@ -52,7 +52,7 @@ const DateInput: React.FC<DateInputProps> = ({
           className={cn(
             "flex items-center justify-between px-3 py-2 border rounded-md cursor-pointer",
             state.errors?.[name] ? "border-red-500" : "border-gray-300",
-            "hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            "hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 "
           )}
         >
           <span>
@@ -64,7 +64,7 @@ const DateInput: React.FC<DateInputProps> = ({
         </Popover.Trigger>
         <Popover.Content
           align="start"
-          className="p-4 bg-white rounded-md shadow-md"
+          className="p-4 bg-background rounded-md shadow-md"
         >
           <Calendar
             mode="single"

@@ -107,7 +107,6 @@ export const createAdjustment = async (
       },
       data: { quantity: { increment: validatedData.data.transAmount } },
     });
-    console.log("Inventory add:", addInventory);
   } else {
     // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);

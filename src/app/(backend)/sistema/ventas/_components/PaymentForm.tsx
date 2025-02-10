@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { useFormState } from "react-dom";
 import { createAdjustment } from "../_actions";
@@ -6,6 +7,9 @@ import SelectInput from "@/components/SelectInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { MinusCircle, PlusCircle } from "lucide-react";
+import { useSession } from "next-auth/react";
+import SupervisorVerificationModal from "@/components/system/SupervisorVerificationModal";
+import { UserType } from "@/types/users";
 
 type AdjustType = {
   items: {
@@ -27,13 +31,46 @@ type AdjustType = {
 };
 
 export default function AdjustmentForm({ items, warehouses }: AdjustType) {
+  const { data: session } = useSession();
+
   const [state, formAction] = useFormState(createAdjustment, {
     errors: {},
     success: false,
     message: "",
   });
+  const user = session?.user as UserType;
 
   const [formType, setFormType] = useState("add");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<() => void>(() => {});
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    console.log(
+      user,
+      "*********************************************************************************************"
+    );
+
+    if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
+      setIsModalOpen(true);
+      setPendingAction(() => () => (e.target as HTMLFormElement).submit());
+    } else {
+      (e.target as HTMLFormElement).submit();
+    }
+  };
+
+  const handleVerify = async (code: string) => {
+    // Implement your verification logic here
+    // For example, you can call an API to verify the supervisor code
+    const isValid = await verifySupervisorCode(code);
+    return isValid;
+  };
+
+  const verifySupervisorCode = async (code: string) => {
+    // Replace with your actual verification logic
+    return code === "1234"; // Example code
+  };
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
@@ -68,7 +105,7 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
       </ul>
 
       {formType === "add" ? (
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
             <div className="flex flex-col gap-3 w-full">
@@ -133,7 +170,7 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
           )}
         </form>
       ) : (
-        <form action={formAction} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
             <div className="flex flex-col gap-3 w-full">
@@ -219,6 +256,12 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
           )}
         </form>
       )}
+
+      <SupervisorVerificationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onVerify={handleVerify}
+      />
     </div>
   );
 }

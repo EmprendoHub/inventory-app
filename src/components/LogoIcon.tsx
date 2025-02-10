@@ -1,15 +1,15 @@
 import Image from "next/image";
 
-const LogoComponent = ({ className }: { className: string }) => {
+const LogoIcon = ({ className }: { className: string }) => {
   return (
     <Image
       width={250}
       height={250}
-      src={"/images/logo_square_light.png"}
+      src={"/images/logo_icon_light.png"}
       alt="Yunuen Co"
       className={`main-logo-class ${className}`}
     />
   );
 };
 
-export default LogoComponent;
+export default LogoIcon;

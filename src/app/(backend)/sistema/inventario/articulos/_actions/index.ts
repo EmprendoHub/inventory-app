@@ -4,6 +4,7 @@ import { uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { idSchema, ProductSchema } from "@/lib/schemas";
 import { ItemFormState } from "@/types/items";
+import { ItemStatus } from "@prisma/client";
 import { unlink, writeFile } from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { join } from "path";
@@ -297,6 +298,51 @@ export async function deleteItemAction(formData: FormData) {
         },
       }),
     ]);
+
+    revalidatePath("/sistema/inventario/articulos");
+    return {
+      errors: {},
+      success: true,
+      message: "Item deleted successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating item:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to delete item",
+    };
+  }
+}
+
+export async function deactivateItemAction(formData: FormData) {
+  const rawData = {
+    id: formData.get("id"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = idSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  try {
+    await prisma.item.update({
+      where: {
+        id: validatedData.data.id,
+      },
+      data: {
+        status: "INACTIVE" as ItemStatus,
+      },
+    });
 
     revalidatePath("/sistema/inventario/articulos");
     return {

@@ -83,7 +83,6 @@ export const createAdjustment = async (
     notes: formData.get("notes"),
   };
 
-  console.log(rawData);
   if (rawData.formType === "add") {
     const validatedData = AddInventorySchema.safeParse(rawData);
     if (!validatedData.success) {
@@ -104,7 +103,6 @@ export const createAdjustment = async (
       },
       data: { quantity: { increment: validatedData.data.transAmount } },
     });
-    console.log("Inventory add:", addInventory);
   } else {
     // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);

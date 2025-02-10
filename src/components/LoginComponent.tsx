@@ -74,10 +74,10 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
 
   return (
     <main className="flex  min-h-screen flex-col items-center justify-center ">
-      <div className="flex items-center justify-center bg-foreground h-screen w-full">
+      <div className="flex items-center justify-center bg-gradient-to-br from-slate-600 to-slate-900 h-screen w-full">
         <div className="w-full flex items-center justify-center maxmdsm:hidden">
           <Image
-            src={"/images/product-placeholder.jpg"}
+            src={"/images/logo_square_light.png"}
             alt="producto"
             width={500}
             height={500}
@@ -85,7 +85,6 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
           />
         </div>
         <div className="w-full bg-background h-screen p-20 maxsm:p-8 shadow-xl text-center text-primary mx-auto flex flex-col items-center justify-center">
-          <WhiteLogoComponent className={" w-[200px] maxsm:w-[120px]"} />
           <h2 className="flex text-xs justify-center py-5 text-foreground">
             Iniciar Session
           </h2>
@@ -105,7 +104,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
             onSubmit={handleSubmit}
           >
             <input
-              className="text-center py-2 rounded-sm"
+              className="text-center py-2 rounded-sm text-foreground"
               type="email"
               placeholder="Correo Electrónico..."
               onChange={(e) => setEmail(e.target.value)}
@@ -118,12 +117,12 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
               onChange={(e) => setHoneypot(e.target.value)}
             />
             <input
-              className="text-center py-2 rounded-sm"
+              className="text-center py-2 rounded-sm text-foreground"
               type="password"
               placeholder="contraseña..."
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button className="bg-primary text-xs text-white w-[150px] p-2 rounded-sm mt-5">
+            <button className="bg-accent text-xs text-white w-[150px] p-2 rounded-sm mt-5">
               Iniciar
             </button>
           </form>
