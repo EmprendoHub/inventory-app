@@ -159,9 +159,9 @@ export type FullOderType = {
   updatedAt: Date;
   dueDate: Date;
   invoiceId: string | null;
-  orderItems: OrderItemsType[];
-  payments: PaymentType[];
-  client: clientType;
+  orderItems?: OrderItemsType[];
+  payments?: PaymentType[];
+  client?: clientType;
 };
 
 export type PaymentType = {

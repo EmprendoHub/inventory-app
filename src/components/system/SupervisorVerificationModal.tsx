@@ -29,28 +29,35 @@ export default function SupervisorVerificationModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-background p-6 rounded-lg shadow-lg">
-        <h2 className="text-lg font-bold mb-4">Supervisor Verification</h2>
+      <div className="bg-red-800 p-10 rounded-lg shadow-lg">
+        <p className="text-center text-4xl mb-4">{"⚠️"}</p>
+        <h2 className="text-lg font-bold mb-4 text-white">
+          Se require código de supervisor!
+        </h2>
         <input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="border p-2 w-full mb-4 rounded-md text-foreground bg-input"
-          placeholder="Enter supervisor code"
+          className="border p-2 w-full mb-4 rounded-md text-foreground bg-input text-center text-xl"
+          placeholder="CÓDIGO DE SUPERVISOR"
         />
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && (
+          <div className="px-4 py-1 bg-white rounded-lg mb-4">
+            <p className="text-red-700 text-sm text-center">{error}</p>
+          </div>
+        )}
         <div className="flex justify-end">
           <button
             onClick={onClose}
-            className="bg-gray-500 text-white px-4 py-2 rounded mr-2 w-full"
+            className="bg-black text-white px-4 py-2 rounded mr-2 w-full"
           >
             Cancel
           </button>
           <button
             onClick={handleVerify}
-            className="bg-blue-600 text-white px-4 py-2 rounded w-full"
+            className="bg-emerald-700 text-white px-4 py-2 rounded w-full"
           >
-            Verify
+            Autorizar
           </button>
         </div>
       </div>

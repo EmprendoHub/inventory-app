@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Image from "next/image";
-import coImage from "../../../../../../../public/images/avatar_placeholder.jpg";
+import coImage from "../../../../../../../public/images/item_placeholder.png";
 import { DownloadCloud, X } from "lucide-react";
 import {
   deleteOrderItemsAction,
@@ -22,6 +22,7 @@ import Link from "next/link";
 import { getMexicoDate, getMexicoTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BsEnvelopeArrowUp } from "react-icons/bs";
+import LogoIcon from "@/components/LogoIcon";
 
 export default function OrderView({ order }: { order: FullOderType }) {
   const subtotal = order.orderItems.reduce(
@@ -69,116 +70,173 @@ export default function OrderView({ order }: { order: FullOderType }) {
     }
   };
 
-  const deletePayment = async (id: string) => {
-    const result = await showModal({
-      title: "¿Estás seguro?, ¡No podrás revertir esto!",
-      type: "delete",
-      text: "Al eliminar este pago no se puede revertir esta acción.",
+  const deleteItem = async (id: string, orderId: string) => {
+    // First, prompt for supervisor code
+    const supervisorCodeResult = await showModal({
+      title: "Verificación de Supervisor",
+      type: "supervisorCode",
+      text: "Por favor, ingrese el código de supervisor para continuar.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonText: "Verificar",
       cancelButtonText: "Cancelar",
     });
 
-    if (result.confirmed) {
-      try {
-        const formData = new FormData();
-        formData.set("id", id);
-        const response = await deletePaymentAction(formData);
-        if (!response.success) throw new Error("Error al eliminar pago");
-        await showModal({
-          title: "¡Eliminado!",
-          type: "delete",
-          text: "El pago ha sido eliminado.",
-          icon: "success",
-        });
-      } catch (error) {
-        console.log("error from modal", error);
+    if (supervisorCodeResult.confirmed) {
+      // Check if the supervisor code is authorized
 
-        await showModal({
-          title: "Error",
+      console.log(supervisorCodeResult.data);
+
+      const isAuthorized = await verifySupervisorCode(
+        supervisorCodeResult.data?.code
+      );
+
+      if (isAuthorized) {
+        // Proceed with the deletion
+        const result = await showModal({
+          title: "¿Estás seguro?, ¡No podrás revertir esto!",
           type: "delete",
-          text: "No se pudo eliminar el pago",
+          text: "Al eliminar este articulo no se puede revertir esta acción.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
+        });
+
+        if (result.confirmed) {
+          try {
+            const formData = new FormData();
+            formData.set("id", id);
+            formData.set("orderId", orderId);
+            const response = await deleteOrderItemsAction(formData);
+            if (!response.success) throw new Error("Error al eliminar");
+            await showModal({
+              title: "¡Eliminado!",
+              type: "delete",
+              text: "El articulo ha sido eliminado.",
+              icon: "success",
+            });
+          } catch (error) {
+            console.log("error from modal", error);
+
+            await showModal({
+              title: "Error",
+              type: "delete",
+              text: "No se pudo eliminar el articulo",
+              icon: "error",
+            });
+          }
+        }
+      } else {
+        await showModal({
+          title: "Código no autorizado",
+          type: "delete",
+          text: "El código de supervisor no es válido.",
           icon: "error",
         });
       }
     }
   };
 
-  const deleteItem = async (id: string, orderId: string) => {
-    const result = await showModal({
-      title: "¿Estás seguro?, ¡No podrás revertir esto!",
-      type: "delete",
-      text: "Al eliminar este articulo no se puede revertir esta acción.",
+  const deletePayment = async (id: string) => {
+    // First, prompt for supervisor code
+    const supervisorCodeResult = await showModal({
+      title: "Verificación de Supervisor",
+      type: "supervisorCode",
+      text: "Por favor, ingrese el código de supervisor para continuar.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
+      confirmButtonText: "Verificar",
       cancelButtonText: "Cancelar",
     });
 
-    if (result.confirmed) {
-      try {
-        const formData = new FormData();
-        formData.set("id", id);
-        formData.set("orderId", orderId);
-        const response = await deleteOrderItemsAction(formData);
-        if (!response.success) throw new Error("Error al eliminar");
-        await showModal({
-          title: "¡Eliminado!",
-          type: "delete",
-          text: "El articulo ha sido eliminado.",
-          icon: "success",
-        });
-      } catch (error) {
-        console.log("error from modal", error);
+    if (supervisorCodeResult.confirmed) {
+      // Check if the supervisor code is authorized
+      const isAuthorized = await verifySupervisorCode(
+        supervisorCodeResult.data?.code
+      );
 
-        await showModal({
-          title: "Error",
+      if (isAuthorized) {
+        // Proceed with the deletion
+        const result = await showModal({
+          title: "¿Estás seguro?, ¡No podrás revertir esto!",
           type: "delete",
-          text: "No se pudo eliminar el articulo",
+          text: "Al eliminar este pago no se puede revertir esta acción.",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Sí, eliminar",
+          cancelButtonText: "Cancelar",
+        });
+
+        if (result.confirmed) {
+          try {
+            const formData = new FormData();
+            formData.set("id", id);
+            const response = await deletePaymentAction(formData);
+            if (!response.success) throw new Error("Error al eliminar pago");
+            await showModal({
+              title: "¡Eliminado!",
+              type: "delete",
+              text: "El pago ha sido eliminado.",
+              icon: "success",
+            });
+          } catch (error) {
+            console.log("error from modal", error);
+
+            await showModal({
+              title: "Error",
+              type: "delete",
+              text: "No se pudo eliminar el pago",
+              icon: "error",
+            });
+          }
+        }
+      } else {
+        await showModal({
+          title: "Código no autorizado",
+          type: "delete",
+          text: "El código de supervisor no es válido.",
           icon: "error",
         });
       }
     }
+  };
+
+  const verifySupervisorCode = async (
+    code: string | undefined
+  ): Promise<boolean> => {
+    // Implement your logic to verify the supervisor code
+    // For example, you can make an API call to verify the code
+    // This is a placeholder implementation
+    return code === "1234"; // Replace with actual verification logic
   };
 
   return (
     <div>
       {/* Company Header */}
       <div className="flex justify-between gap-3 items-start border-b pt-0 pb-8 px-4 maxmd:pr-10 maxsm:pl-0">
-        <div className="flex maxsm:flex-col maxsm:items-start items-center gap-4">
-          <div className="bg-gray-100 p-2 rounded-lg">
-            <Image
-              src={coImage}
-              alt="Company Logo"
-              className="h-10 w-10"
-              height={250}
-              width={250}
-            />
+        <div className="flex maxsm:flex-col maxsm:items-start items-center gap-1">
+          <div className=" p-2 rounded-lg">
+            <LogoIcon className="h-20 w-20" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Yunuen Company.
-            </h2>
-            <p className="text-sm text-gray-600">123 Blvd. Lazaro Cardenas</p>
-            <p className="text-sm text-gray-600">Sahuayo, Michoacan 59000</p>
-            <p className="text-sm text-gray-600">Tel: (555) 123-4567</p>
+            <h2 className="text-xl font-bold text-muted">MUEBLES YUNY</h2>
+            <p className="text-sm text-muted">Blvd. Lazaro Cardenas 380</p>
+            <p className="text-sm text-muted">Sahuayo, Michoacan 59000</p>
+            <p className="text-sm text-muted">Tel: (353) 153-0042</p>
           </div>
         </div>
 
         <div className="text-right w-1/2 flex flex-col gap-1">
           <div>
-            <h2 className="text-2xl maxsm:text-lg font-bold text-gray-900 mb-2">
-              RECIBO
+            <h2 className="text-2xl maxsm:text-lg font-bold text-muted mb-2">
+              Pedido #: {order.orderNo}
             </h2>
-            <p className="text-sm maxsm:text-xs text-gray-600">
+            <p className="text-sm maxsm:text-xs text-muted">
               Fecha: {getMexicoDate(order.createdAt)}
             </p>
-            <p className="text-sm maxsm:text-xs text-gray-600">
+            <p className="text-sm maxsm:text-xs text-muted">
               Hora: {getMexicoTime(order.createdAt)}
-            </p>
-            <p className="text-sm maxsm:text-xs text-gray-600">
-              Pedido #: {order.orderNo}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
@@ -198,21 +256,21 @@ export default function OrderView({ order }: { order: FullOderType }) {
           </div>
         </div>
       </div>
-      <section className="px-8 pb-8 maxsm:pl-1 pt-2 bg-white rounded-lg shadow-md">
+      <section className="px-8 pb-8 maxsm:pl-1 pt-2 bg-card rounded-lg shadow-md">
         {/* Customer Info */}
         <div className="grid grid-cols-2 maxsm:grid-cols-1 gap-8">
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+          <div className="space-y-2 bg-card p-4 rounded-lg">
             {order.client && (
               <div className="flex flex-col">
                 <h3 className="font-semibold text-lg">{order.client.name}</h3>
-                <span className="text-sm text-gray-600 my-0">
+                <span className="text-sm text-muted my-0">
                   {order.client.address}
                 </span>
-                <span className="text-sm text-gray-600 my-0">
+                <span className="text-sm text-muted my-0">
                   Phone: {order.client.phone}
                 </span>
                 {order.client.email && (
-                  <span className="text-sm text-gray-600 my-0">
+                  <span className="text-sm text-muted my-0">
                     Email: {order.client.email}
                   </span>
                 )}
@@ -223,7 +281,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
         {/* Items Table */}
         <Table className="mb-8 border rounded-lg">
-          <TableHeader className="bg-gray-50">
+          <TableHeader className="bg-card">
             <TableRow>
               <TableHead className="">img</TableHead>
               <TableHead>Articulo</TableHead>
@@ -299,17 +357,17 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
       {/* Payments */}
       {order.payments.length > 0 && (
-        <section className="px-8 pb-8 maxsm:pl-1 mt-2 bg-white rounded-lg shadow-md">
+        <section className="px-8 pb-8 maxsm:pl-1 mt-2 bg-card rounded-lg shadow-md">
           {/* Customer Info */}
           <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+            <div className="space-y-2 bg-card p-4 rounded-lg">
               <h3 className="font-semibold text-lg">Pagos</h3>
             </div>
           </div>
 
           {/* Items Table */}
           <Table className="mb-8 border rounded-lg">
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-card">
               <TableRow>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Cant.</TableHead>

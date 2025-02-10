@@ -1,17 +1,27 @@
+import { DeliveryType } from "@/types/delivery";
+import { FullOderType, paymentType } from "@/types/sales";
 import { CircleCheck } from "lucide-react";
 import React from "react";
 
-export default function SalesOverview() {
+export default function SalesOverview({
+  payments,
+  orders,
+  shipments,
+}: {
+  payments: paymentType[];
+  orders: FullOderType[];
+  shipments: DeliveryType[];
+}) {
   const salesActivity = [
     {
-      title: "Empaquetado",
-      qty: 0,
+      title: "Pedidos",
+      qty: orders.length,
       unit: "Qty",
       color: "blue",
     },
     {
       title: "Envíos",
-      qty: 0,
+      qty: shipments.length,
       unit: "Qty",
       color: "emerald",
     },
@@ -23,7 +33,7 @@ export default function SalesOverview() {
     },
     {
       title: "Cobros",
-      qty: 0,
+      qty: payments.length,
       unit: "Qty",
       color: "yellow",
     },

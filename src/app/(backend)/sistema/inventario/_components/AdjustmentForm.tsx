@@ -31,6 +31,8 @@ type AdjustType = {
 
 export default function AdjustmentForm({ items, warehouses }: AdjustType) {
   const { data: session } = useSession();
+  const user = session?.user as UserType;
+
   const [state, formAction] = useFormState(createAdjustment, {
     errors: {},
     success: false,
@@ -38,7 +40,6 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
   });
 
   const [formType, setFormType] = useState("add");
-  const user = session?.user as UserType;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<FormData | null>(null);

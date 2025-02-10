@@ -16,8 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Image from "next/image";
-import coImage from "../../../../../../../public/images/avatar_placeholder.jpg";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import TextAreaInput from "@/components/TextAreaInput";
@@ -75,37 +73,7 @@ export default function OrderForm({
 
   return (
     <div>
-      {/* Company Header */}
-      <div className="flex justify-between items-start mb-8 border-b pb-8">
-        <div className="flex items-center gap-4">
-          <div className="bg-gray-100 p-2 rounded-lg">
-            <Image
-              src={coImage}
-              alt="Company Logo"
-              className="h-16 w-16"
-              height={250}
-              width={250}
-            />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Yunuen Company.
-            </h2>
-            <p className="text-sm text-gray-600">123 Blvd. Lazaro Cardenas</p>
-            <p className="text-sm text-gray-600">Sahuayo, Michoacan 59000</p>
-            <p className="text-sm text-gray-600">Tel: (555) 123-4567</p>
-          </div>
-        </div>
-
-        <div className="text-right">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">RECIBO</h2>
-          <p className="text-sm text-gray-600">
-            Date: {new Date().toLocaleDateString()}
-          </p>
-          <p className="text-sm text-gray-600">Pedido #: P-{"000045"}</p>
-        </div>
-      </div>
-      <form action={formAction} className="p-8 bg-white rounded-lg shadow-md">
+      <form action={formAction} className="p-8 bg-card rounded-lg shadow-md">
         {/* Customer Info */}
         <div className="grid grid-cols-2 gap-8 mb-8">
           <div>
@@ -124,18 +92,16 @@ export default function OrderForm({
               }}
             />
           </div>
-          <div className="space-y-2 bg-gray-50 p-4 rounded-lg">
+          <div className="space-y-2 bg-card p-4 rounded-lg">
             {selectedClient && (
               <>
                 <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
-                <p className="text-sm text-gray-600">
-                  {selectedClient.address}
-                </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted">{selectedClient.address}</p>
+                <p className="text-sm text-muted">
                   Tel: {selectedClient.phone}
                 </p>
                 {selectedClient.email && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted">
                     Email: {selectedClient.email}
                   </p>
                 )}
@@ -172,7 +138,7 @@ export default function OrderForm({
 
         {/* Items Table */}
         <Table className="mb-8 border rounded-lg">
-          <TableHeader className="bg-gray-50">
+          <TableHeader className="bg-card">
             <TableRow>
               <TableHead className="w-[300px]">Articulo</TableHead>
               <TableHead>Cantd.</TableHead>
