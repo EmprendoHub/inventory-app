@@ -16,10 +16,15 @@ import { DownloadCloud, X } from "lucide-react";
 import {
   deleteOrderItemsAction,
   deletePaymentAction,
+  payOrderAction,
 } from "../_actions/orderActions";
 import { useModal } from "@/app/context/ ModalContext";
 import Link from "next/link";
-import { getMexicoDate, getMexicoTime } from "@/lib/utils";
+import {
+  getMexicoDate,
+  getMexicoTime,
+  verifySupervisorCode,
+} from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BsEnvelopeArrowUp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
@@ -202,13 +207,55 @@ export default function OrderView({ order }: { order: FullOderType }) {
     }
   };
 
-  const verifySupervisorCode = async (
-    code: string | undefined
-  ): Promise<boolean> => {
-    // Implement your logic to verify the supervisor code
-    // For example, you can make an API call to verify the code
-    // This is a placeholder implementation
-    return code === "1234"; // Replace with actual verification logic
+  // In your OrderList component
+  const receivePayment = async (id: string) => {
+    const result = await showModal({
+      title: "¿Cuanto te gustaría pagar?",
+      type: "payment",
+      text: "Puedes realizar un pago parcial o completo.",
+      icon: "success",
+      showCancelButton: true,
+      confirmButtonText: "Sí, pagar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (result.confirmed) {
+      try {
+        const formData = new FormData();
+        formData.set("id", id);
+        formData.set("amount", result.data?.amount || "0"); // Handle empty input
+        formData.set("reference", result.data?.reference || "");
+        formData.set("method", result.data?.method || "");
+
+        const response = await payOrderAction(formData);
+
+        if (response.success) {
+          await showModal({
+            title: "¡Pago Aplicado!",
+            type: "delete",
+            text: response.message,
+            icon: "success",
+          });
+        } else {
+          await showModal({
+            title: "¡Pago No Aplicado!",
+            type: "delete",
+            text: response.message,
+            icon: "error",
+          });
+        }
+      } catch (error) {
+        console.log("Error processing payment:", error);
+        await showModal({
+          title: "Error",
+          type: "delete",
+          text: "No se pudo aplicar el pago",
+          icon: "error",
+        });
+      }
+    }
+
+    // eslint-disable-next-line
   };
 
   return (
@@ -239,11 +286,11 @@ export default function OrderView({ order }: { order: FullOderType }) {
               Hora: {getMexicoTime(order.createdAt)}
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 justify-end">
+          <div className="flex gap-2 justify-end ">
             <Link
               target="_blank"
               href={`/api/recibo/${order.id}`}
-              className="px-4 py-2 text-center bg-blue-600 hover:bg-blue-800 text-white text-xs rounded-md flex items-center gap-2"
+              className="px-2 py-2 text-center bg-blue-600 hover:bg-blue-800 text-white text-xs rounded-md flex items-center gap-1"
             >
               <DownloadCloud /> Generar PDF
             </Link>
@@ -252,6 +299,12 @@ export default function OrderView({ order }: { order: FullOderType }) {
               className=" text-center bg-emerald-700 text-white text-xs rounded-md "
             >
               <BsEnvelopeArrowUp /> Enviar Email
+            </Button>
+            <Button
+              onClick={() => receivePayment(order.id)}
+              className=" text-center bg-purple-700 text-white text-xs rounded-md "
+            >
+              <BsEnvelopeArrowUp /> Recibir Pago
             </Button>
           </div>
         </div>
@@ -296,7 +349,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
               <TableRow key={index}>
                 <TableCell className="font-medium">
                   <Image
-                    className="h-20 w-20 grayscale"
+                    className="h-10 w-10 grayscale"
                     src={item.image || coImage}
                     width={150}
                     height={150}

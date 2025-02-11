@@ -78,8 +78,6 @@ export default function ProductEdit({
     // Call the form action
     const result = await updateItemAction(state, formSubmitData);
 
-    console.log(result);
-
     // Check if the product was created successfully
     if (result.success) {
       // Reset the form fields
@@ -170,7 +168,7 @@ export default function ProductEdit({
             value={formData.description}
             onChange={handleInputChange}
             name="description"
-            label="Description"
+            label="Descripción"
             state={state}
           />
           <div className="w-full flex maxsm:flex-col gap-3">

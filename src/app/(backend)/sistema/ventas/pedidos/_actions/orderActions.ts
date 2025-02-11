@@ -240,6 +240,7 @@ export async function payOrderAction(formData: FormData) {
       },
     });
 
+    revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
 

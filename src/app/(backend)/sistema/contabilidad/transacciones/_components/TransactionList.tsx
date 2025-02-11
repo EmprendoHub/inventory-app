@@ -68,7 +68,7 @@ export function TransactionList({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">
+          <div className="uppercase text-xs w-20">
             {new Date(row.getValue("date")).toLocaleDateString()}
           </div>
         ),

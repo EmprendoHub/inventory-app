@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 import React from "react";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import { TruckList } from "../../contabilidad/_components/TruckList";
+import { TruckList } from "./_components/TruckList";
 import { TruckType } from "@/types/truck";
 import BusinessHeader from "../../_components/BusinessHeader";
 

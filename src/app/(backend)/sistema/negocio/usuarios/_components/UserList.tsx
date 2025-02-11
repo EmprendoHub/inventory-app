@@ -39,6 +39,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ ModalContext";
 import { deleteUserAction } from "../_actions";
+import { verifySupervisorCode } from "@/lib/utils";
 
 export function UserList({ users }: { users: UserType[] }) {
   const router = useRouter();
@@ -65,7 +66,7 @@ export function UserList({ users }: { users: UserType[] }) {
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">{row.getValue("name")}</div>
+          <div className="uppercase text-xs w-20">{row.getValue("name")}</div>
         ),
       },
 
@@ -115,37 +116,64 @@ export function UserList({ users }: { users: UserType[] }) {
             const { showModal } = useModal();
 
             const deleteUser = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Estás seguro?, ¡No podrás revertir esto!",
-                type: "delete",
-                text: "Eliminar este usuario?",
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Sí, eliminar",
+                confirmButtonText: "Verificar",
                 cancelButtonText: "Cancelar",
               });
 
-              if (result.confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
 
-                  const response = await deleteUserAction(formData);
-
-                  if (!response.success) throw new Error("Error al eliminar");
-                  await showModal({
-                    title: "¡Eliminado!",
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "El usuario ha sido eliminado.",
-                    icon: "success",
+                    text: "Eliminar este usuario?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
                   });
-                } catch (error) {
-                  console.log("error from modal", error);
 
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deleteUserAction(formData);
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "El usuario ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar el usuario",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
                   await showModal({
-                    title: "Error",
+                    title: "Código no autorizado",
                     type: "delete",
-                    text: "No se pudo eliminar el usuario",
+                    text: "El código de supervisor no es válido.",
                     icon: "error",
                   });
                 }
@@ -153,7 +181,9 @@ export function UserList({ users }: { users: UserType[] }) {
             }, [showModal]);
 
             const viewUser = React.useCallback(async () => {
-              router.push(`/sistema/admin/usuarios/editar/${row.original.id}`);
+              router.push(
+                `/sistema/negocio/usuarios/editar/${row.original.id}`
+              );
             }, []);
             return (
               <DropdownMenu>

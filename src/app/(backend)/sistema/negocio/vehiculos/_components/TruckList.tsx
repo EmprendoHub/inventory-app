@@ -38,6 +38,7 @@ import { useRouter } from "next/navigation";
 import { TruckType } from "@/types/truck";
 import { useModal } from "@/app/context/ ModalContext";
 import { deleteTruckAction } from "../_actions";
+import { verifySupervisorCode } from "@/lib/utils";
 
 export function TruckList({ trucks }: { trucks: TruckType[] }) {
   const router = useRouter();
@@ -52,7 +53,7 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
   const columns = React.useMemo<ColumnDef<TruckType>[]>(
     () => [
       {
-        accessorKey: "licensePlate",
+        accessorKey: "name",
         header: ({ column }) => (
           <Button
             variant="ghost"
@@ -63,6 +64,11 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
             <ArrowUpDown />
           </Button>
         ),
+        cell: ({ row }) => <div className="text-xs">{row.original.name}</div>,
+      },
+      {
+        accessorKey: "licensePlate",
+        header: () => <div className="text-xs">Placa</div>,
         cell: ({ row }) => (
           <div className="text-xs">{row.original.licensePlate}</div>
         ),
@@ -102,46 +108,74 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
             const { showModal } = useModal();
 
             const deleteTruck = React.useCallback(async () => {
-              const confirmed = await showModal({
-                title: "Are you sure?",
-                type: "delete",
-                text: "You won't be able to revert this!",
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "Cancel",
+                confirmButtonText: "Verificar",
+                cancelButtonText: "Cancelar",
               });
 
-              if (confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
 
-                  const response = await deleteTruckAction(formData);
-
-                  if (!response.success)
-                    throw new Error("Failed to delete truck");
-                  await showModal({
-                    title: "Deleted!",
-                    type: "info",
-                    text: "The truck has been deleted.",
-                    icon: "success",
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                    type: "delete",
+                    text: "Eliminar este vehículo?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
                   });
-                } catch (error) {
-                  console.error("Error deleting truck:", error);
+
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deleteTruckAction(formData);
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "El vehículo ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar el vehículo",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
                   await showModal({
-                    title: "Error",
-                    type: "info",
-                    text: "There was an error deleting the truck.",
+                    title: "Código no autorizado",
+                    type: "delete",
+                    text: "El código de supervisor no es válido.",
                     icon: "error",
                   });
                 }
               }
-              // eslint-disable-next-line
-            }, [showModal, row.original.id]);
+            }, [showModal]);
 
             const viewTruck = React.useCallback(() => {
-              router.push(`/sistema/shipping/trucks/edit/${row.original.id}`);
+              router.push(
+                `/sistema/negocio/vehiculos/editar/${row.original.id}`
+              );
               // eslint-disable-next-line
             }, [router, row.original.id]);
 
@@ -209,12 +243,10 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filtro by License Plate..."
-          value={
-            (table.getColumn("licensePlate")?.getFilterValue() as string) ?? ""
-          }
+          placeholder="Filtro nombre..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("licensePlate")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

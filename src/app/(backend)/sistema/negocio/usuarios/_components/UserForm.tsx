@@ -73,7 +73,7 @@ export default function UserForm({ roles }: UserGroupType) {
         text: "El usuario ha sido creado exitosamente.",
         icon: "success",
       });
-      router.push("/sistema/admin/usuarios");
+      router.push("/sistema/negocio/usuarios");
       const formElement = document.getElementById(
         "user-form"
       ) as HTMLFormElement;

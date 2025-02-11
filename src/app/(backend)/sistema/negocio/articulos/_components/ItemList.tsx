@@ -71,7 +71,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">{row.getValue("name")}</div>
+          <div className="uppercase text-xs w-20">{row.getValue("name")}</div>
         ),
       },
 
@@ -142,8 +142,6 @@ export function ProductList({ items }: { items: ItemType[] }) {
               });
 
               if (supervisorCodeResult.confirmed) {
-                console.log(supervisorCodeResult.data);
-
                 const isAuthorized = await verifySupervisorCode(
                   supervisorCodeResult.data?.code
                 );

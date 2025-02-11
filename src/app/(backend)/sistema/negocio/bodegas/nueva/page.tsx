@@ -1,6 +1,6 @@
 import React from "react";
 import FormHeader from "../../_components/FormHeader";
-import WarehouseForm from "../../_components/WarehouseForm";
+import WarehouseForm from "../_components/WarehouseForm";
 
 export default function NewWarehouse() {
   return (

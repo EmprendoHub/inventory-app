@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,93 +36,17 @@ import {
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { warehouseAndProductType } from "@/types/categories";
-
-export const columns: ColumnDef<warehouseAndProductType>[] = [
-  {
-    accessorKey: "title",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs"
-        >
-          Bodega
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase text-xs">{row.getValue("title")}</div>
-    ),
-  },
-  {
-    accessorKey: "description",
-    header: () => <div className="text-left text-xs maxsm:hidden">Desc.</div>,
-    cell: ({ row }) => (
-      <div className="lowercase text-xs maxsm:hidden">
-        {row.getValue("description")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "location",
-    header: () => (
-      <div className="text-left text-xs maxsm:hidden">Ubicación</div>
-    ),
-    cell: ({ row }) => (
-      <div className="lowercase text-xs maxsm:hidden">
-        {row.getValue("location")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "type",
-    header: () => <div className="text-left text-xs">Tipo</div>,
-    cell: ({ row }) => (
-      <div className="lowercase text-xs">{row.getValue("type")}</div>
-    ),
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const warehouse = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(warehouse.id)}
-            >
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Desactivar</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="bg-red-800 text-white mt-2">
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+import { useRouter } from "next/navigation";
+import { useModal } from "@/app/context/ ModalContext";
+import { verifySupervisorCode } from "@/lib/utils";
+import { deleteWarehouseAction } from "../_actions";
 
 export function WarehouseList({
   warehouses,
 }: {
   warehouses: warehouseAndProductType[];
 }) {
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -130,6 +54,173 @@ export function WarehouseList({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const columns = React.useMemo<ColumnDef<warehouseAndProductType>[]>(
+    () => [
+      {
+        accessorKey: "title",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="text-xs"
+            >
+              Bodega
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => (
+          <div className="uppercase text-xs">{row.getValue("title")}</div>
+        ),
+      },
+      {
+        accessorKey: "description",
+        header: () => (
+          <div className="text-left text-xs maxsm:hidden">Desc.</div>
+        ),
+        cell: ({ row }) => (
+          <div className="uppercase text-xs maxsm:hidden">
+            {row.getValue("description")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "location",
+        header: () => (
+          <div className="text-left text-xs maxsm:hidden">Ubicación</div>
+        ),
+        cell: ({ row }) => (
+          <div className="uppercase text-xs maxsm:hidden">
+            {row.getValue("location")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "type",
+        header: () => <div className="text-left text-xs">Tipo</div>,
+        cell: ({ row }) => (
+          <div className="uppercase text-xs">{row.getValue("type")}</div>
+        ),
+      },
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const ActionCell = () => {
+            const { showModal } = useModal();
+
+            const deleteItem = React.useCallback(async () => {
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Verificar",
+                cancelButtonText: "Cancelar",
+              });
+
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
+
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                    type: "delete",
+                    text: "Eliminar este Bodega?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
+                  });
+
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deleteWarehouseAction(formData);
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "La Bodega ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar la Bodega",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
+                  await showModal({
+                    title: "Código no autorizado",
+                    type: "delete",
+                    text: "El código de supervisor no es válido.",
+                    icon: "error",
+                  });
+                }
+              }
+            }, [showModal]);
+
+            const viewItem = React.useCallback(async () => {
+              router.push(`/sistema/negocio/bodegas/editar/${row.original.id}`);
+            }, []);
+
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+
+                  <DropdownMenuItem
+                    onClick={viewItem}
+                    className="text-xs cursor-pointer"
+                  >
+                    <Eye />
+                    Editar
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={deleteItem}
+                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                  >
+                    <X />
+                    Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          };
+
+          return <ActionCell />;
+        },
+      },
+    ],
+    // eslint-disable-next-line
+    []
+  );
 
   const table = useReactTable<warehouseAndProductType>({
     data: warehouses,

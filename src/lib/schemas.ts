@@ -38,6 +38,7 @@ export const ProductSchema = z.object({
 });
 
 export const SupplierSchema = z.object({
+  id: z.string().nullable().optional(),
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Se require un teléfono"),
   email: z
@@ -50,22 +51,27 @@ export const SupplierSchema = z.object({
   paymentTerms: z.string().min(1, "Se requiere términos de pago"),
   taxId: z.string(),
   notes: z.string(),
-  image: z.object({
-    size: z.number(),
-    type: z.string(),
-    name: z.string(),
-    lastModified: z.number(),
-  }),
+  image: z
+    .object({
+      size: z.number(),
+      type: z.string(),
+      name: z.string(),
+      lastModified: z.number(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type ProductFormValues = z.infer<typeof ProductSchema>;
 
 export const CategorySchema = z.object({
+  id: z.string().nullable().optional(),
   title: z.string().min(3, "Se require un Titulo"),
   description: z.string(),
 });
 
 export const WarehouseSchema = z.object({
+  id: z.string().nullable().optional(),
   title: z.string().min(3, "Se require un Titulo"),
   code: z.string().min(3, "Se require un código único"),
   street: z.string().min(3, "Se require una calle"),
@@ -98,12 +104,14 @@ export const AddInventorySchema = z.object({
 });
 
 export const BrandSchema = z.object({
+  id: z.string().nullable().optional(),
   name: z.string().min(3, "Se require un Nombre"),
   description: z.string(),
 });
 
 export const UnitSchema = z.object({
-  title: z.string().min(5, "Se require un Titulo"),
+  id: z.string().nullable().optional(),
+  title: z.string().min(3, "Se require un Titulo"),
   abbreviation: z.string().min(1, "Se require una abreviación"),
 });
 
@@ -143,4 +151,12 @@ export const UserSchema = z.object({
 
 export const VerifyEmailSchema = z.object({
   email: z.string().min(5, { message: "Se requiere un correo electrónico" }),
+});
+
+export const TruckSchema = z.object({
+  id: z.string().optional(),
+  licensePlate: z.string().min(1, "Placa is required"),
+  name: z.string().min(1, "Nombre Plate is required"),
+  km: z.string().min(1, "Km Plate is required"),
+  status: z.enum(["DISPONIBLE", "EN_USO", "MANTENIMIENTO"]),
 });

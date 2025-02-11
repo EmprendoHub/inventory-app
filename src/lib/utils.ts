@@ -110,12 +110,12 @@ export const isValidPhone = (phone: string) => {
 };
 
 export const verifySupervisorCode = async (
-  code: string | undefined
+  code: string = ""
 ): Promise<boolean> => {
   // Implement your logic to verify the supervisor code
   // For example, you can make an API call to verify the code
   // This is a placeholder implementation
-  return code === "1234"; // Replace with actual verification logic
+  return ["1234", "5795", "8745"].includes(code); // Replace with actual verification logic
 };
 
 // Function to mask the input value

@@ -112,7 +112,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">
+          <div className="uppercase text-xs w-20">
             {row.getValue("orderNo")}
           </div>
         ),
@@ -123,7 +123,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           <div className="text-left text-xs maxsm:hidden w-20">Estado</div>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs text-center text-white maxsm:hidden bg-black rounded-md w-20 py-1.5">
+          <div className="uppercase text-xs text-center text-white maxsm:hidden bg-black rounded-md w-20 py-1.5">
             {row.getValue("status")}
           </div>
         ),

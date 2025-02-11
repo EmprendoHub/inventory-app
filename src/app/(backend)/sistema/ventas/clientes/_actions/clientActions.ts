@@ -2,7 +2,9 @@
 
 import { uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
+import { idSchema } from "@/lib/schemas";
 import { writeFile } from "fs/promises";
+import { revalidatePath } from "next/cache";
 import { join } from "path";
 
 export async function createClient(
@@ -79,6 +81,7 @@ export async function createClient(
         image: savedImageUrl,
       },
     });
+    revalidatePath("/sistema/ventas/clientes");
 
     return {
       errors: {},
@@ -98,6 +101,8 @@ export async function createClient(
         message: "Client creation failed",
       };
     }
+
+    revalidatePath("/sistema/ventas/clientes");
 
     return {
       errors: {},
@@ -203,7 +208,8 @@ export async function updateClient(
         },
       });
     }
-
+    revalidatePath(`/sistemas/ventas/clientes/editar/${clientId}`);
+    revalidatePath("/sistema/ventas/clientes");
     return {
       errors: {},
       success: true,
@@ -227,6 +233,50 @@ export async function updateClient(
       errors: {},
       success: false,
       message: "Failed to create client",
+    };
+  }
+}
+
+export async function deleteClientAction(formData: FormData) {
+  const rawData = {
+    id: formData.get("id"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = idSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  try {
+    await prisma.$transaction([
+      prisma.client.delete({
+        where: {
+          id: validatedData.data.id,
+        },
+      }),
+    ]);
+
+    revalidatePath("/sistema/negocio/clientes");
+    return {
+      errors: {},
+      success: true,
+      message: "Category deleted successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating category:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to delete category",
     };
   }
 }

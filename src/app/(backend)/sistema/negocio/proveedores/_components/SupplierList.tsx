@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,90 +36,13 @@ import {
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { supplierType } from "@/types/categories";
-
-export const columns: ColumnDef<supplierType>[] = [
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="text-xs"
-        >
-          Proveedor
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => (
-      <div className="lowercase text-xs">{row.getValue("name")}</div>
-    ),
-  },
-  {
-    accessorKey: "phone",
-    header: () => <div className="text-left text-xs maxsm:hidden">Tel.</div>,
-    cell: ({ row }) => (
-      <div className="lowercase text-xs maxsm:hidden">
-        {row.getValue("phone")}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "email",
-    header: () => <div className="text-left text-xs">Email</div>,
-    cell: ({ row }) => {
-      // Format the amount as a dollar amount
-
-      return (
-        <div className="text-left text-xs font-medium">
-          {row.getValue("email")}
-        </div>
-      );
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => {
-      const supplier = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(supplier.id)}
-            >
-              Ajustar
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(supplier.id)}
-            >
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Desactivar</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="bg-red-800 text-white mt-2">
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+import { useModal } from "@/app/context/ ModalContext";
+import { verifySupervisorCode } from "@/lib/utils";
+import { deleteSupplierAction } from "../_actions";
+import { useRouter } from "next/navigation";
 
 export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
-  console.log(suppliers);
-
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -127,6 +50,170 @@ export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const columns = React.useMemo<ColumnDef<supplierType>[]>(
+    () => [
+      {
+        accessorKey: "name",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+              className="text-xs"
+            >
+              Proveedor
+              <ArrowUpDown />
+            </Button>
+          );
+        },
+        cell: ({ row }) => (
+          <div className="uppercase text-xs">{row.getValue("name")}</div>
+        ),
+      },
+      {
+        accessorKey: "phone",
+        header: () => (
+          <div className="text-left text-xs maxsm:hidden">Tel.</div>
+        ),
+        cell: ({ row }) => (
+          <div className="uppercase text-xs maxsm:hidden">
+            {row.getValue("phone")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "email",
+        header: () => <div className="text-left text-xs">Email</div>,
+        cell: ({ row }) => {
+          // Format the amount as a dollar amount
+
+          return (
+            <div className="text-left text-xs font-medium">
+              {row.getValue("email")}
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const ActionCell = () => {
+            const { showModal } = useModal();
+
+            const deleteItem = React.useCallback(async () => {
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Verificar",
+                cancelButtonText: "Cancelar",
+              });
+
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
+
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                    type: "delete",
+                    text: "Eliminar este proveedor?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
+                  });
+
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deleteSupplierAction(formData);
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "El proveedor ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar el proveedor",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
+                  await showModal({
+                    title: "Código no autorizado",
+                    type: "delete",
+                    text: "El código de supervisor no es válido.",
+                    icon: "error",
+                  });
+                }
+              }
+            }, [showModal]);
+
+            const viewItem = React.useCallback(async () => {
+              router.push(
+                `/sistema/negocio/proveedores/editar/${row.original.id}`
+              );
+            }, []);
+
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+
+                  <DropdownMenuItem
+                    onClick={viewItem}
+                    className="text-xs cursor-pointer"
+                  >
+                    <Eye />
+                    Editar
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={deleteItem}
+                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                  >
+                    <X />
+                    Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          };
+
+          return <ActionCell />;
+        },
+      },
+    ],
+    // eslint-disable-next-line
+    []
+  );
 
   const table = useReactTable<supplierType>({
     data: suppliers,

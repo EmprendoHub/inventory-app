@@ -58,7 +58,7 @@ export function CountItemList({ countItems }: { countItems: CountItemType[] }) {
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">{row.original.itemId}</div>
+          <div className="uppercase text-xs w-20">{row.original.itemId}</div>
         ),
       },
       {

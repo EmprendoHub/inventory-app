@@ -1,17 +1,10 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { z } from "zod";
-
 import { revalidatePath } from "next/cache";
 import { TruckFormState } from "@/types/truck";
-
-// Define Zod schema for Truck
-const TruckSchema = z.object({
-  id: z.string().optional(),
-  licensePlate: z.string().min(1, "License Plate is required"),
-  status: z.enum(["DISPONIBLE", "EN_USO", "MANTENIMIENTO"]),
-});
+import { TruckSchema } from "@/lib/schemas";
+import { TruckStatus } from "@prisma/client";
 
 export const createTruckAction = async (
   state: TruckFormState,
@@ -19,6 +12,8 @@ export const createTruckAction = async (
 ): Promise<TruckFormState> => {
   // Parse and validate form data
   const rawData = {
+    name: formData.get("name") as string,
+    km: formData.get("km") as string,
     licensePlate: formData.get("licensePlate") as string,
     status: formData.get("status") as "DISPONIBLE" | "EN_USO" | "MANTENIMIENTO",
   };
@@ -40,8 +35,10 @@ export const createTruckAction = async (
     await prisma.$transaction(async (prisma) => {
       await prisma.truck.create({
         data: {
+          name: truckData.name,
+          km: truckData.km,
           licensePlate: truckData.licensePlate,
-          status: truckData.status,
+          status: truckData.status as TruckStatus,
         },
       });
     });
@@ -64,6 +61,8 @@ export const updateTruckAction = async (
   // Parse and validate form data
   const rawData = {
     id: formData.get("id") as string,
+    name: formData.get("name") as string,
+    km: formData.get("km") as string,
     licensePlate: formData.get("licensePlate") as string,
     status: formData.get("status") as "DISPONIBLE" | "EN_USO" | "MANTENIMIENTO",
   };
@@ -86,6 +85,8 @@ export const updateTruckAction = async (
       await prisma.truck.update({
         where: { id: truckData.id },
         data: {
+          name: truckData.name,
+          km: truckData.km,
           licensePlate: truckData.licensePlate,
           status: truckData.status,
         },

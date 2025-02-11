@@ -53,14 +53,14 @@ export const columns: ColumnDef<invoiceType>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="lowercase text-xs">{row.getValue("title")}</div>
+      <div className="uppercase text-xs">{row.getValue("title")}</div>
     ),
   },
   {
     accessorKey: "description",
     header: () => <div className="text-left text-xs maxsm:hidden">Desc.</div>,
     cell: ({ row }) => (
-      <div className="lowercase text-xs maxsm:hidden">
+      <div className="uppercase text-xs maxsm:hidden">
         {row.getValue("description")}
       </div>
     ),

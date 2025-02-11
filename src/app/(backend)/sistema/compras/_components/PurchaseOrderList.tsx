@@ -68,7 +68,7 @@ export function PurchaseOrderList({
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">
+          <div className="uppercase text-xs w-20">
             {row.getValue("poNumber")}
           </div>
         ),

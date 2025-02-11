@@ -164,7 +164,6 @@ export async function updateItemAction(
       message: "Validation failed. Please check the fields.",
     };
   }
-  console.log(validatedData.data);
 
   if (!validatedData.data)
     return {
@@ -249,7 +248,7 @@ export async function updateItemAction(
         },
       });
     }
-
+    revalidatePath(`/sistemas/negocio/articulos/editar/${rawData.itemId}`);
     return {
       errors: {},
       success: true,

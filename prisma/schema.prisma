@@ -166,6 +166,8 @@ enum DeliveryStatus {
 
 model Truck {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String    
+  km         String    
   licensePlate  String    @unique
   status        TruckStatus @default(DISPONIBLE)
   deliveries    Delivery[]
@@ -312,6 +314,15 @@ model Warehouse {
   updatedAt     DateTime  @updatedAt
 }
 
+
+type Address {
+  street     String
+  city       String
+  state      String
+  country    String
+  postalCode String
+}
+
 model StockMovement {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   item          Item      @relation(fields: [itemId], references: [id])
@@ -348,13 +359,6 @@ enum MovementStatus {
   REJECTED
 }
 
-type Address {
-  street     String
-  city       String
-  state      String
-  country    String
-  postalCode String
-}
 
 enum WarehouseType {
   PRINCIPAL

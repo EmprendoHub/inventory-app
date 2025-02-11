@@ -64,7 +64,7 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="lowercase text-xs w-20">{row.getValue("code")}</div>
+          <div className="uppercase text-xs w-20">{row.getValue("code")}</div>
         ),
       },
       {

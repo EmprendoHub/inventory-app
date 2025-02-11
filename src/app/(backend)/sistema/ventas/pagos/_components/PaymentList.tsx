@@ -53,14 +53,14 @@ export const columns: ColumnDef<paymentType>[] = [
       );
     },
     cell: ({ row }) => (
-      <div className="lowercase text-xs">{row.getValue("id")}</div>
+      <div className="uppercase text-xs">{row.getValue("id")}</div>
     ),
   },
   {
     accessorKey: "method",
     header: () => <div className="text-left text-xs maxsm:hidden">Método</div>,
     cell: ({ row }) => (
-      <div className="lowercase text-xs maxsm:hidden">
+      <div className="uppercase text-xs maxsm:hidden">
         {row.getValue("method")}
       </div>
     ),
@@ -69,7 +69,7 @@ export const columns: ColumnDef<paymentType>[] = [
     accessorKey: "orderNo",
     header: () => <div className="text-left text-xs maxsm:hidden">Pedido</div>,
     cell: ({ row }) => (
-      <div className="lowercase text-xs maxsm:hidden">
+      <div className="uppercase text-xs maxsm:hidden">
         {row.getValue("orderNo")}
       </div>
     ),
