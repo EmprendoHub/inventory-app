@@ -16,8 +16,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Inventario App",
-  description: "Sistema para manejo fr inventario.",
+  title: "MUEBLES YUNY",
+  description: "Muebles modernos restaurados de alta calidad.",
 };
 
 export default function RootLayout({

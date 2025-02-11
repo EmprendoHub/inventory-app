@@ -17,7 +17,6 @@ import { ArrowUpDown, MoreHorizontal, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -33,7 +32,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { TruckType } from "@/types/truck";
 import { useModal } from "@/app/context/ ModalContext";
@@ -250,30 +248,6 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto text-xs">
-              Columns <ArrowUpDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="capitalize text-xs"
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value: CheckedState) =>
-                    column.toggleVisibility(!!value)
-                  }
-                >
-                  {column.id.replace(/([A-Z])/g, " $1").trim()}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
       <div className="rounded-md border">
         <Table>

@@ -17,7 +17,6 @@ import { ArrowUpDown, MoreHorizontal, X, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -34,7 +33,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DeliveryType } from "@/types/delivery";
-import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ ModalContext";
 import { deleteDeliveryAction } from "../_actions";
@@ -234,30 +232,6 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.id}
-                  className="capitalize text-xs"
-                  checked={column.getIsVisible()}
-                  onCheckedChange={(value: CheckedState) =>
-                    column.toggleVisibility(!!value)
-                  }
-                >
-                  {column.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
       <div className="rounded-md border">
         <Table>

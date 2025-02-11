@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FullOderType } from "@/types/sales";
 import {
   Table,
@@ -39,11 +39,12 @@ export default function OrderView({ order }: { order: FullOderType }) {
   // console.log(tax);
   const grandTotal = subtotal;
   const { showModal } = useModal();
+  const [sending, setSending] = useState(false);
 
   const sendEmailReminder = async (id: string) => {
-    try {
-      console.log("");
+    setSending((prev) => !prev);
 
+    try {
       const res = await fetch(`/api/email`, {
         headers: {
           "Content-Type": "application/json",
@@ -73,9 +74,12 @@ export default function OrderView({ order }: { order: FullOderType }) {
     } catch (error) {
       console.log(error);
     }
+    setSending((prev) => !prev);
   };
 
   const deleteItem = async (id: string, orderId: string) => {
+    setSending((prev) => !prev);
+
     // First, prompt for supervisor code
     const supervisorCodeResult = await showModal({
       title: "Verificación de Supervisor",
@@ -141,9 +145,13 @@ export default function OrderView({ order }: { order: FullOderType }) {
         });
       }
     }
+
+    setSending((prev) => !prev);
   };
 
   const deletePayment = async (id: string) => {
+    setSending((prev) => !prev);
+
     // First, prompt for supervisor code
     const supervisorCodeResult = await showModal({
       title: "Verificación de Supervisor",
@@ -205,10 +213,13 @@ export default function OrderView({ order }: { order: FullOderType }) {
         });
       }
     }
+
+    setSending((prev) => !prev);
   };
 
   // In your OrderList component
   const receivePayment = async (id: string) => {
+    setSending((prev) => !prev);
     const result = await showModal({
       title: "¿Cuanto te gustaría pagar?",
       type: "payment",
@@ -255,7 +266,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
       }
     }
 
-    // eslint-disable-next-line
+    setSending((prev) => !prev);
   };
 
   return (
@@ -295,16 +306,20 @@ export default function OrderView({ order }: { order: FullOderType }) {
               <DownloadCloud /> Generar PDF
             </Link>
             <Button
+              disabled={sending}
               onClick={() => sendEmailReminder(order.id)}
               className=" text-center bg-emerald-700 text-white text-xs rounded-md "
             >
-              <BsEnvelopeArrowUp /> Enviar Email
+              <BsEnvelopeArrowUp /> Enviar Email{" "}
+              {sending && <span className="loader"></span>}
             </Button>
             <Button
+              disabled={sending}
               onClick={() => receivePayment(order.id)}
               className=" text-center bg-purple-700 text-white text-xs rounded-md "
             >
-              <BsEnvelopeArrowUp /> Recibir Pago
+              <BsEnvelopeArrowUp /> Recibir Pago{" "}
+              {sending && <span className="loader"></span>}
             </Button>
           </div>
         </div>
