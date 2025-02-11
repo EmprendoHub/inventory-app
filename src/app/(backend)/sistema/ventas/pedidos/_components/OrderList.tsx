@@ -45,6 +45,7 @@ import { useModal } from "@/app/context/ ModalContext";
 import { deleteOrderAction, payOrderAction } from "../_actions/orderActions";
 import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
+import { verifySupervisorCode } from "@/lib/utils";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -171,35 +172,61 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             const { showModal } = useModal();
 
             const deleteOrder = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Estás seguro?, ¡No podrás revertir esto!",
-                type: "delete",
-                text: "Al eliminar este pedido se eliminara cualquier pago asociado.",
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Sí, eliminar",
+                confirmButtonText: "Verificar",
                 cancelButtonText: "Cancelar",
               });
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
 
-              if (result) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
-                  const response = await deleteOrderAction(formData);
-                  if (!response.success) throw new Error("Error al eliminar");
-                  await showModal({
-                    title: "¡Eliminado!",
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "El pedido ha sido eliminado.",
-                    icon: "success",
+                    text: "Al eliminar este pedido se eliminara cualquier pago asociado.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
                   });
-                } catch (error) {
-                  console.log("error from modal", error);
 
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+                      const response = await deleteOrderAction(formData);
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "El pedido ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar el pedido",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
                   await showModal({
-                    title: "Error",
+                    title: "Código no autorizado",
                     type: "delete",
-                    text: "No se pudo eliminar el pedido",
+                    text: "El código de supervisor no es válido.",
                     icon: "error",
                   });
                 }

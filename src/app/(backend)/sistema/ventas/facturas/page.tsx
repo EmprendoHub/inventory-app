@@ -1,7 +1,7 @@
 import React from "react";
-import InventoryHeader from "../_components/SalesHeader";
 import { InvoiceList } from "./_components/InvoiceList";
 import prisma from "@/lib/db";
+import BusinessHeader from "../../_components/BusinessHeader";
 
 export default async function Invoices() {
   const invoicesWithProductCount = await prisma.invoice.findMany({
@@ -12,7 +12,11 @@ export default async function Invoices() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <InventoryHeader title={"facturas"} link={`facturas/nueva`} />
+      <BusinessHeader
+        title={"facturas"}
+        link={`negocio/facturas/nueva`}
+        btn="Nueva"
+      />
       <InvoiceList invoices={invoicesWithProductCount} />
     </div>
   );

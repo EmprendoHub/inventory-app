@@ -455,11 +455,11 @@ model Expense {
   reference     String?   // Invoice or receipt number
   status        ExpenseStatus @default(PENDING)
   paymentDate   DateTime?
-  deliveryId    String?   @db.ObjectId
-  driverId      String?   @db.ObjectId
-  truckId       String?   @db.ObjectId
-  externalShipId String?  @db.ObjectId
-  supplierId    String?   @db.ObjectId  // Link to supplier if applicable
+  deliveryId    String?   
+  driverId      String?   
+  truckId       String?   
+  externalShipId String?  
+  supplierId    String?   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }

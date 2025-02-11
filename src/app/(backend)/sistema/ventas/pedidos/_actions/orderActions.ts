@@ -50,8 +50,6 @@ export async function createNewOrder(
     errors.items = ["Invalid JSON format for items"];
   }
 
-  console.log(errors);
-
   if (Object.keys(errors).length > 0) {
     return {
       errors,

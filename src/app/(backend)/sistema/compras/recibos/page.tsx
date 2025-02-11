@@ -2,9 +2,9 @@ import prisma from "@/lib/db";
 import React from "react";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import PurchaseHeader from "../../_components/PurchaseHeader";
 import { GoodsReceiptList } from "./_componentes/GoodsReceiptList";
 import { GoodsReceiptType } from "@/types/goodsReceipts";
+import BusinessHeader from "../../_components/BusinessHeader";
 
 export default async function ListReceived() {
   const session = await getServerSession(options);
@@ -33,7 +33,11 @@ export default async function ListReceived() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <PurchaseHeader title={"Recibidos"} link={`recibos/nuevo`} />
+      <BusinessHeader
+        title={"Recibidos"}
+        link={`compras/recibos/nuevo`}
+        btn="Nueva"
+      />
       <GoodsReceiptList goodsReceipts={goodsReceipts} />
     </div>
   );

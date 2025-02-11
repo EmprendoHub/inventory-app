@@ -7,7 +7,6 @@ import React from "react";
 
 export default function HomeNavbar() {
   const { data: session } = useSession();
-  console.log(session?.user);
 
   const path = usePathname();
   return (

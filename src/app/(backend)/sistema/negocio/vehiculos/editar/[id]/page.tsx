@@ -1,8 +1,8 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/inventario/_components/FormHeader";
+import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
-import TruckEdit from "../../_components/TruckEdit";
+import TruckEdit from "../../../../contabilidad/_components/TruckEdit";
 
 export default async function EditTruck({
   params,

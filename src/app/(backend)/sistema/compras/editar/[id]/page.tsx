@@ -1,7 +1,7 @@
 import React from "react";
 import prisma from "@/lib/db";
 import Link from "next/link";
-import FormHeader from "@/app/(backend)/sistema/inventario/_components/FormHeader";
+import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
 import PurchaseOrderEdit from "../../_components/PurchaseOrderEdit";
 
 export default async function EditPurchaseOrder({

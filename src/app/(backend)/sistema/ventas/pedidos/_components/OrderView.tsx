@@ -25,7 +25,7 @@ import { BsEnvelopeArrowUp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
 
 export default function OrderView({ order }: { order: FullOderType }) {
-  const subtotal = order.orderItems.reduce(
+  const subtotal = order.orderItems?.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
@@ -292,7 +292,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {order.orderItems.map((item, index) => (
+            {order.orderItems?.map((item, index) => (
               <TableRow key={index}>
                 <TableCell className="font-medium">
                   <Image
@@ -331,7 +331,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
         <div className="ml-auto w-80 space-y-1">
           <div className="flex justify-between">
             <span className="font-medium">Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>${subtotal?.toFixed(2)}</span>
           </div>
           {/* <div className="flex justify-between">
             <span className="font-medium">IVA (16%):</span>
@@ -339,9 +339,9 @@ export default function OrderView({ order }: { order: FullOderType }) {
           </div> */}
           <div className="flex justify-between border-t pt-2 font-bold">
             <span>Gran Total:</span>
-            <span>${grandTotal.toFixed(2)}</span>
+            <span>${grandTotal?.toFixed(2)}</span>
           </div>
-          {order.payments.length > 0 && (
+          {order.payments && order.payments.length > 0 && (
             <div className="flex justify-between">
               <span className="font-medium">Pagado:</span>
               <span>
@@ -356,7 +356,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
       </section>
 
       {/* Payments */}
-      {order.payments.length > 0 && (
+      {(order.payments?.length ?? 0) > 0 && (
         <section className="px-8 pb-8 maxsm:pl-1 mt-2 bg-card rounded-lg shadow-md">
           {/* Customer Info */}
           <div className="grid grid-cols-2 gap-8">
@@ -377,7 +377,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {order.payments.map((item, index) => (
+              {order.payments?.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>{item.createdAt.toLocaleDateString()}</TableCell>
                   <TableCell>${item.amount.toFixed(2)}</TableCell>

@@ -1,7 +1,8 @@
 import React from "react";
-import InventoryHeader from "../_components/SalesHeader";
+
 import { PaymentList } from "./_components/PaymentList";
 import prisma from "@/lib/db";
+import BusinessHeader from "../../_components/BusinessHeader";
 
 export default async function Payments() {
   const paymentsWithProductCount = await prisma.payment.findMany({
@@ -12,7 +13,11 @@ export default async function Payments() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <InventoryHeader title={"pagos"} link={`pagos/nuevo`} />
+      <BusinessHeader
+        title={"pagos"}
+        link={`negocio/pagos/nuevo`}
+        btn="Nuevo"
+      />
       <PaymentList payments={paymentsWithProductCount} />
     </div>
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/inventario/_components/FormHeader";
+import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
 import Link from "next/link";
 import prisma from "@/lib/db";
 import DeliveryEdit from "../../_components/DeliveryEdit";

@@ -23,6 +23,7 @@ export type ItemType = {
   id: string;
   name: string;
   mainImage: string;
+  status: string;
   description: string;
   sku: string;
   barcode: string | null;

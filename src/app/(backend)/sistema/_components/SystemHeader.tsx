@@ -40,8 +40,6 @@ const SystemHeader = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  if (!session) return null;
-
   return (
     <div className="bg-primary h-10 flex items-center justify-between px-4 maxsm:px-2">
       <TooltipProvider>
@@ -71,13 +69,13 @@ const SystemHeader = () => {
                   onClick={toggleMenu}
                 >
                   <Image
-                    src={session.user?.image || "/images/avatar.jpg"}
+                    src={session?.user?.image || "/images/avatar.jpg"}
                     width={30}
                     height={30}
                     className="rounded-full"
                     alt="avatar"
                   />
-                  <span className="text-xs">{session.user?.name}</span>
+                  <span className="text-xs">{session?.user?.name}</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -102,7 +100,7 @@ const SystemHeader = () => {
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-2">
                 <Image
-                  src={session.user?.image || "/images/avatar.jpg"}
+                  src={session?.user?.image || "/images/avatar.jpg"}
                   width={40}
                   height={40}
                   className="rounded-full"
@@ -110,8 +108,10 @@ const SystemHeader = () => {
                 />
 
                 <div>
-                  <p className="font-semibold">{session.user?.name}</p>
-                  <p className="text-sm text-gray-500">{session.user?.email}</p>
+                  <p className="font-semibold">{session?.user?.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {session?.user?.email}
+                  </p>
                 </div>
                 <div onClick={toggleMenu} className=" cursor-pointer">
                   <X />

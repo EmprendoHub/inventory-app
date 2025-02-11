@@ -2,7 +2,7 @@ import React from "react";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import GoodsReceiptEdit from "../../_componentes/GoodsReceiptEdit";
-import FormHeader from "@/app/(backend)/sistema/inventario/_components/FormHeader";
+import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
 
 export default async function EditGoods({
   params,

@@ -1,7 +1,8 @@
 import React from "react";
-import InventoryHeader from "../_components/SalesHeader";
+
 import { OrderList } from "./_components/OrderList";
 import prisma from "@/lib/db";
+import BusinessHeader from "../../_components/BusinessHeader";
 
 export default async function SalesOrders() {
   const ordersWithItems = await prisma.order.findMany({
@@ -16,7 +17,11 @@ export default async function SalesOrders() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <InventoryHeader title={"Pedidos"} link={`pedidos/nuevo`} />
+      <BusinessHeader
+        title={"Pedidos"}
+        link={`ventas/pedidos/nuevo`}
+        btn="Nuevo"
+      />
       <OrderList orders={ordersWithItems} />
     </div>
   );

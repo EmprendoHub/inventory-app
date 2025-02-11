@@ -1,7 +1,7 @@
 import React from "react";
 import prisma from "@/lib/db";
 import PurchaseOrderForm from "../_components/PurchaseOrderForm";
-import FormHeader from "../../inventario/_components/FormHeader";
+import FormHeader from "../../negocio/_components/FormHeader";
 
 export default async function NewItem() {
   const suppliers = await prisma.supplier.findMany();

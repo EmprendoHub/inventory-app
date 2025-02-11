@@ -19,22 +19,31 @@ export function formatCurrency({ amount, currency }: iAppProps) {
 }
 
 export async function generateOrderId(prisma: PrismaClient) {
-  try {
-    // Create counter if it doesn't exist
-    const newCounter = await prisma.counter.create({
-      data: { id: "order_counter", sequence: 1 },
-    });
-    return newCounter.sequence.toString().padStart(6, "0");
-  } catch (error) {
-    console.log("error", error);
+  const counterId = "order_counter";
 
-    // If counter exists, update it
-    const updated = await prisma.counter.update({
-      where: { id: "order_counter" },
+  // Check if the counter already exists
+  let counter = await prisma.counter.findUnique({
+    where: { id: counterId },
+  });
+
+  if (!counter) {
+    // If the counter doesn't exist, create it
+    counter = await prisma.counter.create({
+      data: {
+        id: counterId,
+        sequence: 1, // Start with sequence 1
+      },
+    });
+  } else {
+    // If the counter exists, increment the sequence
+    counter = await prisma.counter.update({
+      where: { id: counterId },
       data: { sequence: { increment: 1 } },
     });
-    return updated.sequence.toString().padStart(6, "0");
   }
+
+  // Generate the order number using the sequence
+  return counter.sequence.toString().padStart(6, "0");
 }
 
 export function getMexicoTime(date: Date | string) {
@@ -98,4 +107,18 @@ export const isValidEmail = (email: string) => {
 export const isValidPhone = (phone: string) => {
   const phoneRegex = /^(\+\d{2}\s?)?(\d{3}[-\s]?\d{3}[-\s]?\d{4})$/;
   return phoneRegex.test(phone);
+};
+
+export const verifySupervisorCode = async (
+  code: string | undefined
+): Promise<boolean> => {
+  // Implement your logic to verify the supervisor code
+  // For example, you can make an API call to verify the code
+  // This is a placeholder implementation
+  return code === "1234"; // Replace with actual verification logic
+};
+
+// Function to mask the input value
+export const maskValue = (value: string) => {
+  return value.replace(/./g, "•"); // Replace every character with a bullet (•)
 };

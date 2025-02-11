@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { PurchaseOrderList } from "./_components/PurchaseOrderList";
 import { PurchaseOrderType } from "@/types/purchaseOrders";
-import PurchaseHeader from "../_components/PurchaseHeader";
+import BusinessHeader from "../_components/BusinessHeader";
 
 export default async function ListPurchases() {
   const session = await getServerSession(options);
@@ -33,7 +33,11 @@ export default async function ListPurchases() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <PurchaseHeader title={"Ordenes de Compra"} link={`nueva`} />
+      <BusinessHeader
+        title={"Ordenes de Compra"}
+        link={`compras/nueva`}
+        btn="Nueva"
+      />
       <PurchaseOrderList purchaseOrders={purchaseOrders} />
     </div>
   );

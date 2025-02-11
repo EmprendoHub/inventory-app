@@ -52,19 +52,23 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
   const columns = React.useMemo<ColumnDef<DeliveryType>[]>(
     () => [
       {
-        accessorKey: "orderId",
+        accessorKey: "createdAt",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="text-xs"
           >
-            Order ID
+            Fecha
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-xs">{row.original.orderId}</div>
+          <div className="text-xs font-medium">
+            {row.original.createdAt
+              ? new Date(row.original.createdAt).toLocaleDateString()
+              : "N/A"}
+          </div>
         ),
       },
       {
@@ -222,9 +226,11 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtro..."
-          value={(table.getColumn("orderId")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn("createdAt")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("orderId")?.setFilterValue(event.target.value)
+            table.getColumn("createdAt")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

@@ -1,7 +1,7 @@
 // context/ModalContext.tsx
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { BsCurrencyExchange } from "react-icons/bs";
 
 type ModalOptions = {
@@ -20,7 +20,7 @@ type ModalResult = {
     amount?: string;
     reference?: string;
     method?: string;
-    code?: string; // Add this line
+    code?: string;
   };
 };
 
@@ -39,24 +39,128 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     amount: "",
     reference: "",
     method: "",
-    code: "", // Add this line
+    code: "",
   });
 
-  // Reset payment data when payment modal opens
+  const modalRef = useRef<HTMLDivElement>(null);
+  const supervisorCodeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPaymentData((prev) => ({
+      ...prev,
+      code: value,
+    }));
+  };
+
+  const handleConfirm = () => {
+    if (modal?.type === "payment") {
+      handleClose({ confirmed: true, data: paymentData });
+    } else if (modal?.type === "supervisorCode") {
+      handleClose({
+        confirmed: true,
+        data: { code: paymentData.code },
+      });
+    } else {
+      handleClose({ confirmed: true });
+    }
+  };
+
+  const handleCancel = () => {
+    if (modal?.showCancelButton) {
+      handleClose({ confirmed: false });
+    }
+  };
+
+  // Focus trap
+  useEffect(() => {
+    if (!modal) return;
+
+    const handleFocusTrap = (e: KeyboardEvent) => {
+      if (!modalRef.current || e.key !== "Tab") return;
+
+      const focusableElements = modalRef.current.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+
+      const firstFocusable = focusableElements[0] as HTMLElement;
+      const lastFocusable = focusableElements[
+        focusableElements.length - 1
+      ] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        }
+      } else {
+        if (document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleFocusTrap);
+    return () => window.removeEventListener("keydown", handleFocusTrap);
+  }, [modal]);
+
+  // Auto-focus for supervisor code input
+  useEffect(() => {
+    if (modal?.type === "supervisorCode" && supervisorCodeInputRef.current) {
+      const timeoutId = setTimeout(() => {
+        if (supervisorCodeInputRef.current) {
+          supervisorCodeInputRef.current.focus();
+
+          const preventFocusSteal = (e: FocusEvent) => {
+            e.preventDefault();
+            supervisorCodeInputRef.current?.focus();
+          };
+
+          document.addEventListener("focusin", preventFocusSteal);
+          return () =>
+            document.removeEventListener("focusin", preventFocusSteal);
+        }
+      }, 50);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [modal]);
+
+  // Keyboard event handler
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (!modal) return;
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleConfirm();
+      } else if (event.key === "Escape" && modal.showCancelButton) {
+        event.preventDefault();
+        handleCancel();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+    // eslint-disable-next-line
+  }, [modal, paymentData]);
+
+  // Reset payment data when modal type changes
   useEffect(() => {
     if (modal?.type === "payment") {
       setPaymentData({ amount: "", reference: "", method: "", code: "" });
     }
   }, [modal]);
 
+  // Reset payment data when modal closes
   useEffect(() => {
     if (!modal) {
-      // Reset paymentData when the modal is closed
       setPaymentData({
         amount: "",
         reference: "",
         method: "",
-        code: "", // Reset the supervisor code
+        code: "",
       });
     }
   }, [modal]);
@@ -72,13 +176,11 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     setModal(null);
     resolvePromise?.(result);
     setResolvePromise(null);
-
-    // Reset paymentData (including supervisor code) when the modal is closed
     setPaymentData({
       amount: "",
       reference: "",
       method: "",
-      code: "", // Reset the supervisor code
+      code: "",
     });
   };
 
@@ -86,11 +188,21 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     <ModalContext.Provider value={{ showModal }}>
       {children}
       {modal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center min-w-full min-h-screen z-50">
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center min-w-full min-h-screen z-50"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && modal.showCancelButton) {
+              e.preventDefault();
+              handleCancel();
+            }
+          }}
+        >
           <div
+            ref={modalRef}
             className={`${
               modal.icon === "warning" ? "bg-red-800" : "bg-card"
             } rounded-lg p-6 py-12 max-w-md w-96`}
+            onMouseDown={(e) => e.stopPropagation()}
           >
             <div className="text-center">
               {modal.type === "payment" ? (
@@ -133,7 +245,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                         reference: e.target.value,
                       }))
                     }
-                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500  bg-input"
+                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
                   />
 
                   <h3 className="text-xs">Método</h3>
@@ -148,7 +260,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                         method: e.target.value,
                       }))
                     }
-                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500  bg-input"
+                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
                   />
                 </div>
               ) : modal.type === "supervisorCode" ? (
@@ -170,30 +282,42 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                     <p className="text-slate-300 text-xs">{modal.text}</p>
                   </div>
 
-                  <input
-                    name="supervisorCode"
-                    type="password"
-                    placeholder="Código de Supervisor"
-                    value={paymentData.code} // Use paymentData.code
-                    onChange={(e) =>
-                      setPaymentData((prev) => ({
-                        ...prev,
-                        code: e.target.value, // Update the code property
-                      }))
-                    }
-                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500  bg-input"
-                  />
+                  <div>
+                    <input
+                      type="text"
+                      name="username"
+                      autoComplete="off"
+                      style={{ display: "none" }}
+                    />
+                    <input
+                      type="password"
+                      name="password"
+                      autoComplete="off"
+                      style={{ display: "none" }}
+                    />
+
+                    <input
+                      ref={supervisorCodeInputRef}
+                      name="supervisorCode"
+                      type="password"
+                      placeholder="Código de Supervisor"
+                      value={paymentData.code}
+                      onChange={handleInputChange}
+                      autoComplete="new-password"
+                      tabIndex={0}
+                      className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
+                    />
+                  </div>
                 </div>
               ) : (
-                // ... existing delete modal JSX
-                <div className=" flex flex-col justify-center items-center gap-1">
+                <div className="flex flex-col justify-center items-center gap-1">
                   <p className="text-4xl">
                     {modal.icon === "warning" && "⚠️"}
                     {modal.icon === "success" && "✅"}
                     {modal.icon === "error" && "❌"}
                   </p>
                   <h3
-                    className={`text-2xl font-bold mt-2  ${
+                    className={`text-2xl font-bold mt-2 ${
                       modal.icon === "warning" ? "text-white" : ""
                     }`}
                   >
@@ -213,25 +337,14 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             <div className="flex gap-3 justify-center mt-6">
               {modal.showCancelButton && (
                 <button
-                  onClick={() => handleClose({ confirmed: false })}
+                  onClick={handleCancel}
                   className="px-8 text-sm py-2 bg-slate-800 hover:bg-black text-white rounded duration-300 ease-in-out"
                 >
                   {modal.cancelButtonText || "Cancel"}
                 </button>
               )}
               <button
-                onClick={() => {
-                  if (modal.type === "payment") {
-                    handleClose({ confirmed: true, data: paymentData });
-                  } else if (modal.type === "supervisorCode") {
-                    handleClose({
-                      confirmed: true,
-                      data: { code: paymentData.code },
-                    });
-                  } else {
-                    handleClose({ confirmed: true });
-                  }
-                }}
+                onClick={handleConfirm}
                 className="px-8 text-sm py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded"
               >
                 {modal.confirmButtonText || "OK"}

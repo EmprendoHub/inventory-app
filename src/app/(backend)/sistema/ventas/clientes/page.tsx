@@ -12,7 +12,7 @@ export default async function Clients() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <SalesHeader title={"clientes"} link={`clientes/nuevo`} />
+      <SalesHeader title={"clientes"} link={`clientes/crear`} />
       <ClientList clients={clientsWithProductCount} />
     </div>
   );

@@ -3,12 +3,10 @@ import { getToken } from "next-auth/jwt";
 
 // Define protected paths that require specific roles
 const PROTECTED_PATHS = [
-  "/sistema/compras",
-  "/sistema/compras/recibos",
-  "/sistema/compras/recibos/nuevo",
-  "/sistema/negocio/contabilidad/transacciones",
-  "/sistema/negocio/contabilidad/cuentas",
-  "/sistema/negocio/contabilidad/cuentas/nueva",
+  "/sistema/compras", // Protect the entire /sistema/compras/* path
+  "/sistema/negocio", // Protect the entire /sistema/compras/* path
+  "/sistema/contabilidad/transacciones",
+  "/sistema/contabilidad/cuentas",
 ];
 
 export async function middleware(request: any) {
@@ -35,12 +33,19 @@ export async function middleware(request: any) {
       return NextResponse.redirect(signInUrl);
     }
 
-    // Check if current path is in protected paths
-    const isProtectedPath = PROTECTED_PATHS.some((path) =>
+    // Check if the path ends with "editar", "nueva", or "nuevo"
+    // const isDynamicProtectedPath =
+    //   pathname.endsWith("editar") ||
+    //   pathname.endsWith("nueva") ||
+    //   pathname.endsWith("nuevo");
+
+    // Check if the path matches any of the protected paths or their subpaths
+    const isStaticProtectedPath = PROTECTED_PATHS.some((path) =>
       pathname.startsWith(path)
     );
 
-    if (isProtectedPath) {
+    // If the path is protected (dynamic or static), enforce role-based access
+    if (isStaticProtectedPath) {
       // Only allow SUPER_ADMIN and ADMIN roles for protected paths
       if (
         token?.user?.role !== "SUPER_ADMIN" &&
