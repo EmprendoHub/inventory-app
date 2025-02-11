@@ -32,7 +32,7 @@ export default async function ListTransactions() {
   }
 
   return (
-    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
+    <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4  rounded-md">
       <BusinessHeader
         title={"Transacciones"}
         link={`contabilidad/transacciones/nueva`}
