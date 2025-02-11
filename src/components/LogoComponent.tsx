@@ -5,7 +5,7 @@ const LogoComponent = ({ className }: { className: string }) => {
     <Image
       width={250}
       height={250}
-      src={"/images/logo_square_light.png"}
+      src={`/logos/logo_square_light.png`}
       alt="Yunuen Co"
       className={`main-logo-class ${className}`}
     />

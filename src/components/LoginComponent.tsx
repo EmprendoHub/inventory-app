@@ -76,7 +76,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
       <div className="flex items-center justify-center bg-gradient-to-br from-slate-600 to-slate-900 h-screen w-full">
         <div className="w-full flex items-center justify-center maxmdsm:hidden">
           <Image
-            src={"/images/logo_square_light.png"}
+            src={"/logos/logo_square_light.png"}
             alt="producto"
             width={500}
             height={500}
