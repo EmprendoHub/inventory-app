@@ -6,9 +6,6 @@ import SelectInput from "@/components/SelectInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { MinusCircle, PlusCircle } from "lucide-react";
-import SupervisorVerificationModal from "@/components/system/SupervisorVerificationModal";
-import { useSession } from "next-auth/react";
-import { UserType } from "@/types/users";
 
 type AdjustType = {
   items: {
@@ -30,9 +27,6 @@ type AdjustType = {
 };
 
 export default function AdjustmentForm({ items, warehouses }: AdjustType) {
-  const { data: session } = useSession();
-  const user = session?.user as UserType;
-
   const [state, formAction] = useFormState(createAdjustment, {
     errors: {},
     success: false,
@@ -40,39 +34,6 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
   });
 
   const [formType, setFormType] = useState("add");
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<FormData | null>(null);
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
-      setIsModalOpen(true);
-      // Store the form data for later submission
-      setFormData(new FormData(e.target as HTMLFormElement));
-    } else {
-      formAction(new FormData(e.target as HTMLFormElement));
-    }
-  };
-
-  const handleVerify = async (code: string) => {
-    const isValid = await verifySupervisorCode(code);
-
-    if (isValid && formData) {
-      // Submit the form with the stored data
-      formAction(formData);
-      setIsModalOpen(false);
-      setFormData(null);
-    }
-
-    return isValid;
-  };
-
-  const verifySupervisorCode = async (code: string) => {
-    // Replace with your actual verification logic
-    return code === "1234"; // Example code
-  };
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
@@ -107,7 +68,7 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
       </ul>
 
       {formType === "add" ? (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
             <div className="flex flex-col gap-3 w-full">
@@ -258,11 +219,6 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
           )}
         </form>
       )}
-      <SupervisorVerificationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onVerify={handleVerify}
-      />
     </div>
   );
 }

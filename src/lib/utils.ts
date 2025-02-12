@@ -126,7 +126,7 @@ export const verifySupervisorCode = async (
   // Implement your logic to verify the supervisor code
   // For example, you can make an API call to verify the code
   // This is a placeholder implementation
-  return ["1234", "5795", "8745"].includes(code); // Replace with actual verification logic
+  return ["6487", "5795", "8745"].includes(code); // Replace with actual verification logic
 };
 
 // Function to mask the input value
