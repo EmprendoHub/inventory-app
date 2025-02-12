@@ -11,6 +11,8 @@ import { CloudUpload } from "lucide-react";
 import { ItemFormState, ItemGroupType } from "@/types/items";
 import { useModal } from "@/app/context/ ModalContext";
 import { createItemAction } from "../_actions";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export default function ProductForm({
   categories,
@@ -19,7 +21,8 @@ export default function ProductForm({
   warehouses,
   suppliers,
 }: ItemGroupType) {
-  // Update the useFormState hook with the correct type
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   // eslint-disable-next-line
   const [state, formAction] = useFormState<ItemFormState, FormData>(
     createItemAction,
@@ -45,7 +48,7 @@ export default function ProductForm({
     if (fileData) {
       formData.set("image", fileData); // Replace the empty file input with our stored file
     }
-
+    formData.set("userId", user.id);
     // Call the form action
     const result = await createItemAction(state, formData);
 
@@ -124,7 +127,7 @@ export default function ProductForm({
               </div>
             )}
             <Image
-              className="absolute object-cover -z-10 top-0 left-0"
+              className="absolute inset-0 object-cover w-full h-full -z-10"
               src={productImage}
               alt="imagen"
               width={500}

@@ -67,7 +67,7 @@ export async function createNewOrder(
     const dueDate = new Date();
     const orderNo = await generateOrderId(prisma);
 
-    await prisma.order.create({
+    const newOrder = await prisma.order.create({
       data: {
         orderNo,
         clientId: client.id,
@@ -86,7 +86,50 @@ export async function createNewOrder(
           })),
         },
       },
+      include: {
+        orderItems: true,
+      },
     });
+
+    // Iterate through each item in the order
+    for (const orderItem of newOrder.orderItems) {
+      // Find the stock entry for the item
+      const stock = await prisma.stock.findFirst({
+        where: { itemId: orderItem.itemId },
+      });
+
+      if (!stock) {
+        throw new Error(`Stock not found for item ${orderItem.itemId}`);
+      }
+
+      // Calculate the new available quantity
+      const newAvailableQty = stock.availableQty - orderItem.quantity;
+
+      if (newAvailableQty < 0) {
+        throw new Error(`Insufficient stock for item ${orderItem.itemId}`);
+      }
+
+      // Update the stock
+      await prisma.stock.update({
+        where: { id: stock.id },
+        data: {
+          availableQty: newAvailableQty,
+          reservedQty: stock.reservedQty + orderItem.quantity, // Reserve the quantity
+        },
+      });
+
+      // Create a stock movement record
+      await prisma.stockMovement.create({
+        data: {
+          itemId: orderItem.itemId,
+          type: "SALE",
+          quantity: orderItem.quantity,
+          reference: `Order ${newOrder.orderNo}`,
+          status: "COMPLETED",
+          createdBy: newOrder.clientId, // Assuming the client is the one placing the order
+        },
+      });
+    }
 
     revalidatePath("/sistema/ventas/pedidos");
 

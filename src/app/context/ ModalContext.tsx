@@ -1,4 +1,3 @@
-// context/ModalContext.tsx
 "use client";
 
 import { createContext, useContext, useState, useEffect, useRef } from "react";
@@ -41,16 +40,25 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     method: "",
     code: "",
   });
+  const [displayedCode, setDisplayedCode] = useState(""); // State for displayed value (dots)
+
+  console.log(paymentData);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const supervisorCodeInputRef = useRef<HTMLInputElement>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleSupervisorCodeChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const newValue = e.target.value;
+    const lastChar = newValue.slice(-1);
+
     setPaymentData((prev) => ({
       ...prev,
-      code: value,
+      code: prev.code + lastChar,
     }));
+
+    setDisplayedCode(newValue.replace(/./g, "•"));
   };
 
   const handleConfirm = () => {
@@ -150,6 +158,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (modal?.type === "payment") {
       setPaymentData({ amount: "", reference: "", method: "", code: "" });
+      setDisplayedCode(""); // Reset displayed code
     }
   }, [modal]);
 
@@ -162,6 +171,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         method: "",
         code: "",
       });
+      setDisplayedCode(""); // Reset displayed code
     }
   }, [modal]);
 
@@ -182,6 +192,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
       method: "",
       code: "",
     });
+    setDisplayedCode(""); // Reset displayed code
   };
 
   return (
@@ -284,25 +295,12 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
                   <div>
                     <input
-                      type="text"
-                      name="username"
-                      autoComplete="off"
-                      style={{ display: "none" }}
-                    />
-                    <input
-                      type="password"
-                      name="password"
-                      autoComplete="off"
-                      style={{ display: "none" }}
-                    />
-
-                    <input
                       ref={supervisorCodeInputRef}
                       name="supervisorCode"
-                      type="password"
+                      type="text"
                       placeholder="Código de Supervisor"
-                      value={paymentData.code}
-                      onChange={handleInputChange}
+                      value={displayedCode}
+                      onChange={handleSupervisorCodeChange}
                       autoComplete="new-password"
                       tabIndex={0}
                       className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"

@@ -145,7 +145,7 @@ model Delivery {
   trackingUrl   String?   // URL to track the shipment
   carrier     String
   otp         String
-  trackingNumber    String
+  trackingNumber    String  @unique
   deliveryDate DateTime?
   status      String   // Out for Delivery, Delivered, Failed
   createdAt   DateTime @default(now())

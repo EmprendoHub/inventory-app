@@ -36,6 +36,7 @@ import { DeliveryType } from "@/types/delivery";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ ModalContext";
 import { deleteDeliveryAction } from "../_actions";
+import { verifySupervisorCode } from "@/lib/utils";
 
 export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
   const router = useRouter();
@@ -76,7 +77,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
       },
       {
         accessorKey: "carrier",
-        header: () => <div className="text-xs">Paqueteria</div>,
+        header: () => <div className="text-xs">Paquetería</div>,
         cell: ({ row }) => (
           <div className="text-xs font-medium">{row.original.carrier}</div>
         ),
@@ -115,77 +116,101 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
           const ActionCell = () => {
             const { showModal } = useModal();
 
-            const deleteDelivery = React.useCallback(async () => {
-              const confirmed = await showModal({
-                title: "Are you sure?",
-                type: "delete",
-                text: "You won't be able to revert this!",
+            const deleteItem = React.useCallback(async () => {
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "Cancel",
+                confirmButtonText: "Verificar",
+                cancelButtonText: "Cancelar",
               });
 
-              if (confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
 
-                  const response = await deleteDeliveryAction(formData);
-
-                  if (!response.success)
-                    throw new Error("Failed to delete delivery");
-                  await showModal({
-                    title: "Deleted!",
-                    type: "info",
-                    text: "The delivery has been deleted.",
-                    icon: "success",
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                    type: "delete",
+                    text: "Eliminar este categoría?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
                   });
-                } catch (error) {
-                  console.error("Error deleting delivery:", error);
+
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deleteDeliveryAction(formData);
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "La categoría ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar la categoría",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
                   await showModal({
-                    title: "Error",
-                    type: "info",
-                    text: "There was an error deleting the delivery.",
+                    title: "Código no autorizado",
+                    type: "delete",
+                    text: "El código de supervisor no es válido.",
                     icon: "error",
                   });
                 }
               }
-              // eslint-disable-next-line
-            }, [showModal, row.original.id]);
+            }, [showModal]);
 
-            const viewDelivery = React.useCallback(() => {
+            const viewItem = React.useCallback(async () => {
               router.push(`/sistema/ventas/envios/editar/${row.original.id}`);
-              // eslint-disable-next-line
-            }, [router, row.original.id]);
+            }, []);
 
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
                     <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
+                    <MoreHorizontal />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel className="text-xs">
-                    Actions
-                  </DropdownMenuLabel>
+                  <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+
                   <DropdownMenuItem
-                    onClick={viewDelivery}
+                    onClick={viewItem}
                     className="text-xs cursor-pointer"
                   >
-                    <Eye className="mr-2 h-4 w-4" />
-                    Edit
+                    <Eye />
+                    Editar
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={deleteDelivery}
+                    onClick={deleteItem}
                     className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                   >
-                    <X className="mr-2 h-4 w-4" />
-                    Delete
+                    <X />
+                    Eliminar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

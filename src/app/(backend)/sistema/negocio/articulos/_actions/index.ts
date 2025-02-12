@@ -14,6 +14,7 @@ export const createItemAction = async (
   formData: FormData
 ): Promise<ItemFormState> => {
   const rawData = {
+    userId: formData.get("userId"),
     name: formData.get("name"),
     description: formData.get("description"),
     warehouse: formData.get("warehouse"),
@@ -35,6 +36,7 @@ export const createItemAction = async (
 
   // Validate the data using Zod
   const validatedData = ProductSchema.safeParse(rawData);
+
   if (!validatedData.success) {
     const errors = validatedData.error.flatten().fieldErrors;
     return {
@@ -107,6 +109,21 @@ export const createItemAction = async (
           itemId: newProduct.id,
           warehouseId: validatedData.data.warehouse,
           quantity: validatedData.data.stock || 0, // Store stock in the Stock table
+          availableQty: validatedData.data.stock || 0, // Set available quantity
+          reservedQty: 0, // Initially, no reserved quantity
+        },
+      });
+
+      // Step 3: Create Stock Movement Record
+      await prisma.stockMovement.create({
+        data: {
+          itemId: newProduct.id,
+          type: "PURCHASE", // Assuming the initial stock is added via a purchase
+          quantity: validatedData.data.stock || 0,
+          toWarehouseId: validatedData.data.warehouse,
+          reference: `Initial stock for product ${newProduct.id}`,
+          status: "COMPLETED",
+          createdBy: validatedData.data.userId ?? "", // Or the user ID who created the product
         },
       });
 

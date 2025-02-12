@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const ProductSchema = z.object({
   id: z.string().nullable().optional(),
+  userId: z.string().nullable().optional(),
   name: z.string().min(1, "Name is required"),
   description: z.string(),
   category: z.string().min(1, "Se requiere la categoría"),
@@ -159,4 +160,20 @@ export const TruckSchema = z.object({
   name: z.string().min(1, "Nombre Plate is required"),
   km: z.string().min(1, "Km Plate is required"),
   status: z.enum(["DISPONIBLE", "EN_USO", "MANTENIMIENTO"]),
+});
+
+export const DeliverySchema = z.object({
+  id: z.string().optional(),
+  orderId: z.string(),
+  method: z.enum(["INTERNO", "EXTERNO"]),
+  driverId: z.string().optional(),
+  truckId: z.string().optional(),
+  carrier: z.string().min(1, "Paquetería is required"),
+  deliveryDate: z.string().optional(), // Will convert to Date in the action
+  status: z.enum([
+    "Pendiente para entrega",
+    "Fuera para entrega",
+    "Entregado",
+    "Fallido",
+  ]),
 });

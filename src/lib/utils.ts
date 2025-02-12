@@ -122,3 +122,20 @@ export const verifySupervisorCode = async (
 export const maskValue = (value: string) => {
   return value.replace(/./g, "•"); // Replace every character with a bullet (•)
 };
+
+export function generateDeliveryOTP() {
+  // Generate a random 6-digit number
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  return otp.toString(); // Convert to string for consistency
+}
+
+export function generateTrackingNumber() {
+  // Get the current timestamp in base-36 (alphanumeric)
+  const timestampPart = Date.now().toString(36).toUpperCase();
+
+  // Generate a random 4-character alphanumeric string
+  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  // Combine the timestamp and random parts to create a unique tracking number
+  return `ENV-${timestampPart}-${randomPart}`;
+}

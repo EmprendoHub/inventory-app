@@ -146,7 +146,7 @@ export type OrderType = {
   quantity: number;
   price: number;
   orderId: string;
-}[];
+};
 
 export type FullOderType = {
   id: string;

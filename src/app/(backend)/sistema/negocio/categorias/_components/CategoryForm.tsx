@@ -17,7 +17,6 @@ export default function CategoryForm() {
   });
 
   const [sending, setSending] = useState(false);
-
   const { showModal } = useModal();
 
   // Custom submit handler to handle the file upload

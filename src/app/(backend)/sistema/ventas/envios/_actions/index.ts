@@ -1,24 +1,10 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { z } from "zod";
 import { DeliveryFormState } from "@/types/delivery";
 import { revalidatePath } from "next/cache";
-
-// Define Zod schema for Delivery
-const DeliverySchema = z.object({
-  id: z.string().optional(),
-  orderId: z.string(),
-  method: z.enum(["INTERNO", "EXTERNO"]),
-  driverId: z.string().optional(),
-  truckId: z.string().optional(),
-  externalShipId: z.string().optional(),
-  carrier: z.string().min(1, "Paqueteria is required"),
-  otp: z.string().min(1, "OTP is required"),
-  trackingNumber: z.string().min(1, "No. de rastreo se requiere"),
-  deliveryDate: z.string().optional(), // Will convert to Date in the action
-  status: z.enum(["Out for Delivery", "Delivered", "Failed"]),
-});
+import { DeliverySchema } from "@/lib/schemas";
+import { generateDeliveryOTP, generateTrackingNumber } from "@/lib/utils";
 
 export const createDeliveryAction = async (
   state: DeliveryFormState,
@@ -30,19 +16,23 @@ export const createDeliveryAction = async (
     method: formData.get("method") as "INTERNO" | "EXTERNO",
     driverId: formData.get("driverId") as string | null,
     truckId: formData.get("truckId") as string | null,
-    externalShipId: formData.get("externalShipId") as string | null,
-    carrier: formData.get("carrier") as string,
+    carrier: "YUNUEN CO",
     otp: formData.get("otp") as string,
     trackingNumber: formData.get("trackingNumber") as string,
     deliveryDate: formData.get("deliveryDate") as string | null,
     status: formData.get("status") as
-      | "Out for Delivery"
-      | "Delivered"
-      | "Failed",
+      | "Pendiente para entrega"
+      | "Fuera para entrega"
+      | "Entregado"
+      | "Fallido",
   };
+
+  console.log(rawData);
 
   // Validate the data using Zod
   const validatedData = DeliverySchema.safeParse(rawData);
+  console.log(validatedData.error);
+
   if (!validatedData.success) {
     const errors = validatedData.error.flatten().fieldErrors;
     return {
@@ -66,7 +56,8 @@ export const createDeliveryAction = async (
       };
     }
   }
-
+  const otp = generateDeliveryOTP();
+  const trackingNumber = generateTrackingNumber();
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.delivery.create({
@@ -75,10 +66,9 @@ export const createDeliveryAction = async (
           method: deliveryData.method,
           driverId: deliveryData.driverId || undefined,
           truckId: deliveryData.truckId || undefined,
-          externalShipId: deliveryData.externalShipId || undefined,
           carrier: deliveryData.carrier,
-          otp: deliveryData.otp,
-          trackingNumber: deliveryData.trackingNumber,
+          otp,
+          trackingNumber,
           deliveryDate: deliveryDate,
           status: deliveryData.status,
         },
@@ -108,14 +98,15 @@ export const updateDeliveryAction = async (
     driverId: formData.get("driverId") as string | null,
     truckId: formData.get("truckId") as string | null,
     externalShipId: formData.get("externalShipId") as string | null,
-    carrier: formData.get("carrier") as string,
+    carrier: "YUNUEN CO" as string,
     otp: formData.get("otp") as string,
     trackingNumber: formData.get("trackingNumber") as string,
     deliveryDate: formData.get("deliveryDate") as string | null,
     status: formData.get("status") as
-      | "Out for Delivery"
-      | "Delivered"
-      | "Failed",
+      | "Pendiente para entrega"
+      | "Fuera para entrega"
+      | "Entregado"
+      | "Fallido",
   };
 
   // Validate the data using Zod
@@ -143,7 +134,8 @@ export const updateDeliveryAction = async (
       };
     }
   }
-
+  const otp = generateDeliveryOTP();
+  const trackingNumber = generateTrackingNumber();
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.delivery.update({
@@ -153,10 +145,9 @@ export const updateDeliveryAction = async (
           method: deliveryData.method,
           driverId: deliveryData.driverId || undefined,
           truckId: deliveryData.truckId || undefined,
-          externalShipId: deliveryData.externalShipId || undefined,
           carrier: deliveryData.carrier,
-          otp: deliveryData.otp,
-          trackingNumber: deliveryData.trackingNumber,
+          otp,
+          trackingNumber,
           deliveryDate: deliveryDate,
           status: deliveryData.status,
         },

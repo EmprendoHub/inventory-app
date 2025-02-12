@@ -46,7 +46,7 @@ export default async function ItemsGroups() {
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
       <BusinessHeader
-        title={"negocio/articulos"}
+        title={"Artículos"}
         link={`negocio/articulos/nuevo`}
         btn="Nuevo"
       />
