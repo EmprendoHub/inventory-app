@@ -8,7 +8,6 @@ import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { MinusCircle, PlusCircle } from "lucide-react";
 import { useSession } from "next-auth/react";
-import SupervisorVerificationModal from "@/components/system/SupervisorVerificationModal";
 import { UserType } from "@/types/users";
 
 type AdjustType = {
@@ -41,6 +40,7 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
   const user = session?.user as UserType;
 
   const [formType, setFormType] = useState("add");
+  // eslint-disable-next-line
   const [isModalOpen, setIsModalOpen] = useState(false);
   // eslint-disable-next-line
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
@@ -48,29 +48,12 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    console.log(
-      user,
-      "*********************************************************************************************"
-    );
-
     if (user.role !== "SUPER_ADMIN" && user.role !== "ADMIN") {
       setIsModalOpen(true);
       setPendingAction(() => () => (e.target as HTMLFormElement).submit());
     } else {
       (e.target as HTMLFormElement).submit();
     }
-  };
-
-  const handleVerify = async (code: string) => {
-    // Implement your verification logic here
-    // For example, you can call an API to verify the supervisor code
-    const isValid = await verifySupervisorCode(code);
-    return isValid;
-  };
-
-  const verifySupervisorCode = async (code: string) => {
-    // Replace with your actual verification logic
-    return code === "1234"; // Example code
   };
 
   return (
@@ -257,12 +240,6 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
           )}
         </form>
       )}
-
-      <SupervisorVerificationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onVerify={handleVerify}
-      />
     </div>
   );
 }
