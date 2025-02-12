@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "../../../_components/FormHeader";
+import FormBusinessHeader from "../../../_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import WarehouseEdit from "../../_components/WarehouseEdit";
@@ -48,7 +48,7 @@ export default async function EditWarehouse({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar bodega"} />
+      <FormBusinessHeader title={"Editar bodega"} />
       {/* Form */}
       <WarehouseEdit warehouse={warehouse} />
     </div>

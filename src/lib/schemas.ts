@@ -118,11 +118,13 @@ export const UnitSchema = z.object({
 
 export const idSchema = z.object({
   id: z.string().min(3, "Se require un id"),
+  userId: z.string().nullable().optional(),
 });
 
 export const TwoIdSchema = z.object({
   id: z.string().min(3, "Se require un id"),
   orderId: z.string().min(3, "Se require un id de pedido"),
+  userId: z.string().nullable().optional(),
 });
 
 export const PaymentSchema = z.object({

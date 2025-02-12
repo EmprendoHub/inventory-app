@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import BusinessHeader from "../../_components/BusinessHeader";
 
 export default async function Payments() {
-  const paymentsWithProductCount = await prisma.payment.findMany({
+  const payments = await prisma.payment.findMany({
     orderBy: {
       createdAt: "desc",
     },
@@ -14,7 +14,7 @@ export default async function Payments() {
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md ">
       <BusinessHeader title={"pagos"} link={`ventas/pagos/nuevo`} btn="Nuevo" />
-      <PaymentList payments={paymentsWithProductCount} />
+      <PaymentList payments={payments} />
     </div>
   );
 }

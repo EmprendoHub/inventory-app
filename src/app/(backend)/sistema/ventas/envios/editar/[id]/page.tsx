@@ -1,8 +1,9 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+
 import Link from "next/link";
 import prisma from "@/lib/db";
 import DeliveryEdit from "../../_components/DeliveryEdit";
+import FormSalesHeader from "../../../_components/FormSalesHeader";
 
 export default async function EditUser({ params }: { params: { id: string } }) {
   const id = params.id;
@@ -51,7 +52,8 @@ export default async function EditUser({ params }: { params: { id: string } }) {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar Usuario"} />
+      <FormSalesHeader title={"Editar Usuario"} />
+
       {/* Form */}
       <DeliveryEdit
         delivery={delivery}

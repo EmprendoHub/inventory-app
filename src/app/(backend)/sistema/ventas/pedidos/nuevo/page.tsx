@@ -1,6 +1,7 @@
 import React from "react";
 import OrderForm from "../_components/OrderForm";
 import prisma from "@/lib/db";
+import FormSalesHeader from "../../_components/FormSalesHeader";
 
 export default async function NewLayaway() {
   const clients = await prisma.client.findMany({
@@ -14,5 +15,12 @@ export default async function NewLayaway() {
     },
   });
 
-  return <OrderForm clients={clients} items={items} />;
+  return (
+    <div>
+      {/* Header */}
+      <FormSalesHeader title={"Nuevo Pedido"} />
+      {/* Form */}
+      <OrderForm clients={clients} items={items} />;
+    </div>
+  );
 }

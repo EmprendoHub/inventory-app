@@ -106,12 +106,12 @@ export function ProductList({ items }: { items: ItemType[] }) {
         },
       },
       {
-        accessorKey: "totalStock",
+        accessorKey: "totalAvailableStock",
         header: () => (
           <div className="text-left text-xs  maxsm:hidden">Inventario</div>
         ),
         cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("totalStock"));
+          const amount = parseFloat(row.getValue("totalAvailableStock"));
 
           // Format the amount as a dollar amount
 

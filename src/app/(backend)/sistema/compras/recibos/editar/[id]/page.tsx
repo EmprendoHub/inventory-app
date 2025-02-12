@@ -2,7 +2,7 @@ import React from "react";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import GoodsReceiptEdit from "../../_componentes/GoodsReceiptEdit";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 
 export default async function EditGoods({
   params,
@@ -51,7 +51,7 @@ export default async function EditGoods({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar Articulo"} />
+      <FormBusinessHeader title={"Editar Articulo"} />
       {/* Form */}
       <GoodsReceiptEdit
         purchaseOrders={purchaseOrders}

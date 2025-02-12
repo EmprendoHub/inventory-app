@@ -1,7 +1,7 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
 import DeliveryForm from "../_components/DeliveryForm";
 import prisma from "@/lib/db";
+import FormSalesHeader from "../../_components/FormSalesHeader";
 
 export default async function NewDelivery() {
   const orders = await prisma.order.findMany({
@@ -15,7 +15,7 @@ export default async function NewDelivery() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Nuevo Envió"} />
+      <FormSalesHeader title={"Nuevo Envió"} />
       {/* Form */}
       <DeliveryForm orders={orders} drivers={drivers} trucks={trucks} />
     </div>

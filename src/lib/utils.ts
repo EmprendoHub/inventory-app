@@ -1,6 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { Shirt, UserPlus } from "lucide-react";
+import { GiClothes } from "react-icons/gi";
+import { TbComponents, TbRulerMeasure } from "react-icons/tb";
+import { BiCategory } from "react-icons/bi";
+import { FaWarehouse } from "react-icons/fa";
+import { IconComponent } from "@/app/constants";
+import { FaUsers } from "react-icons/fa";
+import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
+import { GiPayMoney } from "react-icons/gi";
+import { PiInvoice } from "react-icons/pi";
+import { FaShippingFast } from "react-icons/fa";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -139,3 +150,18 @@ export function generateTrackingNumber() {
   // Combine the timestamp and random parts to create a unique tracking number
   return `ENV-${timestampPart}-${randomPart}`;
 }
+
+export const iconMap: Record<string, IconComponent> = {
+  TbComponents,
+  Shirt,
+  GiClothes,
+  TbRulerMeasure,
+  BiCategory,
+  FaWarehouse,
+  UserPlus,
+  FaUsers,
+  LiaFileInvoiceDollarSolid,
+  GiPayMoney,
+  PiInvoice,
+  FaShippingFast,
+};

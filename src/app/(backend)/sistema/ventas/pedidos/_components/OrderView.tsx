@@ -17,7 +17,7 @@ import {
   deleteOrderItemsAction,
   deletePaymentAction,
   payOrderAction,
-} from "../_actions/orderActions";
+} from "../_actions";
 import { useModal } from "@/app/context/ ModalContext";
 import Link from "next/link";
 import {
@@ -28,8 +28,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { BsEnvelopeArrowUp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export default function OrderView({ order }: { order: FullOderType }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const subtotal = order.orderItems?.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -117,6 +121,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
             const formData = new FormData();
             formData.set("id", id);
             formData.set("orderId", orderId);
+            formData.set("userId", user?.id);
             const response = await deleteOrderItemsAction(formData);
             if (!response.success) throw new Error("Error al eliminar");
             await showModal({
@@ -303,24 +308,28 @@ export default function OrderView({ order }: { order: FullOderType }) {
               href={`/api/recibo/${order.id}`}
               className="px-2 py-2 text-center bg-blue-600 hover:bg-blue-800 text-white text-xs rounded-md flex items-center gap-1"
             >
-              <DownloadCloud /> Generar PDF
+              <DownloadCloud /> PDF
             </Link>
-            <Button
-              disabled={sending}
-              onClick={() => sendEmailReminder(order.id)}
-              className=" text-center bg-emerald-700 text-white text-xs rounded-md "
-            >
-              <BsEnvelopeArrowUp /> Enviar Email{" "}
-              {sending && <span className="loader"></span>}
-            </Button>
-            <Button
-              disabled={sending}
-              onClick={() => receivePayment(order.id)}
-              className=" text-center bg-purple-700 text-white text-xs rounded-md "
-            >
-              <BsEnvelopeArrowUp /> Recibir Pago{" "}
-              {sending && <span className="loader"></span>}
-            </Button>
+            {order.status !== "CANCELADO" && (
+              <>
+                <Button
+                  disabled={sending}
+                  onClick={() => sendEmailReminder(order.id)}
+                  className=" text-center bg-emerald-700 text-white text-xs rounded-md "
+                >
+                  <BsEnvelopeArrowUp /> Enviar Email{" "}
+                  {sending && <span className="loader"></span>}
+                </Button>
+                <Button
+                  disabled={sending}
+                  onClick={() => receivePayment(order.id)}
+                  className=" text-center bg-purple-700 text-white text-xs rounded-md "
+                >
+                  <BsEnvelopeArrowUp /> Recibir Pago{" "}
+                  {sending && <span className="loader"></span>}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -356,6 +365,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
               <TableHead>Cntd.</TableHead>
               <TableHead className="maxsm:hidden">Precio unitario</TableHead>
               <TableHead>Total</TableHead>
+
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -379,7 +389,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 <TableCell>
                   ${(item.price * item.quantity).toFixed(2)}
                 </TableCell>
-                {item.id && (
+                {item.id && order.status !== "CANCELADO" && (
                   <TableCell>
                     {" "}
                     <button
@@ -441,6 +451,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 <TableHead>Cant.</TableHead>
                 <TableHead>Método</TableHead>
                 <TableHead className=" maxsm:hidden">Ref.</TableHead>
+                <TableHead>Estado</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -449,11 +460,12 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 <TableRow key={index}>
                   <TableCell>{item.createdAt.toLocaleDateString()}</TableCell>
                   <TableCell>${item.amount.toFixed(2)}</TableCell>
-                  <TableCell>{item.method}</TableCell>
+                  <TableCell className="uppercase">{item.method}</TableCell>
                   <TableCell className=" maxsm:hidden">
                     {item.reference}
                   </TableCell>
-                  {item.id && (
+                  <TableCell>{item.status}</TableCell>
+                  {item.id && order.status !== "CANCELADO" && (
                     <TableCell>
                       {" "}
                       <button

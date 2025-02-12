@@ -1,12 +1,12 @@
 import React from "react";
-import FormHeader from "../../_components/FormHeader";
+import FormBusinessHeader from "../../_components/FormBusinessHeader";
 import WarehouseForm from "../_components/WarehouseForm";
 
 export default function NewWarehouse() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Bodega"} />
+      <FormBusinessHeader title={"Bodega"} />
       {/* Form */}
       <WarehouseForm />
     </div>

@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { useFormState } from "react-dom";
-import { createNewOrder } from "../_actions/orderActions";
+import { createNewOrder } from "../_actions";
 import { ItemType } from "@/types/items";
 import { clientType } from "@/types/sales";
 import { SearchSelectInput } from "@/components/SearchSelectInput";

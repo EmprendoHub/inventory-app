@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import ExpenseEdit from "../../_components/ExpenseEdit";
@@ -48,7 +48,7 @@ export default async function EditExpense({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar Gasto"} />
+      <FormBusinessHeader title={"Editar Gasto"} />
       {/* Form */}
       <ExpenseEdit expense={expense} />
     </div>

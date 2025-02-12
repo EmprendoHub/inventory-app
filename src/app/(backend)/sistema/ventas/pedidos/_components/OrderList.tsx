@@ -42,10 +42,12 @@ import {
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { ordersAndItem, paymentType } from "@/types/sales";
 import { useModal } from "@/app/context/ ModalContext";
-import { deleteOrderAction, payOrderAction } from "../_actions/orderActions";
+import { deleteOrderAction, payOrderAction } from "../_actions";
 import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -54,6 +56,8 @@ function calculatePaymentsTotal(payments: paymentType[]) {
 }
 
 export function OrderList({ orders }: { orders: ordersAndItem[] }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -191,10 +195,10 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "Al eliminar este pedido se eliminara cualquier pago asociado.",
+                    text: "Al cancelara este pedido se cancelara cualquier pago asociado.",
                     icon: "warning",
                     showCancelButton: true,
-                    confirmButtonText: "Sí, eliminar",
+                    confirmButtonText: "Sí, cancelar",
                     cancelButtonText: "Cancelar",
                   });
 
@@ -202,13 +206,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                     try {
                       const formData = new FormData();
                       formData.set("id", row.original.id);
+                      formData.set("userId", user.id);
                       const response = await deleteOrderAction(formData);
                       if (!response.success)
-                        throw new Error("Error al eliminar");
+                        throw new Error("Error al cancelado");
                       await showModal({
-                        title: "¡Eliminado!",
+                        title: "¡Cancelado!",
                         type: "delete",
-                        text: "El pedido ha sido eliminado.",
+                        text: "El pedido ha sido cancelado.",
                         icon: "success",
                       });
                     } catch (error) {
@@ -217,7 +222,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                       await showModal({
                         title: "Error",
                         type: "delete",
-                        text: "No se pudo eliminar el pedido",
+                        text: "No se pudo cancelado el pedido",
                         icon: "error",
                       });
                     }
@@ -306,34 +311,38 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                     <Eye />
                     Ver detalles
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={receivePayment}
-                    className="text-xs cursor-pointer"
-                  >
-                    <MdCurrencyExchange /> Recibir pago
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => sendEmailReminder(row.original.id)}
-                    className="text-xs cursor-pointer"
-                  >
-                    <MdSms /> Enviar recordatorio
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      router.push(`/api/recibo/${row.original.id}`)
-                    }
-                    className="text-xs cursor-pointer"
-                  >
-                    <DownloadCloud /> Descargar PDF
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteOrder}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {row.original.status !== "CANCELADO" && (
+                    <>
+                      <DropdownMenuItem
+                        onClick={receivePayment}
+                        className="text-xs cursor-pointer"
+                      >
+                        <MdCurrencyExchange /> Recibir pago
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => sendEmailReminder(row.original.id)}
+                        className="text-xs cursor-pointer"
+                      >
+                        <MdSms /> Enviar recordatorio
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() =>
+                          router.push(`/api/recibo/${row.original.id}`)
+                        }
+                        className="text-xs cursor-pointer"
+                      >
+                        <DownloadCloud /> Descargar PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteOrder}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Cancelar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
@@ -371,9 +380,9 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtrar..."
-          value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("id")?.setFilterValue(event.target.value)
+            table.getColumn("orderNo")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

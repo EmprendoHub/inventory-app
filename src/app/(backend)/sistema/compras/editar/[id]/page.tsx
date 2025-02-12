@@ -1,7 +1,7 @@
 import React from "react";
 import prisma from "@/lib/db";
 import Link from "next/link";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 import PurchaseOrderEdit from "../../_components/PurchaseOrderEdit";
 
 export default async function EditPurchaseOrder({
@@ -51,7 +51,9 @@ export default async function EditPurchaseOrder({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={`Editar Orden de Compra: ${purchaseOrder.poNumber}`} />
+      <FormBusinessHeader
+        title={`Editar Orden de Compra: ${purchaseOrder.poNumber}`}
+      />
       {/* Form */}
       <PurchaseOrderEdit
         suppliers={suppliers}

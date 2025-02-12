@@ -148,62 +148,6 @@ export async function createNewOrder(
   }
 }
 
-export async function deleteOrderAction(formData: FormData) {
-  const rawData = {
-    id: formData.get("id"),
-  };
-
-  // Validate the data using Zod
-  const validatedData = idSchema.safeParse(rawData);
-  if (!validatedData.success) {
-    const errors = validatedData.error.flatten().fieldErrors;
-    return {
-      errors,
-      success: false,
-      message: "Validation failed. Please check the fields.",
-    };
-  }
-
-  if (!validatedData.data)
-    return { success: false, message: "Error al crear producto" };
-
-  try {
-    await prisma.orderItem.deleteMany({
-      where: {
-        orderId: validatedData.data.id,
-      },
-    });
-
-    await prisma.payment.deleteMany({
-      where: {
-        orderId: validatedData.data.id,
-      },
-    });
-
-    const order = await prisma.order.delete({
-      where: {
-        id: validatedData.data.id,
-      },
-    });
-
-    console.log("order deleted", order);
-    revalidatePath("/sistema/ventas/pedidos");
-    revalidatePath("/sistema/ventas/pagos");
-    return {
-      errors: {},
-      success: true,
-      message: "Order deleted successfully!",
-    };
-  } catch (error) {
-    console.error("Error creating order:", error);
-    return {
-      errors: {},
-      success: false,
-      message: "Failed to delete order",
-    };
-  }
-}
-
 export async function payOrderAction(formData: FormData) {
   // Extract and validate form data
   const rawData = {
@@ -274,11 +218,11 @@ export async function payOrderAction(formData: FormData) {
     const payment = await prisma.payment.create({
       data: {
         amount: Math.round(paymentAmount),
-        method: method || "cash",
+        method: method || "Efectivo",
         orderNo: order.orderNo,
         orderId: order.id,
         reference,
-        status: "Paid",
+        status: "PAGADO",
         invoiceId: "",
       },
     });
@@ -323,9 +267,12 @@ export async function deletePaymentAction(formData: FormData) {
     return { success: false, message: "Error al borrar pago" };
 
   try {
-    await prisma.payment.delete({
+    await prisma.payment.update({
       where: {
         id: validatedData.data.id,
+      },
+      data: {
+        status: "CANCELADO",
       },
     });
 
@@ -347,10 +294,134 @@ export async function deletePaymentAction(formData: FormData) {
   }
 }
 
+export async function deleteOrderAction(formData: FormData) {
+  const rawData = {
+    id: formData.get("id"),
+    userId: formData.get("userId"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = idSchema.safeParse(rawData);
+  console.log(validatedData.error);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  try {
+    // Fetch the order with its items
+    const order = await prisma.order.findUnique({
+      where: { id: validatedData.data.id },
+      include: { orderItems: true },
+    });
+
+    if (!order) {
+      return {
+        errors: {},
+        success: false,
+        message: "Order not found",
+      };
+    }
+
+    // Start a transaction to ensure atomicity
+    await prisma.$transaction(async (prisma) => {
+      // Release reserved stock for each item in the order
+      for (const orderItem of order.orderItems) {
+        // Find the stock entries for the item
+        const stocks = await prisma.stock.findMany({
+          where: { itemId: orderItem.itemId },
+        });
+
+        // Calculate the total reserved quantity to release
+        const quantityToRelease = orderItem.quantity;
+
+        // Update each stock entry to release the reserved quantity
+        for (const stock of stocks) {
+          if (stock.reservedQty >= quantityToRelease) {
+            // Release the reserved quantity
+            await prisma.stock.update({
+              where: { id: stock.id },
+              data: {
+                reservedQty: stock.reservedQty - quantityToRelease,
+                availableQty: stock.availableQty + quantityToRelease,
+              },
+            });
+
+            // Create a stock movement record for the release
+            await prisma.stockMovement.create({
+              data: {
+                itemId: orderItem.itemId,
+                type: "RETURN", // Indicates stock is being returned to available
+                quantity: quantityToRelease,
+                reference: `Order ${order.orderNo} deleted`,
+                status: "COMPLETED",
+                createdBy: rawData.userId as string, // Or the user ID who deleted the order
+              },
+            });
+
+            break; // Exit the loop after releasing the quantity
+          }
+        }
+      }
+
+      // Delete order items
+      // await prisma.orderItem.deleteMany({
+      //   where: {
+      //     orderId: validatedData.data.id,
+      //   },
+      // });
+
+      // Update payments status to cancelled
+      await prisma.payment.updateMany({
+        where: {
+          orderId: validatedData.data.id,
+        },
+        data: {
+          status: "CANCELADO",
+        },
+      });
+
+      // Update order status to cancelled
+      await prisma.order.update({
+        where: {
+          id: validatedData.data.id,
+        },
+        data: {
+          status: "CANCELADO",
+        },
+      });
+    });
+
+    console.log("Order deleted and stock updated successfully");
+    revalidatePath("/sistema/ventas/pedidos");
+    revalidatePath("/sistema/ventas/pagos");
+    return {
+      errors: {},
+      success: true,
+      message: "Order deleted successfully!",
+    };
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to delete order",
+    };
+  }
+}
+
 export async function deleteOrderItemsAction(formData: FormData) {
   const rawData = {
     id: formData.get("id"),
     orderId: formData.get("orderId"),
+    userId: formData.get("userId"),
   };
 
   // Validate the data using Zod
@@ -371,24 +442,91 @@ export async function deleteOrderItemsAction(formData: FormData) {
     const orderId = validatedData.data.orderId;
     const itemId = validatedData.data.id;
 
-    // Check the number of orderItems for this order
-    const orderItemCount = await prisma.orderItem.count({
-      where: { orderId },
+    // Fetch the order with its items
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { orderItems: true },
     });
 
-    if (orderItemCount === 1) {
-      // If it's the last order item, delete the order itself
-      await prisma.orderItem.deleteMany({ where: { orderId } });
-      await prisma.payment.deleteMany({ where: { orderId } });
-      await prisma.order.delete({ where: { id: orderId } });
-      console.log(
-        `Order ${orderId} and its payments and last orderItem deleted`
-      );
-    } else {
-      // Otherwise, just delete the specified orderItem
-      await prisma.orderItem.delete({ where: { id: itemId } });
-      console.log(`OrderItem deleted from Order ${orderId}`);
+    if (!order) {
+      return {
+        errors: {},
+        success: false,
+        message: "Order not found",
+      };
     }
+
+    // Start a transaction to ensure atomicity
+    await prisma.$transaction(async (prisma) => {
+      // Release reserved stock for each item in the order
+      for (const orderItem of order.orderItems) {
+        // Find the stock entries for the item
+        const stocks = await prisma.stock.findMany({
+          where: { itemId: orderItem.itemId },
+        });
+
+        // Calculate the total reserved quantity to release
+        const quantityToRelease = orderItem.quantity;
+
+        // Update each stock entry to release the reserved quantity
+        for (const stock of stocks) {
+          if (stock.reservedQty >= quantityToRelease) {
+            // Release the reserved quantity
+            await prisma.stock.update({
+              where: { id: stock.id },
+              data: {
+                reservedQty: stock.reservedQty - quantityToRelease,
+                availableQty: stock.availableQty + quantityToRelease,
+              },
+            });
+
+            // Create a stock movement record for the release
+            await prisma.stockMovement.create({
+              data: {
+                itemId: orderItem.itemId,
+                type: "RETURN", // Indicates stock is being returned to available
+                quantity: quantityToRelease,
+                reference: `Order ${order.orderNo} cancelled`,
+                status: "COMPLETED",
+                createdBy: rawData.userId as string, // Or the user ID who cancelled the order
+              },
+            });
+
+            break; // Exit the loop after releasing the quantity
+          }
+        }
+      }
+
+      const remainingItems = await prisma.orderItem.findMany({
+        where: { orderId: orderId },
+      });
+
+      // if its the last item
+      if (remainingItems.length === 1) {
+        // Update payments status to cancelled
+        await prisma.payment.updateMany({
+          where: {
+            orderId: validatedData.data.orderId,
+          },
+          data: {
+            status: "CANCELADO",
+          },
+        });
+
+        // Update the order status to CANCELADO
+        await prisma.order.update({
+          where: { id: orderId },
+          data: { status: "CANCELADO" },
+        });
+      } else {
+        // Delete the specified order item
+        await prisma.orderItem.delete({ where: { id: itemId } });
+      }
+
+      console.log(
+        `Order ${orderId} status updated to CANCELADO and stock released`
+      );
+    });
 
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
@@ -397,14 +535,15 @@ export async function deleteOrderItemsAction(formData: FormData) {
     return {
       errors: {},
       success: true,
-      message: "Pago eliminado con éxito!",
+      message:
+        "Order status updated to CANCELADO and stock released successfully!",
     };
   } catch (error) {
-    console.error("Error al eliminar pago:", error);
+    console.error("Error updating order status and releasing stock:", error);
     return {
       errors: {},
       success: false,
-      message: "Failed to delete payment",
+      message: "Failed to update order status and release stock",
     };
   }
 }

@@ -92,6 +92,7 @@ export type paymentType = {
   id: string;
   status: string;
   createdAt: Date;
+  orderId?: string;
   updatedAt: Date;
   amount: number;
   method: string;

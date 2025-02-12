@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "../../_components/FormHeader";
+import FormBusinessHeader from "../../_components/FormBusinessHeader";
 import ProductForm from "../_components/ItemForm";
 import prisma from "@/lib/db";
 
@@ -13,7 +13,7 @@ export default async function NewItem() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Articulo"} />
+      <FormBusinessHeader title={"Articulo"} />
       {/* Form */}
       <ProductForm
         categories={categories}

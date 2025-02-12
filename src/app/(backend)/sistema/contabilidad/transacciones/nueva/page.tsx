@@ -1,6 +1,6 @@
 import React from "react";
 
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 import TransactionForm from "../_components/TransactionForm";
 import prisma from "@/lib/db";
 
@@ -9,7 +9,7 @@ export default async function NewExpense() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Transacción"} />
+      <FormBusinessHeader title={"Transacción"} />
       {/* Form */}
       <TransactionForm accounts={accounts} />
     </div>

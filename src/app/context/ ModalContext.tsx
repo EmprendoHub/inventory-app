@@ -42,8 +42,6 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   });
   const [displayedCode, setDisplayedCode] = useState(""); // State for displayed value (dots)
 
-  console.log(paymentData);
-
   const modalRef = useRef<HTMLDivElement>(null);
   const supervisorCodeInputRef = useRef<HTMLInputElement>(null);
 

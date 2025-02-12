@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import TruckEdit from "../../_components/TruckEdit";
@@ -48,7 +48,7 @@ export default async function EditTruck({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar Articulo"} />
+      <FormBusinessHeader title={"Editar Articulo"} />
       {/* Form */}
       <TruckEdit truck={truck} />
     </div>

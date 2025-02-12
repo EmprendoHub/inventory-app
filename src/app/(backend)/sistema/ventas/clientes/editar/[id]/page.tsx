@@ -1,8 +1,8 @@
 import React from "react";
-import ClientFormHeader from "../../../_components/ClientFormHeader";
 import Link from "next/link";
 import ClientEdit from "../../_components/ClientEdit";
 import prisma from "@/lib/db";
+import FormSalesHeader from "../../../_components/FormSalesHeader";
 
 export default async function EditClient({
   params,
@@ -48,7 +48,7 @@ export default async function EditClient({
   return (
     <div>
       {/* Header */}
-      <ClientFormHeader title={"Editar Cliente"} />
+      <FormSalesHeader title={"Editar Cliente"} />
       {/* Form */}
       <ClientEdit client={client} />
     </div>

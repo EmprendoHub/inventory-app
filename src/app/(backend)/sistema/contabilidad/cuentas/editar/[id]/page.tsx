@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "@/app/(backend)/sistema/negocio/_components/FormHeader";
+import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import AccountEdit from "../../_components/AccountEdit";
@@ -50,7 +50,7 @@ export default async function EditAccount({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar Articulo"} />
+      <FormBusinessHeader title={"Editar Articulo"} />
       {/* Form */}
       <AccountEdit account={account} accounts={accounts} />
     </div>

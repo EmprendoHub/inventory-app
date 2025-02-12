@@ -1,11 +1,11 @@
 import React from "react";
-import FormHeader from "../../_components/FormHeader";
+import FormBusinessHeader from "../../_components/FormBusinessHeader";
 import ItemGroupForm from "../../articulos/_components/ItemGroupForm";
 
 export default function NewGroup() {
   return (
     <div>
-      <FormHeader title={"Grupo"} />
+      <FormBusinessHeader title={"Grupo"} />
       <ItemGroupForm />
     </div>
   );

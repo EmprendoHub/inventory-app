@@ -1,12 +1,12 @@
 import React from "react";
-import ClientFormHeader from "../../_components/ClientFormHeader";
 import ClientForm from "../_components/ClientForm";
+import FormSalesHeader from "../../_components/FormSalesHeader";
 
 export default async function NewItem() {
   return (
     <div>
       {/* Header */}
-      <ClientFormHeader title={"Cliente Nuevo"} />
+      <FormSalesHeader title={"Cliente Nuevo"} />
       {/* Form */}
       <ClientForm />
     </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "../../../_components/FormHeader";
+import FormBusinessHeader from "../../../_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import UnitEdit from "../../_components/UnitEdit";
@@ -44,7 +44,7 @@ export default async function EditUnit({ params }: { params: { id: string } }) {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar unidad"} />
+      <FormBusinessHeader title={"Editar unidad"} />
       {/* Form */}
       <UnitEdit unit={unit} />
     </div>

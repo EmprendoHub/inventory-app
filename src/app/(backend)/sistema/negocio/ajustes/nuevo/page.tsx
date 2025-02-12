@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "../../_components/FormHeader";
+import FormBusinessHeader from "../../_components/FormBusinessHeader";
 import AdjustmentForm from "../../_components/AdjustmentForm";
 import prisma from "@/lib/db";
 
@@ -11,7 +11,7 @@ export default async function newAdjustment() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Ajuste"} />
+      <FormBusinessHeader title={"Ajuste"} />
       {/* Form */}
       <AdjustmentForm items={items} warehouses={warehouses} />
     </div>

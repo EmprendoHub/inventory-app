@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "../../../_components/FormHeader";
+import FormBusinessHeader from "../../../_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import CategoryEdit from "../../_components/CategoryEdit";
@@ -48,7 +48,7 @@ export default async function EditCategory({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar categoría"} />
+      <FormBusinessHeader title={"Editar categoría"} />
       {/* Form */}
       <CategoryEdit category={category} />
     </div>

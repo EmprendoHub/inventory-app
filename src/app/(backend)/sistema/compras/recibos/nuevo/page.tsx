@@ -1,7 +1,7 @@
 import React from "react";
 import prisma from "@/lib/db";
 import GoodsReceiptForm from "../_componentes/GoodsReceiptForm";
-import FormHeader from "../../../negocio/_components/FormHeader";
+import FormBusinessHeader from "../../../negocio/_components/FormBusinessHeader";
 
 export default async function NewItem() {
   const purchaseOrders = await prisma.purchaseOrder.findMany();
@@ -10,7 +10,7 @@ export default async function NewItem() {
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Recibido"} />
+      <FormBusinessHeader title={"Recibido"} />
       {/* Form */}
       <GoodsReceiptForm purchaseOrders={purchaseOrders} items={items} />
     </div>

@@ -17,9 +17,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import React, { Dispatch, SetStateAction } from "react";
-import { FaAdjust, FaDollyFlatbed, FaRegFileArchive } from "react-icons/fa";
-import { FaShop, FaTruckFast } from "react-icons/fa6";
-import { MdPayment } from "react-icons/md";
+import {
+  FaAdjust,
+  FaDollyFlatbed,
+  FaRegFileArchive,
+  FaShippingFast,
+} from "react-icons/fa";
+import { FaShop } from "react-icons/fa6";
 import {
   Collapsible,
   CollapsibleContent,
@@ -30,7 +34,7 @@ import { PiInvoice } from "react-icons/pi";
 import { GoSingleSelect } from "react-icons/go";
 import { TbBrandAmigo, TbTransactionDollar } from "react-icons/tb";
 import { BiPurchaseTag, BiSupport } from "react-icons/bi";
-import { GiExpense } from "react-icons/gi";
+import { GiExpense, GiPayMoney } from "react-icons/gi";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
@@ -229,7 +233,7 @@ export default function SideBar({
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/vehiculos"}
                 >
-                  <FaTruckFast size={16} />
+                  <FaShippingFast size={16} />
                   <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                     Vehículos
                   </span>
@@ -324,7 +328,7 @@ export default function SideBar({
                   Envíos
                 </span>
               </Link>
-              <Link
+              {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
                 } ${
@@ -336,7 +340,7 @@ export default function SideBar({
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                   Facturas
                 </span>
-              </Link>
+              </Link> */}
               {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -358,7 +362,7 @@ export default function SideBar({
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/ventas/pagos"}
               >
-                <MdPayment size={16} />
+                <GiPayMoney size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                   Pagos
                 </span>

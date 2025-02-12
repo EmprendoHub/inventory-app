@@ -1,5 +1,5 @@
 import React from "react";
-import FormHeader from "../../../_components/FormHeader";
+import FormBusinessHeader from "../../../_components/FormBusinessHeader";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import BrandEdit from "../../_components/BrandEdit";
@@ -48,7 +48,7 @@ export default async function EditBrand({
   return (
     <div>
       {/* Header */}
-      <FormHeader title={"Editar categoría"} />
+      <FormBusinessHeader title={"Editar categoría"} />
       {/* Form */}
       <BrandEdit brand={brand} />
     </div>

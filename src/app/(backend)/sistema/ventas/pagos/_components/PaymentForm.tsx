@@ -48,10 +48,10 @@ export default function PaymentForm() {
             className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
           >
             <option value="">Seleccione el método de pago</option>
-            <option value="Credit Card">Tarjeta de crédito</option>
-            <option value="Bank Transfer">Transferencia bancaria</option>
-            <option value="PayPal">PayPal</option>
-            <option value="Cash">Efectivo</option>
+            <option value="Tarjeta de Crédito">Tarjeta de crédito</option>
+            <option value="Transferencia">Transferencia bancaria</option>
+            <option value="Mercado Pago">Mercado Pago</option>
+            <option value="Efectivo">Efectivo</option>
           </select>
           {state.errors?.method && (
             <p className="text-sm text-red-500">

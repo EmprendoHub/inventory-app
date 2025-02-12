@@ -2,7 +2,7 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
-export default function FormHeader({ title }: { title: string }) {
+export default function FormBusinessHeader({ title }: { title: string }) {
   return (
     <div>
       <div className="flex items-center justify-between bg-background mb-4 p-2 rounded-lg">

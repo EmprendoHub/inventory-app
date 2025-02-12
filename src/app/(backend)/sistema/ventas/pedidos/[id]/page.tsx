@@ -2,6 +2,7 @@ import React from "react";
 import prisma from "@/lib/db";
 import OrderView from "../_components/OrderView";
 import Link from "next/link";
+import FormSalesHeader from "../../_components/FormSalesHeader";
 
 export default async function ViewOrder({
   params,
@@ -48,5 +49,12 @@ export default async function ViewOrder({
     );
   }
 
-  return <OrderView order={order} />;
+  return (
+    <div>
+      {/* Header */}
+      <FormSalesHeader title={"Ver Pedido"} />
+      {/* Form */}
+      <OrderView order={order} />;
+    </div>
+  );
 }
