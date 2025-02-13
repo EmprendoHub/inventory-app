@@ -167,9 +167,11 @@ export const TruckSchema = z.object({
 export const DeliverySchema = z.object({
   id: z.string().optional(),
   orderId: z.string(),
+  orderNo: z.string(),
   method: z.enum(["INTERNO", "EXTERNO"]),
   driverId: z.string().optional(),
   truckId: z.string().optional(),
+  price: z.number().positive("Price must be a positive number"),
   carrier: z.string().min(1, "Paquetería is required"),
   deliveryDate: z.string().optional(), // Will convert to Date in the action
   status: z.enum([

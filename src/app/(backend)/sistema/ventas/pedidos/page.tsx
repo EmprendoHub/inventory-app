@@ -10,6 +10,11 @@ export default async function SalesOrders() {
       createdAt: "desc",
     },
     include: {
+      delivery: {
+        where: {
+          status: "PAGADO",
+        },
+      },
       orderItems: true, // Includes all related order items
       payments: {
         where: {

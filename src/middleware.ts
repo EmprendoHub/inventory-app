@@ -59,6 +59,7 @@ export async function middleware(request: any) {
       if (
         token?.user?.role !== "SUPER_ADMIN" &&
         token?.user?.role !== "ADMIN" &&
+        token?.user?.role !== "CHOFER" &&
         token?.user?.role !== "GERENTE"
       ) {
         signInUrl = new URL("/no-autorizado", request.url);

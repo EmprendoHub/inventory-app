@@ -39,9 +39,9 @@ type SearchSelectInputProps = {
 export function SearchSelectInput({
   label,
   name,
-  className = "w-full col-span-1 maxsm:col-span-2",
+  className = "w-full flex",
   options = [],
-  placeholder = "Selecciona una opción...",
+  placeholder = "Seleccionar...",
   emptyMessage = "No se encontraron opciones.",
   value: externalValue,
   onChange,
@@ -114,7 +114,7 @@ export function SearchSelectInput({
                     value={option.name}
                     onSelect={() => handleSelect(option.value)}
                   >
-                    {option.name}
+                    {`${option.name}`}
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",

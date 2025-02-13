@@ -21,7 +21,7 @@ export default function SystemLayout({
           } duration-300 ease-in-out`}
         >
           <SystemHeader />
-          <div className="p-4">{children}</div>
+          <div className="p-4 flex-1">{children}</div>
         </main>
       </ModalProvider>
     </div>

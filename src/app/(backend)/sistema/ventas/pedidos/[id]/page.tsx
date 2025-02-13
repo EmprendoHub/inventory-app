@@ -29,8 +29,13 @@ export default async function ViewOrder({
       id: id,
     },
     include: {
+      delivery: true,
       orderItems: true, // Includes all related order items
-      payments: true, // Includes all related order payments
+      payments: {
+        where: {
+          status: "PAGADO",
+        },
+      }, // Includes all related order payments
       client: true, // Includes related order client
     },
   });

@@ -48,6 +48,7 @@ import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import { DeliveryType } from "@/types/delivery";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -147,8 +148,23 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         },
       },
       {
+        accessorKey: "delivery",
+        header: () => <div className="text-left text-xs">Envió</div>,
+        cell: ({ row }) => {
+          const delivery = row.getValue("delivery") as DeliveryType;
+          const amount = delivery?.price || 0;
+          const formatted = new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(amount);
+          return (
+            <div className="text-left text-xs font-medium">{formatted}</div>
+          );
+        },
+      },
+      {
         accessorKey: "totalAmount",
-        header: () => <div className="text-left text-xs">Total</div>,
+        header: () => <div className="text-left text-xs">Pedido</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalAmount"));
           const formatted = new Intl.NumberFormat("en-US", {

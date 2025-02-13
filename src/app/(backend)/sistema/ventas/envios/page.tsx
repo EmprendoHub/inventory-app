@@ -16,11 +16,17 @@ export default async function ListUsers() {
       orderBy: {
         createdAt: "desc", // Latest product
       },
+      include: {
+        driver: true,
+      },
     });
   } else if (session.user.role === "ADMIN") {
     deliveries = await prisma.delivery.findMany({
       orderBy: {
         createdAt: "desc", // Latest product
+      },
+      include: {
+        driver: true,
       },
     });
   } else {
@@ -28,8 +34,13 @@ export default async function ListUsers() {
       orderBy: {
         createdAt: "desc", // Latest product
       },
+      include: {
+        driver: true,
+      },
     });
   }
+
+  console.log(deliveries);
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">

@@ -49,7 +49,7 @@ export default async function EditPurchaseOrder({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-1">
       {/* Header */}
       <FormBusinessHeader
         title={`Editar Orden de Compra: ${purchaseOrder.poNumber}`}

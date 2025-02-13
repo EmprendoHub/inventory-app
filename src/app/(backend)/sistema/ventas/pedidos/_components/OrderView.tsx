@@ -39,9 +39,13 @@ export default function OrderView({ order }: { order: FullOderType }) {
     0
   );
 
-  // const tax = subtotal * 0.16;
+  const previousPayments = (order.payments ?? []).reduce(
+    (sum, item) => sum + item.amount,
+    0
+  );
   // console.log(tax);
-  const grandTotal = subtotal;
+  const grandTotal = (subtotal || 0) + (order.delivery?.price || 0);
+
   const { showModal } = useModal();
   const [sending, setSending] = useState(false);
 
@@ -384,10 +388,18 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.quantity}</TableCell>
                 <TableCell className="maxsm:hidden">
-                  ${item.price.toFixed(2)}
+                  $
+                  {item.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </TableCell>
                 <TableCell>
-                  ${(item.price * item.quantity).toFixed(2)}
+                  $
+                  {(item.price * item.quantity).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </TableCell>
                 {item.id && order.status !== "CANCELADO" && (
                   <TableCell>
@@ -409,25 +421,47 @@ export default function OrderView({ order }: { order: FullOderType }) {
         <div className="ml-auto w-80 space-y-1">
           <div className="flex justify-between">
             <span className="font-medium">Subtotal:</span>
-            <span>${subtotal?.toFixed(2)}</span>
+            <span>
+              $
+              {subtotal?.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
-          {/* <div className="flex justify-between">
-            <span className="font-medium">IVA (16%):</span>
-            <span>${tax.toFixed(2)}</span>
-          </div> */}
+          <div className="flex justify-between">
+            <span className="font-medium">Envió:</span>
+            <span>
+              $
+              {(order.delivery?.price || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
           <div className="flex justify-between border-t pt-2 font-bold">
             <span>Gran Total:</span>
-            <span>${grandTotal?.toFixed(2)}</span>
+            <span>
+              $
+              {grandTotal?.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
           {order.payments && order.payments.length > 0 && (
-            <div className="flex justify-between">
-              <span className="font-medium">Pagado:</span>
-              <span>
-                -$
-                {order.payments
-                  .reduce((sum, item) => sum + item.amount, 0)
-                  .toFixed(2)}
-              </span>
+            <div className="flex flex-col">
+              <div className="flex justify-between">
+                <span className="font-medium">Pagado:</span>
+                <span>
+                  -$
+                  {previousPayments.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium">Pendiente:</span>
+                <span>${(grandTotal - previousPayments).toLocaleString()}</span>
+              </div>
             </div>
           )}
         </div>
@@ -459,7 +493,13 @@ export default function OrderView({ order }: { order: FullOderType }) {
               {order.payments?.map((item, index) => (
                 <TableRow key={index}>
                   <TableCell>{item.createdAt.toLocaleDateString()}</TableCell>
-                  <TableCell>${item.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    $
+                    {item.amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </TableCell>
                   <TableCell className="uppercase">{item.method}</TableCell>
                   <TableCell className=" maxsm:hidden">
                     {item.reference}

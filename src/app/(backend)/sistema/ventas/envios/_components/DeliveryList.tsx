@@ -32,13 +32,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DeliveryType } from "@/types/delivery";
+import { DeliveryAndDriverType } from "@/types/delivery";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ ModalContext";
-import { deleteDeliveryAction } from "../_actions";
+import { acceptDeliveryAction, deleteDeliveryAction } from "../_actions";
 import { verifySupervisorCode } from "@/lib/utils";
+import { FaTruckLoading } from "react-icons/fa";
 
-export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
+export function DeliveryList({
+  deliveries,
+}: {
+  deliveries: DeliveryAndDriverType[];
+}) {
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -48,7 +53,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const columns = React.useMemo<ColumnDef<DeliveryType>[]>(
+  const columns = React.useMemo<ColumnDef<DeliveryAndDriverType>[]>(
     () => [
       {
         accessorKey: "createdAt",
@@ -71,15 +76,25 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
         ),
       },
       {
-        accessorKey: "method",
-        header: "Método",
-        cell: ({ row }) => <div className="text-xs">{row.original.method}</div>,
+        accessorKey: "driver",
+        header: "Chofer",
+        cell: ({ row }) => {
+          const driver = row.original.driver.name || "BODEGA";
+          return <div className="text-xs">{driver}</div>;
+        },
       },
       {
-        accessorKey: "carrier",
-        header: () => <div className="text-xs">Paquetería</div>,
+        accessorKey: "orderNo",
+        header: "Pedido",
         cell: ({ row }) => (
-          <div className="text-xs font-medium">{row.original.carrier}</div>
+          <div className="text-xs">{row.original.orderNo}</div>
+        ),
+      },
+      {
+        accessorKey: "price",
+        header: () => <div className="text-xs">Precio</div>,
+        cell: ({ row }) => (
+          <div className="text-xs font-medium">{row.original.price}</div>
         ),
       },
       {
@@ -115,8 +130,47 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
         cell: ({ row }) => {
           const ActionCell = () => {
             const { showModal } = useModal();
+            const acceptDelivery = React.useCallback(async () => {
+              // First, prompt for supervisor code
 
-            const deleteItem = React.useCallback(async () => {
+              const result = await showModal({
+                title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                type: "info",
+                text: "Aceptar envió?",
+                icon: "success",
+                showCancelButton: true,
+                confirmButtonText: "Sí, aceptar",
+                cancelButtonText: "Cancelar",
+              });
+
+              if (result.confirmed) {
+                try {
+                  const formData = new FormData();
+                  formData.set("id", row.original.id);
+
+                  const response = await acceptDeliveryAction(formData);
+
+                  if (!response.success) throw new Error("Error al asignar");
+                  await showModal({
+                    title: "¡Asignado!",
+                    type: "info",
+                    text: "el envió ha sido asignado.",
+                    icon: "success",
+                  });
+                } catch (error) {
+                  console.log("error from modal", error);
+
+                  await showModal({
+                    title: "Error",
+                    type: "delete",
+                    text: "No se pudo asignar el envió",
+                    icon: "error",
+                  });
+                }
+              }
+            }, [showModal]);
+
+            const deleteDelivery = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
                 title: "Verificación de Supervisor",
@@ -137,7 +191,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "Eliminar este categoría?",
+                    text: "Cancelar este envió?",
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonText: "Sí, eliminar",
@@ -154,9 +208,9 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
                       if (!response.success)
                         throw new Error("Error al eliminar");
                       await showModal({
-                        title: "¡Eliminado!",
+                        title: "CANCELAR!",
                         type: "delete",
-                        text: "La categoría ha sido eliminado.",
+                        text: "el envió ha sido cancelado.",
                         icon: "success",
                       });
                     } catch (error) {
@@ -165,7 +219,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
                       await showModal({
                         title: "Error",
                         type: "delete",
-                        text: "No se pudo eliminar la categoría",
+                        text: "No se pudo eliminar el envió",
                         icon: "error",
                       });
                     }
@@ -195,7 +249,13 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-
+                  <DropdownMenuItem
+                    onClick={acceptDelivery}
+                    className="text-xs cursor-pointer"
+                  >
+                    <FaTruckLoading />
+                    Recibir
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={viewItem}
                     className="text-xs cursor-pointer"
@@ -206,11 +266,11 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={deleteItem}
+                    onClick={deleteDelivery}
                     className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                   >
                     <X />
-                    Eliminar
+                    Cancelar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -225,7 +285,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
     []
   );
 
-  const table = useReactTable<DeliveryType>({
+  const table = useReactTable<DeliveryAndDriverType>({
     data: deliveries,
     columns,
     onSortingChange: setSorting,
@@ -248,12 +308,10 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filtro..."
-          value={
-            (table.getColumn("createdAt")?.getFilterValue() as string) ?? ""
-          }
+          placeholder="No de Pedido..."
+          value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("createdAt")?.setFilterValue(event.target.value)
+            table.getColumn("orderNo")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -305,8 +363,7 @@ export function DeliveryList({ deliveries }: { deliveries: DeliveryType[] }) {
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} delivery record(s) selected.
+          {table.getFilteredRowModel().rows.length} pedido(s).
         </div>
         <div className="space-x-2">
           <Button

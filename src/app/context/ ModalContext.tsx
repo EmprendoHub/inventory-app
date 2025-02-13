@@ -44,6 +44,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
   const modalRef = useRef<HTMLDivElement>(null);
   const supervisorCodeInputRef = useRef<HTMLInputElement>(null);
+  const paymentInputRef = useRef<HTMLInputElement>(null);
 
   const handleSupervisorCodeChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -121,6 +122,25 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
           const preventFocusSteal = (e: FocusEvent) => {
             e.preventDefault();
             supervisorCodeInputRef.current?.focus();
+          };
+
+          document.addEventListener("focusin", preventFocusSteal);
+          return () =>
+            document.removeEventListener("focusin", preventFocusSteal);
+        }
+      }, 50);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    if (modal?.type === "payment" && paymentInputRef.current) {
+      const timeoutId = setTimeout(() => {
+        if (paymentInputRef.current) {
+          paymentInputRef.current.focus();
+
+          const preventFocusSteal = (e: FocusEvent) => {
+            e.preventDefault();
+            paymentInputRef.current?.focus();
           };
 
           document.addEventListener("focusin", preventFocusSteal);
@@ -228,9 +248,11 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
                   <h3 className="text-xs mt-3">Cantidad</h3>
                   <input
+                    ref={paymentInputRef}
                     name="payment"
                     type="number"
                     min={1}
+                    tabIndex={0}
                     placeholder="$100.00"
                     value={paymentData.amount}
                     onChange={(e) =>
@@ -239,7 +261,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                         amount: e.target.value,
                       }))
                     }
-                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
                   />
 
                   <h3 className="text-xs">Referencia</h3>
@@ -301,7 +323,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                       onChange={handleSupervisorCodeChange}
                       autoComplete="new-password"
                       tabIndex={0}
-                      className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
+                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
                     />
                   </div>
                 </div>

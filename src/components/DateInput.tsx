@@ -36,7 +36,7 @@ const DateInput: React.FC<DateInputProps> = ({
     : "";
 
   return (
-    <div className="flex flex-col  min-w-60">
+    <div className="flex flex-col  min-w-40">
       <label
         htmlFor={name}
         className="block text-sm font-medium text-muted mb-2"

@@ -1,9 +1,15 @@
 "use server";
 
+import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
 import { idSchema, PaymentSchema, TwoIdSchema } from "@/lib/schemas";
-import { generateOrderId } from "@/lib/utils";
+import {
+  generateDeliveryOTP,
+  generateOrderId,
+  generateTrackingNumber,
+} from "@/lib/utils";
 import { OrderStatus } from "@prisma/client";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
 export async function createNewOrder(
@@ -17,7 +23,8 @@ export async function createNewOrder(
   const clientData = formData.get("client") as string;
   const itemsInput = formData.get("items") as string;
   const notes = formData.get("notes") as string;
-
+  const deliveryPrice = formData.get("price") as string;
+  const deliverDate = formData.get("deliveryDate") as string | null;
   // Validate inputs
   const errors: { [key: string]: string[] } = {};
 
@@ -64,74 +71,124 @@ export async function createNewOrder(
       0
     );
 
-    const dueDate = new Date();
-    const orderNo = await generateOrderId(prisma);
-
-    const newOrder = await prisma.order.create({
-      data: {
-        orderNo,
-        clientId: client.id,
-        status: "PENDIENTE" as OrderStatus,
-        totalAmount,
-        notes,
-        dueDate,
-        orderItems: {
-          create: items.map((item) => ({
-            itemId: item.id,
-            name: item.name,
-            description: item.description,
-            quantity: item.quantity,
-            price: item.price,
-            image: item.mainImage,
-          })),
-        },
-      },
-      include: {
-        orderItems: true,
-      },
-    });
-
-    // Iterate through each item in the order
-    for (const orderItem of newOrder.orderItems) {
-      // Find the stock entry for the item
-      const stock = await prisma.stock.findFirst({
-        where: { itemId: orderItem.itemId },
-      });
-
-      if (!stock) {
-        throw new Error(`Stock not found for item ${orderItem.itemId}`);
+    // Convert deliveryDate to Date object if provided
+    let deliveryDate: Date | undefined = undefined;
+    if (deliverDate) {
+      deliveryDate = new Date(deliverDate);
+      if (isNaN(deliveryDate.getTime())) {
+        return {
+          errors: { deliveryDate: ["Invalid delivery date"] },
+          success: false,
+          message: "Invalid delivery date provided.",
+        };
       }
-
-      // Calculate the new available quantity
-      const newAvailableQty = stock.availableQty - orderItem.quantity;
-
-      if (newAvailableQty < 0) {
-        throw new Error(`Insufficient stock for item ${orderItem.itemId}`);
-      }
-
-      // Update the stock
-      await prisma.stock.update({
-        where: { id: stock.id },
-        data: {
-          availableQty: newAvailableQty,
-          reservedQty: stock.reservedQty + orderItem.quantity, // Reserve the quantity
-        },
-      });
-
-      // Create a stock movement record
-      await prisma.stockMovement.create({
-        data: {
-          itemId: orderItem.itemId,
-          type: "SALE",
-          quantity: orderItem.quantity,
-          reference: `Order ${newOrder.orderNo}`,
-          status: "COMPLETED",
-          createdBy: newOrder.clientId, // Assuming the client is the one placing the order
-        },
-      });
     }
 
+    const otp = generateDeliveryOTP();
+    const trackingNumber = generateTrackingNumber();
+    const deliveryMethod = "INTERNO";
+    const carrier = "YUNUEN COMPANY";
+    const deliveryStatus = "Pendiente de Pago";
+
+    const dueDate = new Date();
+    const orderNo = await generateOrderId(prisma);
+    const session = await getServerSession(options);
+    const user = session?.user;
+
+    await prisma.$transaction(async (prisma) => {
+      const newOrder = await prisma.order.create({
+        data: {
+          orderNo,
+          clientId: client.id,
+          status: "PENDIENTE" as OrderStatus,
+          totalAmount,
+          notes,
+          dueDate,
+          orderItems: {
+            create: items.map((item) => ({
+              itemId: item.id,
+              name: item.name,
+              description: item.description,
+              quantity: item.quantity,
+              price: item.price,
+              image: item.mainImage,
+            })),
+          },
+        },
+        include: {
+          orderItems: true,
+        },
+      });
+
+      // Iterate through each item in the order
+      for (const orderItem of newOrder.orderItems) {
+        // Find the stock entry for the item
+        const stock = await prisma.stock.findFirst({
+          where: { itemId: orderItem.itemId },
+        });
+
+        if (!stock) {
+          throw new Error(`Stock not found for item ${orderItem.itemId}`);
+        }
+
+        // Calculate the new available quantity
+        const newAvailableQty = stock.availableQty - orderItem.quantity;
+
+        if (newAvailableQty < 0) {
+          throw new Error(`Insufficient stock for item ${orderItem.itemId}`);
+        }
+
+        // Update the stock
+        await prisma.stock.update({
+          where: { id: stock.id },
+          data: {
+            availableQty: newAvailableQty,
+            reservedQty: stock.reservedQty + orderItem.quantity, // Reserve the quantity
+          },
+        });
+
+        // Create a stock movement record
+        await prisma.stockMovement.create({
+          data: {
+            itemId: orderItem.itemId,
+            type: "SALE",
+            quantity: orderItem.quantity,
+            reference: `Order ${newOrder.orderNo}`,
+            status: "COMPLETED",
+            createdBy: newOrder.clientId, // Assuming the client is the one placing the order
+          },
+        });
+      }
+
+      // ADD delivery
+
+      const newDelivery = await prisma.delivery.create({
+        data: {
+          orderId: newOrder.id,
+          orderNo,
+          method: deliveryMethod,
+          price: Number(deliveryPrice),
+          carrier,
+          otp,
+          trackingNumber,
+          deliveryDate: deliveryDate,
+          status: deliveryStatus,
+          userId: user.id,
+        },
+      });
+
+      await prisma.order.update({
+        where: {
+          id: newOrder.id,
+        },
+        data: {
+          deliveryId: newDelivery.id,
+        },
+      });
+    });
+
     revalidatePath("/sistema/ventas/pedidos");
+    revalidatePath("/sistema/ventas/envios");
 
     return {
       errors: {},
@@ -171,12 +228,15 @@ export async function payOrderAction(formData: FormData) {
   const paymentAmount = Number(amount);
 
   try {
-    // Find order and calculate current payments total
     const order = await prisma.order.findUnique({
       where: { id: id as string },
       include: {
+        delivery: true,
         payments: {
           select: { amount: true },
+          where: {
+            status: "PAGADO",
+          },
         },
       },
     });
@@ -189,13 +249,13 @@ export async function payOrderAction(formData: FormData) {
       };
     }
 
-    const currentTotal = order.payments.reduce(
+    const previousPayments = order.payments.reduce(
       (sum, payment) => sum + payment.amount,
       0
     );
 
     // Check if order is already paid off
-    if (currentTotal >= order.totalAmount) {
+    if (previousPayments > order.totalAmount + (order.delivery?.price || 0)) {
       return {
         errors: {},
         success: false,
@@ -203,14 +263,19 @@ export async function payOrderAction(formData: FormData) {
       };
     }
 
+    console.log(
+      previousPayments + paymentAmount,
+      order.totalAmount + (order.delivery?.price || 0)
+    );
     // Check if new payment would exceed order total
-    if (currentTotal + paymentAmount > order.totalAmount) {
+    if (
+      previousPayments + paymentAmount >
+      order.totalAmount + (order.delivery?.price || 0)
+    ) {
       return {
         errors: {},
         success: false,
-        message: `El monto del pago de $${paymentAmount} excedería el total del pedido, intenta aplicar un pago por no mas de: $${
-          order.totalAmount - currentTotal
-        } `,
+        message: `El monto del pago de $${paymentAmount} excedería el total del pedido!.`,
       };
     }
 
@@ -224,6 +289,24 @@ export async function payOrderAction(formData: FormData) {
         reference,
         status: "PAGADO",
         invoiceId: "",
+      },
+    });
+
+    let orderStatus = "PENDIENTE";
+
+    if (
+      previousPayments + paymentAmount ===
+      order.totalAmount + (order.delivery?.price || 0)
+    ) {
+      orderStatus = "PROCESANDO";
+    }
+
+    await prisma.order.update({
+      where: {
+        id: order.id,
+      },
+      data: {
+        status: orderStatus as OrderStatus,
       },
     });
 
@@ -302,7 +385,6 @@ export async function deleteOrderAction(formData: FormData) {
 
   // Validate the data using Zod
   const validatedData = idSchema.safeParse(rawData);
-  console.log(validatedData.error);
   if (!validatedData.success) {
     const errors = validatedData.error.flatten().fieldErrors;
     return {
@@ -389,7 +471,7 @@ export async function deleteOrderAction(formData: FormData) {
       });
 
       // Update order status to cancelled
-      await prisma.order.update({
+      const updatedOrder = await prisma.order.update({
         where: {
           id: validatedData.data.id,
         },
@@ -397,6 +479,17 @@ export async function deleteOrderAction(formData: FormData) {
           status: "CANCELADO",
         },
       });
+
+      if (updatedOrder.deliveryId) {
+        await prisma.delivery.update({
+          where: {
+            id: updatedOrder.deliveryId,
+          },
+          data: {
+            status: "CANCELADO",
+          },
+        });
+      }
     });
 
     console.log("Order deleted and stock updated successfully");

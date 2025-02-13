@@ -4,7 +4,7 @@ import { uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { idSchema, UserSchema } from "@/lib/schemas";
 import { UserFormState } from "@/types/users";
-import { Role } from "@prisma/client";
+import { DriverStatus, Role } from "@prisma/client";
 import { unlink, writeFile } from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { join } from "path";
@@ -71,7 +71,7 @@ export const createUserAction = async (
   const verificationToken = crypto.randomBytes(64).toString("hex");
 
   try {
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name: validatedData.data.name,
         email: validatedData.data.email,
@@ -83,6 +83,17 @@ export const createUserAction = async (
         avatar: savedImageUrl,
       },
     });
+
+    if (validatedData.data.role === "CHOFER") {
+      await prisma.driver.create({
+        data: {
+          name: validatedData.data.name,
+          userId: newUser.id,
+          status: "DISPONIBLE" as DriverStatus,
+          licenseNumber: "",
+        },
+      });
+    }
 
     await unlink(path);
     revalidatePath("/sistema/admin/usuarios");

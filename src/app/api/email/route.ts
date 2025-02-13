@@ -81,7 +81,13 @@ export async function POST(request: Request) {
                       <tr>
                         <td>${item.name}</td>
                         <td>${item.quantity}</td>
-                        <td>$${(item.quantity * item.price).toFixed(2)}</td>
+                        <td>$${(item.quantity * item.price).toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}</td>
                       </tr>
                     `
                   )
@@ -91,7 +97,10 @@ export async function POST(request: Request) {
       
             <h3><strong>Total Pedido: ${orderData?.orderItems
               .reduce((acc, item) => acc + item.quantity * item.price, 0)
-              .toFixed(2)}</strong></h3>
+              .toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</strong></h3>
 
             <div>${bodyTwo}</div>
             <table border="1" cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
@@ -109,7 +118,10 @@ export async function POST(request: Request) {
                     <tr>
                       <td>${item.createdAt.toLocaleDateString()}</td>
                       <td>${item.method}</td>
-                      <td>$${item.amount.toFixed(2)}</td>
+                      <td>$${item.amount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
                     </tr>
                   `
                 )
@@ -120,7 +132,10 @@ export async function POST(request: Request) {
 
           <h3><strong>Total Pagos: ${orderData?.payments
             .reduce((acc, item) => acc + item.amount, 0)
-            .toFixed(2)}</strong></h3>
+            .toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}</strong></h3>
             <p></p>
             <h2><strong>Pendiente: ${
               orderData?.orderItems.reduce(

@@ -13,7 +13,7 @@ export default async function NewDelivery() {
   const trucks = await prisma.truck.findMany();
 
   return (
-    <div>
+    <div className="flex flex-col gap-1">
       {/* Header */}
       <FormSalesHeader title={"Nuevo Envió"} />
       {/* Form */}

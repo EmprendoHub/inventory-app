@@ -9,6 +9,7 @@ import { createDeliveryAction } from "../_actions";
 import { useModal } from "@/app/context/ ModalContext";
 import DateInput from "@/components/DateInput";
 import { clientType } from "@/types/sales";
+import NumericInput from "@/components/NumericInput";
 
 type DeliveryFormProps = {
   orders: { id: string; orderNo: string; client: clientType }[];
@@ -66,7 +67,7 @@ export default function DeliveryForm({
         }
       }}
     >
-      <div className="w-full">
+      <div className="w-full flex items-center gap-3">
         <SelectInput
           label="Order"
           name="orderId"
@@ -76,6 +77,7 @@ export default function DeliveryForm({
           }))}
           state={state}
         />
+        <NumericInput label="Costo de Envió" name="price" state={state} />
       </div>
       <div className="flex maxmd:flex-col gap-3 w-full">
         <div className="w-full">

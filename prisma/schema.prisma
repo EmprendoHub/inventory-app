@@ -30,6 +30,7 @@ model User {
   role               Role    @default(CLIENTE)
   createdAt          DateTime  @default(now()) @map("createdAt")
   updatedAt          DateTime  @updatedAt @map("updatedAt")
+  orders             Order[]
 }
 
 enum Role {
@@ -56,6 +57,7 @@ model Client {
 model Driver {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String
+  userId        String?
   licenseNumber String
   status        DriverStatus @default(DISPONIBLE)
   deliveries    Delivery[]
@@ -94,7 +96,11 @@ model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   orderNo     String   @unique  // This will store "000001" format
   client      Client   @relation(fields: [clientId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?  @db.ObjectId
   clientId    String   @db.ObjectId
+  delivery    Delivery?   @relation(fields: [deliveryId], references: [id])
+  deliveryId    String?   @db.ObjectId
   status      OrderStatus   @default(PENDIENTE)
   totalAmount Int
   notes       String
@@ -105,13 +111,16 @@ model Order {
   invoiceId   String?  @db.ObjectId
   orderItems  OrderItem[]
   payments    Payment[]
+
 }
 
 enum OrderStatus {
   PENDIENTE
+  PROCESANDO
   PAGADO
   ENVIADO
   ENTREGADO
+  COMPLETADO
   CANCELADO
 }
 
@@ -136,7 +145,9 @@ model OrderItem {
 model Delivery {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   orderId     String @db.ObjectId
+  orderNo     String
   method        DeliveryMethod
+  userId      String   @db.ObjectId
   driverId      String?   @db.ObjectId
   driver        Driver?   @relation(fields: [driverId], references: [id])
   truckId       String?   @db.ObjectId
@@ -145,11 +156,13 @@ model Delivery {
   trackingUrl   String?   // URL to track the shipment
   carrier     String
   otp         String
+  price         Float
   trackingNumber    String  @unique
   deliveryDate DateTime?
-  status      String   // Out for Delivery, Delivered, Failed
+  status      String  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  orders    Order[]
 }
 
 enum DeliveryMethod {

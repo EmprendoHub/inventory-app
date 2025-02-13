@@ -1,3 +1,5 @@
+import { DeliveryType } from "./delivery";
+
 export type layawayAndProductType = {
   id: string;
   createdAt: Date;
@@ -163,6 +165,7 @@ export type FullOderType = {
   orderItems?: OrderItemsType[];
   payments?: PaymentType[];
   client?: clientType;
+  delivery?: DeliveryType | null;
 };
 
 export type PaymentType = {
