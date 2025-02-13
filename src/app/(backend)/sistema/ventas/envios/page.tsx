@@ -3,14 +3,14 @@ import React from "react";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { DeliveryList } from "./_components/DeliveryList";
-import { DeliveryType } from "@/types/delivery";
 import SalesHeader from "../_components/SalesHeader";
+import { DeliveryAndDriverType } from "@/types/delivery";
 
 export default async function ListUsers() {
   const session = await getServerSession(options);
 
   // Calculate total stock for each item
-  let deliveries: DeliveryType[];
+  let deliveries;
   if (session.user.role === "GERENTE") {
     deliveries = await prisma.delivery.findMany({
       orderBy: {
@@ -39,6 +39,11 @@ export default async function ListUsers() {
       },
     });
   }
+
+  // Filter out deliveries with null drivers and cast driver to non-nullable type
+  deliveries = deliveries.filter(
+    (delivery) => delivery.driver !== null
+  ) as DeliveryAndDriverType[];
 
   console.log(deliveries);
 
