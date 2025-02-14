@@ -537,6 +537,47 @@ model Payment {
   updatedAt   DateTime @updatedAt
 }
 
+// ******************* ACCOUNTING CASH **************** //
+model CashRegister {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  balance       Float     @default(0)
+  transactions  CashTransaction[]
+  audits        CashAudit[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String?
+}
+
+model CashTransaction {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  type          CashTransactionType
+  amount        Float
+  description   String?
+  cashRegister  CashRegister @relation(fields: [cashRegisterId], references: [id])
+  cashRegisterId String    @db.ObjectId
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String?
+}
+
+enum CashTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+model CashAudit {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  cashRegister  CashRegister @relation(fields: [cashRegisterId], references: [id])
+  cashRegisterId String    @db.ObjectId
+  startBalance  Float
+  endBalance    Float
+  auditDate     DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  managerId     String?
+  userId        String?
+}
 
 // ************* PURCHASE ORDERS ******************* //
 

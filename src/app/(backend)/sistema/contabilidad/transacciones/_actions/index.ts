@@ -1,14 +1,14 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { TransactionFormState } from "@/types/transactions";
+import { AccountingFormState } from "@/types/accounting";
 import { TransactionType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export const createTransactionAction = async (
-  state: TransactionFormState,
+  state: AccountingFormState,
   formData: FormData
-): Promise<TransactionFormState> => {
+): Promise<AccountingFormState> => {
   const rawData = {
     date: formData.get("date"),
     description: formData.get("description"),
@@ -62,9 +62,9 @@ export const createTransactionAction = async (
 };
 
 export async function updateTransactionAction(
-  state: TransactionFormState,
+  state: AccountingFormState,
   formData: FormData
-): Promise<TransactionFormState> {
+): Promise<AccountingFormState> {
   const rawData = {
     id: formData.get("id") as string,
     date: formData.get("date") as string,

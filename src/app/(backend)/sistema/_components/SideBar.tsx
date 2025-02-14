@@ -1,5 +1,6 @@
 "use client";
 import {
+  BanknoteIcon,
   BarChart,
   Boxes,
   Building2,
@@ -22,7 +23,7 @@ import {
   FaRegFileArchive,
   FaShippingFast,
 } from "react-icons/fa";
-import { FaShop } from "react-icons/fa6";
+import { FaCashRegister, FaShop } from "react-icons/fa6";
 import {
   Collapsible,
   CollapsibleContent,
@@ -413,6 +414,39 @@ export default function SideBar({
                     Cuentas
                   </span>
                 </Link>
+              )}
+
+              {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
+                user?.role || ""
+              ) && (
+                <>
+                  <Link
+                    className={`flex w-full items-center gap-2 p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    }  ${
+                      path === "/sistema/cajas" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/cajas"}
+                  >
+                    <FaCashRegister size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Cajas
+                    </span>
+                  </Link>
+                  <Link
+                    className={`flex w-full items-center gap-2 p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    }  ${
+                      path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/cajas/auditoria"}
+                  >
+                    <BanknoteIcon size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Cortes
+                    </span>
+                  </Link>
+                </>
               )}
 
               <Link
