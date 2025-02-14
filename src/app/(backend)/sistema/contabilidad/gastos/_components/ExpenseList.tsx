@@ -38,8 +38,13 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteExpenseAction } from "../_actions";
 import { useModal } from "@/app/context/ ModalContext";
+import { verifySupervisorCode } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -96,39 +101,57 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
             const { showModal } = useModal();
 
             const deleteExpense = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Estás seguro?, ¡No podrás revertir esto!",
-                type: "delete",
-                text: "Eliminar este gasto?",
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Sí, eliminar",
+                confirmButtonText: "Verificar",
                 cancelButtonText: "Cancelar",
               });
-
-              if (result) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
-
-                  const response = await deleteExpenseAction(formData);
-
-                  if (!response.success) throw new Error("Error al eliminar");
-                  await showModal({
-                    title: "¡Eliminado!",
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
+                if (isAuthorized) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "El gasto ha sido eliminado.",
-                    icon: "success",
+                    text: "Eliminar este gasto?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
                   });
-                } catch (error) {
-                  console.log("error from modal", error);
 
-                  await showModal({
-                    title: "Error",
-                    type: "delete",
-                    text: "No se pudo eliminar el gasto",
-                    icon: "error",
-                  });
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deleteExpenseAction(formData);
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "El gasto ha sido eliminado.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar el gasto",
+                        icon: "error",
+                      });
+                    }
+                  }
                 }
               }
             }, [showModal]);
@@ -159,13 +182,15 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteExpense}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+                    <DropdownMenuItem
+                      onClick={deleteExpense}
+                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                    >
+                      <X />
+                      Eliminar
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

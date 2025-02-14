@@ -460,8 +460,8 @@ model Transaction {
 }
 
 enum TransactionType {
-  DEBIT
-  CREDIT
+  DEBITO
+  CREDITO
 }
 
 model Expense {

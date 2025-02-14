@@ -94,7 +94,7 @@ export function GoodsReceiptList({
                 cancelButtonText: "Cancel",
               });
 
-              if (result) {
+              if (result.confirmed) {
                 try {
                   const formData = new FormData();
                   formData.set("id", row.original.id);

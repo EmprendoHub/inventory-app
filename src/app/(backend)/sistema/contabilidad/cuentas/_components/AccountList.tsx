@@ -77,14 +77,26 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
         ),
       },
       {
-        accessorKey: "type",
-        header: () => <div className="text-left text-xs">Tipo</div>,
+        accessorKey: "balance",
+        header: () => <div className="text-left text-xs">Balance</div>,
         cell: ({ row }) => (
           <div className="text-left text-xs font-medium">
-            {row.getValue("type")}
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(row.getValue("balance"))}
           </div>
         ),
       },
+      // {
+      //   accessorKey: "type",
+      //   header: () => <div className="text-left text-xs">Tipo</div>,
+      //   cell: ({ row }) => (
+      //     <div className="text-left text-xs font-medium">
+      //       {row.getValue("type")}
+      //     </div>
+      //   ),
+      // },
       {
         id: "actions",
         enableHiding: false,
@@ -103,7 +115,7 @@ export function AccountList({ accounts }: { accounts: AccountType[] }) {
                 cancelButtonText: "Cancelar",
               });
 
-              if (result) {
+              if (result.confirmed) {
                 try {
                   const formData = new FormData();
                   formData.set("id", row.original.id);

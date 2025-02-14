@@ -12,7 +12,9 @@ export default async function SalesOrders() {
     include: {
       delivery: {
         where: {
-          status: "PAGADO",
+          status: {
+            in: ["PAGADO", "PENDIENTE"],
+          },
         },
       },
       orderItems: true, // Includes all related order items

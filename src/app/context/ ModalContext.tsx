@@ -118,15 +118,6 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
       const timeoutId = setTimeout(() => {
         if (supervisorCodeInputRef.current) {
           supervisorCodeInputRef.current.focus();
-
-          const preventFocusSteal = (e: FocusEvent) => {
-            e.preventDefault();
-            supervisorCodeInputRef.current?.focus();
-          };
-
-          document.addEventListener("focusin", preventFocusSteal);
-          return () =>
-            document.removeEventListener("focusin", preventFocusSteal);
         }
       }, 50);
 
@@ -137,15 +128,6 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
       const timeoutId = setTimeout(() => {
         if (paymentInputRef.current) {
           paymentInputRef.current.focus();
-
-          const preventFocusSteal = (e: FocusEvent) => {
-            e.preventDefault();
-            paymentInputRef.current?.focus();
-          };
-
-          document.addEventListener("focusin", preventFocusSteal);
-          return () =>
-            document.removeEventListener("focusin", preventFocusSteal);
         }
       }, 50);
 
@@ -268,12 +250,13 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                   <input
                     name="reference"
                     type="text"
+                    tabIndex={0}
                     placeholder="546576546574"
-                    value={paymentData.reference}
+                    value={paymentData.reference} // Value is controlled by state
                     onChange={(e) =>
                       setPaymentData((prev) => ({
                         ...prev,
-                        reference: e.target.value,
+                        reference: e.target.value, // Update state on change
                       }))
                     }
                     className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
@@ -283,12 +266,13 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                   <input
                     name="method"
                     type="text"
+                    tabIndex={0}
                     placeholder="EFECTIVO"
-                    value={paymentData.method}
+                    value={paymentData.method} // Value is controlled by state
                     onChange={(e) =>
                       setPaymentData((prev) => ({
                         ...prev,
-                        method: e.target.value,
+                        method: e.target.value, // Update state on change
                       }))
                     }
                     className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"

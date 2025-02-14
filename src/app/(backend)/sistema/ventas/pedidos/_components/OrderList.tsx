@@ -110,14 +110,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-20"
+            className="text-xs w-16 px-2"
           >
-            ID
+            Pedido
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs w-20">
+          <div className="uppercase text-xs w-16">
             {row.getValue("orderNo")}
           </div>
         ),
@@ -128,7 +128,17 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           <div className="text-left text-xs maxsm:hidden w-20">Estado</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs text-center text-white maxsm:hidden bg-black rounded-md w-20 py-1.5">
+          <div
+            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-24 px-2 ${
+              row.original.status === "CANCELADO"
+                ? "bg-red-900"
+                : row.original.status === "PENDIENTE"
+                ? "bg-purple-900"
+                : row.original.status === "PROCESANDO"
+                ? "bg-emerald-900"
+                : "bg-blue-900"
+            }`}
+          >
             {row.getValue("status")}
           </div>
         ),

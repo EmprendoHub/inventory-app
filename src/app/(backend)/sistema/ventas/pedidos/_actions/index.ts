@@ -88,7 +88,7 @@ export async function createNewOrder(
     const trackingNumber = generateTrackingNumber();
     const deliveryMethod = "INTERNO";
     const carrier = "YUNUEN COMPANY";
-    const deliveryStatus = "Pendiente de Pago";
+    const deliveryStatus = "PENDIENTE";
 
     const dueDate = new Date();
     const orderNo = await generateOrderId(prisma);

@@ -43,8 +43,8 @@ export default function OrderView({ order }: { order: FullOderType }) {
     (sum, item) => sum + item.amount,
     0
   );
-  // console.log(tax);
   const grandTotal = (subtotal || 0) + (order.delivery?.price || 0);
+  const isOrderPaid = previousPayments === grandTotal;
 
   const { showModal } = useModal();
   const [sending, setSending] = useState(false);
@@ -101,8 +101,6 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
     if (supervisorCodeResult.confirmed) {
       // Check if the supervisor code is authorized
-
-      console.log(supervisorCodeResult.data);
 
       const isAuthorized = await verifySupervisorCode(
         supervisorCodeResult.data?.code
@@ -279,10 +277,17 @@ export default function OrderView({ order }: { order: FullOderType }) {
   };
 
   return (
-    <div>
+    <div className="order-view relative">
+      {order.status === "CANCELADO" && (
+        <div className="absolute z-40 top-28 maxmd:top-64">
+          <h2 className="text-6xl maxmd:text-4xl text-red-900 font-black ">
+            CANCELADO
+          </h2>
+        </div>
+      )}
       {/* Company Header */}
-      <div className="flex justify-between gap-3 items-start border-b pt-0 pb-8 px-4 maxmd:pr-10 maxsm:pl-0">
-        <div className="flex maxsm:flex-col maxsm:items-start items-center gap-1">
+      <div className="flex maxmd:flex-col justify-between gap-3 items-start maxsm:items-end border-b pt-0 pb-8 px-4 maxmd:pr-10 maxsm:pl-0">
+        <div className="flex maxsm:items-start items-center gap-1">
           <div className=" p-2 rounded-lg">
             <LogoIcon className="h-20 w-20" />
           </div>
@@ -314,8 +319,8 @@ export default function OrderView({ order }: { order: FullOderType }) {
             >
               <DownloadCloud /> PDF
             </Link>
-            {order.status !== "CANCELADO" && (
-              <>
+            {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(user?.role || "") &&
+              order.status !== "CANCELADO" && (
                 <Button
                   disabled={sending}
                   onClick={() => sendEmailReminder(order.id)}
@@ -324,15 +329,16 @@ export default function OrderView({ order }: { order: FullOderType }) {
                   <BsEnvelopeArrowUp /> Enviar Email{" "}
                   {sending && <span className="loader"></span>}
                 </Button>
-                <Button
-                  disabled={sending}
-                  onClick={() => receivePayment(order.id)}
-                  className=" text-center bg-purple-700 text-white text-xs rounded-md "
-                >
-                  <BsEnvelopeArrowUp /> Recibir Pago{" "}
-                  {sending && <span className="loader"></span>}
-                </Button>
-              </>
+              )}
+            {order.status !== "CANCELADO" && !isOrderPaid && (
+              <Button
+                disabled={sending}
+                onClick={() => receivePayment(order.id)}
+                className=" text-center bg-purple-700 text-white text-xs rounded-md "
+              >
+                <BsEnvelopeArrowUp /> Recibir Pago{" "}
+                {sending && <span className="loader"></span>}
+              </Button>
             )}
           </div>
         </div>
@@ -401,17 +407,21 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     maximumFractionDigits: 2,
                   })}
                 </TableCell>
-                {item.id && order.status !== "CANCELADO" && (
-                  <TableCell>
-                    {" "}
-                    <button
-                      onClick={() => deleteItem(item.id, order.id)}
-                      className="bg-red-600 text-white rounded-md"
-                    >
-                      <X />
-                    </button>
-                  </TableCell>
-                )}
+                {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(
+                  user?.role || ""
+                ) &&
+                  item.id &&
+                  order.status !== "CANCELADO" && (
+                    <TableCell>
+                      {" "}
+                      <button
+                        onClick={() => deleteItem(item.id, order.id)}
+                        className="bg-red-600 text-white rounded-md"
+                      >
+                        <X />
+                      </button>
+                    </TableCell>
+                  )}
               </TableRow>
             ))}
           </TableBody>
@@ -439,7 +449,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
               })}
             </span>
           </div>
-          <div className="flex justify-between border-t pt-2 font-bold">
+          <div className="flex text-xl justify-between border-t pt-2 font-bold">
             <span>Gran Total:</span>
             <span>
               $
@@ -449,21 +459,28 @@ export default function OrderView({ order }: { order: FullOderType }) {
               })}
             </span>
           </div>
-          {order.payments && order.payments.length > 0 && (
-            <div className="flex flex-col">
-              <div className="flex justify-between">
-                <span className="font-medium">Pagado:</span>
-                <span>
-                  -$
-                  {previousPayments.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-medium">Pendiente:</span>
-                <span>${(grandTotal - previousPayments).toLocaleString()}</span>
-              </div>
+          <div className="flex flex-col">
+            <div className="flex justify-between">
+              <span className="font-medium">Pagado:</span>
+              <span className="text-emerald-700">
+                $
+                {previousPayments.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
-          )}
+            <div className="flex justify-between">
+              <span className="font-medium">Pendiente:</span>
+              <span className="text-yellow-500">
+                $
+                {(grandTotal - previousPayments).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -505,17 +522,20 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     {item.reference}
                   </TableCell>
                   <TableCell>{item.status}</TableCell>
-                  {item.id && order.status !== "CANCELADO" && (
-                    <TableCell>
-                      {" "}
-                      <button
-                        onClick={() => deletePayment(item.id)}
-                        className="bg-red-600 text-white rounded-md"
-                      >
-                        <X />
-                      </button>
-                    </TableCell>
-                  )}
+                  {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(
+                    user?.role || ""
+                  ) &&
+                    item.id &&
+                    order.status !== "CANCELADO" && (
+                      <TableCell>
+                        <button
+                          onClick={() => deletePayment(item.id)}
+                          className="bg-red-600 text-white rounded-md"
+                        >
+                          <X />
+                        </button>
+                      </TableCell>
+                    )}
                 </TableRow>
               ))}
             </TableBody>

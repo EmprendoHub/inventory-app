@@ -1,7 +1,6 @@
 "use client";
 import {
   BarChart,
-  Box,
   Boxes,
   Building2,
   ChevronLeft,
@@ -87,7 +86,7 @@ export default function SideBar({
           </Link>
 
           {/* Negocio */}
-          {user?.role === "SUPER_ADMIN" && (
+          {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Collapsible className="w-full">
               <CollapsibleTrigger className="w-full">
                 <div className="flex  items-center gap-2 hover:bg-slate-900 p-2 rounded-md justify-between">
@@ -102,7 +101,7 @@ export default function SideBar({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-1  ">
-                {user?.role === "SUPER_ADMIN" && (
+                {/* {user?.role === "SUPER_ADMIN" && (
                   <Link
                     className={`group flex w-full items-center justify-between gap-2 p-1.5   ${
                       hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -124,7 +123,7 @@ export default function SideBar({
                       size={16}
                     />
                   </Link>
-                )}
+                )} */}
 
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
@@ -288,32 +287,38 @@ export default function SideBar({
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent className="flex flex-col gap-1">
-              <Link
-                className={`flex w-full items-center gap-2 p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                }  ${
-                  path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/clientes"}
-              >
-                <Users2 size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Clientes
-                </span>
-              </Link>
-              <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                } ${
-                  path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/pedidos"}
-              >
-                <PiInvoice size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Pedidos
-                </span>
-              </Link>
+              {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
+                user?.role || ""
+              ) && (
+                <>
+                  <Link
+                    className={`flex w-full items-center gap-2 p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    }  ${
+                      path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/ventas/clientes"}
+                  >
+                    <Users2 size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Clientes
+                    </span>
+                  </Link>
+                  <Link
+                    className={`flex w-full items-center gap-2  p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    } ${
+                      path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/ventas/pedidos"}
+                  >
+                    <PiInvoice size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Pedidos
+                    </span>
+                  </Link>
+                </>
+              )}
 
               <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
@@ -354,38 +359,45 @@ export default function SideBar({
                   Recibos
                 </span>
               </Link> */}
-              <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                } ${
-                  path === "/sistema/ventas/pagos" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/pagos"}
-              >
-                <GiPayMoney size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Pagos
-                </span>
-              </Link>
+              {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+                <Link
+                  className={`flex w-full items-center gap-2  p-1.5  ${
+                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  } ${
+                    path === "/sistema/ventas/pagos" ? "bg-blue-600" : ""
+                  } hover:bg-slate-900 rounded-md`}
+                  href={"/sistema/ventas/pagos"}
+                >
+                  <GiPayMoney size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Pagos
+                  </span>
+                </Link>
+              )}
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Negocio */}
-          <Collapsible className="w-full">
-            <CollapsibleTrigger className="w-full">
-              <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
-                <div className="flex items-center gap-2 ">
-                  <Building2 size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Contabilidad
-                  </span>
-                </div>
+          {/* Contabilidad */}
+          {/* Compras */}
 
-                <ChevronRight size={25} />
-              </div>
-            </CollapsibleTrigger>
+          <Collapsible className="w-full">
+            {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (
+              <CollapsibleTrigger className="w-full">
+                <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
+                  <div className="flex items-center gap-2 ">
+                    <Building2 size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Contabilidad
+                    </span>
+                  </div>
+
+                  <ChevronRight size={25} />
+                </div>
+              </CollapsibleTrigger>
+            )}
+
             <CollapsibleContent className="flex flex-col gap-1">
-              {user?.role === "SUPER_ADMIN" && (
+              {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -437,7 +449,7 @@ export default function SideBar({
           </Collapsible>
 
           {/* Compras */}
-          {user?.role === "SUPER_ADMIN" && (
+          {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Collapsible className="w-full">
               <CollapsibleTrigger className="w-full">
                 <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
@@ -493,17 +505,19 @@ export default function SideBar({
               Integraciones
             </span>
           </Link> */}
-          <Link
-            className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
-              path === "/sistema/reportes" ? "bg-blue-600" : ""
-            }`}
-            href={"/sistema/reportes"}
-          >
-            <BarChart size={16} />
-            <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-              Reportes
-            </span>
-          </Link>
+          {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+            <Link
+              className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
+                path === "/sistema/reportes" ? "bg-blue-600" : ""
+              }`}
+              href={"/sistema/reportes"}
+            >
+              <BarChart size={16} />
+              <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                Reportes
+              </span>
+            </Link>
+          )}
         </nav>
       </div>
 

@@ -35,7 +35,7 @@ export type DeliveryAndDriverType = {
   createdAt: Date;
   updatedAt: Date;
   userId: string | null;
-  driver: DriverType;
+  driver: DriverType | null;
 };
 
 export type DeliveryFormState = {
@@ -46,10 +46,10 @@ export type DeliveryFormState = {
 
 export type DriverType = {
   id: string;
-  name: string;
-  userId: string;
-  licenseNumber: string;
-  status: string;
+  name: string | null;
+  userId: string | null;
+  licenseNumber: string | null;
+  status: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

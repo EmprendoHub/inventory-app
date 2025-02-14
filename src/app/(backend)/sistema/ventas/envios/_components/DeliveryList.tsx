@@ -35,15 +35,23 @@ import {
 import { DeliveryAndDriverType } from "@/types/delivery";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ ModalContext";
-import { acceptDeliveryAction, deleteDeliveryAction } from "../_actions";
+import {
+  acceptDeliveryAction,
+  deleteDeliveryAction,
+  deliverDeliveryAction,
+} from "../_actions";
 import { verifySupervisorCode } from "@/lib/utils";
 import { FaTruckLoading } from "react-icons/fa";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function DeliveryList({
   deliveries,
 }: {
   deliveries: DeliveryAndDriverType[];
 }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -61,7 +69,7 @@ export function DeliveryList({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs"
+            className="text-xs w-16"
           >
             Fecha
             <ArrowUpDown />
@@ -79,8 +87,12 @@ export function DeliveryList({
         accessorKey: "driver",
         header: "Chofer",
         cell: ({ row }) => {
-          const driver = row.original.driver.name || "BODEGA";
-          return <div className="text-xs">{driver}</div>;
+          const driver = row.original?.driver?.name || "BODEGA";
+          return (
+            <div className="text-[12px] uppercase px-2 bg-black text-white rounded-md">
+              {driver}
+            </div>
+          );
         },
       },
       {
@@ -94,23 +106,35 @@ export function DeliveryList({
         accessorKey: "price",
         header: () => <div className="text-xs">Precio</div>,
         cell: ({ row }) => (
-          <div className="text-xs font-medium">{row.original.price}</div>
+          <div className="text-xs font-medium">
+            ${row.original.price.toLocaleString()}
+          </div>
         ),
       },
       {
         accessorKey: "trackingNumber",
         header: () => <div className="text-xs">No. de rastreo</div>,
         cell: ({ row }) => (
-          <div className="text-xs font-medium">
-            {row.original.trackingNumber}
-          </div>
+          <div className="text-[12px]">{row.original.trackingNumber}</div>
         ),
       },
       {
         accessorKey: "status",
         header: () => <div className="text-xs">Estado</div>,
         cell: ({ row }) => (
-          <div className="text-xs font-medium">{row.original.status}</div>
+          <div
+            className={`text-[12px] font-medium px-2 rounded-md  text-white ${
+              row.original.status === "CANCELADO"
+                ? "bg-red-900"
+                : row.original.status === "ENTREGADO"
+                ? "bg-emerald-900"
+                : row.original.status === "EN CAMINO"
+                ? "bg-blue-900"
+                : "bg-purple-900"
+            }`}
+          >
+            {row.original.status}
+          </div>
         ),
       },
       {
@@ -130,6 +154,7 @@ export function DeliveryList({
         cell: ({ row }) => {
           const ActionCell = () => {
             const { showModal } = useModal();
+
             const acceptDelivery = React.useCallback(async () => {
               // First, prompt for supervisor code
 
@@ -164,6 +189,46 @@ export function DeliveryList({
                     title: "Error",
                     type: "delete",
                     text: "No se pudo asignar el envió",
+                    icon: "error",
+                  });
+                }
+              }
+            }, [showModal]);
+
+            const deliverDelivery = React.useCallback(async () => {
+              // First, prompt for supervisor code
+
+              const result = await showModal({
+                title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                type: "info",
+                text: "Aceptar envió?",
+                icon: "success",
+                showCancelButton: true,
+                confirmButtonText: "Sí, aceptar",
+                cancelButtonText: "Cancelar",
+              });
+
+              if (result.confirmed) {
+                try {
+                  const formData = new FormData();
+                  formData.set("id", row.original.id);
+
+                  const response = await deliverDeliveryAction(formData);
+
+                  if (!response.success) throw new Error("Error al asignar");
+                  await showModal({
+                    title: "¡Entregar!",
+                    type: "info",
+                    text: "el envió ha sido entregado.",
+                    icon: "success",
+                  });
+                } catch (error) {
+                  console.log("error from modal", error);
+
+                  await showModal({
+                    title: "Error",
+                    type: "delete",
+                    text: "No se pudo entregar el envió",
                     icon: "error",
                   });
                 }
@@ -239,6 +304,10 @@ export function DeliveryList({
               router.push(`/sistema/ventas/envios/editar/${row.original.id}`);
             }, []);
 
+            const viewOrder = React.useCallback(async () => {
+              router.push(`/sistema/ventas/pedidos/${row.original.orderId}`);
+            }, []);
+
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -249,29 +318,60 @@ export function DeliveryList({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                  {["SUPER_ADMIN", "CHOFER"].includes(user?.role || "") &&
+                    !["CANCELADO", "ENTREGADO", "EN CAMINO"].includes(
+                      row.original.status || ""
+                    ) && (
+                      <DropdownMenuItem
+                        onClick={acceptDelivery}
+                        className="text-xs cursor-pointer"
+                      >
+                        <FaTruckLoading />
+                        Recibir
+                      </DropdownMenuItem>
+                    )}
+                  {["CHOFER"].includes(user?.role || "") &&
+                    ["EN CAMINO"].includes(row.original.status || "") && (
+                      <DropdownMenuItem
+                        onClick={deliverDelivery}
+                        className="text-xs cursor-pointer"
+                      >
+                        <FaTruckLoading />
+                        Entregar
+                      </DropdownMenuItem>
+                    )}
+
                   <DropdownMenuItem
-                    onClick={acceptDelivery}
-                    className="text-xs cursor-pointer"
-                  >
-                    <FaTruckLoading />
-                    Recibir
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={viewItem}
+                    onClick={viewOrder}
                     className="text-xs cursor-pointer"
                   >
                     <Eye />
-                    Editar
+                    Ver Pedido
                   </DropdownMenuItem>
+                  {user?.role === "SUPER_ADMIN" ||
+                    (user?.role === "ADMIN" && (
+                      <DropdownMenuItem
+                        onClick={viewItem}
+                        className="text-xs cursor-pointer"
+                      >
+                        <Eye />
+                        Editar Envió
+                      </DropdownMenuItem>
+                    ))}
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteDelivery}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Cancelar
-                  </DropdownMenuItem>
+                  {user?.role === "SUPER_ADMIN" ||
+                    user?.role === "ADMIN" ||
+                    (user?.role === "GERENTE" &&
+                      row.original.status !== "CANCELADO" && (
+                        <DropdownMenuItem
+                          onClick={deleteDelivery}
+                          className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                        >
+                          <X />
+                          Cancelar
+                        </DropdownMenuItem>
+                      ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

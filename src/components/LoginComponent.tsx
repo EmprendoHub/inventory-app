@@ -103,7 +103,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
             onSubmit={handleSubmit}
           >
             <input
-              className="text-center py-2 rounded-sm text-foreground"
+              className="text-center py-2 rounded-sm text-foreground bg-input"
               type="email"
               placeholder="Correo Electrónico..."
               onChange={(e) => setEmail(e.target.value)}
@@ -116,7 +116,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
               onChange={(e) => setHoneypot(e.target.value)}
             />
             <input
-              className="text-center py-2 rounded-sm text-foreground"
+              className="text-center py-2 rounded-sm text-foreground bg-input"
               type="password"
               placeholder="contraseña..."
               onChange={(e) => setPassword(e.target.value)}

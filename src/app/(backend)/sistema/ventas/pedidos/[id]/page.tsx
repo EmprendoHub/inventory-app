@@ -59,7 +59,7 @@ export default async function ViewOrder({
       {/* Header */}
       <FormSalesHeader title={"Ver Pedido"} />
       {/* Form */}
-      <OrderView order={order} />;
+      <OrderView order={order} />
     </div>
   );
 }

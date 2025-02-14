@@ -278,6 +278,7 @@ export const acceptDeliveryAction = async (formData: FormData) => {
         data: {
           userId: session?.user.id,
           driverId: driver?.id,
+          status: "EN CAMINO",
         },
       });
     }
@@ -293,6 +294,45 @@ export const acceptDeliveryAction = async (formData: FormData) => {
     return {
       success: false,
       message: "Failed to delete delivery.",
+    };
+  }
+};
+
+export const deliverDeliveryAction = async (formData: FormData) => {
+  const id = formData.get("id") as string;
+
+  if (!id) {
+    return { success: false, message: "Delivery ID is required." };
+  }
+
+  try {
+    const session = await getServerSession(options);
+    if (session?.user?.id) {
+      const driver = await prisma.driver.findFirst({
+        where: { userId: session.user.id as string },
+      });
+
+      await prisma.delivery.update({
+        where: { id },
+        data: {
+          userId: session?.user.id,
+          driverId: driver?.id,
+          status: "ENTREGADO",
+        },
+      });
+    }
+
+    revalidatePath("/sistema/ventas/envios");
+    revalidatePath("/sistema/ventas/pedidos");
+    return {
+      success: true,
+      message: "Delivery delivered successfully!",
+    };
+  } catch (error) {
+    console.error("Error delivering delivery:", error);
+    return {
+      success: false,
+      message: "Failed to deliver delivery.",
     };
   }
 };
