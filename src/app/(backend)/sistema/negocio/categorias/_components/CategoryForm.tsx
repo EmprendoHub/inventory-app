@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useFormState } from "react-dom";
 import { createCategory } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import TextInput from "@/components/TextInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import { useRouter } from "next/navigation";
@@ -39,7 +39,9 @@ export default function CategoryForm() {
         "category-form"
       ) as HTMLFormElement;
       formElement.reset();
-      router.push("/sistema/negocio/bodegas");
+      setSending((prev) => !prev);
+
+      router.push("/sistema/negocio/categorias");
       setSending((prev) => !prev);
     }
   };

@@ -35,7 +35,7 @@ import {
 import { GoodsReceiptType } from "@/types/goodsReceipts";
 import { useRouter } from "next/navigation";
 import { deleteGoodsReceiptAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export function GoodsReceiptList({
   goodsReceipts,

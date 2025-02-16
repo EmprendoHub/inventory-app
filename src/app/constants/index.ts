@@ -33,7 +33,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     title: "Artículos Compuestos",
     iconName: "GiClothes",
     description: "Agrupa varios artículos y véndelos en paquetes.",
-    link: "/sistema/negocio/articulos/nuevo",
+    link: "/sistema/negocio/articulos/conjuntos/nuevo",
     buttonText: "Articulo Nuevo",
   },
   {

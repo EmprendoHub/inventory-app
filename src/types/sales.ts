@@ -125,6 +125,7 @@ export type ordersAndItem = {
   clientId: string;
   status: string;
   totalAmount: number;
+  discount: number | null;
   createdAt: Date;
   updatedAt: Date;
   invoiceId: string | null;
@@ -157,6 +158,7 @@ export type FullOderType = {
   clientId: string;
   status: string;
   totalAmount: number;
+  discount: number | null;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -185,6 +187,7 @@ export type OrderItemsType = {
   itemId: string;
   image: string | null;
   name: string;
+  isGroup: boolean | null;
   description: string;
   quantity: number;
   price: number;

@@ -8,7 +8,7 @@ import {
   InventoryCountFormState,
   InventoryCountGroupType,
 } from "@/types/inventoryCounts";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { createInventoryCountAction } from "../_actions";
 import { Button } from "@/components/ui/button";
 import DateInput from "@/components/DateInput";

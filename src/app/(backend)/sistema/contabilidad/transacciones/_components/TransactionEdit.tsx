@@ -6,7 +6,7 @@ import SelectInput from "@/components/SelectInput";
 import { TransactionGroupType } from "@/types/transactions";
 import { useRouter } from "next/navigation";
 import { updateTransactionAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import DateInput from "@/components/DateInput";
 import NumericInput from "@/components/NumericInput";
 

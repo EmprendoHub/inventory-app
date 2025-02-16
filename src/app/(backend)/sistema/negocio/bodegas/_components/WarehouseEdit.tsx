@@ -4,7 +4,7 @@ import { useFormState } from "react-dom";
 import { updateWarehouseAction } from "../_actions";
 import SelectInput from "@/components/SelectInput";
 import TextInput from "@/components/TextInput";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { useRouter } from "next/navigation";
 import { warehouseType } from "@/types/warehouse";
 

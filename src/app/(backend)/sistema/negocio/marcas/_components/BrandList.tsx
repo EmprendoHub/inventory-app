@@ -37,7 +37,7 @@ import {
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { brandType } from "@/types/categories";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/lib/utils";
 import { deleteBrandAction } from "../_actions";
 

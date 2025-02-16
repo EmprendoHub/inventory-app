@@ -37,7 +37,7 @@ import {
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { paymentType } from "@/types/sales";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/lib/utils";
 import { deletePaymentAction } from "../../pedidos/_actions";
 import { UserType } from "@/types/users";

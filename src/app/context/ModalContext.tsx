@@ -1,27 +1,9 @@
 "use client";
 
+import { ModalOptions, ModalResult } from "@/types/delivery";
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { BsCurrencyExchange } from "react-icons/bs";
-
-type ModalOptions = {
-  title: string;
-  text: string;
-  type: "delete" | "payment" | "info" | "supervisorCode";
-  icon?: "warning" | "success" | "error";
-  showCancelButton?: boolean;
-  confirmButtonText?: string;
-  cancelButtonText?: string;
-};
-
-type ModalResult = {
-  confirmed: boolean;
-  data?: {
-    amount?: string;
-    reference?: string;
-    method?: string;
-    code?: string;
-  };
-};
+import { DeliveryConfirmationModal } from "../(backend)/sistema/ventas/envios/_components/DeliveryConfirmationModal";
 
 type ModalContextType = {
   showModal: (options: ModalOptions) => Promise<ModalResult>;
@@ -216,7 +198,17 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             onMouseDown={(e) => e.stopPropagation()}
           >
             <div className="text-center">
-              {modal.type === "payment" ? (
+              {modal.type === "deliveryConfirmation" ? (
+                <DeliveryConfirmationModal
+                  onConfirm={(signature, image) => {
+                    handleClose({
+                      confirmed: true,
+                      data: { signature, image },
+                    });
+                  }}
+                  onCancel={() => handleClose({ confirmed: false })}
+                />
+              ) : modal.type === "payment" ? (
                 <div className="flex flex-col justify-center items-center gap-1">
                   <BsCurrencyExchange size={60} color="green" />
                   <h3

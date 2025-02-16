@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { useFormState } from "react-dom";
+import React, { useEffect, useState } from "react";
 import { createNewOrder } from "../_actions";
-import { ItemType } from "@/types/items";
+import { ItemType, ProcessedItemGroup, SelectedItemType } from "@/types/items";
 import { clientType } from "@/types/sales";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { Input } from "@/components/ui/input";
@@ -21,15 +20,20 @@ import { X } from "lucide-react";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
+import { useFormState } from "react-dom";
 
 export default function OrderForm({
   clients,
   items,
+  itemGroups,
 }: {
   clients: clientType[];
   items: ItemType[];
+  itemGroups: ProcessedItemGroup[];
 }) {
   const router = useRouter();
+  const [sending, setSending] = useState(false);
+  // eslint-disable-next-line
   const [state, formAction] = useFormState(createNewOrder, {
     errors: {},
     success: false,
@@ -38,33 +42,47 @@ export default function OrderForm({
   const [selectedClient, setSelectedClient] = React.useState<clientType | null>(
     null
   );
-  const [selectedItems, setSelectedItems] = React.useState<
-    Array<ItemType & { quantity: number }>
-  >([]);
+  const [selectedItems, setSelectedItems] = React.useState<SelectedItemType[]>(
+    []
+  );
   const [selectedItemId, setSelectedItemId] = React.useState("");
   const [quantity, setQuantity] = React.useState(1);
   const [deliveryCost, setDeliveryCost] = React.useState(0);
+  const [discount, setDiscount] = React.useState(0);
 
   const subtotal = selectedItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
-  //const tax = subtotal * 0.1;
-  const grandTotal = subtotal + deliveryCost;
+  const grandTotal = subtotal - discount + deliveryCost;
 
+  // Update the handleAddItem function
   const handleAddItem = () => {
-    const selectedItem = items.find((item) => item.id === selectedItemId);
-    if (selectedItem) {
-      setSelectedItems((prev) => [
-        ...prev,
-        {
+    const selectedGroup = itemGroups.find(
+      (group) => group.id === selectedItemId
+    );
+
+    if (selectedGroup) {
+      const groupItem: SelectedItemType = {
+        ...selectedGroup,
+        quantity,
+        isGroup: true,
+        items: selectedGroup.items,
+      };
+      setSelectedItems((prev) => [...prev, groupItem]);
+    } else {
+      const selectedItem = items.find((item) => item.id === selectedItemId);
+      if (selectedItem) {
+        const singleItem: SelectedItemType = {
           ...selectedItem,
-          quantity: quantity,
-        },
-      ]);
-      setSelectedItemId("");
-      setQuantity(1);
+          quantity,
+          isGroup: false,
+        };
+        setSelectedItems((prev) => [...prev, singleItem]);
+      }
     }
+    setSelectedItemId("");
+    setQuantity(1);
   };
 
   useEffect(() => {
@@ -74,9 +92,23 @@ export default function OrderForm({
     // eslint-disable-next-line
   }, [state]);
 
+  // Custom form submission handler
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Prevent default form submission
+
+    setSending(true); // Set sending to true
+
+    const formData = new FormData(event.currentTarget);
+    const result = await createNewOrder(state, formData);
+
+    if (result.success) {
+      router.push("/sistema/ventas/pedidos");
+    }
+  };
+
   return (
     <form
-      action={formAction}
+      onSubmit={handleSubmit} // Use custom submit handler
       className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
     >
       {/* Customer Info */}
@@ -96,7 +128,7 @@ export default function OrderForm({
               setSelectedClient(client || null);
             }}
           />
-          {/* DElivery info */}
+          {/* Delivery info */}
           <NumericInput
             label="Costo de Envió"
             name="price"
@@ -137,10 +169,16 @@ export default function OrderForm({
           name="productId"
           state={state}
           className="flex-1"
-          options={items.map((item) => ({
-            value: item.id,
-            name: item.name,
-          }))}
+          options={[
+            ...items.map((item) => ({
+              value: item.id,
+              name: item.name,
+            })),
+            ...itemGroups.map((group) => ({
+              value: group.id,
+              name: `${group.name} (Agrupado)`,
+            })),
+          ]}
           onChange={setSelectedItemId}
         />
         <Input
@@ -236,6 +274,16 @@ export default function OrderForm({
             </span>
           </div>
           <div className="flex justify-between">
+            <span className="font-medium">Descuento:</span>
+            <NumericInput
+              label=""
+              name="discount"
+              state={state}
+              defaultValue={discount}
+              onChange={setDiscount}
+            />
+          </div>
+          <div className="flex justify-between">
             <span className="font-medium">Envió:</span>
             <span>
               $
@@ -268,9 +316,14 @@ export default function OrderForm({
 
       {/* Submit Section */}
       <div className="mt-8 flex justify-end gap-4 border-t pt-8">
-        <Button type="submit" size="lg" className="px-8 text-white">
-          Crear Pedido
-        </Button>
+        <button
+          type="submit"
+          disabled={sending}
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          {sending && <span className="loader"></span>}
+          {sending ? "Creando Pedido..." : "Crear Pedido"}
+        </button>
         {state.message && (
           <p
             className={`mt-4 text-sm ${

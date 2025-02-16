@@ -5,7 +5,7 @@ import { useFormState } from "react-dom";
 import SelectInput from "@/components/SelectInput";
 import TextInput from "@/components/TextInput";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { TruckFormState, TruckType } from "@/types/truck";
 import { updateTruckAction } from "../_actions";
 

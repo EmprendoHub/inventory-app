@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, X, Eye } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, X, Eye, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,9 +34,10 @@ import {
 } from "@/components/ui/table";
 import { DeliveryAndDriverType } from "@/types/delivery";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import {
   acceptDeliveryAction,
+  checkDeliveryOrderBalance,
   deleteDeliveryAction,
   deliverDeliveryAction,
 } from "../_actions";
@@ -44,6 +45,11 @@ import { verifySupervisorCode } from "@/lib/utils";
 import { FaTruckLoading } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import {
+  payOrderActionOnDelivery,
+  updateOrderOnDelivery,
+} from "../../pedidos/_actions";
+import { uploadImageAction } from "@/app/_actions";
 
 export function DeliveryList({
   deliveries,
@@ -57,6 +63,11 @@ export function DeliveryList({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const handleRefresh = () => {
+    // Refresh the page
+    router.refresh();
+  };
+
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -89,7 +100,7 @@ export function DeliveryList({
         cell: ({ row }) => {
           const driver = row.original?.driver?.name || "BODEGA";
           return (
-            <div className="text-[12px] uppercase px-2 bg-black text-white rounded-md">
+            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md">
               {driver}
             </div>
           );
@@ -123,14 +134,16 @@ export function DeliveryList({
         header: () => <div className="text-xs">Estado</div>,
         cell: ({ row }) => (
           <div
-            className={`text-[12px] font-medium px-2 rounded-md  text-white ${
+            className={`text-[12px] text-center font-medium px-2 rounded-md  text-white ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "ENTREGADO"
                 ? "bg-emerald-900"
                 : row.original.status === "EN CAMINO"
-                ? "bg-blue-900"
-                : "bg-purple-900"
+                ? "bg-purple-900"
+                : row.original.status === "PROCESANDO"
+                ? "bg-blue-700"
+                : "bg-yellow-700"
             }`}
           >
             {row.original.status}
@@ -176,6 +189,7 @@ export function DeliveryList({
                   const response = await acceptDeliveryAction(formData);
 
                   if (!response.success) throw new Error("Error al asignar");
+
                   await showModal({
                     title: "¡Asignado!",
                     type: "info",
@@ -195,42 +209,253 @@ export function DeliveryList({
               }
             }, [showModal]);
 
+            // Inside the `deliverDelivery` function
             const deliverDelivery = React.useCallback(async () => {
-              // First, prompt for supervisor code
+              const formData = new FormData();
+              formData.set("id", row.original.id);
+              formData.set("orderId", row.original.orderId);
+              const res = await checkDeliveryOrderBalance(formData);
 
-              const result = await showModal({
-                title: "¿Estás seguro?, ¡No podrás revertir esto!",
-                type: "info",
-                text: "Aceptar envió?",
-                icon: "success",
-                showCancelButton: true,
-                confirmButtonText: "Sí, aceptar",
-                cancelButtonText: "Cancelar",
-              });
+              if (res.pending === 0) {
+                const result = await showModal({
+                  title: "¿Listo para entregar pedido?",
+                  type: "info",
+                  text: "Entregar envió?",
+                  icon: "success",
+                  showCancelButton: true,
+                  confirmButtonText: "Sí, aceptar",
+                  cancelButtonText: "Cancelar",
+                });
 
-              if (result.confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
+                if (result.confirmed) {
+                  try {
+                    // Show the delivery confirmation modal
+                    const deliveryResult = await showModal({
+                      title: "Confirm Delivery",
+                      type: "deliveryConfirmation",
+                      text: "Please confirm the delivery by providing a signature and uploading an image.",
+                      icon: "success",
+                      showCancelButton: true,
+                      confirmButtonText: "Confirm",
+                      cancelButtonText: "Cancel",
+                    });
 
-                  const response = await deliverDeliveryAction(formData);
+                    if (deliveryResult.confirmed) {
+                      // Call deliverDeliveryAction to update the delivery status
+                      const deliveryResponse = await deliverDeliveryAction(
+                        formData
+                      );
+                      if (!deliveryResponse.success) {
+                        throw new Error("Error al asignar");
+                      }
 
-                  if (!response.success) throw new Error("Error al asignar");
-                  await showModal({
-                    title: "¡Entregar!",
-                    type: "info",
-                    text: "el envió ha sido entregado.",
-                    icon: "success",
-                  });
-                } catch (error) {
-                  console.log("error from modal", error);
+                      const { signature, image } = deliveryResult.data || {};
 
-                  await showModal({
-                    title: "Error",
-                    type: "delete",
-                    text: "No se pudo entregar el envió",
-                    icon: "error",
-                  });
+                      // Upload the signature and image to the server
+                      let signatureUrl = "";
+                      let imageUrl = "";
+
+                      if (signature) {
+                        // Upload the signature (Base64 string)
+                        const signatureUploadResponse = await uploadImageAction(
+                          signature
+                        );
+                        if (signatureUploadResponse.success) {
+                          signatureUrl = signatureUploadResponse.imageUrl ?? "";
+                        } else {
+                          throw new Error("Failed to upload signature");
+                        }
+                      }
+
+                      if (image) {
+                        // Convert the image to Base64
+                        const base64Image = await new Promise<string>(
+                          (resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(image);
+                            reader.onload = () =>
+                              resolve(reader.result as string);
+                            reader.onerror = (error) => reject(error);
+                          }
+                        );
+
+                        // Upload the Base64 image to the server
+                        const imageUploadResponse = await uploadImageAction(
+                          base64Image
+                        );
+                        if (imageUploadResponse.success) {
+                          imageUrl = imageUploadResponse.imageUrl ?? "";
+                        } else {
+                          throw new Error("Failed to upload image");
+                        }
+                      }
+
+                      // Save the signature and image URL to the database
+                      const deliveryFormData = new FormData();
+                      deliveryFormData.set("id", row.original.orderId);
+                      if (signatureUrl) {
+                        deliveryFormData.set("signature", signatureUrl);
+                      }
+                      if (imageUrl) {
+                        deliveryFormData.set("imageUrl", imageUrl);
+                      }
+
+                      const updateResponse = await updateOrderOnDelivery(
+                        deliveryFormData
+                      );
+                      if (updateResponse.success) {
+                        await showModal({
+                          title: "¡Entrega Confirmada!",
+                          type: "delete",
+                          text: "La entrega ha sido confirmada con éxito.",
+                          icon: "success",
+                        });
+                      } else {
+                        await showModal({
+                          title: "Error",
+                          type: "delete",
+                          text: "No se pudo confirmar la entrega.",
+                          icon: "error",
+                        });
+                      }
+                    }
+                  } catch (error) {
+                    console.log("error from modal", error);
+                    await showModal({
+                      title: "Error",
+                      type: "delete",
+                      text: "No se pudo entregar el envió",
+                      icon: "error",
+                    });
+                  }
+                }
+              } else {
+                // Handle pending payment case (same as before)
+                const paymentResult = await showModal({
+                  title: `Cobrar pendiente: $${res.pending} antes de entrega!`,
+                  type: "payment",
+                  text: `Se debe pagar: $${res.pending}`,
+                  icon: "success",
+                  showCancelButton: true,
+                  confirmButtonText: "Sí, pagar",
+                  cancelButtonText: "Cancelar",
+                });
+
+                if (paymentResult.confirmed) {
+                  try {
+                    const formData = new FormData();
+                    formData.set("id", row.original.orderId);
+                    formData.set("amount", paymentResult.data?.amount || "0");
+                    formData.set(
+                      "reference",
+                      paymentResult.data?.reference || ""
+                    );
+                    formData.set("method", paymentResult.data?.method || "");
+
+                    // Show the delivery confirmation modal
+                    const deliveryResult = await showModal({
+                      title: "Confirm Delivery",
+                      type: "deliveryConfirmation",
+                      text: "Por favor, confirme la entrega proporcionando una firma y cargando una imagen.",
+                      icon: "success",
+                      showCancelButton: true,
+                      confirmButtonText: "Confirm",
+                      cancelButtonText: "Cancel",
+                    });
+
+                    if (deliveryResult.confirmed) {
+                      const { signature, image } = deliveryResult.data || {};
+
+                      // Upload the signature and image to the server
+                      let signatureUrl = "";
+                      let imageUrl = "";
+
+                      if (signature) {
+                        // Upload the signature (Base64 string)
+                        const signatureUploadResponse = await uploadImageAction(
+                          signature
+                        );
+                        if (signatureUploadResponse.success) {
+                          signatureUrl = signatureUploadResponse.imageUrl ?? "";
+                        } else {
+                          throw new Error("Failed to upload signature");
+                        }
+                      }
+
+                      if (image) {
+                        // Convert the image to Base64
+                        const base64Image = await new Promise<string>(
+                          (resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(image);
+                            reader.onload = () =>
+                              resolve(reader.result as string);
+                            reader.onerror = (error) => reject(error);
+                          }
+                        );
+
+                        // Upload the Base64 image to the server
+                        const imageUploadResponse = await uploadImageAction(
+                          base64Image
+                        );
+                        if (imageUploadResponse.success) {
+                          imageUrl = imageUploadResponse.imageUrl ?? "";
+                        } else {
+                          throw new Error("Failed to upload image");
+                        }
+                      }
+
+                      // Save the signature and image URL to the database
+                      const deliveryFormData = new FormData();
+                      deliveryFormData.set("id", row.original.orderId);
+                      if (signatureUrl) {
+                        deliveryFormData.set("signature", signatureUrl);
+                      }
+                      if (imageUrl) {
+                        deliveryFormData.set("imageUrl", imageUrl);
+                      }
+
+                      const updateResponse = await updateOrderOnDelivery(
+                        deliveryFormData
+                      );
+                      if (updateResponse.success) {
+                        const response = await payOrderActionOnDelivery(
+                          formData
+                        );
+
+                        if (response.success) {
+                          await showModal({
+                            title: "¡Entrega Confirmada!",
+                            type: "delete",
+                            text: "La entrega ha sido confirmada con éxito.",
+                            icon: "success",
+                          });
+                        } else {
+                          await showModal({
+                            title: "¡Pago No Aplicado!",
+                            type: "delete",
+                            text: response.message,
+                            icon: "error",
+                          });
+                        }
+                      } else {
+                        await showModal({
+                          title: "Error",
+                          type: "delete",
+                          text: "No se pudo confirmar la entrega.",
+                          icon: "error",
+                        });
+                      }
+                    }
+                  } catch (error) {
+                    console.log("Error processing payment:", error);
+                    await showModal({
+                      title: "Error",
+                      type: "delete",
+                      text: "No se pudo aplicar el pago",
+                      icon: "error",
+                    });
+                  }
                 }
               }
             }, [showModal]);
@@ -406,7 +631,7 @@ export function DeliveryList({
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex items-center justify-between py-4">
         <Input
           placeholder="No de Pedido..."
           value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
@@ -415,6 +640,11 @@ export function DeliveryList({
           }
           className="max-w-sm"
         />
+        {/* Add the refresh button */}
+        <Button onClick={handleRefresh} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refrescar
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>

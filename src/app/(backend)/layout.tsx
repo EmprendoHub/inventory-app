@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import SystemHeader from "./sistema/_components/SystemHeader";
 import SideBar from "./sistema/_components/SideBar";
-import { ModalProvider } from "@/app/context/ ModalContext";
+import { ModalProvider } from "@/app/context/ModalContext";
 
 export default function SystemLayout({
   children,

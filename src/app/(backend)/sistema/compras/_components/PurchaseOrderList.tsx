@@ -37,7 +37,7 @@ import { PurchaseOrderType } from "@/types/purchaseOrders";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deletePurchaseOrderAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export function PurchaseOrderList({
   purchaseOrders,

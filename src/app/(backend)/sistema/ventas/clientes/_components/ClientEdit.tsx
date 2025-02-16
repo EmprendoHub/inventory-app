@@ -7,7 +7,7 @@ import Image from "next/image";
 import TextAreaInput from "@/components/TextAreaInput";
 import { CloudUpload } from "lucide-react";
 import { clientType } from "@/types/sales";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { useRouter } from "next/navigation";
 import { updateClient } from "../_actions/clientActions";
 

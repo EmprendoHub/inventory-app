@@ -16,8 +16,6 @@ export const createGoodsReceiptAction = async (
     items: JSON.parse(formData.get("items") as string),
   };
 
-  console.log(rawData.items);
-
   if (
     !rawData.receiptNumber ||
     !rawData.purchaseOrderId ||

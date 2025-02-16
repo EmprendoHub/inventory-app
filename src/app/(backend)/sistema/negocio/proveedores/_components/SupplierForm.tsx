@@ -7,7 +7,7 @@ import Image from "next/image";
 import TextAreaInput from "@/components/TextAreaInput";
 import { CloudUpload } from "lucide-react";
 import { createSupplier } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function SupplierForm() {
   // eslint-disable-next-line

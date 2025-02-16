@@ -7,7 +7,7 @@ import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { CloudUpload } from "lucide-react";
 import { UserFormState, UserGroupType } from "@/types/users";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { createUserAction } from "../_actions";
 import PasswordInput from "@/components/PasswordInput";
 import ToggleSwitch from "../../_components/ToggleSwitch";

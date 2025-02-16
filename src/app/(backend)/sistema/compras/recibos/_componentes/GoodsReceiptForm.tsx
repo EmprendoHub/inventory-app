@@ -9,7 +9,7 @@ import {
 } from "@/types/goodsReceipts";
 import { createGoodsReceiptAction } from "../_actions";
 import { Button } from "@/components/ui/button";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";

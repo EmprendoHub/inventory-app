@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
-import { ItemType } from "@/types/items";
+import { ItemGroupType, ItemType } from "@/types/items";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
 import TextInput from "@/components/TextInput";
 import NumericInput from "@/components/NumericInput";
@@ -10,12 +10,18 @@ import Image from "next/image";
 import placeholderImage from "../../../../../../../public/images/item_placeholder.png";
 import { CloudUpload, X } from "lucide-react";
 import { useDropzone } from "react-dropzone";
+import { updateItemGroupAction } from "../_actions";
 import { useModal } from "@/app/context/ModalContext";
-import { createItemGroup } from "../_actions";
 
-export default function ItemGroupForm({ items }: { items: ItemType[] }) {
+export default function ItemGroupEdit({
+  items,
+  itemGroup,
+}: {
+  items: ItemType[];
+  itemGroup: ItemGroupType & { items: { itemId: string; quantity: number }[] }; // Include quantities
+}) {
   // eslint-disable-next-line
-  const [state, formAction] = useFormState(createItemGroup, {
+  const [state, formAction] = useFormState(updateItemGroupAction, {
     errors: {},
     success: false,
     message: "",
@@ -23,10 +29,33 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
 
   const { showModal } = useModal();
 
+  // Pre-fill selected items with quantities
   const [selectedItems, setSelectedItems] = React.useState<
     { item: ItemType; quantity: number }[]
   >([]);
 
+  // Effect to map item IDs to their corresponding item objects with quantities
+  useEffect(() => {
+    if (itemGroup.items && items.length > 0) {
+      const mappedItems = itemGroup.items
+        .map(({ itemId, quantity }) => {
+          const item = items.find((item) => item.id === itemId);
+          return item ? { item, quantity } : null;
+        })
+        .filter(
+          (item): item is { item: ItemType; quantity: number } => item !== null
+        );
+      setSelectedItems(mappedItems);
+    }
+  }, [itemGroup.items, items]);
+
+  // Pre-fill the image
+  const [productImage, setProductImage] = useState<string>(
+    itemGroup.mainImage || "/images/item_placeholder.png"
+  );
+  const [fileData, setFileData] = useState<File | null>(null);
+
+  // Function to add an item to the selected items list
   const handleAddItem = (itemId: string) => {
     const selectedItem = items.find((item) => item.id === itemId);
     if (selectedItem && !selectedItems.find((si) => si.item.id === itemId)) {
@@ -34,10 +63,12 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
     }
   };
 
+  // Function to remove an item from the selected items list
   const handleRemoveItem = (itemId: string) => {
     setSelectedItems(selectedItems.filter((si) => si.item.id !== itemId));
   };
 
+  // Function to update the quantity of a specific item
   const handleQuantityChange = (itemId: string, quantity: number) => {
     setSelectedItems(
       selectedItems.map((si) =>
@@ -46,6 +77,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
     );
   };
 
+  // Function to calculate the total price of selected items
   const calculateTotalPrice = () => {
     return selectedItems.reduce(
       (total, si) => total + si.item.price * si.quantity,
@@ -53,34 +85,26 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
     );
   };
 
-  const [productImage, setProductImage] = useState<string>(
-    "/images/item_placeholder.png"
-  );
-  const [fileData, setFileData] = useState<File | null>(null);
-
+  // Custom submit handler to handle the file upload
   const handleSubmit = async (formData: FormData) => {
     if (fileData) {
       formData.set("image", fileData);
     }
-    selectedItems.forEach((si, index) => {
-      formData.set(`items[${index}].id`, si.item.id);
-      formData.set(`items[${index}].quantity`, si.quantity.toString());
-    });
-    const result = await createItemGroup(state, formData);
+    formData.set("id", itemGroup.id); // Include the item group ID for updating
+    formData.set(
+      "items",
+      selectedItems.map((si) => `${si.item.id}:${si.quantity}`).join(",")
+    );
+    const result = await updateItemGroupAction(state, formData);
+
+    // Check if the product was updated successfully
     if (result.success) {
       await showModal({
-        title: "Articulo Compuesto Creado!",
+        title: "Articulo Compuesto Actualizado!",
         type: "delete",
-        text: "El articulo Compuesto ha sido creado exitosamente.",
+        text: "El articulo Compuesto ha sido actualizado exitosamente.",
         icon: "success",
       });
-      const formElement = document.getElementById(
-        "compound-product-form"
-      ) as HTMLFormElement;
-      formElement.reset();
-      setProductImage("/images/item_placeholder.png");
-      setSelectedItems([]);
-      setFileData(null);
     }
   };
 
@@ -94,6 +118,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
       const file = acceptedFiles[0];
       setFileData(file);
 
+      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setProductImage(reader.result as string);
@@ -113,6 +138,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
         }
       }}
     >
+      {/* Image Upload Section */}
       <div className="flex flex-col ">
         <div className="flex items-center gap-2 mb-2">
           <h3 className="text-base font-semibold">Agrega imagen</h3>
@@ -150,12 +176,17 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
         )}
       </div>
       <div className="flex maxsm:flex-col items-center gap-4">
-        <TextInput label="Nombre" name="name" state={state} />
+        <TextInput
+          label="Nombre"
+          name="name"
+          state={state}
+          value={itemGroup.name} // Pre-fill the name
+        />
         <NumericInput
           label="Precio Sugerido"
           name="price"
           state={state}
-          defaultValue={calculateTotalPrice()}
+          defaultValue={itemGroup.price || calculateTotalPrice()} // Pre-fill the price
         />
       </div>
 
@@ -214,7 +245,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
                 onChange={(e) =>
                   handleQuantityChange(item.id, parseInt(e.target.value))
                 }
-                className="w-16 px-2 py-1 border rounded bg-input"
+                className="w-20 p-2 border rounded"
               />
               <button
                 type="button"
@@ -227,6 +258,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
           ))}
         </div>
 
+        {/* Display the total price of selected items */}
         <div className="mt-4">
           <p className="font-semibold text-lg">
             Total: {calculateTotalPrice().toLocaleString()}
@@ -238,7 +270,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
         type="submit"
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
       >
-        Crear Articulo Compuesto
+        Actualizar Articulo Compuesto
       </button>
 
       {state.message && (

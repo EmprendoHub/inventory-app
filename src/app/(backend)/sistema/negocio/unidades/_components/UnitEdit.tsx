@@ -5,7 +5,7 @@ import { updateUnitAction } from "../_actions";
 import { unitType } from "@/types/categories";
 import { useRouter } from "next/router";
 import TextInput from "@/components/TextInput";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function UnitEdit({ unit }: { unit: unitType }) {
   const router = useRouter();

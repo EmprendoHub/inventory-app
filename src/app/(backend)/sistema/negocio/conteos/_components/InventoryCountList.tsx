@@ -37,7 +37,7 @@ import { InventoryCountType } from "@/types/inventoryCounts";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteInventoryCountAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export function InventoryCountList({
   inventoryCounts,

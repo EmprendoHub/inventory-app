@@ -7,7 +7,7 @@ import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import { CloudUpload } from "lucide-react";
 import { UserGroupType } from "@/types/users";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { useRouter } from "next/navigation";
 import { updateUserAction } from "../_actions";
 import PasswordInput from "@/components/PasswordInput";

@@ -53,3 +53,30 @@ export type DriverType = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type ModalOptions = {
+  title: string;
+  text: string;
+  type:
+    | "delete"
+    | "payment"
+    | "info"
+    | "supervisorCode"
+    | "deliveryConfirmation"; // Add new type
+  icon?: "warning" | "success" | "error";
+  showCancelButton?: boolean;
+  confirmButtonText?: string;
+  cancelButtonText?: string;
+};
+
+export type ModalResult = {
+  confirmed: boolean;
+  data?: {
+    amount?: string;
+    reference?: string;
+    method?: string;
+    code?: string;
+    signature?: string;
+    image?: File | null;
+  };
+};

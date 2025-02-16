@@ -37,7 +37,7 @@ import { ExpenseType } from "@/types/expenses";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteExpenseAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";

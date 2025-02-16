@@ -4,7 +4,9 @@ import prisma from "@/lib/db";
 import { mc } from "@/lib/minio";
 import { VerifyEmailSchema } from "@/lib/schemas";
 import axios from "axios";
+import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
+import { join } from "path";
 
 // Put a file in bucket my-bucketname
 export const uploadToBucket = async (
@@ -16,7 +18,6 @@ export const uploadToBucket = async (
 > => {
   try {
     const response = await mc.fPutObject(folder, filename, file);
-    console.log(response, "response");
     return { response };
   } catch (error) {
     console.error("Upload failed:", error);
@@ -150,5 +151,28 @@ export async function resendEmail(data: any) {
         email: { _errors: [`Failed Google Captcha Score: ${res.data?.score}`] },
       },
     };
+  }
+}
+
+export async function uploadImageAction(base64Image: string) {
+  try {
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.png`;
+    const path = join("/", "tmp", newFilename);
+
+    const uint8Array = new Uint8Array(imageBuffer);
+    await writeFile(path, uint8Array);
+
+    await uploadToBucket("inventario", "proofs/" + newFilename, path);
+    const imageUrl = `${process.env.MINIO_URL}proofs/${newFilename}`;
+
+    return { success: true, imageUrl };
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    return { success: false, error: "Failed to upload image" };
   }
 }

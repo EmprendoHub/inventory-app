@@ -38,7 +38,7 @@ import { clientsAndProductType, clientType } from "@/types/sales";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/lib/utils";
 import { deleteClientAction } from "../_actions/clientActions";
 

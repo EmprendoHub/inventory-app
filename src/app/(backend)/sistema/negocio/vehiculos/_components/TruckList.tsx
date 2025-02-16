@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
 import { TruckType } from "@/types/truck";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { deleteTruckAction } from "../_actions";
 import { verifySupervisorCode } from "@/lib/utils";
 

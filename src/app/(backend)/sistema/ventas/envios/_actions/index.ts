@@ -210,7 +210,7 @@ export const deleteDeliveryAction = async (formData: FormData) => {
           where: { id: matchingPayment.id },
           data: { status: "CANCELADO" },
         });
-        console.log("Exact match found. Payment status updated to CANCELADO.");
+        // console.log("Exact match found. Payment status updated to CANCELADO.");
       } else {
         // If no exact match, find a payment with an amount larger than delivery.price
         matchingPayment = order.payments.find(
@@ -333,6 +333,60 @@ export const deliverDeliveryAction = async (formData: FormData) => {
     return {
       success: false,
       message: "Failed to deliver delivery.",
+    };
+  }
+};
+
+export const checkDeliveryOrderBalance = async (formData: FormData) => {
+  const id = formData.get("id") as string;
+  const orderId = formData.get("orderId") as string;
+
+  if (!id) {
+    return { success: false, message: "Delivery ID is required.", pending: 0 };
+  }
+
+  try {
+    const session = await getServerSession(options);
+    const delivery = await prisma.delivery.findFirst({
+      where: { id },
+    });
+    const order = await prisma.order.findFirst({
+      where: { id: orderId },
+      include: {
+        payments: true,
+      },
+    });
+
+    if (session?.user?.id && order) {
+      const orderPaymentsTotal = order?.payments.reduce(
+        (sum, payment) => sum + payment.amount,
+        0
+      );
+      const deliveryPrice = delivery?.price || 0;
+      const orderTotal = order?.totalAmount + deliveryPrice;
+      const pendingAmount = orderTotal - orderPaymentsTotal;
+
+      console.log(orderTotal, orderPaymentsTotal, deliveryPrice, pendingAmount);
+
+      revalidatePath("/sistema/ventas/envios");
+      revalidatePath("/sistema/ventas/pedidos");
+      return {
+        success: true,
+        message: "Delivery delivered successfully!",
+        pending: pendingAmount,
+      };
+    }
+    return {
+      success: false,
+      message: "Error delivering delivery!",
+      pending: 0,
+    };
+  } catch (error) {
+    console.error("Error delivering delivery:", error);
+    return {
+      success: false,
+      message: "Failed to deliver delivery.",
+      pending: 0,
     };
   }
 };

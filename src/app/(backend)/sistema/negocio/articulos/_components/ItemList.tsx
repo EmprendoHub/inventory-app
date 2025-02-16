@@ -37,7 +37,7 @@ import { ItemType } from "@/types/items";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { deleteItemAction, toggleItemStatusAction } from "../_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";

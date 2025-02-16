@@ -19,7 +19,6 @@ export const createPurchaseOrderAction = async (
     expectedDate: formData.get("expectedDate"),
     items: JSON.parse(formData.get("items") as string),
   };
-  console.log(rawData.items);
   if (
     !rawData.poNumber ||
     !rawData.supplierId ||
@@ -52,6 +51,7 @@ export const createPurchaseOrderAction = async (
           data: {
             purchaseOrderId: newPurchaseOrder.id,
             itemId: item.itemId,
+            name: "",
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             tax: item.tax,
@@ -129,6 +129,7 @@ export async function updatePurchaseOrderAction(
           data: {
             purchaseOrderId: rawData.id,
             itemId: item.itemId,
+            name: "",
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             tax: item.tax,

@@ -8,8 +8,8 @@ import Image from "next/image";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { CloudUpload } from "lucide-react";
-import { ItemGroupType } from "@/types/items";
-import { useModal } from "@/app/context/ ModalContext";
+import { ItemCompoundType } from "@/types/items";
+import { useModal } from "@/app/context/ModalContext";
 import { useRouter } from "next/navigation";
 import { updateItemAction } from "../_actions";
 
@@ -20,7 +20,7 @@ export default function ProductEdit({
   warehouses,
   suppliers,
   item,
-}: ItemGroupType) {
+}: ItemCompoundType) {
   const router = useRouter();
   // eslint-disable-next-line
   const [state, formAction] = useFormState(updateItemAction, {
@@ -262,12 +262,14 @@ export default function ProductEdit({
           name="cost"
           label="Costo de Compra"
           state={state}
+          defaultValue={formData.cost}
         />
         <NumericInput
           onChange={(value) => handleInputChange("price", value)}
           name="price"
           label="Precio de Venta"
           state={state}
+          defaultValue={formData.price}
         />
       </div>
       <div className="flex maxsm:flex-col gap-3">
@@ -276,6 +278,7 @@ export default function ProductEdit({
           name="minStock"
           label="Stock Minio"
           state={state}
+          defaultValue={formData.minStock}
         />
       </div>
       <div className="flex maxsm:flex-col gap-3">
@@ -284,6 +287,7 @@ export default function ProductEdit({
           name="tax"
           label="Impuesto"
           state={state}
+          defaultValue={formData.tax}
         />
         <SelectInput
           label="Proveedor"

@@ -8,7 +8,7 @@ import TextAreaInput from "@/components/TextAreaInput";
 import { CloudUpload } from "lucide-react";
 import { createClient } from "../_actions/clientActions";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function ClientForm() {
   const router = useRouter();

@@ -8,7 +8,7 @@ import { InventoryCountGroupType } from "@/types/inventoryCounts";
 import { useRouter } from "next/navigation";
 import { updateInventoryCountAction } from "../_actions";
 import { Button } from "@/components/ui/button";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import DateInput from "@/components/DateInput";
 import NumericInput from "@/components/NumericInput";
 

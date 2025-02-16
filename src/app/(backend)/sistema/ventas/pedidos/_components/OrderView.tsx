@@ -18,7 +18,6 @@ import {
   deletePaymentAction,
   payOrderAction,
 } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
 import Link from "next/link";
 import {
   getMexicoDate,
@@ -30,6 +29,7 @@ import { BsEnvelopeArrowUp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function OrderView({ order }: { order: FullOderType }) {
   const { data: session } = useSession();
@@ -48,6 +48,22 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
   const { showModal } = useModal();
   const [sending, setSending] = useState(false);
+
+  // Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState("");
+
+  // Function to open the lightbox
+  const openLightbox = (imageUrl: string) => {
+    setLightboxImage(imageUrl);
+    setLightboxOpen(true);
+  };
+
+  // Function to close the lightbox
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxImage("");
+  };
 
   const sendEmailReminder = async (id: string) => {
     setSending((prev) => !prev);
@@ -278,13 +294,47 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
   return (
     <div className="order-view relative">
-      {order.status === "CANCELADO" && (
+      {order.status === "CANCELADO" ? (
         <div className="absolute z-40 top-28 maxmd:top-64">
           <h2 className="text-6xl maxmd:text-4xl text-red-900 font-black ">
             CANCELADO
           </h2>
         </div>
+      ) : order.status === "PAGADO" ? (
+        <div className="absolute z-40 top-28 maxmd:top-64">
+          <h2 className="text-6xl maxmd:text-4xl text-emerald-900 font-black ">
+            ENTREGADO
+          </h2>
+        </div>
+      ) : (
+        ""
       )}
+      {order.status}
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+          onClick={closeLightbox}
+        >
+          <div className="relative max-w-4xl max-h-full">
+            <Image
+              src={lightboxImage || coImage}
+              alt="Enlarged item image"
+              width={800}
+              height={800}
+              className="object-contain"
+            />
+            <button
+              onClick={closeLightbox}
+              className="absolute top-4 right-4 p-2 bg-white rounded-full hover:bg-gray-200"
+            >
+              <X className="text-black" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Company Header */}
       <div className="flex maxmd:flex-col justify-between gap-3 items-start maxsm:items-end border-b pt-0 pb-8 px-4 maxmd:pr-10 maxsm:pl-0">
         <div className="flex maxsm:items-start items-center gap-1">
@@ -343,46 +393,27 @@ export default function OrderView({ order }: { order: FullOderType }) {
           </div>
         </div>
       </div>
-      <section className="px-8 pb-8 maxsm:pl-1 pt-2 bg-card rounded-lg shadow-md">
-        {/* Customer Info */}
-        <div className="grid grid-cols-2 maxsm:grid-cols-1 gap-8">
-          <div className="space-y-2 bg-card p-4 rounded-lg">
-            {order.client && (
-              <div className="flex flex-col">
-                <h3 className="font-semibold text-lg">{order.client.name}</h3>
-                <span className="text-sm text-muted my-0">
-                  {order.client.address}
-                </span>
-                <span className="text-sm text-muted my-0">
-                  Phone: {order.client.phone}
-                </span>
-                {order.client.email && (
-                  <span className="text-sm text-muted my-0">
-                    Email: {order.client.email}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
 
-        {/* Items Table */}
-        <Table className="mb-8 border rounded-lg">
-          <TableHeader className="bg-card">
-            <TableRow>
-              <TableHead className="">img</TableHead>
-              <TableHead>Articulo</TableHead>
-              <TableHead>Cntd.</TableHead>
-              <TableHead className="maxsm:hidden">Precio unitario</TableHead>
-              <TableHead>Total</TableHead>
-
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {order.orderItems?.map((item, index) => (
-              <TableRow key={index}>
-                <TableCell className="font-medium">
+      {/* Items Table */}
+      <Table className="mb-8 border rounded-lg">
+        <TableHeader className="bg-card">
+          <TableRow>
+            <TableHead className="">img</TableHead>
+            <TableHead>Articulo</TableHead>
+            <TableHead>Cntd.</TableHead>
+            <TableHead className="maxsm:hidden">Precio unitario</TableHead>
+            <TableHead>Total</TableHead>
+            <TableHead></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {order.orderItems?.map((item, index) => (
+            <TableRow key={index}>
+              <TableCell className="font-medium">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => openLightbox(item.image || coImage.src)}
+                >
                   <Image
                     className="h-10 w-10 grayscale"
                     src={item.image || coImage}
@@ -390,100 +421,100 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     height={150}
                     alt="img"
                   />
-                </TableCell>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell className="maxsm:hidden">
-                  $
-                  {item.price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </TableCell>
-                <TableCell>
-                  $
-                  {(item.price * item.quantity).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </TableCell>
-                {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(
-                  user?.role || ""
-                ) &&
-                  item.id &&
-                  order.status !== "CANCELADO" && (
-                    <TableCell>
-                      {" "}
-                      <button
-                        onClick={() => deleteItem(item.id, order.id)}
-                        className="bg-red-600 text-white rounded-md"
-                      >
-                        <X />
-                      </button>
-                    </TableCell>
-                  )}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
-        {/* Totals */}
-        <div className="ml-auto w-80 space-y-1">
-          <div className="flex justify-between">
-            <span className="font-medium">Subtotal:</span>
-            <span>
-              $
-              {subtotal?.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Envió:</span>
-            <span>
-              $
-              {(order.delivery?.price || 0).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className="flex text-xl justify-between border-t pt-2 font-bold">
-            <span>Gran Total:</span>
-            <span>
-              $
-              {grandTotal?.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex justify-between">
-              <span className="font-medium">Pagado:</span>
-              <span className="text-emerald-700">
+                </div>
+              </TableCell>
+              <TableCell className="font-medium">
+                <div className="flex flex-col gap-1">
+                  <span>{item.name}</span>
+                  <span className="text-[12px]">{item.description}</span>
+                </div>
+              </TableCell>
+              <TableCell>{item.quantity}</TableCell>
+              <TableCell className="maxsm:hidden">
                 $
-                {previousPayments.toLocaleString(undefined, {
+                {item.price.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium">Pendiente:</span>
-              <span className="text-yellow-500">
+              </TableCell>
+              <TableCell>
                 $
-                {(grandTotal - previousPayments).toLocaleString(undefined, {
+                {(item.price * item.quantity).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}
-              </span>
-            </div>
+              </TableCell>
+              {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(user?.role || "") &&
+                item.id &&
+                order.status !== "CANCELADO" && (
+                  <TableCell>
+                    <button
+                      onClick={() => deleteItem(item.id, order.id)}
+                      className="bg-red-600 text-white rounded-md"
+                    >
+                      <X />
+                    </button>
+                  </TableCell>
+                )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {/* Totals */}
+      <div className="ml-auto w-80 space-y-1">
+        <div className="flex justify-between">
+          <span className="font-medium">Subtotal:</span>
+          <span>
+            $
+            {subtotal?.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span className="font-medium">Envió:</span>
+          <span>
+            $
+            {(order.delivery?.price || 0).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+        <div className="flex text-xl justify-between border-t pt-2 font-bold">
+          <span>Gran Total:</span>
+          <span>
+            $
+            {grandTotal?.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+        <div className="flex flex-col">
+          <div className="flex justify-between">
+            <span className="font-medium">Pagado:</span>
+            <span className="text-emerald-700">
+              $
+              {previousPayments.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-medium">Pendiente:</span>
+            <span className="text-yellow-500">
+              $
+              {(grandTotal - previousPayments).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
         </div>
-      </section>
-
+      </div>
       {/* Payments */}
       {(order.payments?.length ?? 0) > 0 && (
         <section className="px-8 pb-8 maxsm:pl-1 mt-2 bg-card rounded-lg shadow-md">

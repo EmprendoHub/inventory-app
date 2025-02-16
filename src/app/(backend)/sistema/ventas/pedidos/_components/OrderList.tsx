@@ -18,6 +18,7 @@ import {
   DownloadCloud,
   Eye,
   MoreHorizontal,
+  RefreshCw,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,7 @@ import {
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { ordersAndItem, paymentType } from "@/types/sales";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { deleteOrderAction, payOrderAction } from "../_actions";
 import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
@@ -64,6 +65,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -133,10 +135,10 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "PENDIENTE"
-                ? "bg-purple-900"
+                ? "bg-yellow-700"
                 : row.original.status === "PROCESANDO"
-                ? "bg-emerald-900"
-                : "bg-blue-900"
+                ? "bg-blue-900"
+                : "bg-emerald-900"
             }`}
           >
             {row.getValue("status")}
@@ -400,18 +402,31 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       rowSelection,
     },
   });
+  const handleRefresh = () => {
+    // Refresh the page
+    router.refresh();
+  };
 
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder="Filtrar..."
-          value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("orderNo")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex items-center justify-between w-full">
+          <Input
+            placeholder="Filtrar..."
+            value={
+              (table.getColumn("orderNo")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              table.getColumn("orderNo")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          {/* Add the refresh button */}
+          <Button onClick={handleRefresh} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refrescar
+          </Button>
+        </div>
         <DropdownMenu>
           <DropdownMenuContent align="end">
             {table

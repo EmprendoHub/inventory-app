@@ -145,20 +145,20 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
           className="flex flex-col justify-center items-center text-center gap-y-4 text-foreground"
         >
           <input
-            className="text-center py-2 rounded-md text-sm"
+            className="text-center py-2 rounded-md text-sm bg-input"
             type="text"
             placeholder="Nombre y Apellidos..."
             onChange={(e) => setUsername(e.target.value)}
           />
           <input
-            className="text-center py-2 rounded-md text-sm"
+            className="text-center py-2 rounded-md text-sm bg-input"
             type="text"
             placeholder="Teléfono"
             value={phone}
             onChange={handlePhoneChange}
           />
           <input
-            className="text-center py-2 rounded-md text-sm"
+            className="text-center py-2 rounded-md text-sm bg-input"
             type="email"
             placeholder="Correo Electrónico..."
             onChange={(e) => setEmail(e.target.value)}
@@ -166,13 +166,13 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
 
           <input
             hidden
-            className="text-center py-2 rounded-md text-sm"
+            className="text-center py-2 rounded-md text-sm bg-input"
             type="text"
             placeholder="Honeypot"
             onChange={(e) => setHoneypot(e.target.value)}
           />
           <input
-            className="text-center py-2 rounded-md text-sm"
+            className="text-center py-2 rounded-md text-sm bg-input"
             type="password"
             placeholder="Contraseña..."
             onChange={(e) => setPassword(e.target.value)}

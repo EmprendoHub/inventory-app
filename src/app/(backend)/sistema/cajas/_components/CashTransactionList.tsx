@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { paymentType } from "@/types/sales";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/lib/utils";

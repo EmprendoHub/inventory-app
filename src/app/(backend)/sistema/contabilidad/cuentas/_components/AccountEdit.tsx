@@ -7,7 +7,7 @@ import { AccountGroupType } from "@/types/accounting";
 import { useRouter } from "next/navigation";
 import { updateAccountAction } from "../_actions";
 import TextAreaInput from "@/components/TextAreaInput";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function AccountEdit({ accounts, account }: AccountGroupType) {
   const router = useRouter();

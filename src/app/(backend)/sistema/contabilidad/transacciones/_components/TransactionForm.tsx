@@ -5,7 +5,7 @@ import TextInput from "@/components/TextInput";
 import SelectInput from "@/components/SelectInput";
 import { TransactionFormState } from "@/types/transactions";
 import { createTransactionAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import DateInput from "@/components/DateInput";
 import NumericInput from "@/components/NumericInput";
 import { AccountOneType } from "@/types/accounting";

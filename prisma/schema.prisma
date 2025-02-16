@@ -4,12 +4,17 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL") 
 }
 
 
 model Counter {
   id        String   @id @default("order_counter") @map("_id")
+  sequence  Int      @default(0)
+}
+
+model POCounter {
+  id        String   @id @default("po_counter") @map("_id")
   sequence  Int      @default(0)
 }
 
@@ -103,6 +108,9 @@ model Order {
   deliveryId    String?   @db.ObjectId
   status      OrderStatus   @default(PENDIENTE)
   totalAmount Int
+  discount Float?
+  signature   String?  // Add this field
+  imageUrl    String?  // Add this field
   notes       String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -130,7 +138,8 @@ model OrderItem {
   orderId     String @db.ObjectId
   itemId      String @db.ObjectId // Keep the itemId for reference, but don't enforce a foreign key constraint
   image       String?
-  name        String     
+  name        String 
+  isGroup     Boolean  @default(false)  
   description String
   quantity    Int
   price       Int
@@ -157,6 +166,8 @@ model Delivery {
   carrier     String
   otp         String
   price         Float
+  signature   String?  // Add this field
+  imageUrl    String?  // Add this field
   trackingNumber    String  @unique
   deliveryDate DateTime?
   status      String  
@@ -227,6 +238,7 @@ model Item {
   brandId       String     @db.ObjectId
   unitId        String     @db.ObjectId
   variants      ItemVariant[]
+  itemGroups  ItemGroupItem[] // Relationship to the join table
   stocks        Stock[]
   stockMovements StockMovement[]
 }
@@ -241,6 +253,32 @@ enum ItemStatus {
   LOW_STOCK
 }
 
+model ItemGroupItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  itemGroupId String   @db.ObjectId
+  itemId      String   @db.ObjectId
+  quantity    Int
+  item        Item     @relation(fields: [itemId], references: [id])
+  itemGroup   ItemGroup @relation(fields: [itemGroupId], references: [id])
+
+  @@unique([itemGroupId, itemId]) // Ensure each item is unique within a group
+}
+
+model ItemGroup {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  mainImage   String?
+  barcode     String?
+  price       Float
+  notes       String?
+  status      ItemStatus     @default(ACTIVE)
+  itemVariantId String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  items       ItemGroupItem[] // Relationship to the join table
+}
+
+
 model ItemVariant {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   item        Item     @relation(fields: [itemId], references: [id])
@@ -254,14 +292,6 @@ model ItemVariant {
   updatedAt   DateTime @updatedAt
 }
 
-
-model ItemGroup {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  itemId      String[]
-  itemVariantId String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
 
 
 model Category {
@@ -585,7 +615,7 @@ model PurchaseOrder {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   poNumber      String    @unique  // PO-000001 format
   supplierId    String    @db.ObjectId
-  status        POStatus  @default(DRAFT)
+  status        POStatus  @default(BORRADOR)
   totalAmount   Float
   taxAmount     Float
   notes         String?
@@ -598,13 +628,13 @@ model PurchaseOrder {
 }
 
 enum POStatus {
-  DRAFT
-  SUBMITTED
-  APPROVED
+  BORRADOR
+  PENDIENTE
+  APROBADO
   ORDERED
-  PARTIALLY_RECEIVED
-  RECEIVED
-  CANCELLED
+  PARCIALMENTE_RECIBIDO
+  RECIBIDO
+  CANCELADO
 }
 
 model PurchaseOrderItem {
@@ -612,6 +642,9 @@ model PurchaseOrderItem {
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
   purchaseOrderId String    @db.ObjectId
   itemId          String    @db.ObjectId
+  image       String?
+  name        String 
+   description String?
   quantity        Int
   unitPrice       Float
   tax             Float
@@ -619,6 +652,7 @@ model PurchaseOrderItem {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
+
 
 model GoodsReceipt {
   id              String    @id @default(auto()) @map("_id") @db.ObjectId

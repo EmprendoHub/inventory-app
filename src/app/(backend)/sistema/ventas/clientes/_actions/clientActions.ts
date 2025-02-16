@@ -129,8 +129,6 @@ export async function updateClient(
   const address = formData.get("address") as string;
   const image = formData.get("image") as File;
 
-  console.log(image);
-
   // Validate inputs
   const errors: { [key: string]: string[] } = {};
 

@@ -38,7 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { unitType } from "@/types/categories";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/lib/utils";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { deleteUnitAction } from "../_actions";
 
 export function UnitList({ units }: { units: unitType[] }) {

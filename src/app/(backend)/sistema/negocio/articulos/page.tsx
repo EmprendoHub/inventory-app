@@ -3,7 +3,7 @@ import React from "react";
 import { ProductList } from "./_components/ItemList";
 import BusinessHeader from "../../_components/BusinessHeader";
 
-export default async function ItemsGroups() {
+export default async function ItemsPage() {
   const getItemsWithTotalStock = async () => {
     try {
       // Fetch all items

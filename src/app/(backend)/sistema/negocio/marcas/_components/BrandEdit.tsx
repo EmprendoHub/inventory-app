@@ -4,7 +4,7 @@ import { useFormState } from "react-dom";
 import { updateBrandAction } from "../_actions";
 import { brandType } from "@/types/categories";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import TextInput from "@/components/TextInput";
 import TextAreaInput from "@/components/TextAreaInput";
 

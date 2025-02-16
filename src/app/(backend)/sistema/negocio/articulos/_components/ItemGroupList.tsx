@@ -14,7 +14,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,57 +33,98 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ItemGroupType } from "@/types/items";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { categoryType } from "@/types/categories";
-import { useModal } from "@/app/context/ModalContext";
+// import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useModal } from "@/app/context/ModalContext";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 import { verifySupervisorCode } from "@/lib/utils";
-import { deleteCategoryAction } from "../_actions";
+import {
+  deleteItemGroupAction,
+  toggleItemGroupStatusAction,
+} from "../_actions";
 
-export function CategoryList({ categories }: { categories: categoryType[] }) {
+export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
+
+  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-
-  const router = useRouter();
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const columns = React.useMemo<ColumnDef<categoryType>[]>(
+  const columns = React.useMemo<ColumnDef<ItemGroupType>[]>(
     () => [
       {
-        accessorKey: "title",
-        header: ({ column }) => {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="text-xs w-20"
+          >
+            ID
+            <ArrowUpDown />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="uppercase text-xs w-20">{row.getValue("name")}</div>
+        ),
+      },
+
+      // {
+      //   accessorKey: "mainImage",
+      //   header: "Img",
+      //   cell: ({ row }) => (
+      //     <div className="relative w-12 h-12 overflow-hidden rounded-lg">
+      //       <Image
+      //         src={row.getValue("mainImage")}
+      //         alt="img"
+      //         width={100}
+      //         height={100}
+      //         className="capitalize text-xs min-w-10 h-auto object-cover"
+      //       />
+      //     </div>
+      //   ),
+      // },
+
+      {
+        accessorKey: "price",
+        header: () => <div className="text-left text-xs">Precio</div>,
+        cell: ({ row }) => {
+          const amount = parseFloat(row.getValue("price"));
+          const formatted = new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(amount);
           return (
-            <Button
-              variant="ghost"
-              onClick={() =>
-                column.toggleSorting(column.getIsSorted() === "asc")
-              }
-              className="text-xs upp"
-            >
-              Categoría
-              <ArrowUpDown />
-            </Button>
+            <div className="text-left text-xs font-medium">{formatted}</div>
           );
         },
-        cell: ({ row }) => (
-          <div className="uppercase text-xs">{row.getValue("title")}</div>
-        ),
       },
-      {
-        accessorKey: "description",
-        header: () => (
-          <div className="text-left text-xs maxsm:hidden">Desc.</div>
-        ),
-        cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
-            {row.getValue("description")}
-          </div>
-        ),
-      },
+      // {
+      //   accessorKey: "totalAvailableStock",
+      //   header: () => (
+      //     <div className="text-left text-xs  maxsm:hidden">Inventario</div>
+      //   ),
+      //   cell: ({ row }) => {
+      //     const amount = parseFloat(row.getValue("totalAvailableStock"));
+
+      //     // Format the amount as a dollar amount
+
+      //     return (
+      //       <div className="text-left text-xs font-medium maxsm:hidden">
+      //         {amount}
+      //       </div>
+      //     );
+      //   },
+      // },
       {
         id: "actions",
         enableHiding: false,
@@ -113,7 +153,7 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "Eliminar este categoría?",
+                    text: "Eliminar este articulo?",
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonText: "Sí, eliminar",
@@ -125,14 +165,14 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                       const formData = new FormData();
                       formData.set("id", row.original.id);
 
-                      const response = await deleteCategoryAction(formData);
+                      const response = await deleteItemGroupAction(formData);
 
                       if (!response.success)
                         throw new Error("Error al eliminar");
                       await showModal({
                         title: "¡Eliminado!",
                         type: "delete",
-                        text: "La categoría ha sido eliminado.",
+                        text: "El articulo ha sido eliminado.",
                         icon: "success",
                       });
                     } catch (error) {
@@ -141,7 +181,7 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                       await showModal({
                         title: "Error",
                         type: "delete",
-                        text: "No se pudo eliminar la categoría",
+                        text: "No se pudo eliminar el articulo",
                         icon: "error",
                       });
                     }
@@ -157,39 +197,116 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
               }
             }, [showModal]);
 
+            const toggleItemStatus = React.useCallback(async () => {
+              const result = await showModal({
+                title: "¿Estás seguro?",
+                type: "delete",
+                text: `¿Quieres ${
+                  row.original.status === "ACTIVE" ? "desactivar" : "activar"
+                } este artículo?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: `Sí, ${
+                  row.original.status === "ACTIVE" ? "Desactivar" : "Activar"
+                }`,
+                cancelButtonText: "Cancelar",
+              });
+
+              if (result.confirmed) {
+                try {
+                  const formData = new FormData();
+                  formData.set("id", row.original.id);
+
+                  const response = await toggleItemGroupStatusAction(formData);
+
+                  if (!response.success)
+                    throw new Error("Error al cambiar el estado");
+                  await showModal({
+                    title: "¡Éxito!",
+                    type: "delete",
+                    text: `El artículo compuesto ha sido ${
+                      row.original.status === "ACTIVE"
+                        ? "desactivado"
+                        : "activado"
+                    }.`,
+                    icon: "success",
+                  });
+
+                  // Refresh the page or re-fetch data
+                  router.refresh(); // or use a state update to re-fetch data
+                } catch (error) {
+                  console.log("error from modal", error);
+
+                  await showModal({
+                    title: "Error",
+                    type: "delete",
+                    text: "No se pudo cambiar el estado del artículo",
+                    icon: "error",
+                  });
+                }
+              }
+              // eslint-disable-next-line
+            }, [showModal, router]);
+
             const viewItem = React.useCallback(async () => {
               router.push(
-                `/sistema/negocio/categorias/editar/${row.original.id}`
+                `/sistema/negocio/articulos/conjuntos/editar/${row.original.id}`
               );
             }, []);
-
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Open menu</span>
-                    <MoreHorizontal />
+                    <span className="sr-only">Abrir menú</span>
+                    <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs">
+                    Acciones
+                  </DropdownMenuLabel>
 
-                  <DropdownMenuItem
-                    onClick={viewItem}
-                    className="text-xs cursor-pointer"
-                  >
-                    <Eye />
-                    Editar
-                  </DropdownMenuItem>
+                  {user && user.role === "SUPER_ADMIN" ? (
+                    <div>
+                      <DropdownMenuItem
+                        onClick={viewItem}
+                        className="text-xs cursor-pointer"
+                      >
+                        <Eye />
+                        Editar
+                      </DropdownMenuItem>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteItem}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteItem}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        onClick={toggleItemStatus}
+                        className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        {row.original.status === "ACTIVE"
+                          ? "Desactivar"
+                          : "Activar"}
+                      </DropdownMenuItem>
+                    </div>
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={toggleItemStatus}
+                      className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                    >
+                      <X />
+                      {row.original.status === "ACTIVE"
+                        ? "Desactivar"
+                        : "Activar"}
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
@@ -203,8 +320,8 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
     []
   );
 
-  const table = useReactTable<categoryType>({
-    data: categories,
+  const table = useReactTable<ItemGroupType>({
+    data: items,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -227,9 +344,9 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtrar..."
-          value={(table.getColumn("title")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("title")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -281,6 +398,9 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={`${
+                    row.original.status === "INACTIVE" ? "bg-muted" : ""
+                  }`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -308,8 +428,7 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
       <div className="flex items-center justify-end space-x-2 py-4">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} categoría(s)
-          seleccionada(s).
+          {table.getFilteredRowModel().rows.length} articulo(s) seleccionado(s).
         </div>
         <div className="space-x-2">
           <Button

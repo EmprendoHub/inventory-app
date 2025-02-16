@@ -7,7 +7,7 @@ import { GoodsReceiptGroupType } from "@/types/goodsReceipts";
 import { useRouter } from "next/navigation";
 import { updateGoodsReceiptAction } from "../_actions";
 import { Button } from "@/components/ui/button";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import TextAreaInput from "@/components/TextAreaInput";
 import DateInput from "@/components/DateInput";
 

@@ -8,8 +8,8 @@ import Image from "next/image";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { CloudUpload } from "lucide-react";
-import { ItemFormState, ItemGroupType } from "@/types/items";
-import { useModal } from "@/app/context/ ModalContext";
+import { ItemFormState, ItemCompoundType } from "@/types/items";
+import { useModal } from "@/app/context/ModalContext";
 import { createItemAction } from "../_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
@@ -20,7 +20,7 @@ export default function ProductForm({
   units,
   warehouses,
   suppliers,
-}: ItemGroupType) {
+}: ItemCompoundType) {
   const { data: session } = useSession();
   const user = session?.user as UserType;
   // eslint-disable-next-line

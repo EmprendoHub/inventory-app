@@ -6,7 +6,6 @@ import prisma from "@/lib/db";
 export default async function newAdjustment() {
   const warehouses = await prisma.warehouse.findMany();
   const items = await prisma.item.findMany();
-  console.log(items);
 
   return (
     <div>

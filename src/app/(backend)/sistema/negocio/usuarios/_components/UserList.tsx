@@ -37,7 +37,7 @@ import { UserType } from "@/types/users";
 import { CheckedState } from "@radix-ui/react-checkbox";
 // import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { deleteUserAction } from "../_actions";
 import { verifySupervisorCode } from "@/lib/utils";
 

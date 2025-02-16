@@ -181,3 +181,41 @@ export const DeliverySchema = z.object({
     "Fallido",
   ]),
 });
+
+export const ItemGroupSchema = z.object({
+  id: z.string().nullable().optional(),
+  userId: z.string().nullable().optional(),
+  name: z.string().min(1, "Name is required"),
+  description: z.string(),
+  category: z.string().min(1, "Se requiere la categoría"),
+  warehouse: z.string().min(1, "Se requiere la Bodega"),
+  brand: z.string().min(1, "Se requiere la Marca"),
+  unit: z.string().min(1, "Se requiere la unidad de medida"),
+  sku: z.string().min(1, "Se requiere el SKU"),
+  barcode: z.string().min(1, "Se requiere el Codigo de barras"),
+  dimensions: z.string(),
+  price: z.number().positive("Price must be a positive number"),
+  cost: z.number().positive("Price must be a positive number"),
+  stock: z
+    .number()
+    .int()
+    .nonnegative("Stock must be a non-negative integer")
+    .nullable()
+    .optional(),
+  minStock: z
+    .number()
+    .int()
+    .nonnegative("Stock mínimo  must be a non-negative integer"),
+  supplier: z.string().min(1, "Se requiere el proveedor"),
+  tax: z.number(),
+  notes: z.string(),
+  image: z
+    .object({
+      size: z.number(),
+      type: z.string(),
+      name: z.string(),
+      lastModified: z.number(),
+    })
+    .nullable()
+    .optional(),
+});

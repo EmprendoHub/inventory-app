@@ -37,7 +37,7 @@ import { AccountOneType as AccountType } from "@/types/accounting";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteAccountAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export function AccountList({ accounts }: { accounts: AccountType[] }) {
   const router = useRouter();

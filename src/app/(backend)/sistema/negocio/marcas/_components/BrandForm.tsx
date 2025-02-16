@@ -4,7 +4,7 @@ import { useFormState } from "react-dom";
 import { createBrand } from "../_actions";
 import TextInput from "@/components/TextInput";
 import TextAreaInput from "@/components/TextAreaInput";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function BrandForm() {
   // eslint-disable-next-line

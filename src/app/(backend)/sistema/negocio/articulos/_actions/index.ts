@@ -303,6 +303,12 @@ export async function deleteItemAction(formData: FormData) {
 
   try {
     await prisma.$transaction([
+      // Delete all related StockMovement records
+      prisma.stockMovement.deleteMany({
+        where: {
+          itemId: validatedData.data.id, // Adjust this field based on your schema
+        },
+      }),
       prisma.stock.deleteMany({
         where: {
           itemId: validatedData.data.id, // Adjust this field based on your schema
@@ -382,6 +388,313 @@ export async function toggleItemStatusAction(formData: FormData) {
     });
 
     revalidatePath("/sistema/negocio/articulos");
+    return {
+      errors: {},
+      success: true,
+      message: `Item status updated to ${newStatus} successfully!`,
+    };
+  } catch (error) {
+    console.error("Error updating item status:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to update item status",
+    };
+  }
+}
+
+export async function createItemGroup(
+  state: {
+    errors: { [key: string]: string[] };
+    success: boolean;
+    message: string;
+  },
+  formData: FormData
+) {
+  const name = formData.get("name") as string;
+  const price = formData.get("price") as string;
+  const image = formData.get("image") as File;
+  const itemsInput = formData.get("items") as string;
+
+  // Validate inputs
+  const errors: { [key: string]: string[] } = {};
+
+  if (!name || name.trim() === "") {
+    errors.name = ["Group name is required"];
+  }
+
+  // Parse items input (format: "itemId1:quantity1,itemId2:quantity2")
+  const items = itemsInput
+    ? itemsInput.split(",").map((pair) => {
+        const [itemId, quantity] = pair.split(":");
+        return { itemId, quantity: parseInt(quantity, 10) };
+      })
+    : [];
+
+  if (items.length === 0) {
+    errors.items = ["At least one item is required"];
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      errors,
+      success: false,
+      message: "Please fix the errors before submitting.",
+    };
+  }
+
+  // Convert the image file to Base64
+  let base64Image = "";
+  if (image && image instanceof File && image.size > 0) {
+    const arrayBuffer = await image.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    base64Image = buffer.toString("base64");
+  }
+
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+  const imageBuffer = Buffer.from(base64Data, "base64");
+
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.png`;
+  const path = join("/", "tmp", newFilename);
+
+  // Save to temporary file
+  const uint8Array = new Uint8Array(imageBuffer);
+  await writeFile(path, uint8Array);
+
+  await uploadToBucket("inventario", "products/" + newFilename, path);
+  const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
+
+  try {
+    // Create the ItemGroup
+    await prisma.itemGroup.create({
+      data: {
+        name,
+        mainImage: savedImageUrl,
+        price: Number(price),
+        items: {
+          create: items.map(({ itemId, quantity }) => ({
+            itemId,
+            quantity,
+          })),
+        },
+      },
+    });
+
+    revalidatePath("/sistema/negocio/articulos/conjuntos");
+    return {
+      errors: {},
+      success: true,
+      message: "Item group created successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating item group:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to create item group",
+    };
+  }
+}
+
+export async function updateItemGroupAction(
+  state: {
+    errors: { [key: string]: string[] };
+    success: boolean;
+    message: string;
+  },
+  formData: FormData
+) {
+  const groupItemId = formData.get("id") as string;
+  const name = formData.get("name") as string;
+  const price = formData.get("price") as string;
+  const image = formData.get("image") as File;
+  const itemsInput = formData.get("items") as string;
+
+  // Validate inputs
+  const errors: { [key: string]: string[] } = {};
+
+  if (!name || name.trim() === "") {
+    errors.name = ["Group name is required"];
+  }
+
+  // Parse items input (format: "itemId1:quantity1,itemId2:quantity2")
+  const items = itemsInput
+    ? itemsInput.split(",").map((pair) => {
+        const [itemId, quantity] = pair.split(":");
+        return { itemId, quantity: parseInt(quantity, 10) };
+      })
+    : [];
+
+  if (items.length === 0) {
+    errors.items = ["At least one item is required"];
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return {
+      errors,
+      success: false,
+      message: "Please fix the errors before submitting.",
+    };
+  }
+
+  // Convert the image file to Base64
+  let base64Image = "";
+  if (image && image instanceof File && image.size > 0) {
+    const arrayBuffer = await image.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    base64Image = buffer.toString("base64");
+  }
+
+  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+  const imageBuffer = Buffer.from(base64Data, "base64");
+
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.png`;
+  const path = join("/", "tmp", newFilename);
+
+  // Save to temporary file
+  const uint8Array = new Uint8Array(imageBuffer);
+  await writeFile(path, uint8Array);
+
+  await uploadToBucket("inventario", "products/" + newFilename, path);
+  const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
+
+  try {
+    // Update the ItemGroup
+    await prisma.itemGroup.update({
+      where: {
+        id: groupItemId,
+      },
+      data: {
+        name,
+        price: Number(price),
+        mainImage: image ? savedImageUrl : undefined, // Only update image if a new one is provided
+        items: {
+          deleteMany: {}, // Delete existing ItemGroupItem records
+          create: items.map(({ itemId, quantity }) => ({
+            itemId,
+            quantity,
+          })),
+        },
+      },
+    });
+
+    revalidatePath(
+      `/sistemas/negocio/articulos/conjuntos/editar/${groupItemId}`
+    );
+    return {
+      errors: {},
+      success: true,
+      message: "Articulo compuesto actualizado correctamente!",
+    };
+  } catch (error) {
+    console.error("Error al actualizar Articulo compuesto:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Fallo al actualizar Articulo compuesto",
+    };
+  }
+}
+
+export async function deleteItemGroupAction(formData: FormData) {
+  const rawData = {
+    id: formData.get("id"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = idSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al eliminar producto compuesto" };
+
+  try {
+    await prisma.$transaction([
+      prisma.itemGroup.delete({
+        where: {
+          id: validatedData.data.id,
+        },
+      }),
+    ]);
+
+    revalidatePath("/sistema/negocio/articulos/conjuntos");
+    return {
+      errors: {},
+      success: true,
+      message: "Item deleted successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating item:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to delete item",
+    };
+  }
+}
+
+export async function toggleItemGroupStatusAction(formData: FormData) {
+  const rawData = {
+    id: formData.get("id"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = idSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  try {
+    // Fetch the current status of the item
+    const item = await prisma.itemGroup.findUnique({
+      where: {
+        id: validatedData.data.id,
+      },
+      select: {
+        status: true,
+      },
+    });
+
+    if (!item) {
+      return {
+        success: false,
+        message: "Item not found",
+      };
+    }
+
+    // Toggle the status
+    const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+
+    // Update the item with the new status
+    await prisma.itemGroup.update({
+      where: {
+        id: validatedData.data.id,
+      },
+      data: {
+        status: newStatus as ItemStatus,
+      },
+    });
+
+    revalidatePath("/sistema/negocio/articulos/conjuntos");
     return {
       errors: {},
       success: true,

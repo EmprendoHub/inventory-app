@@ -18,8 +18,6 @@ export default function SalesOverview({
   const { data: session } = useSession();
   const user = session?.user as UserType;
 
-  console.log(shipments);
-
   const salesActivity = [
     {
       title: "Pedidos",

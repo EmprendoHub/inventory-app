@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useFormState } from "react-dom";
 import { updateCategoryAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { categoryType } from "@/types/categories";
 import TextAreaInput from "@/components/TextAreaInput";
 import TextInput from "@/components/TextInput";

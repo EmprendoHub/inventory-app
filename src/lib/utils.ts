@@ -57,6 +57,34 @@ export async function generateOrderId(prisma: PrismaClient) {
   return counter.sequence.toString().padStart(6, "0");
 }
 
+export async function generatePurchaseOrderId(prisma: PrismaClient) {
+  const counterId = "po_counter";
+
+  // Check if the counter already exists
+  let counter = await prisma.pOCounter.findUnique({
+    where: { id: counterId },
+  });
+
+  if (!counter) {
+    // If the counter doesn't exist, create it
+    counter = await prisma.counter.create({
+      data: {
+        id: counterId,
+        sequence: 1, // Start with sequence 1
+      },
+    });
+  } else {
+    // If the counter exists, increment the sequence
+    counter = await prisma.counter.update({
+      where: { id: counterId },
+      data: { sequence: { increment: 1 } },
+    });
+  }
+
+  // Generate the order number using the sequence
+  return counter.sequence.toString().padStart(6, "0");
+}
+
 export function getMexicoTime(date: Date | string) {
   const d = new Date(date);
   return d.toLocaleString("en-US", {

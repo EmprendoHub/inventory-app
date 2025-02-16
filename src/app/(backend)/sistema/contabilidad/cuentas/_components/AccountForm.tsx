@@ -4,7 +4,7 @@ import { useFormState } from "react-dom";
 import TextInput from "@/components/TextInput";
 import SelectInput from "@/components/SelectInput";
 import { AccountingFormState, AccountGroupType } from "@/types/accounting";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { createAccountAction } from "../_actions";
 import TextAreaInput from "@/components/TextAreaInput";
 

@@ -8,7 +8,7 @@ import { createExpenseAction } from "../_actions";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function ExpenseForm() {
   // eslint-disable-next-line

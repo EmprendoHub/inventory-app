@@ -35,6 +35,20 @@ export default async function ListUsers() {
         },
       },
     });
+  } else if (user.role === "CHOFER") {
+    deliveries = await prisma.delivery.findMany({
+      orderBy: {
+        createdAt: "desc", // Latest product
+      },
+      include: {
+        driver: true,
+      },
+      where: {
+        status: {
+          in: ["PROCESANDO", "EN CAMINO", "ENTREGADO"],
+        },
+      },
+    });
   } else {
     deliveries = await prisma.delivery.findMany({
       orderBy: {

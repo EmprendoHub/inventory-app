@@ -24,6 +24,7 @@ export default async function ViewOrder({
       </div>
     );
   }
+
   const order = await prisma.order.findUnique({
     where: {
       id: id,
@@ -54,12 +55,72 @@ export default async function ViewOrder({
     );
   }
 
+  // Function to fetch item details
+  const fetchItemDetails = async (itemId: string) => {
+    return await prisma.item.findUnique({
+      where: {
+        id: itemId,
+      },
+    });
+  };
+
+  // Function to process order items
+  const processOrderItems = async (orderItems: any) => {
+    const processedItems = [];
+
+    for (const item of orderItems) {
+      if (item.isGroup) {
+        // Fetch the group details
+        const group = await prisma.itemGroup.findUnique({
+          where: {
+            id: item.itemId,
+          },
+          include: {
+            items: {
+              include: {
+                item: true, // Include the item details
+              },
+            },
+          },
+        });
+
+        if (group) {
+          // Generate a description for the group
+          const groupDescription = group.items
+            .map(
+              (groupItem) => `${groupItem.item.name} (x${groupItem.quantity})`
+            )
+            .join(", ");
+
+          // Modify the orderItem to include the group description
+          processedItems.push({
+            ...item,
+            description: groupDescription, // Add the generated description
+          });
+        }
+      } else {
+        // For non-group items, just add them as-is
+        const itemDetails = await fetchItemDetails(item.itemId);
+        processedItems.push({
+          ...item,
+          description: itemDetails?.name || "Item no encontrado",
+        });
+      }
+    }
+
+    return processedItems;
+  };
+
+  // Process the order items
+  const processedOrderItems = await processOrderItems(order.orderItems);
+  // console.log("Processed Order Items:", processedOrderItems);
+
   return (
     <div>
       {/* Header */}
       <FormSalesHeader title={"Ver Pedido"} />
       {/* Form */}
-      <OrderView order={order} />
+      <OrderView order={{ ...order, orderItems: processedOrderItems }} />
     </div>
   );
 }

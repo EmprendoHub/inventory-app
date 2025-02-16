@@ -37,7 +37,7 @@ import { TransactionType } from "@/types/transactions";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteTransactionAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export function TransactionList({
   transactions,

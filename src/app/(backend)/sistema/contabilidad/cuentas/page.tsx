@@ -30,7 +30,6 @@ export default async function ListAccounts() {
       },
     });
   }
-  console.log("accoujnts", accounts);
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">

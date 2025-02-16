@@ -6,7 +6,7 @@ import SelectInput from "@/components/SelectInput";
 import { ExpenseType } from "@/types/expenses";
 import { useRouter } from "next/navigation";
 import { updateExpenseAction } from "../_actions";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import NumericInput from "@/components/NumericInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import DateInput from "@/components/DateInput";

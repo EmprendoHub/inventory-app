@@ -2,6 +2,7 @@
 import {
   BanknoteIcon,
   BarChart,
+  Box,
   Boxes,
   Building2,
   ChevronLeft,
@@ -135,9 +136,27 @@ export default function SideBar({
                   href={"/sistema/negocio/articulos"}
                 >
                   <div className="flex items-center gap-1">
-                    <Boxes size={16} />
+                    <Box size={16} />
                     <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                       Productos
+                    </span>
+                  </div>
+                  <PlusCircle className="hidden group-hover:block" size={16} />
+                </Link>
+                <Link
+                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  } ${
+                    path === "/sistema/negocio/articulos/conjuntos"
+                      ? "bg-blue-600"
+                      : ""
+                  } hover:bg-slate-900 rounded-md`}
+                  href={"/sistema/negocio/articulos/conjuntos"}
+                >
+                  <div className="flex items-center gap-1">
+                    <Boxes size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Conjuntos
                     </span>
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />

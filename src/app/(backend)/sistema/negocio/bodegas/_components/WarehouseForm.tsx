@@ -4,7 +4,7 @@ import { useFormState } from "react-dom";
 import { createWarehouse } from "../_actions";
 import SelectInput from "@/components/SelectInput";
 import TextInput from "@/components/TextInput";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function WarehouseForm() {
   // eslint-disable-next-line

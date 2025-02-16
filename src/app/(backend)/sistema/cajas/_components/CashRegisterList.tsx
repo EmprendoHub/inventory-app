@@ -40,7 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { useModal } from "@/app/context/ ModalContext";
+import { useModal } from "@/app/context/ModalContext";
 import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/lib/utils";
@@ -57,8 +57,6 @@ export function CashRegisterList({
 }: {
   registers: CashRegisterResponse[];
 }) {
-  console.log(registers);
-
   const { data: session } = useSession();
   const user = session?.user as UserType;
   const router = useRouter();

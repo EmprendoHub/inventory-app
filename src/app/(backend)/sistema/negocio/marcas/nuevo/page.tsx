@@ -6,7 +6,7 @@ export default function NewGroup() {
   return (
     <div>
       <FormBusinessHeader title={"Grupo"} />
-      <ItemGroupForm />
+      <ItemGroupForm items={[]} />
     </div>
   );
 }

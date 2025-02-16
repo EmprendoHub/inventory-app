@@ -76,9 +76,17 @@ export const createCashTransactionAction = async (
 };
 
 export const createCashAuditAction = async (
-  prevState: { success: boolean; message: string }, // Add this parameter
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
   formData: FormData
-): Promise<{ success: boolean; message: string }> => {
+): Promise<{
+  success: boolean;
+  message: string;
+  errors: Record<string, string[]>;
+}> => {
   const rawData = {
     cashRegisterId: formData.get("cashRegisterId") as string,
     startBalance: parseFloat(formData.get("startBalance") as string),
@@ -93,6 +101,7 @@ export const createCashAuditAction = async (
     !rawData.auditDate
   ) {
     return {
+      errors: {},
       success: false,
       message: "Missing required fields.",
     };
@@ -110,11 +119,16 @@ export const createCashAuditAction = async (
 
     revalidatePath("/sistema/auditoria-caja");
     return {
+      errors: {},
       success: true,
       message: "Cash Audit created successfully!",
     };
   } catch (error) {
     console.error("Error creating cash audit:", error);
-    return { success: false, message: "Error al crear auditoría de caja." };
+    return {
+      errors: {},
+      success: false,
+      message: "Error al crear auditoría de caja.",
+    };
   }
 };

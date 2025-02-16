@@ -3,6 +3,7 @@ import React from "react";
 type NumericInputType = {
   label: string;
   name: string;
+  defaultValue?: number;
   state: { errors?: { [key: string]: string[] } };
   onChange?: (value: number) => void; // Add onChange prop
 };
@@ -10,6 +11,7 @@ type NumericInputType = {
 export default function NumericInput({
   label,
   name,
+  defaultValue,
   state,
   onChange,
 }: NumericInputType) {
@@ -31,6 +33,7 @@ export default function NumericInput({
       <input
         type="number"
         id={name}
+        defaultValue={defaultValue}
         name={name}
         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         onChange={handleChange} // Attach the onChange handler
