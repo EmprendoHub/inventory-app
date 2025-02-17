@@ -75,66 +75,61 @@ export function DeliveryList({
   const columns = React.useMemo<ColumnDef<DeliveryAndDriverType>[]>(
     () => [
       {
-        accessorKey: "createdAt",
+        accessorKey: "orderNo",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-16"
+            className="text-xs w-10"
           >
-            Fecha
+            Pedido
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-xs font-medium">
-            {row.original.createdAt
-              ? new Date(row.original.createdAt).toLocaleDateString()
-              : "N/A"}
+          <div className="text-xs font-medium max-w-10">
+            {row.original.orderNo}
           </div>
         ),
       },
       {
         accessorKey: "driver",
-        header: "Chofer",
+        header: () => <div className="text-xs maxsm:hidden">Chofer</div>,
         cell: ({ row }) => {
           const driver = row.original?.driver?.name || "BODEGA";
           return (
-            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md">
+            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxsm:hidden">
               {driver}
             </div>
           );
         },
       },
       {
-        accessorKey: "orderNo",
-        header: "Pedido",
-        cell: ({ row }) => (
-          <div className="text-xs">{row.original.orderNo}</div>
-        ),
-      },
-      {
         accessorKey: "price",
-        header: () => <div className="text-xs">Precio</div>,
+        header: () => <div className="text-xs max-w-10">Precio</div>,
         cell: ({ row }) => (
-          <div className="text-xs font-medium">
+          <div className="text-xs font-medium w-10">
             ${row.original.price.toLocaleString()}
           </div>
         ),
       },
       {
         accessorKey: "trackingNumber",
-        header: () => <div className="text-xs">No. de rastreo</div>,
+        header: () => (
+          <div className="text-xs maxsm:hidden maxsm:p-0">No. de rastreo</div>
+        ),
         cell: ({ row }) => (
-          <div className="text-[12px]">{row.original.trackingNumber}</div>
+          <div className="text-[12px] maxsm:hidden maxsm:p-0">
+            {row.original.trackingNumber}
+          </div>
         ),
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-xs">Estado</div>,
+        header: () => <div className="text-xs max-w-22">Estado</div>,
         cell: ({ row }) => (
           <div
-            className={`text-[12px] text-center font-medium px-2 rounded-md  text-white ${
+            className={`text-[12px] maxsm:w-22 text-center font-medium px-2 rounded-md text-white ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "ENTREGADO"
@@ -169,8 +164,6 @@ export function DeliveryList({
             const { showModal } = useModal();
 
             const acceptDelivery = React.useCallback(async () => {
-              // First, prompt for supervisor code
-
               const result = await showModal({
                 title: "¿Estás seguro?, ¡No podrás revertir esto!",
                 type: "info",
@@ -209,7 +202,6 @@ export function DeliveryList({
               }
             }, [showModal]);
 
-            // Inside the `deliverDelivery` function
             const deliverDelivery = React.useCallback(async () => {
               const formData = new FormData();
               formData.set("id", row.original.id);
@@ -229,7 +221,6 @@ export function DeliveryList({
 
                 if (result.confirmed) {
                   try {
-                    // Show the delivery confirmation modal
                     const deliveryResult = await showModal({
                       title: "Confirm Delivery",
                       type: "deliveryConfirmation",
@@ -241,7 +232,6 @@ export function DeliveryList({
                     });
 
                     if (deliveryResult.confirmed) {
-                      // Call deliverDeliveryAction to update the delivery status
                       const deliveryResponse = await deliverDeliveryAction(
                         formData
                       );
@@ -251,12 +241,10 @@ export function DeliveryList({
 
                       const { signature, image } = deliveryResult.data || {};
 
-                      // Upload the signature and image to the server
                       let signatureUrl = "";
                       let imageUrl = "";
 
                       if (signature) {
-                        // Upload the signature (Base64 string)
                         const signatureUploadResponse = await uploadImageAction(
                           signature
                         );
@@ -268,7 +256,6 @@ export function DeliveryList({
                       }
 
                       if (image) {
-                        // Convert the image to Base64
                         const base64Image = await new Promise<string>(
                           (resolve, reject) => {
                             const reader = new FileReader();
@@ -279,7 +266,6 @@ export function DeliveryList({
                           }
                         );
 
-                        // Upload the Base64 image to the server
                         const imageUploadResponse = await uploadImageAction(
                           base64Image
                         );
@@ -290,7 +276,6 @@ export function DeliveryList({
                         }
                       }
 
-                      // Save the signature and image URL to the database
                       const deliveryFormData = new FormData();
                       deliveryFormData.set("id", row.original.orderId);
                       if (signatureUrl) {
@@ -330,7 +315,6 @@ export function DeliveryList({
                   }
                 }
               } else {
-                // Handle pending payment case (same as before)
                 const paymentResult = await showModal({
                   title: `Cobrar pendiente: $${res.pending} antes de entrega!`,
                   type: "payment",
@@ -352,7 +336,6 @@ export function DeliveryList({
                     );
                     formData.set("method", paymentResult.data?.method || "");
 
-                    // Show the delivery confirmation modal
                     const deliveryResult = await showModal({
                       title: "Confirm Delivery",
                       type: "deliveryConfirmation",
@@ -366,12 +349,10 @@ export function DeliveryList({
                     if (deliveryResult.confirmed) {
                       const { signature, image } = deliveryResult.data || {};
 
-                      // Upload the signature and image to the server
                       let signatureUrl = "";
                       let imageUrl = "";
 
                       if (signature) {
-                        // Upload the signature (Base64 string)
                         const signatureUploadResponse = await uploadImageAction(
                           signature
                         );
@@ -383,7 +364,6 @@ export function DeliveryList({
                       }
 
                       if (image) {
-                        // Convert the image to Base64
                         const base64Image = await new Promise<string>(
                           (resolve, reject) => {
                             const reader = new FileReader();
@@ -394,7 +374,6 @@ export function DeliveryList({
                           }
                         );
 
-                        // Upload the Base64 image to the server
                         const imageUploadResponse = await uploadImageAction(
                           base64Image
                         );
@@ -405,7 +384,6 @@ export function DeliveryList({
                         }
                       }
 
-                      // Save the signature and image URL to the database
                       const deliveryFormData = new FormData();
                       deliveryFormData.set("id", row.original.orderId);
                       if (signatureUrl) {
@@ -461,7 +439,6 @@ export function DeliveryList({
             }, [showModal]);
 
             const deleteDelivery = React.useCallback(async () => {
-              // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
                 title: "Verificación de Supervisor",
                 type: "supervisorCode",
@@ -631,16 +608,15 @@ export function DeliveryList({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between py-4">
+      <div className="flex  maxsm:flex-col maxsm:items-start gap-3 items-center justify-between py-4">
         <Input
           placeholder="No de Pedido..."
           value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             table.getColumn("orderNo")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="max-w-40"
         />
-        {/* Add the refresh button */}
         <Button onClick={handleRefresh} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refrescar
@@ -652,7 +628,7 @@ export function DeliveryList({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="max-sm:hidden">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -669,7 +645,7 @@ export function DeliveryList({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="max-sm:hidden">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -684,7 +660,7 @@ export function DeliveryList({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  Sin resultafos.
+                  Sin resultados.
                 </TableCell>
               </TableRow>
             )}
