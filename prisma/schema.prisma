@@ -26,6 +26,7 @@ model User {
   name               String
   email              String    @unique
   verificationToken  String?  @unique
+  authCode           String?  
   phone              String?
   stripeId           String?
   password           String?
@@ -36,6 +37,7 @@ model User {
   createdAt          DateTime  @default(now()) @map("createdAt")
   updatedAt          DateTime  @updatedAt @map("updatedAt")
   orders             Order[]
+  cashRegister       CashRegister?
 }
 
 enum Role {
@@ -91,6 +93,7 @@ model Supplier {
   image       String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  purchaseOrders PurchaseOrder[]
 }
 
 
@@ -519,12 +522,12 @@ enum ExpenseStatus {
 }
 
 enum ExpenseType {
-  FUEL
-  MAINTENANCE
-  SALARY
-  EXTERNAL_SHIPPING
-  OTHER
-  OFFICE
+  NOMINA
+  GASOLINA
+  PROVEEDOR
+  MANTENIMIENTO
+  OFICINA
+  OTRO
 }
 
 model Accounting {
@@ -572,11 +575,14 @@ model CashRegister {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   balance       Float     @default(0)
+  fund          Float     @default(0)
   transactions  CashTransaction[]
   audits        CashAudit[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  userId        String?
+  user          User    @relation(fields: [userId], references: [id])
+  userId        String  @db.ObjectId @unique
+  managerId     String?
 }
 
 model CashTransaction {
@@ -615,6 +621,7 @@ model PurchaseOrder {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   poNumber      String    @unique  // PO-000001 format
   supplierId    String    @db.ObjectId
+  supplier      Supplier  @relation(fields: [supplierId], references: [id]) // Add this line
   status        POStatus  @default(BORRADOR)
   totalAmount   Float
   taxAmount     Float
@@ -625,6 +632,7 @@ model PurchaseOrder {
   payments      SupplierPayment[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  userId        String?
 }
 
 enum POStatus {
@@ -644,7 +652,7 @@ model PurchaseOrderItem {
   itemId          String    @db.ObjectId
   image       String?
   name        String 
-   description String?
+  description String?
   quantity        Int
   unitPrice       Float
   tax             Float

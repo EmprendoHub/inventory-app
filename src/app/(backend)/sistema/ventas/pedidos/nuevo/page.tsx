@@ -2,43 +2,46 @@ import React from "react";
 import OrderForm from "../_components/OrderForm";
 import prisma from "@/lib/db";
 import FormSalesHeader from "../../_components/FormSalesHeader";
-import { ItemType, ProcessedItemGroup } from "@/types/items";
+import { ProcessedItemGroup } from "@/types/items";
 
 export default async function NewOrder() {
-  // Fetch clients
   const clients = await prisma.client.findMany({
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  // Fetch items and include their associated itemGroups
   const items = await prisma.item.findMany({
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  // Fetch all itemGroups
   const rawItemGroups = await prisma.itemGroup.findMany({
     include: {
-      items: true, // Include the items associated with each itemGroup
+      items: {
+        include: {
+          item: true, // Include the actual item details
+        },
+      },
     },
   });
 
-  // Create a Map of items for efficient lookup
-  const itemsMap = new Map(items.map((item) => [item.id, item]));
-
-  // Process each itemGroup to include its corresponding items
+  // Process each itemGroup to include description
   const itemGroups: ProcessedItemGroup[] = rawItemGroups.map((group) => {
-    // Get all items in the group, filtering out undefined values
-    const groupItems = (group.items || [])
-      .map((item) => itemsMap.get(item.id))
-      .filter((item): item is ItemType => item !== undefined);
+    // Generate description using the same format that works in ViewOrder
+    const description = group.items
+      .map((groupItem) => {
+        const quantity = groupItem.quantity || 1;
+        const qtyString = quantity === 1 ? "" : ` x${quantity}`;
+        return `${groupItem.item.name}${qtyString}`;
+      })
+      .join(", ");
 
     return {
       ...group,
-      items: groupItems, // Attach the processed items to the group
+      items: group.items.map((item) => item.item), // Map to actual items
+      description,
     };
   });
 

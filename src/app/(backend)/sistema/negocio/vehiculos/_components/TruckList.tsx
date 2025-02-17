@@ -36,7 +36,7 @@ import { useRouter } from "next/navigation";
 import { TruckType } from "@/types/truck";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteTruckAction } from "../_actions";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 
 export function TruckList({ trucks }: { trucks: TruckType[] }) {
   const router = useRouter();
@@ -122,7 +122,7 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

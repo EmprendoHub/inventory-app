@@ -46,7 +46,7 @@ import { useModal } from "@/app/context/ModalContext";
 import { deleteOrderAction, payOrderAction } from "../_actions";
 import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { DeliveryType } from "@/types/delivery";
@@ -219,7 +219,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

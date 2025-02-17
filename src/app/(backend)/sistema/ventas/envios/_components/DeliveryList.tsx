@@ -41,7 +41,7 @@ import {
   deleteDeliveryAction,
   deliverDeliveryAction,
 } from "../_actions";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { FaTruckLoading } from "react-icons/fa";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
@@ -477,7 +477,7 @@ export function DeliveryList({
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

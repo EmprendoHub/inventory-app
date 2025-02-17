@@ -1,9 +1,11 @@
 //expenses
 "use server";
 
+import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
 import { ExpenseFormState } from "@/types/expenses";
 import { ExpenseStatus, ExpenseType } from "@prisma/client";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
 export const createExpenseAction = async (
@@ -13,17 +15,14 @@ export const createExpenseAction = async (
   const rawData = {
     type: formData.get("type"),
     amount: parseFloat(formData.get("amount") as string),
-    description: formData.get("description"),
-    reference: formData.get("reference"),
-    status: formData.get("status"),
+    description: formData.get("description") as string,
+    reference: formData.get("reference") as string,
+    status: formData.get("status") as string,
     paymentDate: formData.get("paymentDate"),
-    deliveryId: formData.get("deliveryId"),
-    driverId: formData.get("driverId"),
-    truckId: formData.get("truckId"),
-    externalShipId: formData.get("externalShipId"),
-    supplierId: formData.get("supplierId"),
+    driver: formData.get("driver") as string,
+    truck: formData.get("truck") as string,
+    supplier: formData.get("supplier") as string,
   };
-
   if (!rawData.type || !rawData.amount || !rawData.status) {
     return {
       errors: { general: ["Missing required fields"] },
@@ -31,7 +30,12 @@ export const createExpenseAction = async (
       message: "Validation failed. Please check the fields.",
     };
   }
+  const session = await getServerSession(options);
+  const user = session?.user;
 
+  const driver = JSON.parse(rawData.driver);
+  const truck = JSON.parse(rawData.truck);
+  const supplier = JSON.parse(rawData.supplier);
   try {
     await prisma.expense.create({
       data: {
@@ -43,14 +47,22 @@ export const createExpenseAction = async (
         paymentDate: rawData.paymentDate
           ? new Date(rawData.paymentDate as string)
           : undefined,
-        deliveryId: rawData.deliveryId as string,
-        driverId: rawData.driverId as string,
-        truckId: rawData.truckId as string,
-        externalShipId: rawData.externalShipId as string,
-        supplierId: rawData.supplierId as string,
+        driverId: driver && (driver.id as string),
+        truckId: truck && (truck.id as string),
+        supplierId: supplier && (supplier.id as string),
       },
     });
 
+    await prisma.cashRegister.update({
+      where: { userId: user.id || "" },
+      data: {
+        balance: {
+          decrement: rawData.amount, // deducts cash withdraw to the current balance
+        },
+      },
+    });
+
+    revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/contabilidad/gastos");
     return {
       success: true,

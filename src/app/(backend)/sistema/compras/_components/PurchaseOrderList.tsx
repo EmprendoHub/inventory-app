@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, Signature, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -36,14 +36,23 @@ import {
 import { PurchaseOrderType } from "@/types/purchaseOrders";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
-import { deletePurchaseOrderAction } from "../_actions";
+import {
+  cancelPurchaseOrderAction,
+  deletePurchaseOrderAction,
+} from "../_actions";
 import { useModal } from "@/app/context/ModalContext";
+import { verifySupervisorCode } from "@/app/_actions";
+import { FaTruckLoading } from "react-icons/fa";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function PurchaseOrderList({
   purchaseOrders,
 }: {
   purchaseOrders: PurchaseOrderType[];
 }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -74,19 +83,59 @@ export function PurchaseOrderList({
         ),
       },
       {
-        accessorKey: "supplierId",
+        accessorKey: "supplier",
         header: () => <div className="text-left text-xs">Proveedor</div>,
         cell: ({ row }) => (
           <div className="text-left text-xs font-medium">
-            {row.original.supplierId}
+            {row.original.supplier?.name}
           </div>
         ),
+      },
+      {
+        accessorKey: "taxAmount",
+        header: () => <div className="text-left text-xs">IVA %16</div>,
+        cell: ({ row }) => {
+          const amount = parseFloat(row.getValue("taxAmount"));
+          const formatted = new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(amount);
+          return (
+            <div className="text-left text-xs font-medium">{formatted}</div>
+          );
+        },
+      },
+      {
+        accessorKey: "totalAmount",
+        header: () => <div className="text-left text-xs">Total</div>,
+        cell: ({ row }) => {
+          const amount = parseFloat(row.getValue("totalAmount"));
+          const formatted = new Intl.NumberFormat("en-US", {
+            style: "currency",
+            currency: "USD",
+          }).format(amount);
+          return (
+            <div className="text-left text-xs font-medium">{formatted}</div>
+          );
+        },
       },
       {
         accessorKey: "status",
         header: () => <div className="text-left text-xs">Estado</div>,
         cell: ({ row }) => (
-          <div className="text-left text-xs font-medium">
+          <div
+            className={`text-[12px] text-center font-medium px-2 rounded-md  text-white ${
+              row.original.status === "CANCELADO"
+                ? "bg-red-900"
+                : row.original.status === "ENTREGADO"
+                ? "bg-emerald-900"
+                : row.original.status === "EN CAMINO"
+                ? "bg-purple-900"
+                : row.original.status === "APROBADO"
+                ? "bg-blue-700"
+                : "bg-yellow-700"
+            }`}
+          >
             {row.getValue("status")}
           </div>
         ),
@@ -99,42 +148,146 @@ export function PurchaseOrderList({
             const { showModal } = useModal();
 
             const deletePurchaseOrder = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Estás seguro?, ¡No podrás revertir esto!",
-                type: "delete",
-                text: "Eliminar esta orden de compra?",
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
                 icon: "warning",
                 showCancelButton: true,
-                confirmButtonText: "Sí, eliminar",
+                confirmButtonText: "Verificar",
                 cancelButtonText: "Cancelar",
               });
 
-              if (result.confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
 
-                  const response = await deletePurchaseOrderAction(formData);
-
-                  if (!response.success) throw new Error("Error al eliminar");
-                  await showModal({
-                    title: "¡Eliminado!",
+                if (isAuthorized.success) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "La orden de compra ha sido eliminada.",
-                    icon: "success",
+                    text: "Eliminar esta orden de compra?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, eliminar",
+                    cancelButtonText: "Cancelar",
                   });
-                } catch (error) {
-                  console.log("error from modal", error);
 
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await deletePurchaseOrderAction(
+                        formData
+                      );
+
+                      if (!response.success)
+                        throw new Error("Error al eliminar");
+                      await showModal({
+                        title: "¡Eliminado!",
+                        type: "delete",
+                        text: "La orden de compra ha sido eliminada.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo eliminar la orden de compra",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
                   await showModal({
-                    title: "Error",
+                    title: "Código no autorizado",
                     type: "delete",
-                    text: "No se pudo eliminar la orden de compra",
+                    text: "El código de supervisor no es válido.",
                     icon: "error",
                   });
                 }
               }
             }, [showModal]);
+
+            const cancelPurchaseOrder = React.useCallback(async () => {
+              // First, prompt for supervisor code
+              const supervisorCodeResult = await showModal({
+                title: "Verificación de Supervisor",
+                type: "supervisorCode",
+                text: "Por favor, ingrese el código de supervisor para continuar.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Verificar",
+                cancelButtonText: "Cancelar",
+              });
+
+              if (supervisorCodeResult.confirmed) {
+                const isAuthorized = await verifySupervisorCode(
+                  supervisorCodeResult.data?.code
+                );
+
+                if (isAuthorized.success) {
+                  const result = await showModal({
+                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
+                    type: "delete",
+                    text: "Cancelar esta orden de compra?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, cancelar",
+                    cancelButtonText: "Cancelar",
+                  });
+
+                  if (result.confirmed) {
+                    try {
+                      const formData = new FormData();
+                      formData.set("id", row.original.id);
+
+                      const response = await cancelPurchaseOrderAction(
+                        formData
+                      );
+
+                      if (!response.success)
+                        throw new Error("Error al cancelar");
+                      await showModal({
+                        title: "Cancelado!",
+                        type: "delete",
+                        text: "La orden de compra ha sido cancelada.",
+                        icon: "success",
+                      });
+                    } catch (error) {
+                      console.log("error from modal", error);
+
+                      await showModal({
+                        title: "Error",
+                        type: "delete",
+                        text: "No se pudo cancelar la orden de compra",
+                        icon: "error",
+                      });
+                    }
+                  }
+                } else {
+                  await showModal({
+                    title: "Código no autorizado",
+                    type: "delete",
+                    text: "El código de supervisor no es válido.",
+                    icon: "error",
+                  });
+                }
+              }
+            }, [showModal]);
+
+            const acceptDelivery = React.useCallback(async () => {
+              router.push(`/sistema/compras/recibir/${row.original.id}`);
+            }, []);
+
+            const authorizeDelivery = React.useCallback(async () => {
+              router.push(`/sistema/compras/auth/${row.original.id}`);
+            }, []);
 
             const viewPurchaseOrder = React.useCallback(async () => {
               router.push(`/sistema/compras/editar/${row.original.id}`);
@@ -151,22 +304,69 @@ export function PurchaseOrderList({
                   <DropdownMenuLabel className="text-xs">
                     Acciones
                   </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={viewPurchaseOrder}
-                    className="text-xs cursor-pointer"
-                  >
-                    <Eye />
-                    Editar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                    !["CANCELADO", "ENTREGADO", "EN CAMINO"].includes(
+                      row.original.status || ""
+                    ) && (
+                      <DropdownMenuItem
+                        onClick={viewPurchaseOrder}
+                        className="text-xs cursor-pointer"
+                      >
+                        <Eye />
+                        Editar
+                      </DropdownMenuItem>
+                    )}
+
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                    !["CANCELADO", "ENTREGADO", "EN CAMINO"].includes(
+                      row.original.status || ""
+                    ) && (
+                      <DropdownMenuItem
+                        onClick={acceptDelivery}
+                        className="text-xs cursor-pointer"
+                      >
+                        <FaTruckLoading />
+                        Recibir
+                      </DropdownMenuItem>
+                    )}
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                    ![
+                      "CANCELADO",
+                      "ENTREGADO",
+                      "EN CAMINO",
+                      "APROBADO",
+                    ].includes(row.original.status || "") && (
+                      <DropdownMenuItem
+                        onClick={authorizeDelivery}
+                        className="text-xs cursor-pointer"
+                      >
+                        <Signature />
+                        Autorizar
+                      </DropdownMenuItem>
+                    )}
+                  <DropdownMenuSeparator />
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                    !["CANCELADO"].includes(row.original.status || "") && (
+                      <DropdownMenuItem
+                        onClick={cancelPurchaseOrder}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Cancelar
+                      </DropdownMenuItem>
+                    )}
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deletePurchaseOrder}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <DropdownMenuItem
+                      onClick={deletePurchaseOrder}
+                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                    >
+                      <X />
+                      Eliminar
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

@@ -31,9 +31,11 @@ export type CashRegisterResponse = {
   id: string;
   name: string;
   balance: number;
+  fund: number;
   createdAt: Date;
   updatedAt: Date;
   userId: string | null;
+  managerId: string | null;
 };
 
 export type CashTransactionFormData = {

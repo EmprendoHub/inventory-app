@@ -366,8 +366,6 @@ export const checkDeliveryOrderBalance = async (formData: FormData) => {
       const orderTotal = order?.totalAmount + deliveryPrice;
       const pendingAmount = orderTotal - orderPaymentsTotal;
 
-      console.log(orderTotal, orderPaymentsTotal, deliveryPrice, pendingAmount);
-
       revalidatePath("/sistema/ventas/envios");
       revalidatePath("/sistema/ventas/pedidos");
       return {

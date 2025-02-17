@@ -75,6 +75,7 @@ export type ProcessedItemGroup = ItemGroupType & {
 export type SelectedItemType = {
   id: string;
   name: string;
+  description?: string;
   price: number;
   quantity: number;
   isGroup: boolean;

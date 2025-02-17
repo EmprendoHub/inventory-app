@@ -37,7 +37,7 @@ import {
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { unitType } from "@/types/categories";
 import { useRouter } from "next/navigation";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteUnitAction } from "../_actions";
 
@@ -108,7 +108,7 @@ export function UnitList({ units }: { units: unitType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

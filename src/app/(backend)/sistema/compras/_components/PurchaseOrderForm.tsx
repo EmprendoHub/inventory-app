@@ -21,8 +21,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { X } from "lucide-react";
-import SelectInput from "@/components/SelectInput";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
+import { useRouter } from "next/navigation";
 
 export default function PurchaseOrderForm({
   suppliers,
@@ -37,6 +37,7 @@ export default function PurchaseOrderForm({
       message: "",
     }
   );
+  const router = useRouter();
 
   const [sending, setSending] = useState(false);
   const { showModal } = useModal();
@@ -44,6 +45,8 @@ export default function PurchaseOrderForm({
   const [selectedItems, setSelectedItems] = useState<
     {
       itemId: string;
+      name: string;
+      sku: string;
       quantity: number;
       unitPrice: number;
     }[]
@@ -51,6 +54,8 @@ export default function PurchaseOrderForm({
 
   const [newItem, setNewItem] = useState({
     itemId: "",
+    name: "",
+    sku: "",
     quantity: 1,
     unitPrice: 0,
   });
@@ -70,18 +75,29 @@ export default function PurchaseOrderForm({
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
   );
-  const taxTotal = taxEnabled ? subtotal * 0.16 : 0; // 16% tax if enabled
+  const taxTotal = taxEnabled ? subtotal * 0.16 : 0;
   const grandTotal = subtotal + taxTotal + deliveryCost;
 
   const handleAddItem = () => {
     if (newItem.itemId && newItem.quantity > 0 && newItem.unitPrice >= 0) {
-      setSelectedItems((prev) => [...prev, newItem]);
-      // Reset the newItem state to clear the inputs
-      setNewItem({
-        itemId: "",
-        quantity: 1,
-        unitPrice: 0,
-      });
+      const selectedItem = items.find((item) => item.id === newItem.itemId);
+      if (selectedItem) {
+        setSelectedItems((prev) => [
+          ...prev,
+          {
+            ...newItem,
+            name: selectedItem.name,
+            sku: selectedItem.sku || "",
+          },
+        ]);
+        setNewItem({
+          itemId: "",
+          name: "",
+          sku: "",
+          quantity: 1,
+          unitPrice: 0,
+        });
+      }
     }
   };
 
@@ -91,8 +107,11 @@ export default function PurchaseOrderForm({
 
     const formData = new FormData(event.currentTarget);
     formData.set("items", JSON.stringify(selectedItems));
-    formData.set("deliveryCost", deliveryCost.toString());
+    // formData.set("deliveryCost", deliveryCost.toString());
+    formData.set("totalAmount", grandTotal.toString());
     formData.set("taxEnabled", taxEnabled.toString());
+    formData.set("taxAmount", taxTotal.toString());
+    formData.set("supplier", JSON.stringify(selectedSupplier));
 
     const result = await createPurchaseOrderAction(state, formData);
 
@@ -112,6 +131,8 @@ export default function PurchaseOrderForm({
       setDeliveryCost(0);
       setTaxEnabled(false);
     }
+    router.push("/sistema/compras");
+
     setSending(false);
   };
 
@@ -120,6 +141,11 @@ export default function PurchaseOrderForm({
       id="purchase-order-form"
       onSubmit={handleSubmit}
       className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // Prevent form submission
+        }
+      }}
     >
       {/* Supplier Info */}
       <div className="flex maxsm:flex-col-reverse gap-4 mb-8">
@@ -138,33 +164,33 @@ export default function PurchaseOrderForm({
               setSelectedSupplier(supplier || null);
             }}
           />
-          <NumericInput
+          {/* <NumericInput
             label="Costo de Envío"
             name="deliveryCost"
             state={state}
             defaultValue={deliveryCost}
             onChange={setDeliveryCost}
-          />
+          /> */}
           <DateInput
             name="expectedDate"
             label="Fecha Esperada"
             state={state}
             defaultValue={new Date()}
           />
-          <SelectInput
+          {/* <SelectInput
             label="Estado"
             name="status"
             options={[
-              { value: "DRAFT", name: "Borrador" },
-              { value: "SUBMITTED", name: "Enviado" },
-              { value: "APPROVED", name: "Aprobado" },
+              { value: "BORRADOR", name: "Borrador" },
+              { value: "PENDIENTE", name: "Pendiente" },
+              { value: "APROBADO", name: "Aprobado" },
               { value: "ORDERED", name: "Ordenado" },
-              { value: "PARTIALLY_RECEIVED", name: "Parcialmente Recibido" },
-              { value: "RECEIVED", name: "Recibido" },
-              { value: "CANCELLED", name: "Cancelado" },
+              { value: "PARCIALMENTE_RECIBIDO", name: "Parcialmente Recibido" },
+              { value: "RECIBIDO", name: "Recibido" },
+              { value: "CANCELADO", name: "Cancelado" },
             ]}
             state={state}
-          />
+          /> */}
         </div>
         <div className="space-y-2 bg-card p-4 rounded-lg justify-between min-h-full flex-col flex">
           <div></div>
@@ -215,21 +241,21 @@ export default function PurchaseOrderForm({
             name: item.name,
           }))}
           className="flex-1 min-w-60"
-          value={newItem.itemId} // Controlled by newItem.itemId
+          value={newItem.itemId}
           onChange={(value) => setNewItem({ ...newItem, itemId: value })}
         />
         <NumericInput
           label="Cantidad"
           name="newQuantity"
           state={state}
-          defaultValue={newItem.quantity} // Controlled by newItem.quantity
+          defaultValue={newItem.quantity}
           onChange={(value) => setNewItem({ ...newItem, quantity: value })}
         />
         <NumericInput
           label="Precio Unitario"
           name="newUnitPrice"
           state={state}
-          defaultValue={newItem.unitPrice} // Controlled by newItem.unitPrice
+          defaultValue={newItem.unitPrice}
           onChange={(value) => setNewItem({ ...newItem, unitPrice: value })}
         />
         <Button type="button" onClick={handleAddItem}>
@@ -242,6 +268,7 @@ export default function PurchaseOrderForm({
         <TableHeader className="bg-card">
           <TableRow>
             <TableHead className="w-[300px]">Artículo</TableHead>
+            <TableHead>Descripción</TableHead>
             <TableHead>Cant.</TableHead>
             <TableHead>Precio Unitario</TableHead>
             <TableHead>Total</TableHead>
@@ -251,9 +278,8 @@ export default function PurchaseOrderForm({
         <TableBody>
           {selectedItems.map((item, index) => (
             <TableRow key={index} className="bg-black bg-opacity-20">
-              <TableCell className="font-medium">
-                {items.find((i) => i.id === item.itemId)?.name}
-              </TableCell>
+              <TableCell className="font-medium">{item.name}</TableCell>
+              <TableCell>{item.sku}</TableCell>
               <TableCell>
                 <input
                   type="number"

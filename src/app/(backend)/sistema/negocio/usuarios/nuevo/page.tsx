@@ -7,7 +7,7 @@ export default async function NewUser() {
   return (
     <div>
       {/* Header */}
-      <FormBusinessHeader title={"Articulo"} />
+      <FormBusinessHeader title={"Usuario nuevo"} />
       {/* Form */}
       <UserForm roles={roles} />
     </div>

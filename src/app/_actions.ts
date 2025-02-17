@@ -176,3 +176,21 @@ export async function uploadImageAction(base64Image: string) {
     return { success: false, error: "Failed to upload image" };
   }
 }
+
+export const verifySupervisorCode = async (
+  code: string = ""
+): Promise<{ authUserId: string; success: boolean }> => {
+  const authorizedUser = await prisma.user.findFirst({
+    where: {
+      authCode: code,
+    },
+  });
+
+  if (!authorizedUser) {
+    return { authUserId: "", success: false };
+  }
+  // Implement your logic to verify the supervisor code
+  // For example, you can make an API call to verify the code
+  // This is a placeholder implementation
+  return { authUserId: authorizedUser.id, success: true }; // Replace with actual verification logic
+};

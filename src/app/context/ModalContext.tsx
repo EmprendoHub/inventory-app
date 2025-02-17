@@ -4,6 +4,7 @@ import { ModalOptions, ModalResult } from "@/types/delivery";
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { BsCurrencyExchange } from "react-icons/bs";
 import { DeliveryConfirmationModal } from "../(backend)/sistema/ventas/envios/_components/DeliveryConfirmationModal";
+import SelectInput from "@/components/SelectInput";
 
 type ModalContextType = {
   showModal: (options: ModalOptions) => Promise<ModalResult>;
@@ -253,21 +254,20 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                     }
                     className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
                   />
-
-                  <h3 className="text-xs">Método</h3>
-                  <input
+                  <SelectInput
+                    label="Método de Pago"
                     name="method"
-                    type="text"
-                    tabIndex={0}
-                    placeholder="EFECTIVO"
-                    value={paymentData.method} // Value is controlled by state
+                    options={[
+                      { value: "EFECTIVO", name: "EFECTIVO" },
+                      { value: "TARJETA", name: "TARJETA" },
+                      { value: "TRANSFERENCIA", name: "TRANSFERENCIA" },
+                    ]}
                     onChange={(e) =>
                       setPaymentData((prev) => ({
                         ...prev,
                         method: e.target.value, // Update state on change
                       }))
                     }
-                    className="text-center rounded-md text-sm peer w-full px-4 py-2 border outline-none focus:ring-2 focus:ring-blue-500 bg-input"
                   />
                 </div>
               ) : modal.type === "supervisorCode" ? (
@@ -327,23 +327,26 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                 </div>
               )}
             </div>
-
-            <div className="flex gap-3 justify-center mt-6">
-              {modal.showCancelButton && (
+            {modal.type !== "deliveryConfirmation" ? (
+              <div className="flex gap-3 justify-center mt-6">
+                {modal.showCancelButton && (
+                  <button
+                    onClick={handleCancel}
+                    className="px-8 text-sm py-2 bg-slate-800 hover:bg-black text-white rounded duration-300 ease-in-out"
+                  >
+                    {modal.cancelButtonText || "Cancel"}
+                  </button>
+                )}
                 <button
-                  onClick={handleCancel}
-                  className="px-8 text-sm py-2 bg-slate-800 hover:bg-black text-white rounded duration-300 ease-in-out"
+                  onClick={handleConfirm}
+                  className="px-8 text-sm py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded"
                 >
-                  {modal.cancelButtonText || "Cancel"}
+                  {modal.confirmButtonText || "OK"}
                 </button>
-              )}
-              <button
-                onClick={handleConfirm}
-                className="px-8 text-sm py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded"
-              >
-                {modal.confirmButtonText || "OK"}
-              </button>
-            </div>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
         </div>
       )}

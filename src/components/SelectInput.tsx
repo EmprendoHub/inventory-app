@@ -9,7 +9,7 @@ type SelectType = {
     name: string;
     value: string;
   }[];
-  state: { errors?: { [key: string]: string[] } };
+  state?: { errors?: { [key: string]: string[] } };
   onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void; // Add onChange prop
 };
 
@@ -45,9 +45,9 @@ export default function SelectInput({
           )
         )}
       </select>
-      {state.errors?.[`${name}`] && (
+      {state?.errors?.[`${name}`] && (
         <p className="text-sm text-red-500">
-          {state.errors?.[`${name}`].join(", ")}
+          {state?.errors?.[`${name}`].join(", ")}
         </p>
       )}
     </div>

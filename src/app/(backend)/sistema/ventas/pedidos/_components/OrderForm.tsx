@@ -21,6 +21,9 @@ import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
 import { useFormState } from "react-dom";
+import Image from "next/image";
+import SelectInput from "@/components/SelectInput";
+import { useModal } from "@/app/context/ModalContext";
 
 export default function OrderForm({
   clients,
@@ -49,6 +52,7 @@ export default function OrderForm({
   const [quantity, setQuantity] = React.useState(1);
   const [deliveryCost, setDeliveryCost] = React.useState(0);
   const [discount, setDiscount] = React.useState(0);
+  const { showModal } = useModal();
 
   const subtotal = selectedItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -101,6 +105,16 @@ export default function OrderForm({
     const formData = new FormData(event.currentTarget);
     const result = await createNewOrder(state, formData);
 
+    if (!result.success) {
+      await showModal({
+        title: "¡Error!",
+        type: "delete",
+        text: `${result.message}`,
+        icon: "error",
+      });
+      setSending(false); // Set sending to true
+    }
+
     if (result.success) {
       router.push("/sistema/ventas/pedidos");
     }
@@ -129,11 +143,28 @@ export default function OrderForm({
             }}
           />
           {/* Delivery info */}
-          <NumericInput
+          {/* <NumericInput
             label="Costo de Envió"
             name="price"
             state={state}
-            onChange={setDeliveryCost}
+            onChange={(e) => setDeliveryCost(Number(e.target.value))}
+          /> */}
+          <SelectInput
+            label="Costo de Envió"
+            name="price"
+            options={[
+              { value: "0", name: "Seleccionar..." },
+              { value: "500", name: "5km" },
+              { value: "600", name: "10km" },
+              { value: "800", name: "20Km" },
+              { value: "1000", name: "30Km" },
+              { value: "1200", name: "40km" },
+              { value: "1400", name: "50km" },
+              { value: "1600", name: "60km" },
+              { value: "1800", name: "70km" },
+            ]}
+            onChange={(e) => setDeliveryCost(Number(e.target.value))}
+            state={state}
           />
           <DateInput
             defaultValue={new Date()}
@@ -173,10 +204,12 @@ export default function OrderForm({
             ...items.map((item) => ({
               value: item.id,
               name: item.name,
+              image: item.mainImage, // Assuming `item.image` contains the image URL
             })),
             ...itemGroups.map((group) => ({
               value: group.id,
               name: `${group.name} (Agrupado)`,
+              image: group.mainImage, // Assuming `group.image` contains the image URL
             })),
           ]}
           onChange={setSelectedItemId}
@@ -189,7 +222,7 @@ export default function OrderForm({
           className="w-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           placeholder="Qty"
         />
-        <Button type="button" onClick={handleAddItem}>
+        <Button type="button" onClick={handleAddItem} className="text-white">
           +
         </Button>
       </div>
@@ -198,6 +231,7 @@ export default function OrderForm({
       <Table className="mb-8 border rounded-lg">
         <TableHeader className="bg-card">
           <TableRow>
+            <TableHead className="w-[150px]">Img.</TableHead>
             <TableHead className="w-[300px]">Articulo</TableHead>
             <TableHead>Cant.</TableHead>
             <TableHead>Precio</TableHead>
@@ -208,7 +242,22 @@ export default function OrderForm({
         <TableBody>
           {selectedItems.map((item, index) => (
             <TableRow key={index} className="bg-black bg-opacity-20">
-              <TableCell className="font-medium">{item.name}</TableCell>
+              <TableCell className="font-medium">
+                <Image
+                  src={item.mainImage || "/images/item_placeholder.png"}
+                  width={150}
+                  height={150}
+                  alt="img"
+                />
+              </TableCell>
+              <TableCell className="font-medium">
+                <div className="flex flex-col">
+                  <span className="text-xs">{item.name}</span>
+                  <span className="text-[12px] leading-none">
+                    {item.description}
+                  </span>
+                </div>
+              </TableCell>
               <TableCell>
                 <Input
                   type="number"
@@ -273,7 +322,7 @@ export default function OrderForm({
               })}
             </span>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-between items-center">
             <span className="font-medium">Descuento:</span>
             <NumericInput
               label=""
@@ -281,6 +330,7 @@ export default function OrderForm({
               state={state}
               defaultValue={discount}
               onChange={setDiscount}
+              className="w-20"
             />
           </div>
           <div className="flex justify-between">
@@ -294,7 +344,7 @@ export default function OrderForm({
             </span>
           </div>
           <div className="flex justify-between border-t pt-2 font-bold text-2xl">
-            <span>Grand Total:</span>
+            <span className="text-xl">Grand Total:</span>
             <span>
               $
               {grandTotal.toLocaleString(undefined, {

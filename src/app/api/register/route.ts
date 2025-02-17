@@ -124,7 +124,7 @@ export async function POST(request: any) {
         }
       }
       //return new Response('New user registered', { status: 200 });
-      console.log("response.data?.score:", response.data?.score);
+      // console.log("response.data?.score:", response.data?.score);
 
       return NextResponse.json({
         message: "New user registered",

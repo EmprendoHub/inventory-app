@@ -39,7 +39,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteUserAction } from "../_actions";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 
 export function UserList({ users }: { users: UserType[] }) {
   const router = useRouter();
@@ -132,7 +132,7 @@ export function UserList({ users }: { users: UserType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

@@ -2,27 +2,115 @@
 
 import { useFormState } from "react-dom";
 import { createCashAuditAction } from "../_actions";
-import TextInput from "@/components/TextInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
+import { CashRegisterResponse } from "@/types/accounting";
+import { SearchSelectInput } from "@/components/SearchSelectInput";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useModal } from "@/app/context/ModalContext";
+import { verifySupervisorCode } from "@/app/_actions";
 
-export default function CashAuditForm() {
+export default function CashAuditForm({
+  cashRegisters,
+}: {
+  cashRegisters: CashRegisterResponse[];
+}) {
+  const router = useRouter();
+  const { showModal } = useModal();
+  // eslint-disable-next-line
   const [state, formAction] = useFormState(createCashAuditAction, {
     success: false,
     message: "",
     errors: {},
   });
+  const [sending, setSending] = useState(false);
+
+  const [selectedRegister, setSelectedRegister] =
+    useState<CashRegisterResponse | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const formData = new FormData(event.currentTarget);
+    event.preventDefault();
+    setSending(true);
+
+    // First, prompt for supervisor code
+    const supervisorCodeResult = await showModal({
+      title: "Verificación de Supervisor",
+      type: "supervisorCode",
+      text: "Por favor, ingrese el código de supervisor para continuar.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Verificar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (supervisorCodeResult.confirmed) {
+      const isAuthorized = await verifySupervisorCode(
+        supervisorCodeResult.data?.code
+      );
+
+      if (isAuthorized.success) {
+        formData.set("managerId", isAuthorized.authUserId.toString());
+        formData.set("register", JSON.stringify(selectedRegister));
+        formData.set(
+          "startBalance",
+          selectedRegister?.balance?.toString() || ""
+        );
+        const result = await createCashAuditAction(state, formData);
+
+        if (result.success) {
+          await showModal({
+            title: "Corte de Caja completado!",
+            type: "delete",
+            text: "El corte de caja ha sido completado exitosamente.",
+            icon: "success",
+          });
+          const formElement = document.getElementById(
+            "audit-register-form"
+          ) as HTMLFormElement;
+          formElement.reset();
+          setSelectedRegister(null);
+          router.push("/sistema/cajas/auditoria");
+        }
+      }
+      setSending(false);
+    }
+    setSending(false);
+  };
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      id="audit-register-form"
+      onSubmit={handleSubmit}
+      className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // Prevent form submission
+        }
+      }}
+    >
       <div>
-        <TextInput label="Caja" name="cashRegisterId" state={state} />
-        <NumericInput
-          label="Balance Inicial"
-          name="startBalance"
+        <SearchSelectInput
+          label="Seleccionar Caja:"
+          name="cashRegister"
           state={state}
+          className="flex-1 mb-4"
+          options={cashRegisters.map((item) => ({
+            value: item.id,
+            name: item.name,
+          }))}
+          onChange={(value) => {
+            const register = cashRegisters.find((r) => r.id === value);
+            setSelectedRegister(register || null);
+          }}
         />
-        <NumericInput label="Balance Final" name="endBalance" state={state} />
+
+        <div className="flex flex-col">
+          <span className="text-xs">Actual en Caja</span>
+          <p>${selectedRegister?.balance.toLocaleString()}</p>
+        </div>
+        <NumericInput label="Se recibe" name="endBalance" state={state} />
         <DateInput
           label="Fecha"
           name="auditDate"
@@ -33,8 +121,10 @@ export default function CashAuditForm() {
 
       <button
         type="submit"
-        className="bg-blue-500 text-white px-4 py-2 rounded"
+        disabled={sending}
+        className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-900 mt-10`}
       >
+        {sending && <span className="loader"></span>}
         Crear Corte de Caja
       </button>
       {state.message && (

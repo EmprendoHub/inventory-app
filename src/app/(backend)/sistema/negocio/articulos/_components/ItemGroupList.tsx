@@ -40,7 +40,7 @@ import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import {
   deleteItemGroupAction,
   toggleItemGroupStatusAction,
@@ -149,7 +149,7 @@ export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

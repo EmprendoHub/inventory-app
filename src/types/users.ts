@@ -1,5 +1,7 @@
 // types/users.ts
 
+import { CashTransactionResponse } from "./accounting";
+
 export type UserGroupType = {
   roles: { name: string; value: string; label: string }[];
   user?: UserType;
@@ -11,6 +13,7 @@ export type UserType = {
   name: string;
   email: string;
   verificationToken: string | null;
+  authCode: string | null;
   phone: string | null;
   stripeId: string | null;
   password: string | null;
@@ -20,6 +23,7 @@ export type UserType = {
   role: string | null;
   createdAt: Date;
   updatedAt: Date;
+  cashRegister?: CashTransactionResponse | null;
 };
 
 export type UserFormState = {

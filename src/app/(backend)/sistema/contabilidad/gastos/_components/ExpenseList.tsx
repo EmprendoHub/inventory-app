@@ -38,7 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteExpenseAction } from "../_actions";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 
@@ -115,7 +115,7 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
                 const isAuthorized = await verifySupervisorCode(
                   supervisorCodeResult.data?.code
                 );
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

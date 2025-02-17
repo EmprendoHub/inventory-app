@@ -68,12 +68,12 @@ export default function ExpenseEdit({ expense }: { expense: ExpenseType }) {
         label="Tipo"
         name="type"
         options={[
-          { value: "SALARY", name: "NOMINA" },
-          { value: "EXTERNAL_SHIPPING", name: "PAQUETERÍA" },
-          { value: "FUEL", name: "GASOLINA" },
-          { value: "MAINTENANCE", name: "MANTENIMIENTO" },
-          { value: "OFFICE", name: "OFICINA" },
-          { value: "OTHER", name: "OTRO" },
+          { value: "NOMINA", name: "NOMINA" },
+          { value: "GASOLINA", name: "GASOLINA" },
+          { value: "PROVEEDOR", name: "PROVEEDOR" },
+          { value: "MANTENIMIENTO", name: "MANTENIMIENTO" },
+          { value: "OFICINA", name: "OFICINA" },
+          { value: "OTRO", name: "OTRO" },
         ]}
         state={state}
       />

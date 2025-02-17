@@ -38,7 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { brandType } from "@/types/categories";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { deleteBrandAction } from "../_actions";
 
 export function BrandList({ brands }: { brands: brandType[] }) {
@@ -107,7 +107,7 @@ export function BrandList({ brands }: { brands: brandType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

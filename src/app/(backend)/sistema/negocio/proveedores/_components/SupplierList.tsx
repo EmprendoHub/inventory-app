@@ -37,7 +37,7 @@ import {
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { supplierType } from "@/types/categories";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { deleteSupplierAction } from "../_actions";
 import { useRouter } from "next/navigation";
 
@@ -121,7 +121,7 @@ export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

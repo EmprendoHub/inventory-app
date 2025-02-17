@@ -1,6 +1,3 @@
-// SearchSelectInput.tsx
-"use client";
-
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,10 +15,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Image from "next/image";
 
 type OptionType = {
   name: string;
   value: string;
+  image?: string | null;
+  description?: string;
 };
 
 type SearchSelectInputProps = {
@@ -31,6 +31,7 @@ type SearchSelectInputProps = {
   options: OptionType[];
   placeholder?: string;
   emptyMessage?: string;
+  hidden?: boolean;
   value?: string;
   onChange?: (value: string) => void;
   state: { errors?: { [key: string]: string[] } };
@@ -44,6 +45,7 @@ export function SearchSelectInput({
   placeholder = "Seleccionar...",
   emptyMessage = "No se encontraron opciones.",
   value: externalValue,
+  hidden,
   onChange,
   state,
 }: SearchSelectInputProps) {
@@ -67,10 +69,11 @@ export function SearchSelectInput({
     setOpen(false);
   };
 
-  const getDisplayText = () => {
-    const selectedOption = options.find((option) => option.value === value);
-    return selectedOption ? selectedOption.name : placeholder;
+  const getSelectedOption = () => {
+    return options.find((option) => option.value === value);
   };
+
+  const selectedOption = getSelectedOption();
 
   return (
     <div className={className}>
@@ -94,11 +97,22 @@ export function SearchSelectInput({
             aria-expanded={open}
             className="w-full justify-between"
           >
-            {getDisplayText()}
+            <div className="flex items-center gap-2">
+              {selectedOption?.image && (
+                <Image
+                  width={150}
+                  height={150}
+                  src={selectedOption.image}
+                  alt={selectedOption.name}
+                  className="w-6 h-6 object-cover rounded"
+                />
+              )}
+              <span>{selectedOption ? selectedOption.name : placeholder}</span>
+            </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent className={`w-full p-0 ${hidden ? "hidden" : "block"}`}>
           <Command shouldFilter={false}>
             <CommandInput
               placeholder={placeholder}
@@ -113,8 +127,25 @@ export function SearchSelectInput({
                     key={option.value}
                     value={option.name}
                     onSelect={() => handleSelect(option.value)}
+                    className="flex items-center gap-2 py-2"
                   >
-                    {`${option.name}`}
+                    {option.image && (
+                      <Image
+                        width={150}
+                        height={150}
+                        src={option.image}
+                        alt={option.name}
+                        className="w-8 h-8 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex flex-col">
+                      <span>{option.name}</span>
+                      {option.description && (
+                        <span className="text-xs text-muted-foreground">
+                          {option.description}
+                        </span>
+                      )}
+                    </div>
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",

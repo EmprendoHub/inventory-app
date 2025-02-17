@@ -379,7 +379,9 @@ export default function SideBar({
                   Recibos
                 </span>
               </Link> */}
-              {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+              {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
+                user?.role || ""
+              ) && (
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -397,8 +399,23 @@ export default function SideBar({
             </CollapsibleContent>
           </Collapsible>
 
+          {/* Mi caja */}
+          <Link
+            className={`flex w-full items-center gap-2 p-1.5  ${
+              hidden ? "pl-2 pr-2" : "pl-2 pr-4"
+            }  ${
+              path === `/sistema/cajas/personal/${user?.id}`
+                ? "bg-blue-600"
+                : ""
+            } hover:bg-slate-900 rounded-md`}
+            href={`/sistema/cajas/personal/${user?.id}`}
+          >
+            <FaCashRegister size={16} />
+            <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+              Caja
+            </span>
+          </Link>
           {/* Contabilidad */}
-          {/* Compras */}
 
           <Collapsible className="w-full">
             {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (

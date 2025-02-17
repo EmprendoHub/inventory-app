@@ -38,7 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { paymentType } from "@/types/sales";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { deletePaymentAction } from "../../pedidos/_actions";
 import { UserType } from "@/types/users";
 import { useSession } from "next-auth/react";
@@ -133,7 +133,7 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

@@ -4,7 +4,7 @@ import Link from "next/link";
 import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
 import PurchaseOrderEdit from "../../_components/PurchaseOrderEdit";
 
-export default async function EditPurchaseOrder({
+export default async function AuthPurchaseOrder({
   params,
 }: {
   params: { id: string };
@@ -31,9 +31,6 @@ export default async function EditPurchaseOrder({
   const purchaseOrder = await prisma.purchaseOrder.findUnique({
     where: {
       id: id,
-    },
-    include: {
-      supplier: true,
     },
   });
 
@@ -69,7 +66,7 @@ export default async function EditPurchaseOrder({
         purchaseOrder={purchaseOrder}
         items={items}
         purchaseOrderItems={purchaseOrderItems}
-        formType="Actualizar"
+        formType="Autorizar"
       />
     </div>
   );

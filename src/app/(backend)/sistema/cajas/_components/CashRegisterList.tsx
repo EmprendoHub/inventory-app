@@ -13,13 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  DownloadCloud,
-  Eye,
-  MoreHorizontal,
-  X,
-} from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -41,16 +35,12 @@ import {
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useModal } from "@/app/context/ModalContext";
-import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
-import {
-  deleteOrderAction,
-  payOrderAction,
-} from "../../ventas/pedidos/_actions";
 import { CashRegisterResponse } from "@/types/accounting";
+import { deleteCashRegisterAction } from "../_actions";
 
 export function CashRegisterList({
   registers,
@@ -67,40 +57,6 @@ export function CashRegisterList({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const { showModal } = useModal();
-
-  const sendEmailReminder = async (id: string) => {
-    try {
-      const res = await fetch(`/api/email`, {
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: "ojñolasidfioasdfuñoasdikfh",
-        },
-        method: "POST",
-        body: JSON.stringify({
-          id,
-        }),
-      });
-
-      if (res.ok) {
-        await showModal({
-          title: "Correo Enviado!",
-          type: "delete",
-          text: "El correo se envió exitosamente",
-          icon: "success",
-        });
-      } else {
-        await showModal({
-          title: "¡Correo No Enviado!",
-          type: "delete",
-          text: "El correo no se envió correctamente",
-          icon: "error",
-        });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const columns = React.useMemo<ColumnDef<CashRegisterResponse>[]>(
     () => [
@@ -169,7 +125,7 @@ export function CashRegisterList({
           const ActionCell = () => {
             const { showModal } = useModal();
 
-            const deleteOrder = React.useCallback(async () => {
+            const deleteRegister = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
                 title: "Verificación de Supervisor",
@@ -185,7 +141,7 @@ export function CashRegisterList({
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
@@ -201,13 +157,13 @@ export function CashRegisterList({
                       const formData = new FormData();
                       formData.set("id", row.original.id);
                       formData.set("userId", user.id);
-                      const response = await deleteOrderAction(formData);
+                      const response = await deleteCashRegisterAction(formData);
                       if (!response.success)
                         throw new Error("Error al cancelado");
                       await showModal({
                         title: "¡Cancelado!",
                         type: "delete",
-                        text: "El pedido ha sido cancelado.",
+                        text: "La caja ha sido cancelada.",
                         icon: "success",
                       });
                     } catch (error) {
@@ -216,7 +172,7 @@ export function CashRegisterList({
                       await showModal({
                         title: "Error",
                         type: "delete",
-                        text: "No se pudo cancelado el pedido",
+                        text: "No se pudo cancelado la caja",
                         icon: "error",
                       });
                     }
@@ -232,59 +188,8 @@ export function CashRegisterList({
               }
             }, [showModal]);
 
-            // In your OrderList component
-            const receivePayment = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Cuanto te gustaría pagar?",
-                type: "payment",
-                text: "Puedes realizar un pago parcial o completo.",
-                icon: "success",
-                showCancelButton: true,
-                confirmButtonText: "Sí, pagar",
-                cancelButtonText: "Cancelar",
-              });
-
-              if (result.confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
-                  formData.set("amount", result.data?.amount || "0"); // Handle empty input
-                  formData.set("reference", result.data?.reference || "");
-                  formData.set("method", result.data?.method || "");
-
-                  const response = await payOrderAction(formData);
-
-                  if (response.success) {
-                    await showModal({
-                      title: "¡Pago Aplicado!",
-                      type: "delete",
-                      text: response.message,
-                      icon: "success",
-                    });
-                  } else {
-                    await showModal({
-                      title: "¡Pago No Aplicado!",
-                      type: "delete",
-                      text: response.message,
-                      icon: "error",
-                    });
-                  }
-                } catch (error) {
-                  console.log("Error processing payment:", error);
-                  await showModal({
-                    title: "Error",
-                    type: "delete",
-                    text: "No se pudo aplicar el pago",
-                    icon: "error",
-                  });
-                }
-              }
-
-              // eslint-disable-next-line
-            }, [showModal, row.original.id]);
-
-            const viewOrder = React.useCallback(async () => {
-              router.push(`/sistema/ventas/pedidos/${row.original.id}`);
+            const viewRegister = React.useCallback(async () => {
+              router.push(`/sistema/cajas/${row.original.id}`);
             }, []);
             return (
               <DropdownMenu>
@@ -299,36 +204,16 @@ export function CashRegisterList({
                     Acciones
                   </DropdownMenuLabel>
                   <DropdownMenuItem
-                    onClick={viewOrder}
+                    onClick={viewRegister}
                     className="text-xs cursor-pointer"
                   >
                     <Eye />
                     Ver detalles
                   </DropdownMenuItem>
                   <>
-                    <DropdownMenuItem
-                      onClick={receivePayment}
-                      className="text-xs cursor-pointer"
-                    >
-                      <MdCurrencyExchange /> Recibir pago
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => sendEmailReminder(row.original.id)}
-                      className="text-xs cursor-pointer"
-                    >
-                      <MdSms /> Enviar recordatorio
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        router.push(`/api/recibo/${row.original.id}`)
-                      }
-                      className="text-xs cursor-pointer"
-                    >
-                      <DownloadCloud /> Descargar PDF
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
-                      onClick={deleteOrder}
+                      onClick={deleteRegister}
                       className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                     >
                       <X />

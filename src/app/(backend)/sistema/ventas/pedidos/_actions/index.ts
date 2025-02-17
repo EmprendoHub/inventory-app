@@ -43,6 +43,22 @@ export async function createNewOrder(
 
   const items = JSON.parse(itemsInput) as LocalItemsType;
 
+  if (items.length === 0) {
+    return {
+      errors: {},
+      success: false,
+      message: "No se seleccionaron productos.",
+    };
+  }
+
+  if (!client) {
+    return {
+      errors: {},
+      success: false,
+      message: "No se selecciono un  cliente.",
+    };
+  }
+
   try {
     const totalAmount = items.reduce(
       (sum, item) => sum + item.quantity * item.price,
@@ -203,30 +219,32 @@ export async function createNewOrder(
         // Execute all stock updates and stock movements in parallel
         await Promise.all([...stockUpdates, ...stockMovements]);
 
-        // Create delivery
-        const newDelivery = await prisma.delivery.create({
-          data: {
-            orderId: newOrder.id,
-            orderNo,
-            method: deliveryMethod,
-            price: Number(deliveryPrice),
-            carrier,
-            otp,
-            trackingNumber,
-            deliveryDate: deliveryDate,
-            status: deliveryStatus,
-            userId: user.id,
-          },
-        });
+        if (Number(deliveryPrice) > 0) {
+          // Create delivery
+          const newDelivery = await prisma.delivery.create({
+            data: {
+              orderId: newOrder.id,
+              orderNo,
+              method: deliveryMethod,
+              price: Number(deliveryPrice),
+              carrier,
+              otp,
+              trackingNumber,
+              deliveryDate: deliveryDate,
+              status: deliveryStatus,
+              userId: user.id,
+            },
+          });
 
-        await prisma.order.update({
-          where: {
-            id: newOrder.id,
-          },
-          data: {
-            deliveryId: newDelivery.id,
-          },
-        });
+          await prisma.order.update({
+            where: {
+              id: newOrder.id,
+            },
+            data: {
+              deliveryId: newDelivery.id,
+            },
+          });
+        }
       },
       {
         timeout: 10000, // Increase timeout to 10 seconds
@@ -270,6 +288,8 @@ export async function payOrderAction(formData: FormData) {
     };
   }
 
+  const session = await getServerSession(options);
+  const user = session?.user;
   const { id, amount, reference, method } = validatedData.data;
   const paymentAmount = Number(amount);
 
@@ -334,6 +354,17 @@ export async function payOrderAction(formData: FormData) {
       },
     });
 
+    if (payment.method === "Efectivo") {
+      await prisma.cashRegister.update({
+        where: { userId: user.id || "" },
+        data: {
+          balance: {
+            increment: Math.round(paymentAmount), // deducts cash withdraw to the current balance
+          },
+        },
+      });
+    }
+
     let orderStatus = "PENDIENTE";
 
     if (previousPayments + paymentAmount >= order.totalAmount) {
@@ -360,6 +391,7 @@ export async function payOrderAction(formData: FormData) {
       },
     });
 
+    revalidatePath("/sistema/cajas");
     revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/envios");
@@ -400,6 +432,8 @@ export async function payOrderActionOnDelivery(formData: FormData) {
     };
   }
 
+  const session = await getServerSession(options);
+  const user = session?.user;
   const { id, amount, reference, method } = validatedData.data;
   const paymentAmount = Number(amount);
 
@@ -476,6 +510,15 @@ export async function payOrderActionOnDelivery(formData: FormData) {
       },
     });
 
+    await prisma.cashRegister.update({
+      where: { userId: user.id },
+      data: {
+        balance: {
+          increment: paymentAmount, // Adds paymentAmount to the current balance
+        },
+      },
+    });
+
     if (
       previousPayments + paymentAmount ===
       order.totalAmount + (order.delivery?.price || 0)
@@ -483,7 +526,7 @@ export async function payOrderActionOnDelivery(formData: FormData) {
       const deliveryStatus = "ENTREGADO";
 
       if (order.delivery) {
-        const updatedDelivery = await prisma.delivery.update({
+        await prisma.delivery.update({
           where: {
             id: order.deliveryId || "",
           },
@@ -491,10 +534,9 @@ export async function payOrderActionOnDelivery(formData: FormData) {
             status: deliveryStatus,
           },
         });
-        console.log(updatedDelivery);
       }
     }
-
+    revalidatePath("/sistema/cajas");
     revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pedidos");
@@ -582,10 +624,11 @@ export async function updateOrderOnDelivery(formData: FormData) {
 export async function deletePaymentAction(formData: FormData) {
   const rawData = {
     id: formData.get("id"),
+    userId: formData.get("userId"),
   };
 
   // Validate the data using Zod
-  const validatedData = idSchema.safeParse(rawData);
+  const validatedData = TwoIdSchema.safeParse(rawData);
   if (!validatedData.success) {
     const errors = validatedData.error.flatten().fieldErrors;
     return {
@@ -599,7 +642,7 @@ export async function deletePaymentAction(formData: FormData) {
     return { success: false, message: "Error al borrar pago" };
 
   try {
-    await prisma.payment.update({
+    const canceledPayment = await prisma.payment.update({
       where: {
         id: validatedData.data.id,
       },
@@ -608,6 +651,16 @@ export async function deletePaymentAction(formData: FormData) {
       },
     });
 
+    await prisma.cashRegister.update({
+      where: { userId: validatedData.data.userId || "" },
+      data: {
+        balance: {
+          decrement: canceledPayment.amount, // Adds paymentAmount to the current balance
+        },
+      },
+    });
+
+    revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
     revalidatePath(`/sistema/ventas/pedidos/${validatedData.data.id}`);
@@ -709,20 +762,41 @@ export async function deleteOrderAction(formData: FormData) {
       //   },
       // });
 
-      // Update payments status to cancelled
-      await prisma.payment.updateMany({
-        where: {
-          orderId: validatedData.data.id,
-        },
-        data: {
-          status: "CANCELADO",
-        },
-      });
-
       // Update order status to cancelled
       const updatedOrder = await prisma.order.update({
         where: {
           id: validatedData.data.id,
+        },
+        data: {
+          status: "CANCELADO",
+        },
+        include: {
+          payments: {
+            where: {
+              status: "PAGADO",
+            },
+          },
+        },
+      });
+
+      const previousPayments = updatedOrder.payments.reduce(
+        (sum, payment) => sum + payment.amount,
+        0
+      );
+
+      await prisma.cashRegister.update({
+        where: { userId: validatedData.data.userId || "" },
+        data: {
+          balance: {
+            decrement: previousPayments, // Adds paymentAmount to the current balance
+          },
+        },
+      });
+
+      // Update payments status to cancelled
+      await prisma.payment.updateMany({
+        where: {
+          orderId: validatedData.data.id,
         },
         data: {
           status: "CANCELADO",
@@ -742,6 +816,7 @@ export async function deleteOrderAction(formData: FormData) {
     });
 
     // console.log("Order deleted and stock updated successfully");
+    revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
     return {
@@ -873,6 +948,7 @@ export async function deleteOrderItemsAction(formData: FormData) {
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
     revalidatePath(`/sistema/ventas/pedidos/${orderId}`);
+    revalidatePath("/sistema/cajas");
 
     return {
       errors: {},

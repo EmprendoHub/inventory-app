@@ -38,7 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { categoryType } from "@/types/categories";
 import { useModal } from "@/app/context/ModalContext";
 import { useRouter } from "next/navigation";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { deleteCategoryAction } from "../_actions";
 
 export function CategoryList({ categories }: { categories: categoryType[] }) {
@@ -109,7 +109,7 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

@@ -4,9 +4,9 @@ import React, { useState } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import { ChevronDown } from "lucide-react";
 import dayjs from "dayjs";
-import { cn } from "@/lib/utils"; // Utility for conditionally joining classNames
-import { DeliveryFormState } from "@/types/delivery"; // Adjust the import path as needed
-import { Calendar } from "@/components/ui/calendar"; // Import the correct Calendar component from ShadCN
+import { cn } from "@/lib/utils";
+import { DeliveryFormState } from "@/types/delivery";
+import { Calendar } from "@/components/ui/calendar";
 
 type DateInputProps = {
   name: string;
@@ -30,29 +30,35 @@ const DateInput: React.FC<DateInputProps> = ({
         : defaultValue
       : undefined
   );
+  const [open, setOpen] = useState(false);
 
   const formattedDate = selectedDate
     ? dayjs(selectedDate).format("YYYY-MM-DD")
     : "";
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setOpen(false); // Close the popover when a date is selected
+  };
+
   return (
-    <div className="flex flex-col  min-w-40">
+    <div className="flex flex-col min-w-40">
       <label
         htmlFor={name}
         className="block text-sm font-medium text-muted mb-2"
       >
         {label}{" "}
         {isOptional && (
-          <span className="text-xs text-gray-500">(Optional)</span>
+          <span className="text-xs text-gray-500">(Opcional)</span>
         )}
       </label>
 
-      <Popover.Root>
+      <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger
           className={cn(
-            "flex items-center justify-between px-3 py-2 border rounded-md cursor-pointer",
+            "flex z-50 items-center justify-between px-3 py-2 border rounded-md cursor-pointer",
             state.errors?.[name] ? "border-red-500" : "border-gray-300",
-            "hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 "
+            "hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           )}
         >
           <span>
@@ -64,22 +70,20 @@ const DateInput: React.FC<DateInputProps> = ({
         </Popover.Trigger>
         <Popover.Content
           align="start"
-          className="p-4 bg-background rounded-md shadow-md"
+          className="p-4 bg-background rounded-md shadow-md z-50"
         >
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={setSelectedDate} // Corrected onSelect function
+            onSelect={handleDateSelect}
             initialFocus
           />
           <Popover.Arrow className="fill-white" />
         </Popover.Content>
       </Popover.Root>
 
-      {/* Hidden input to integrate with form submissions */}
       <input type="hidden" name={name} value={formattedDate} />
 
-      {/* Display validation errors */}
       {state.errors?.[name] && (
         <p className="mt-1 text-sm text-red-600">
           {state.errors[name].join(", ")}

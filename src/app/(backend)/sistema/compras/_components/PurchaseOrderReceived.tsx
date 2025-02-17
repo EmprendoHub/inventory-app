@@ -17,11 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { X } from "lucide-react";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { useRouter } from "next/navigation";
 
-export default function PurchaseOrderEdit({
+export default function PurchaseOrderReceived({
   suppliers,
   items,
   purchaseOrder,
@@ -158,6 +157,7 @@ export default function PurchaseOrderEdit({
         <div className="flex flex-col gap-3 w-1/2 maxsm:w-full">
           <SearchSelectInput
             label="Proveedor:"
+            hidden={true}
             name="supplierId"
             state={state}
             value={selectedSupplier?.id}
@@ -180,7 +180,7 @@ export default function PurchaseOrderEdit({
           /> */}
           <DateInput
             name="expectedDate"
-            label="Fecha Esperada"
+            label="Fecha Entrega"
             state={state}
             defaultValue={new Date()}
           />
@@ -227,6 +227,7 @@ export default function PurchaseOrderEdit({
               type="checkbox"
               id="taxEnabled"
               checked={taxEnabled}
+              disabled
               onChange={(e) => setTaxEnabled(e.target.checked)}
               className="w-4 h-4 rounded-full bg-input"
             />
@@ -247,7 +248,7 @@ export default function PurchaseOrderEdit({
             value: item.id,
             name: item.name,
           }))}
-          className="flex-1 min-w-60"
+          className="flex-1 min-w-[70%]"
           value={newItem.itemId}
           onChange={(value) => setNewItem({ ...newItem, itemId: value })}
         />
@@ -258,14 +259,14 @@ export default function PurchaseOrderEdit({
           defaultValue={newItem.quantity}
           onChange={(value) => setNewItem({ ...newItem, quantity: value })}
         />
-        <NumericInput
+        {/* <NumericInput
           label="Precio Unitario"
           name="newUnitPrice"
           state={state}
           defaultValue={newItem.unitPrice}
           onChange={(value) => setNewItem({ ...newItem, unitPrice: value })}
-        />
-        <Button type="button" onClick={handleAddItem}>
+        /> */}
+        <Button type="button" onClick={handleAddItem} className="text-white">
           +
         </Button>
       </div>
@@ -278,7 +279,6 @@ export default function PurchaseOrderEdit({
             <TableHead>Cant.</TableHead>
             <TableHead>Precio Unitario</TableHead>
             <TableHead>Total</TableHead>
-            <TableHead className="text-right">Acción</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -298,33 +298,8 @@ export default function PurchaseOrderEdit({
                   className="w-20 bg-input rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </TableCell>
-              <TableCell>
-                $
-                {item.unitPrice.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </TableCell>
-              <TableCell>
-                $
-                {(item.unitPrice * item.quantity).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() =>
-                    setSelectedItems((prev) =>
-                      prev.filter((_, i) => i !== index)
-                    )
-                  }
-                >
-                  <X />
-                </Button>
-              </TableCell>
+              <TableCell>****</TableCell>
+              <TableCell>****</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -338,50 +313,6 @@ export default function PurchaseOrderEdit({
           state={state}
           className="w-full"
         />
-        <div className="flex flex-col gap-4 w-full">
-          <div className="flex justify-between">
-            <span className="font-medium">Subtotal:</span>
-            <span>
-              $
-              {subtotal.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          {taxEnabled && (
-            <div className="flex justify-between">
-              <span className="font-medium">Impuesto (16%):</span>
-              <span>
-                $
-                {taxTotal.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="font-medium">Costo de Envío:</span>
-            <span>
-              $
-              {deliveryCost.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className="flex justify-between border-t pt-2 font-bold text-2xl">
-            <span>Total:</span>
-            <span>
-              $
-              {grandTotal.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Hidden Form Data */}

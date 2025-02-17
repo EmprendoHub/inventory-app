@@ -2,9 +2,9 @@ import React from "react";
 import prisma from "@/lib/db";
 import Link from "next/link";
 import FormBusinessHeader from "@/app/(backend)/sistema/negocio/_components/FormBusinessHeader";
-import PurchaseOrderEdit from "../../_components/PurchaseOrderEdit";
+import PurchaseOrderReceived from "../../_components/PurchaseOrderReceived";
 
-export default async function EditPurchaseOrder({
+export default async function ReceivePurchaseOrder({
   params,
 }: {
   params: { id: string };
@@ -32,9 +32,6 @@ export default async function EditPurchaseOrder({
     where: {
       id: id,
     },
-    include: {
-      supplier: true,
-    },
   });
 
   const purchaseOrderItems = await prisma.purchaseOrderItem.findMany({
@@ -61,15 +58,15 @@ export default async function EditPurchaseOrder({
     <div className="flex flex-col gap-1">
       {/* Header */}
       <FormBusinessHeader
-        title={`Editar Orden de Compra: ${purchaseOrder.poNumber}`}
+        title={`Recibir Orden de Compra: ${purchaseOrder.poNumber}`}
       />
       {/* Form */}
-      <PurchaseOrderEdit
+      <PurchaseOrderReceived
         suppliers={suppliers}
         purchaseOrder={purchaseOrder}
         items={items}
         purchaseOrderItems={purchaseOrderItems}
-        formType="Actualizar"
+        formType="Recibir"
       />
     </div>
   );

@@ -41,7 +41,7 @@ import { useModal } from "@/app/context/ModalContext";
 import { deleteItemAction, toggleItemStatusAction } from "../_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 
 export function ProductList({ items }: { items: ItemType[] }) {
   const { data: session } = useSession();
@@ -146,7 +146,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

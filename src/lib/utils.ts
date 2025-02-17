@@ -61,13 +61,13 @@ export async function generatePurchaseOrderId(prisma: PrismaClient) {
   const counterId = "po_counter";
 
   // Check if the counter already exists
-  let counter = await prisma.pOCounter.findUnique({
+  let pOCounter = await prisma.pOCounter.findUnique({
     where: { id: counterId },
   });
 
-  if (!counter) {
+  if (!pOCounter) {
     // If the counter doesn't exist, create it
-    counter = await prisma.counter.create({
+    pOCounter = await prisma.pOCounter.create({
       data: {
         id: counterId,
         sequence: 1, // Start with sequence 1
@@ -75,14 +75,14 @@ export async function generatePurchaseOrderId(prisma: PrismaClient) {
     });
   } else {
     // If the counter exists, increment the sequence
-    counter = await prisma.counter.update({
+    pOCounter = await prisma.pOCounter.update({
       where: { id: counterId },
       data: { sequence: { increment: 1 } },
     });
   }
 
   // Generate the order number using the sequence
-  return counter.sequence.toString().padStart(6, "0");
+  return pOCounter.sequence.toString().padStart(6, "0");
 }
 
 export function getMexicoTime(date: Date | string) {
@@ -146,15 +146,6 @@ export const isValidEmail = (email: string) => {
 export const isValidPhone = (phone: string) => {
   const phoneRegex = /^(\+\d{2}\s?)?(\d{3}[-\s]?\d{3}[-\s]?\d{4})$/;
   return phoneRegex.test(phone);
-};
-
-export const verifySupervisorCode = async (
-  code: string = ""
-): Promise<boolean> => {
-  // Implement your logic to verify the supervisor code
-  // For example, you can make an API call to verify the code
-  // This is a placeholder implementation
-  return ["6487", "5795", "8745"].includes(code); // Replace with actual verification logic
 };
 
 // Function to mask the input value

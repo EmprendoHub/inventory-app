@@ -19,17 +19,14 @@ import {
   payOrderAction,
 } from "../_actions";
 import Link from "next/link";
-import {
-  getMexicoDate,
-  getMexicoTime,
-  verifySupervisorCode,
-} from "@/lib/utils";
+import { getMexicoDate, getMexicoTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BsEnvelopeArrowUp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { useModal } from "@/app/context/ModalContext";
+import { verifySupervisorCode } from "@/app/_actions";
 
 export default function OrderView({ order }: { order: FullOderType }) {
   const { data: session } = useSession();
@@ -122,7 +119,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
         supervisorCodeResult.data?.code
       );
 
-      if (isAuthorized) {
+      if (isAuthorized.success) {
         // Proceed with the deletion
         const result = await showModal({
           title: "¿Estás seguro?, ¡No podrás revertir esto!",
@@ -192,7 +189,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
         supervisorCodeResult.data?.code
       );
 
-      if (isAuthorized) {
+      if (isAuthorized.success) {
         // Proceed with the deletion
         const result = await showModal({
           title: "¿Estás seguro?, ¡No podrás revertir esto!",
@@ -208,6 +205,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
           try {
             const formData = new FormData();
             formData.set("id", id);
+            formData.set("userId", user.id);
             const response = await deletePaymentAction(formData);
             if (!response.success) throw new Error("Error al eliminar pago");
             await showModal({

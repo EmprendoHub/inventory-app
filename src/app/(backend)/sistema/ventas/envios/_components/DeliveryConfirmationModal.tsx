@@ -39,11 +39,10 @@ export const DeliveryConfirmationModal: React.FC<
 
   const handleConfirm = async () => {
     if (!signature || !image) {
-      alert("Please provide both a signature and an image.");
       await showModal({
-        title: "¡Entrega Confirmada!",
+        title: "¡Agrega imagen y firma!",
         type: "delete",
-        text: "La entrega ha sido confirmada con éxito.",
+        text: "La entrega require una firma y foto.",
         icon: "error",
       });
       return;
@@ -52,13 +51,15 @@ export const DeliveryConfirmationModal: React.FC<
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 ">
       <h2 className="text-lg font-bold mb-4">Confirmar Entrega</h2>
       <div className="mb-4">
         <label className="block mb-2">Firma:</label>
         <SignatureCanvas
           ref={sigCanvas}
-          canvasProps={{ className: "border border-gray-300 w-full h-32" }}
+          canvasProps={{
+            className: "border border-gray-300 w-full h-32 bg-white",
+          }}
         />
         <div className="mt-2">
           <Button onClick={handleClearSignature} className="mr-2">
@@ -78,7 +79,7 @@ export const DeliveryConfirmationModal: React.FC<
           className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
         />
       </div>
-      <div className="flex justify-between gap-3">
+      <div className=" justify-between gap-3">
         <Button onClick={onCancel} variant="outline">
           Cancelar
         </Button>

@@ -29,6 +29,7 @@ export default function UserForm({ roles }: UserGroupType) {
     name: "",
     email: "",
     phone: "",
+    authCode: "",
     password: "",
     role: "",
     avatar: "",
@@ -171,7 +172,13 @@ export default function UserForm({ roles }: UserGroupType) {
             label="Teléfono"
             state={state}
           />
-
+          <TextInput
+            value={formData.authCode ?? ""}
+            onChange={handleInputChange}
+            name="authCode"
+            label="Código de supervisor"
+            state={state}
+          />
           <PasswordInput
             value={formData.password ?? ""}
             onChange={handleInputChange}

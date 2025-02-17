@@ -39,7 +39,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { deleteClientAction } from "../_actions/clientActions";
 
 export function ClientList({ clients }: clientsAndProductType) {
@@ -133,7 +133,7 @@ export function ClientList({ clients }: clientsAndProductType) {
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

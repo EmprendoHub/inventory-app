@@ -38,7 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { warehouseAndProductType } from "@/types/categories";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/lib/utils";
+import { verifySupervisorCode } from "@/app/_actions";
 import { deleteWarehouseAction } from "../_actions";
 
 export function WarehouseList({
@@ -130,7 +130,7 @@ export function WarehouseList({
                   supervisorCodeResult.data?.code
                 );
 
-                if (isAuthorized) {
+                if (isAuthorized.success) {
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",

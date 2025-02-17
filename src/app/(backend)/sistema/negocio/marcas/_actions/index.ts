@@ -35,8 +35,7 @@ export const createBrand = async (
     description: validatedData.data.description,
   };
 
-  const newBrand = await prisma.brand.create({ data: newBrandData });
-  console.log("Creating Brand", newBrand);
+  await prisma.brand.create({ data: newBrandData });
 
   return { success: true, message: "Marca creada exitosamente!" };
 };
