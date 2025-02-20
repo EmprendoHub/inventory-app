@@ -54,7 +54,7 @@ export default function SideBar({
   return (
     <aside
       className={` duration-300 ease-in-out min-h-screen bg-slate-800  text-slate-50 flex flex-col justify-between fixed ${
-        hidden ? "w-10" : "w-46"
+        hidden ? "w-10" : "w-44"
       }`}
     >
       {/* Top */}
