@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, Signature, X } from "lucide-react";
+import { ArrowUpDown, Edit, MoreHorizontal, Signature, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -305,22 +305,28 @@ export function PurchaseOrderList({
                     Acciones
                   </DropdownMenuLabel>
                   {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
-                    !["CANCELADO", "ENTREGADO", "EN CAMINO"].includes(
-                      row.original.status || ""
-                    ) && (
+                    ![
+                      "CANCELADO",
+                      "ENTREGADO",
+                      "EN CAMINO",
+                      "RECIBIDO",
+                    ].includes(row.original.status || "") && (
                       <DropdownMenuItem
                         onClick={viewPurchaseOrder}
                         className="text-xs cursor-pointer"
                       >
-                        <Eye />
+                        <Edit />
                         Editar
                       </DropdownMenuItem>
                     )}
 
                   {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
-                    !["CANCELADO", "ENTREGADO", "EN CAMINO"].includes(
-                      row.original.status || ""
-                    ) && (
+                    ![
+                      "CANCELADO",
+                      "ENTREGADO",
+                      "EN CAMINO",
+                      "RECIBIDO",
+                    ].includes(row.original.status || "") && (
                       <DropdownMenuItem
                         onClick={acceptDelivery}
                         className="text-xs cursor-pointer"
@@ -329,12 +335,13 @@ export function PurchaseOrderList({
                         Recibir
                       </DropdownMenuItem>
                     )}
-                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                  {["SUPER_ADMIN", "OWNER"].includes(user?.role || "") &&
                     ![
                       "CANCELADO",
                       "ENTREGADO",
                       "EN CAMINO",
                       "APROBADO",
+                      "RECIBIDO",
                     ].includes(row.original.status || "") && (
                       <DropdownMenuItem
                         onClick={authorizeDelivery}
@@ -346,7 +353,9 @@ export function PurchaseOrderList({
                     )}
                   <DropdownMenuSeparator />
                   {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
-                    !["CANCELADO"].includes(row.original.status || "") && (
+                    !["CANCELADO", "RECIBIDO"].includes(
+                      row.original.status || ""
+                    ) && (
                       <DropdownMenuItem
                         onClick={cancelPurchaseOrder}
                         className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"

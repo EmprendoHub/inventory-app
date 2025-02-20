@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useFormState } from "react-dom";
-import { updatePurchaseOrderAction } from "../_actions";
+import { receivePurchaseOrderAction } from "../_actions";
 import { PurchaseOrderGroupType } from "@/types/purchaseOrders";
 import { Button } from "@/components/ui/button";
 import TextAreaInput from "@/components/TextAreaInput";
@@ -29,7 +29,7 @@ export default function PurchaseOrderReceived({
 }: PurchaseOrderGroupType) {
   const router = useRouter();
   // eslint-disable-next-line
-  const [state, formAction] = useFormState(updatePurchaseOrderAction, {
+  const [state, formAction] = useFormState(receivePurchaseOrderAction, {
     errors: {},
     success: false,
     message: "",
@@ -118,13 +118,14 @@ export default function PurchaseOrderReceived({
     formData.set("formType", formType?.toString() || "");
     formData.set("supplier", JSON.stringify(selectedSupplier));
 
-    const result = await updatePurchaseOrderAction(state, formData);
+    const result = await receivePurchaseOrderAction(state, formData);
+    console.log(result);
 
     if (result.success) {
       await showModal({
-        title: "Orden de Compra Actualizada!",
+        title: "Orden de Compra Recibida!",
         type: "delete",
-        text: "La orden de compra ha sido actualizada exitosamente.",
+        text: "La orden de compra ha sido Recibida exitosamente.",
         icon: "success",
       });
       const formElement = document.getElementById(
@@ -135,8 +136,8 @@ export default function PurchaseOrderReceived({
       setSelectedSupplier(null);
       setDeliveryCost(0);
       setTaxEnabled(false);
+      router.push("/sistema/compras");
     }
-    router.push("/sistema/compras");
 
     setSending(false);
   };
