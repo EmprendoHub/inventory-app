@@ -21,8 +21,8 @@ export async function middleware(request: any) {
   const userRole = token?.user?.role;
 
   if (!isRouteAllowed(userRole, pathname)) {
-    console.log("User role:", userRole);
-    console.log("Requested path:", pathname);
+    // console.log("User role:", userRole);
+    // console.log("Requested path:", pathname);
 
     // Redirect to a default route if the user is authenticated but not authorized
     if (pathname !== "/sistema/home") {

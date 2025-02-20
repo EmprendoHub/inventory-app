@@ -212,7 +212,6 @@ export function isRouteAllowed(role: string, pathname: string): boolean {
   }
 
   const { allowedRoutes } = roleConfig;
-  console.log("allowedRoutes", allowedRoutes);
 
   // Always allow access to /no-autorizado
   if (pathname === "/no-autorizado") {
@@ -227,8 +226,6 @@ export function isRouteAllowed(role: string, pathname: string): boolean {
   // Check if the pathname matches any allowed route
   for (const route of allowedRoutes) {
     if (route.startsWith("!")) {
-      console.log("route.startsWith(!):", route, route.startsWith("!"));
-
       // Deny route (e.g., "!/sistema/config")
       const denyRoute = route.slice(1);
       if (pathname.startsWith(denyRoute)) {
@@ -236,16 +233,8 @@ export function isRouteAllowed(role: string, pathname: string): boolean {
       }
     } else {
       // Allow route (e.g., "/sistema/ventas/envios")
-      console.log(
-        "pathname.startsWith(route):",
-        pathname.startsWith(route),
-        pathname,
-        route
-      );
 
       if (pathname.startsWith(route)) {
-        console.log("TRUEEEEEEEEEEEEEEEE");
-
         return true;
       }
     }

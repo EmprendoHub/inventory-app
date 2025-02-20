@@ -239,10 +239,10 @@ export function DeliveryList({
                         throw new Error("Error al asignar");
                       }
 
-                      const { signature, image } = deliveryResult.data || {};
+                      const { signature } = deliveryResult.data || {};
 
                       let signatureUrl = "";
-                      let imageUrl = "";
+                      // let imageUrl = "";
 
                       if (signature) {
                         const signatureUploadResponse = await uploadImageAction(
@@ -255,35 +255,35 @@ export function DeliveryList({
                         }
                       }
 
-                      if (image) {
-                        const base64Image = await new Promise<string>(
-                          (resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.readAsDataURL(image);
-                            reader.onload = () =>
-                              resolve(reader.result as string);
-                            reader.onerror = (error) => reject(error);
-                          }
-                        );
+                      // if (image) {
+                      //   const base64Image = await new Promise<string>(
+                      //     (resolve, reject) => {
+                      //       const reader = new FileReader();
+                      //       reader.readAsDataURL(image);
+                      //       reader.onload = () =>
+                      //         resolve(reader.result as string);
+                      //       reader.onerror = (error) => reject(error);
+                      //     }
+                      //   );
 
-                        const imageUploadResponse = await uploadImageAction(
-                          base64Image
-                        );
-                        if (imageUploadResponse.success) {
-                          imageUrl = imageUploadResponse.imageUrl ?? "";
-                        } else {
-                          throw new Error("Failed to upload image");
-                        }
-                      }
+                      //   const imageUploadResponse = await uploadImageAction(
+                      //     base64Image
+                      //   );
+                      //   if (imageUploadResponse.success) {
+                      //     imageUrl = imageUploadResponse.imageUrl ?? "";
+                      //   } else {
+                      //     throw new Error("Failed to upload image");
+                      //   }
+                      // }
 
                       const deliveryFormData = new FormData();
                       deliveryFormData.set("id", row.original.orderId);
                       if (signatureUrl) {
                         deliveryFormData.set("signature", signatureUrl);
                       }
-                      if (imageUrl) {
-                        deliveryFormData.set("imageUrl", imageUrl);
-                      }
+                      // if (imageUrl) {
+                      //   deliveryFormData.set("imageUrl", imageUrl);
+                      // }
 
                       const updateResponse = await updateOrderOnDelivery(
                         deliveryFormData

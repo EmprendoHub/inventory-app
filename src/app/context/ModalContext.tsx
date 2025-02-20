@@ -195,16 +195,16 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
             ref={modalRef}
             className={`${
               modal.icon === "warning" ? "bg-red-800" : "bg-card"
-            } rounded-lg p-6 py-12 max-w-md w-96`}
+            } rounded-lg p-6 py-6 max-w-md w-96`}
             onMouseDown={(e) => e.stopPropagation()}
           >
             <div className="text-center">
               {modal.type === "deliveryConfirmation" ? (
                 <DeliveryConfirmationModal
-                  onConfirm={(signature, image) => {
+                  onConfirm={(signature) => {
                     handleClose({
                       confirmed: true,
-                      data: { signature, image },
+                      data: { signature },
                     });
                   }}
                   onCancel={() => handleClose({ confirmed: false })}

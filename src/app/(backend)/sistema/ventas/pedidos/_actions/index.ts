@@ -619,7 +619,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
   const rawData = {
     id: formData.get("id"),
     signature: formData.get("signature"),
-    imageUrl: formData.get("imageUrl"),
+    // imageUrl: formData.get("imageUrl"),
   };
 
   try {
@@ -627,7 +627,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
       where: { id: rawData.id as string },
       data: {
         signature: rawData.signature as string,
-        imageUrl: rawData.imageUrl as string,
+        // imageUrl: rawData.imageUrl as string,
         status: "ENTREGADO",
       },
     });
@@ -644,7 +644,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
       where: { id: order.deliveryId as string },
       data: {
         signature: rawData.signature as string,
-        imageUrl: rawData.imageUrl as string,
+        // imageUrl: rawData.imageUrl as string,
         status: "ENTREGADO",
       },
     });
