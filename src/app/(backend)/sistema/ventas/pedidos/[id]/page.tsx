@@ -55,8 +55,6 @@ export default async function ViewOrder({
     );
   }
 
-  console.log(order);
-
   // Function to fetch item details
   const fetchItemDetails = async (itemId: string) => {
     return await prisma.item.findUnique({

@@ -46,6 +46,7 @@ export const RBAC_CONFIG = {
       "/sistema/home", // Allow all sistema routes
       "/sistema/ventas/envios", // Only allow /sistema/ventas/envios
       "/sistema/cajas/personal/", // Allow all sistema routes
+      "/sistema/cajas/auditoria/nueva", // Allow all sistema routes
     ],
   },
 };

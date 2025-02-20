@@ -214,16 +214,20 @@ export function CashRegisterList({
                     <Eye />
                     Ver detalles
                   </DropdownMenuItem>
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={deleteRegister}
-                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                    >
-                      <X />
-                      Cancelar
-                    </DropdownMenuItem>
-                  </>
+
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      {" "}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteRegister}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Cancelar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
