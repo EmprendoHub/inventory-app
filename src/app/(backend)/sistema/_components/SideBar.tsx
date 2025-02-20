@@ -106,7 +106,7 @@ export default function SideBar({
                 {/* {user?.role === "SUPER_ADMIN" && (
                   <Link
                     className={`group flex w-full items-center justify-between gap-2 p-1.5   ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
                       path === "/sistema/negocio" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
@@ -129,7 +129,7 @@ export default function SideBar({
 
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/articulos" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -145,7 +145,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/articulos/conjuntos"
                       ? "bg-blue-600"
@@ -163,7 +163,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/categorias" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -180,7 +180,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/proveedores" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -198,7 +198,7 @@ export default function SideBar({
 
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/marcas" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -214,7 +214,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/bodegas" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -230,7 +230,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/unidades" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -246,7 +246,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/vehiculos" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -273,7 +273,7 @@ export default function SideBar({
                 {["SUPER_ADMIN"].includes(user?.role || "") && (
                   <Link
                     className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
                       path === "/sistema/negocio/ajustes/nuevo"
                         ? "bg-blue-600"
@@ -320,7 +320,7 @@ export default function SideBar({
                 <>
                   <Link
                     className={`flex w-full items-center gap-2 p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     }  ${
                       path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
@@ -333,7 +333,7 @@ export default function SideBar({
                   </Link>
                   <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
                       path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
@@ -349,7 +349,7 @@ export default function SideBar({
 
               <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                 } ${
                   path === "/sistema/ventas/envios" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
@@ -362,7 +362,7 @@ export default function SideBar({
               </Link>
               {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                 } ${
                   path === "/sistema/ventas/facturas" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
@@ -375,7 +375,7 @@ export default function SideBar({
               </Link> */}
               {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                 } ${
                   path === "/sistema/ventas/recibos" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
@@ -391,7 +391,7 @@ export default function SideBar({
               ) && (
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/ventas/pagos" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -489,7 +489,7 @@ export default function SideBar({
               <CollapsibleContent className="flex flex-col gap-1">
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   }  ${
                     path === "/sistema/contabilidad/cuentas"
                       ? "bg-blue-600"
@@ -505,7 +505,7 @@ export default function SideBar({
 
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   }  ${
                     path === "/sistema/cajas" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -518,7 +518,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   }  ${
                     path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -545,7 +545,7 @@ export default function SideBar({
 
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/contabilidad/transacciones"
                       ? "bg-blue-600"
@@ -579,7 +579,7 @@ export default function SideBar({
               <CollapsibleContent className="flex flex-col gap-1">
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   }  ${
                     path === "/sistema/compras" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
@@ -593,7 +593,7 @@ export default function SideBar({
                 {["SUPER_ADMIN"].includes(user?.role || "") && (
                   <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
                       path === "/sistema/compras/recibos" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
