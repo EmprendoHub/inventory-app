@@ -13,7 +13,7 @@ export default async function SalesOrders() {
       delivery: {
         where: {
           status: {
-            in: ["CANCELADO", "PAGADO", "PENDIENTE", "ENTREGADO"],
+            in: ["CANCELADO", "PAGADO", "PENDIENTE", "ENTREGADO", "PROCESANDO"],
           },
         },
       },

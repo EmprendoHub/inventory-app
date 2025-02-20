@@ -292,22 +292,39 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
   return (
     <div className="order-view relative">
-      {order.status === "CANCELADO" ? (
-        <div className="absolute z-40 top-28 maxmd:top-64">
+      <div className="absolute flex items-center gap-4 z-40 top-24 maxmd:top-64">
+        {order.status === "CANCELADO" ? (
           <h2 className="text-6xl maxmd:text-4xl text-red-900 font-black ">
             CANCELADO
           </h2>
-        </div>
-      ) : order.status === "PAGADO" ? (
-        <div className="absolute z-40 top-28 maxmd:top-64">
+        ) : order.status === "PAGADO" ? (
           <h2 className="text-6xl maxmd:text-4xl text-emerald-900 font-black ">
+            PAGADO Y ENTREGADO
+          </h2>
+        ) : order.status === "ENTREGADO" ? (
+          <h2 className="text-6xl maxmd:text-4xl text-yellow-600 font-black ">
             ENTREGADO
           </h2>
-        </div>
-      ) : (
-        ""
-      )}
-      {order.status}
+        ) : (
+          ""
+        )}
+        {order.signature && (
+          <div className="bg-white w-fit rounded-md">
+            <div
+              className="cursor-pointer"
+              onClick={() => openLightbox(order.signature || coImage.src)}
+            >
+              <Image
+                className="h-16 w-16"
+                src={order.signature || coImage}
+                width={250}
+                height={250}
+                alt="img"
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Lightbox */}
       {lightboxOpen && (
@@ -315,7 +332,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
           onClick={closeLightbox}
         >
-          <div className="relative max-w-4xl max-h-full">
+          <div className="relative max-w-4xl max-h-full bg-white">
             <Image
               src={lightboxImage || coImage}
               alt="Enlarged item image"

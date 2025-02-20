@@ -378,7 +378,7 @@ export async function payOrderAction(formData: FormData) {
       const payment = await prisma.payment.create({
         data: {
           amount: Math.round(paymentAmount),
-          method: method || "Efectivo",
+          method: method || "EFECTIVO",
           orderNo: order.orderNo,
           orderId: order.id,
           reference,
@@ -387,7 +387,7 @@ export async function payOrderAction(formData: FormData) {
         },
       });
 
-      if (payment.method === "Efectivo") {
+      if (payment.method === "EFECTIVO") {
         const updatedRegister = await prisma.cashRegister.update({
           where: { userId: user.id || "" },
           data: {

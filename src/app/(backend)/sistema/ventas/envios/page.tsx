@@ -20,6 +20,11 @@ export default async function ListUsers() {
       include: {
         driver: true,
       },
+      where: {
+        status: {
+          in: ["PROCESANDO", "EN CAMINO", "ENTREGADO", "PAGADO", "PENDIENTE"],
+        },
+      },
     });
   } else if (user.role === "ADMIN") {
     deliveries = await prisma.delivery.findMany({
