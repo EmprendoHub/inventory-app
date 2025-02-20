@@ -127,7 +127,7 @@ export function PurchaseOrderList({
             className={`text-[12px] text-center font-medium px-2 rounded-md  text-white ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
-                : row.original.status === "ENTREGADO"
+                : row.original.status === "RECIBIDO"
                 ? "bg-emerald-900"
                 : row.original.status === "EN CAMINO"
                 ? "bg-purple-900"
@@ -293,91 +293,90 @@ export function PurchaseOrderList({
               router.push(`/sistema/compras/editar/${row.original.id}`);
             }, []);
             return (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menú</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel className="text-xs">
-                    Acciones
-                  </DropdownMenuLabel>
-                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
-                    ![
-                      "CANCELADO",
-                      "ENTREGADO",
-                      "EN CAMINO",
-                      "RECIBIDO",
-                    ].includes(row.original.status || "") && (
-                      <DropdownMenuItem
-                        onClick={viewPurchaseOrder}
-                        className="text-xs cursor-pointer"
-                      >
-                        <Edit />
-                        Editar
-                      </DropdownMenuItem>
-                    )}
+              <>
+                {!["CANCELADO", "RECIBIDO"].includes(
+                  row.original.status || ""
+                ) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menú</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel className="text-xs">
+                        Acciones
+                      </DropdownMenuLabel>
+                      {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                        !["CANCELADO", "EN CAMINO", "RECIBIDO"].includes(
+                          row.original.status || ""
+                        ) && (
+                          <DropdownMenuItem
+                            onClick={viewPurchaseOrder}
+                            className="text-xs cursor-pointer"
+                          >
+                            <Edit />
+                            Editar
+                          </DropdownMenuItem>
+                        )}
 
-                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
-                    ![
-                      "CANCELADO",
-                      "ENTREGADO",
-                      "EN CAMINO",
-                      "RECIBIDO",
-                    ].includes(row.original.status || "") && (
-                      <DropdownMenuItem
-                        onClick={acceptDelivery}
-                        className="text-xs cursor-pointer"
-                      >
-                        <FaTruckLoading />
-                        Recibir
-                      </DropdownMenuItem>
-                    )}
-                  {["SUPER_ADMIN", "OWNER"].includes(user?.role || "") &&
-                    ![
-                      "CANCELADO",
-                      "ENTREGADO",
-                      "EN CAMINO",
-                      "APROBADO",
-                      "RECIBIDO",
-                    ].includes(row.original.status || "") && (
-                      <DropdownMenuItem
-                        onClick={authorizeDelivery}
-                        className="text-xs cursor-pointer"
-                      >
-                        <Signature />
-                        Autorizar
-                      </DropdownMenuItem>
-                    )}
-                  <DropdownMenuSeparator />
-                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
-                    !["CANCELADO", "RECIBIDO"].includes(
-                      row.original.status || ""
-                    ) && (
-                      <DropdownMenuItem
-                        onClick={cancelPurchaseOrder}
-                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        Cancelar
-                      </DropdownMenuItem>
-                    )}
+                      {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                        !["CANCELADO", "EN CAMINO", "RECIBIDO"].includes(
+                          row.original.status || ""
+                        ) && (
+                          <DropdownMenuItem
+                            onClick={acceptDelivery}
+                            className="text-xs cursor-pointer"
+                          >
+                            <FaTruckLoading />
+                            Recibir
+                          </DropdownMenuItem>
+                        )}
+                      {["SUPER_ADMIN", "OWNER"].includes(user?.role || "") &&
+                        ![
+                          "CANCELADO",
+                          "EN CAMINO",
+                          "APROBADO",
+                          "RECIBIDO",
+                        ].includes(row.original.status || "") && (
+                          <DropdownMenuItem
+                            onClick={authorizeDelivery}
+                            className="text-xs cursor-pointer"
+                          >
+                            <Signature />
+                            Autorizar
+                          </DropdownMenuItem>
+                        )}
+                      <DropdownMenuSeparator />
+                      {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                        !["CANCELADO", "RECIBIDO"].includes(
+                          row.original.status || ""
+                        ) && (
+                          <DropdownMenuItem
+                            onClick={cancelPurchaseOrder}
+                            className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                          >
+                            <X />
+                            Cancelar
+                          </DropdownMenuItem>
+                        )}
 
-                  <DropdownMenuSeparator />
+                      <DropdownMenuSeparator />
 
-                  {["SUPER_ADMIN"].includes(user?.role || "") && (
-                    <DropdownMenuItem
-                      onClick={deletePurchaseOrder}
-                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                    >
-                      <X />
-                      Eliminar
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      {["SUPER_ADMIN"].includes(user?.role || "") && (
+                        <DropdownMenuItem
+                          onClick={deletePurchaseOrder}
+                          className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                        >
+                          <X />
+                          Eliminar
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </>
             );
           };
 
