@@ -9,7 +9,7 @@ export default function SystemLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [hidden, setHidden] = useState(true);
+  const [hidden, setHidden] = useState(false);
 
   return (
     <div className="flex ">
