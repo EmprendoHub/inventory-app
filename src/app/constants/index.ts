@@ -114,6 +114,11 @@ export const roles = [
     label: "CHOFER",
   },
   {
+    name: "ADMIN",
+    value: "ADMIN",
+    label: "ADMIN",
+  },
+  {
     name: "GERENTE",
     value: "GERENTE",
     label: "GERENTE",
