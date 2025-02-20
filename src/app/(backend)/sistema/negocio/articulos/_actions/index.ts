@@ -206,106 +206,96 @@ export async function updateItemAction(
       message: "Error al validar campos del producto",
     };
 
-  // Convert the image file to Base64
-  if (
-    rawData.image &&
-    rawData.image instanceof File &&
-    rawData.image.size > 0
-  ) {
-    // Convert the image file to ArrayBuffer
-    const arrayBuffer = await rawData.image.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+  try {
+    if (
+      rawData.image &&
+      rawData.image instanceof File &&
+      rawData.image.size > 0
+    ) {
+      // Convert the image file to ArrayBuffer
+      const arrayBuffer = await rawData.image.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-    // Optimize the image using sharp
-    const optimizedImageBuffer = await sharp(buffer)
-      .resize(800, 800, {
-        // Resize to a maximum of 800x800 pixels
-        fit: "inside", // Maintain aspect ratio
-        withoutEnlargement: true, // Don't enlarge images smaller than 800x800
-      })
-      .webp({
-        // Convert to WebP format
-        quality: 80, // Adjust quality (0-100)
-        lossless: false, // Use lossy compression for smaller file size
-      })
-      .toBuffer();
+      // Optimize the image using sharp
+      const optimizedImageBuffer = await sharp(buffer)
+        .resize(800, 800, {
+          // Resize to a maximum of 800x800 pixels
+          fit: "inside", // Maintain aspect ratio
+          withoutEnlargement: true, // Don't enlarge images smaller than 800x800
+        })
+        .webp({
+          // Convert to WebP format
+          quality: 80, // Adjust quality (0-100)
+          lossless: false, // Use lossy compression for smaller file size
+        })
+        .toBuffer();
 
-    // Generate a unique filename
-    const newFilename = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2)}.webp`;
-    const path = join("/", "tmp", newFilename);
+      // Generate a unique filename
+      const newFilename = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.webp`;
+      const path = join("/", "tmp", newFilename);
 
-    // Save the optimized image to a temporary file
-    await writeFile(path, optimizedImageBuffer);
+      // Save the optimized image to a temporary file
+      await writeFile(path, optimizedImageBuffer);
 
-    // Upload the optimized image to Minio
-    await uploadToBucket("inventario", "products/" + newFilename, path);
-    const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
-
-    try {
-      if (rawData.image) {
-        await prisma.item.update({
-          where: {
-            id: rawData.itemId,
-          },
-          data: {
-            name: rawData.name,
-            description: rawData.description,
-            categoryId: rawData.category,
-            brandId: rawData.brand,
-            unitId: rawData.unit,
-            dimensions: rawData.dimensions,
-            cost: rawData.cost,
-            price: rawData.price,
-            minStock: rawData.minStock,
-            tax: rawData.tax,
-            supplierId: rawData.supplier,
-            notes: rawData.notes,
-            mainImage: savedImageUrl,
-          },
-        });
-      } else {
-        await prisma.item.update({
-          where: {
-            id: rawData.itemId,
-          },
-          data: {
-            name: rawData.name,
-            description: rawData.description,
-            categoryId: rawData.category,
-            brandId: rawData.brand,
-            unitId: rawData.unit,
-            dimensions: rawData.dimensions,
-            cost: rawData.cost,
-            price: rawData.price,
-            minStock: rawData.minStock,
-            tax: rawData.tax,
-            supplierId: rawData.supplier,
-            notes: rawData.notes,
-          },
-        });
-      }
-      revalidatePath(`/sistemas/negocio/articulos/editar/${rawData.itemId}`);
-      return {
-        errors: {},
-        success: true,
-        message: "Articulo actualizado correctamente!",
-      };
-    } catch (error) {
-      console.error("Error al actualizar Articulo:", error);
-
-      return {
-        errors: {},
-        success: false,
-        message: "Fallo al actualizar Articulo",
-      };
+      // Upload the optimized image to Minio
+      await uploadToBucket("inventario", "products/" + newFilename, path);
+      const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
+      await prisma.item.update({
+        where: {
+          id: rawData.itemId,
+        },
+        data: {
+          name: rawData.name,
+          description: rawData.description,
+          categoryId: rawData.category,
+          brandId: rawData.brand,
+          unitId: rawData.unit,
+          dimensions: rawData.dimensions,
+          cost: rawData.cost,
+          price: rawData.price,
+          minStock: rawData.minStock,
+          tax: rawData.tax,
+          supplierId: rawData.supplier,
+          notes: rawData.notes,
+          mainImage: savedImageUrl,
+        },
+      });
+    } else {
+      await prisma.item.update({
+        where: {
+          id: rawData.itemId,
+        },
+        data: {
+          name: rawData.name,
+          description: rawData.description,
+          categoryId: rawData.category,
+          brandId: rawData.brand,
+          unitId: rawData.unit,
+          dimensions: rawData.dimensions,
+          cost: rawData.cost,
+          price: rawData.price,
+          minStock: rawData.minStock,
+          tax: rawData.tax,
+          supplierId: rawData.supplier,
+          notes: rawData.notes,
+        },
+      });
     }
-  } else {
+    revalidatePath(`/sistemas/negocio/articulos/editar/${rawData.itemId}`);
+    return {
+      errors: {},
+      success: true,
+      message: "Articulo actualizado correctamente!",
+    };
+  } catch (error) {
+    console.error("Error al actualizar Articulo:", error);
+
     return {
       errors: {},
       success: false,
-      message: "Falto una imagen!",
+      message: "Fallo al actualizar Articulo",
     };
   }
 }

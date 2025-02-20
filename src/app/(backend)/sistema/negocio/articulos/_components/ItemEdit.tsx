@@ -231,7 +231,7 @@ export default function ProductEdit({
         </div>
         <TextInput
           name="dimensions"
-          label="Dimensiones (10 x 20 x 30)"
+          label="Peso"
           state={state}
           value={formData.dimensions ?? ""}
           onChange={handleInputChange}

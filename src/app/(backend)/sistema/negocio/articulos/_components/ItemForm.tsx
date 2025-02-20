@@ -212,11 +212,7 @@ export default function ProductForm({
             state={state}
           />
         </div>
-        <TextInput
-          name="dimensions"
-          label="Dimensiones (10 x 20 x 30)"
-          state={state}
-        />
+        <TextInput name="dimensions" label="peso" state={state} />
       </div>
 
       {/* Numeric inputs */}
