@@ -104,7 +104,6 @@ export default function OrderForm({
 
     const formData = new FormData(event.currentTarget);
     const result = await createNewOrder(state, formData);
-    console.log("result*******************", result);
 
     if (!result.success) {
       await showModal({

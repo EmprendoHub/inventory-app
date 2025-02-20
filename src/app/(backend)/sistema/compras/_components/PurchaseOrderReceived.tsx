@@ -119,7 +119,6 @@ export default function PurchaseOrderReceived({
     formData.set("supplier", JSON.stringify(selectedSupplier));
 
     const result = await receivePurchaseOrderAction(state, formData);
-    console.log(result);
 
     if (result.success) {
       await showModal({

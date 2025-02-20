@@ -247,7 +247,6 @@ export async function receivePurchaseOrderAction(
       message: "Validation failed. Please check the fields.",
     };
   }
-  console.log(rawData);
 
   try {
     await prisma.$transaction(async (prisma) => {
@@ -370,7 +369,6 @@ export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
   transAmount: number;
   pOrderNo: string;
 }) => {
-  console.log(adjustmentInfo);
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.stock.update({

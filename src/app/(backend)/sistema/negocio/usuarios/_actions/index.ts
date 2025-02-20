@@ -123,8 +123,6 @@ export async function updateUserAction(
     avatar: formData.get("avatar") as File,
   };
 
-  console.log(rawData);
-
   const validatedData = UserSchema.safeParse(rawData);
 
   if (!validatedData.success) {

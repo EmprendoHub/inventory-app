@@ -22,7 +22,6 @@ export const createAdjustment = async (
     formType: formData.get("formType"),
     notes: formData.get("notes"),
   };
-  console.log(rawData);
 
   if (rawData.formType === "add") {
     const validatedData = AddInventorySchema.safeParse(rawData);
