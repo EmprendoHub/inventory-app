@@ -7,11 +7,11 @@ export async function middleware(request: any) {
   const pathname = request.nextUrl.pathname;
   let redirectUrl;
 
-  console.log("Middleware triggered for path:", pathname);
+  // console.log("Middleware triggered for path:", pathname);
 
   // Redirect to login if not authenticated
   if (!token) {
-    console.log("User not authenticated, redirecting to login");
+    // console.log("User not authenticated, redirecting to login");
     redirectUrl = new URL("/iniciar", request.url);
     redirectUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(redirectUrl);
@@ -19,10 +19,6 @@ export async function middleware(request: any) {
 
   // Check if the user's role has access to the requested route
   const userRole = token?.user?.role;
-  console.log(
-    "isRouteAllowed(userRole, pathname)",
-    isRouteAllowed(userRole, pathname)
-  );
 
   if (!isRouteAllowed(userRole, pathname)) {
     console.log("User role:", userRole);
@@ -40,7 +36,7 @@ export async function middleware(request: any) {
     }
   }
 
-  console.log("User authorized, allowing access to route:", pathname);
+  // console.log("User authorized, allowing access to route:", pathname);
   return NextResponse.next();
 }
 

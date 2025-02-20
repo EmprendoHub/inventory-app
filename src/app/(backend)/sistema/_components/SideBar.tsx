@@ -54,7 +54,7 @@ export default function SideBar({
   return (
     <aside
       className={` duration-300 ease-in-out min-h-screen bg-slate-800  text-slate-50 flex flex-col justify-between fixed ${
-        hidden ? "w-10" : "w-52"
+        hidden ? "w-10" : "w-46"
       }`}
     >
       {/* Top */}
@@ -446,7 +446,7 @@ export default function SideBar({
               <Link
                 className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
                 ${
-                  path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
+                  path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/contabilidad/gastos"}
               >

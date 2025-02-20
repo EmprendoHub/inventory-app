@@ -17,7 +17,7 @@ export default function SystemLayout({
         <SideBar setHidden={setHidden} hidden={hidden} />
         <main
           className={` w-full bg-background min-h-screen ${
-            hidden ? "ml-10" : "ml-52"
+            hidden ? "ml-10" : "ml-46"
           } duration-300 ease-in-out`}
         >
           <SystemHeader />
