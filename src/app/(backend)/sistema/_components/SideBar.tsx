@@ -259,7 +259,7 @@ export default function SideBar({
                 </Link>
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 adminpr-4"
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                   } ${
                     path === "/sistema/negocio/usuarios" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}

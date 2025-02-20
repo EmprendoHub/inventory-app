@@ -115,7 +115,7 @@ export default function UserForm({ roles }: UserGroupType) {
           </div>
           <div
             {...getUserRootProps()}
-            className={`relative overflow-hidden flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-96 mb-5 ${
+            className={`relative overflow-hidden flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-auto mb-5 ${
               isUserDragActive
                 ? "border-blue-500 bg-blue-50"
                 : "border-gray-300 bg-gray-50"
