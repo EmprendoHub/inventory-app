@@ -20,13 +20,13 @@ export default async function CashRegisterDetailsPage({
   });
 
   if (!cashRegister) {
-    return <div>No se encontró cartera</div>;
+    return <div>No se encontró expediente...</div>;
   }
 
   return (
     <div className="p-4">
-      <div className="p-4 flex items-end justify-between w-full">
-        <div className="flex flex-col items-start w-fit gap-3 bg-card p-4 rounded-md">
+      <div className="p-4 flex items-end justify-between w-full bg-card rounded-md">
+        <div className="flex flex-col items-start w-fit gap-3  p-4 ">
           <h1 className="text-2xl font-bold mb-4 uppercase">
             {cashRegister.name}
           </h1>

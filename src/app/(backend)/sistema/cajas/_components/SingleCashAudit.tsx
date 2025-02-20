@@ -56,7 +56,7 @@ export default function SingleCashAuditForm({
         supervisorCodeResult.data?.code
       );
 
-      if (isAuthorized.success && user.role === "MANAGER") {
+      if (isAuthorized.success && user.role === "GERENTE") {
         formData.set("managerId", isAuthorized.authUserId.toString());
         formData.set("register", JSON.stringify(selectedRegister));
         formData.set(
@@ -92,9 +92,9 @@ export default function SingleCashAuditForm({
 
         if (result.success) {
           await showModal({
-            title: "Corte de Caja completado!",
+            title: "Entrega de Efectivo completado!",
             type: "delete",
-            text: "El corte de caja ha sido completado exitosamente.",
+            text: "Entrega de Efectivo ha sido completado exitosamente.",
             icon: "success",
           });
           const formElement = document.getElementById(
@@ -112,29 +112,33 @@ export default function SingleCashAuditForm({
   };
 
   return (
-    <>
+    <div className="flex flex-col items-end">
       {!hidden && (
         <form
           id="single-audit-register-form"
           onSubmit={handleAuditSubmit}
-          className="flex-1 p-3 bg-card rounded-lg shadow-md"
+          className="flex-1 "
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault(); // Prevent form submission
             }
           }}
         >
-          <NumericInput label="Se recibe" name="endBalance" state={state} />
+          <NumericInput
+            label="Cantidad que se recibe"
+            name="endBalance"
+            state={state}
+          />
 
           <input type="hidden" name="auditDate" value={formattedDate} />
 
           <button
             type="submit"
             disabled={sending}
-            className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-900 mt-5`}
+            className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-xs font-medium rounded-md text-white bg-emerald-700 hover:bg-emerald-900 mt-5 w-full`}
           >
             {sending && <span className="loader"></span>}
-            Crear Corte de Caja
+            {user?.role === "CHOFER" ? "ENTREGAR EFECTIVO" : "REALIZAR CORTE"}
           </button>
           {state.message && (
             <p className="text-sm text-gray-600">{state.message}</p>
@@ -147,8 +151,10 @@ export default function SingleCashAuditForm({
         className={`flex items-center gap-2 bg-purple-800 text-white text-xs px-6 py-1 rounded-md mt-2`}
       >
         <BanknoteIcon size={16} />
-        <span className={`text-xs `}>CORTE DE CAJA</span>
+        <span className={`text-xs `}>
+          {user?.role === "CHOFER" ? "ENTREGAR EFECTIVO" : "CORTE DE CAJA"}
+        </span>
       </button>
-    </>
+    </div>
   );
 }
