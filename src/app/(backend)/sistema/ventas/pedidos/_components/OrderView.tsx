@@ -378,16 +378,17 @@ export default function OrderView({ order }: { order: FullOderType }) {
                   {sending && <span className="loader"></span>}
                 </Button>
               )}
-            {order.status !== "CANCELADO" && !isOrderPaid && (
-              <Button
-                disabled={sending}
-                onClick={() => receivePayment(order.id)}
-                className=" text-center bg-purple-700 text-white text-xs rounded-md "
-              >
-                <BsEnvelopeArrowUp /> Recibir Pago{" "}
-                {sending && <span className="loader"></span>}
-              </Button>
-            )}
+            {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
+              !isOrderPaid && (
+                <Button
+                  disabled={sending}
+                  onClick={() => receivePayment(order.id)}
+                  className=" text-center bg-purple-700 text-white text-xs rounded-md "
+                >
+                  <BsEnvelopeArrowUp /> Recibir Pago{" "}
+                  {sending && <span className="loader"></span>}
+                </Button>
+              )}
           </div>
         </div>
       </div>
@@ -398,7 +399,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
           <TableRow>
             <TableHead className="">img</TableHead>
             <TableHead>Articulo</TableHead>
-            <TableHead>Cntd.</TableHead>
+            <TableHead>Cnt.</TableHead>
             <TableHead className="maxsm:hidden">Precio unitario</TableHead>
             <TableHead>Total</TableHead>
             <TableHead></TableHead>
@@ -442,7 +443,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                   maximumFractionDigits: 2,
                 })}
               </TableCell>
-              {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(user?.role || "") &&
+              {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
                 item.id &&
                 order.status !== "CANCELADO" && (
                   <TableCell>
@@ -551,9 +552,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     {item.reference}
                   </TableCell>
                   <TableCell>{item.status}</TableCell>
-                  {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(
-                    user?.role || ""
-                  ) &&
+                  {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
                     item.id &&
                     order.status !== "CANCELADO" && (
                       <TableCell>
