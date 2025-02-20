@@ -1,7 +1,6 @@
 import prisma from "@/lib/db";
 import { CashTransactionList } from "../../_components/CashTransactionList";
-import Link from "next/link";
-import { BanknoteIcon } from "lucide-react";
+import SingleCashAuditForm from "../../_components/SingleCashAudit";
 
 export default async function CashRegisterDetailsPage({
   params,
@@ -39,13 +38,9 @@ export default async function CashRegisterDetailsPage({
             </span>
           </div>
         </div>
-        <Link
-          className={`flex items-center gap-2 bg-purple-800 text-white text-xs px-6 py-1 rounded-md`}
-          href={"/sistema/cajas/auditoria/nueva"}
-        >
-          <BanknoteIcon size={16} />
-          <span className={`text-xs `}>CORTE DE CAJA</span>
-        </Link>
+        <div>
+          <SingleCashAuditForm cashRegister={cashRegister} />
+        </div>
       </div>
       <CashTransactionList transactions={cashRegister.transactions} />
     </div>

@@ -13,16 +13,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
+import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,12 +30,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { useModal } from "@/app/context/ModalContext";
-import { useRouter } from "next/navigation";
-import { verifySupervisorCode } from "@/app/_actions";
-import { useSession } from "next-auth/react";
-import { UserType } from "@/types/users";
-import { deleteOrderAction } from "../../ventas/pedidos/_actions";
 import { CashTransactionResponse } from "@/types/accounting";
 
 export function CashTransactionList({
@@ -47,9 +37,6 @@ export function CashTransactionList({
 }: {
   transactions: CashTransactionResponse[];
 }) {
-  const { data: session } = useSession();
-  const user = session?.user as UserType;
-  const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -147,107 +134,109 @@ export function CashTransactionList({
       {
         id: "actions",
         enableHiding: false,
-        cell: ({ row }) => {
+        cell: ({}) => {
           const ActionCell = () => {
-            const { showModal } = useModal();
+            // const { showModal } = useModal();
 
-            const deleteOrder = React.useCallback(async () => {
-              // First, prompt for supervisor code
-              const supervisorCodeResult = await showModal({
-                title: "Verificación de Supervisor",
-                type: "supervisorCode",
-                text: "Por favor, ingrese el código de supervisor para continuar.",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Verificar",
-                cancelButtonText: "Cancelar",
-              });
-              if (supervisorCodeResult.confirmed) {
-                const isAuthorized = await verifySupervisorCode(
-                  supervisorCodeResult.data?.code
-                );
+            // const deleteOrder = React.useCallback(async () => {
+            //   // First, prompt for supervisor code
+            //   const supervisorCodeResult = await showModal({
+            //     title: "Verificación de Supervisor",
+            //     type: "supervisorCode",
+            //     text: "Por favor, ingrese el código de supervisor para continuar.",
+            //     icon: "warning",
+            //     showCancelButton: true,
+            //     confirmButtonText: "Verificar",
+            //     cancelButtonText: "Cancelar",
+            //   });
+            //   if (supervisorCodeResult.confirmed) {
+            //     const isAuthorized = await verifySupervisorCode(
+            //       supervisorCodeResult.data?.code
+            //     );
 
-                if (isAuthorized.success) {
-                  const result = await showModal({
-                    title: "¿Estás seguro?, ¡No podrás revertir esto!",
-                    type: "delete",
-                    text: "Al cancelara este pedido se cancelara cualquier pago asociado.",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Sí, cancelar",
-                    cancelButtonText: "Cancelar",
-                  });
+            //     if (isAuthorized.success) {
+            //       const result = await showModal({
+            //         title: "¿Estás seguro?, ¡No podrás revertir esto!",
+            //         type: "delete",
+            //         text: "Al cancelara este pedido se cancelara cualquier pago asociado.",
+            //         icon: "warning",
+            //         showCancelButton: true,
+            //         confirmButtonText: "Sí, cancelar",
+            //         cancelButtonText: "Cancelar",
+            //       });
 
-                  if (result.confirmed) {
-                    try {
-                      const formData = new FormData();
-                      formData.set("id", row.original.id);
-                      formData.set("userId", user.id);
-                      const response = await deleteOrderAction(formData);
-                      if (!response.success)
-                        throw new Error("Error al cancelado");
-                      await showModal({
-                        title: "¡Cancelado!",
-                        type: "delete",
-                        text: "El pedido ha sido cancelado.",
-                        icon: "success",
-                      });
-                    } catch (error) {
-                      console.log("error from modal", error);
+            //       if (result.confirmed) {
+            //         try {
+            //           const formData = new FormData();
+            //           formData.set("id", row.original.id);
+            //           formData.set("userId", user.id);
+            //           const response = await deleteOrderAction(formData);
+            //           if (!response.success)
+            //             throw new Error("Error al cancelado");
+            //           await showModal({
+            //             title: "¡Cancelado!",
+            //             type: "delete",
+            //             text: "El pedido ha sido cancelado.",
+            //             icon: "success",
+            //           });
+            //         } catch (error) {
+            //           console.log("error from modal", error);
 
-                      await showModal({
-                        title: "Error",
-                        type: "delete",
-                        text: "No se pudo cancelado el pedido",
-                        icon: "error",
-                      });
-                    }
-                  }
-                } else {
-                  await showModal({
-                    title: "Código no autorizado",
-                    type: "delete",
-                    text: "El código de supervisor no es válido.",
-                    icon: "error",
-                  });
-                }
-              }
-            }, [showModal]);
+            //           await showModal({
+            //             title: "Error",
+            //             type: "delete",
+            //             text: "No se pudo cancelado el pedido",
+            //             icon: "error",
+            //           });
+            //         }
+            //       }
+            //     } else {
+            //       await showModal({
+            //         title: "Código no autorizado",
+            //         type: "delete",
+            //         text: "El código de supervisor no es válido.",
+            //         icon: "error",
+            //       });
+            //     }
+            //   }
+            // }, [showModal]);
 
-            const viewOrder = React.useCallback(async () => {
-              router.push(`/sistema/ventas/pedidos/${row.original.id}`);
-            }, []);
+            // const viewOrder = React.useCallback(async () => {
+            //   router.push(`/sistema/ventas/pedidos/${row.original.id}`);
+            // }, []);
             return (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menú</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel className="text-xs">
-                    Acciones
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={viewOrder}
-                    className="text-xs cursor-pointer"
-                  >
-                    <Eye />
-                    Ver detalles
-                  </DropdownMenuItem>
-                  <>
-                    <DropdownMenuSeparator />
+              <>
+                {/* <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Abrir menú</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel className="text-xs">
+                      Acciones
+                    </DropdownMenuLabel>
                     <DropdownMenuItem
-                      onClick={deleteOrder}
-                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      onClick={viewOrder}
+                      className="text-xs cursor-pointer"
                     >
-                      <X />
-                      Cancelar
+                      <Eye />
+                      Ver detalles
                     </DropdownMenuItem>
-                  </>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteOrder}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Cancelar
+                      </DropdownMenuItem>
+                    </>
+                  </DropdownMenuContent>
+                </DropdownMenu> */}
+              </>
             );
           };
 
@@ -283,9 +272,11 @@ export function CashTransactionList({
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtrar..."
-          value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn("description")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("id")?.setFilterValue(event.target.value)
+            table.getColumn("description")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

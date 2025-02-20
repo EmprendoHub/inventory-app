@@ -164,19 +164,19 @@ export const createCashAuditAction = async (
         },
       });
 
+      const managerUser = await prisma.user.findFirst({
+        where: {
+          id: rawData.managerId,
+        },
+      });
+
       await prisma.cashTransaction.create({
         data: {
           type: "RETIRO",
           amount: Math.round(rawData.endBalance),
-          description: "CORTE DE CAJA",
+          description: `CORTE DE CAJA (${updatedRegister.name}) RETIRADO POR: (${managerUser?.name})`,
           cashRegisterId: updatedRegister.id,
           userId: rawData.managerId,
-        },
-      });
-
-      const managerUser = await prisma.user.findFirst({
-        where: {
-          id: rawData.managerId,
         },
       });
 
@@ -191,7 +191,7 @@ export const createCashAuditAction = async (
           type: "DEPOSITO",
           date: new Date(),
           amount: Math.round(rawData.endBalance),
-          description: `CORTE DE CAJA (${updatedRegister.name}) RETIRADO POR: (${managerUser?.name})`,
+          description: `CORTE DE CAJA (${updatedRegister.name}) DEPOSITADO POR: (${managerUser?.name})`,
           registerId: updatedRegister.id,
           accountId: account?.id || "",
         },
@@ -210,6 +210,112 @@ export const createCashAuditAction = async (
     revalidatePath("/sistema/contabilidad/cuentas");
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/cajas/auditoria");
+    return {
+      errors: {},
+      success: true,
+      message: "Cash Audit created successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating cash audit:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Error al crear auditoría de caja.",
+    };
+  }
+};
+
+export const createCashHandoffAction = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+): Promise<{
+  success: boolean;
+  message: string;
+  errors: Record<string, string[]>;
+}> => {
+  const rawData = {
+    managerId: formData.get("managerId") as string,
+    register: formData.get("register") as string,
+    startBalance: parseFloat(formData.get("startBalance") as string),
+    endBalance: parseFloat(formData.get("endBalance") as string),
+    auditDate: formData.get("auditDate") as string,
+  };
+
+  const register = JSON.parse(rawData.register);
+
+  if (
+    !register.id ||
+    !rawData.endBalance ||
+    !rawData.auditDate ||
+    !rawData.managerId
+  ) {
+    return {
+      errors: {},
+      success: false,
+      message: "Missing required fields.",
+    };
+  }
+  const session = await getServerSession(options);
+  const user = session?.user;
+  const manager = await prisma.user.findFirst({
+    where: {
+      id: rawData.managerId,
+    },
+  });
+  try {
+    await prisma.$transaction(async (prisma) => {
+      const driverRegister = await prisma.cashRegister.update({
+        where: { userId: user?.id || "" },
+        data: {
+          balance: {
+            decrement: rawData.endBalance, // deducts cash withdraw to the current balance
+          },
+        },
+      });
+
+      const branchRegister = await prisma.cashRegister.update({
+        where: { userId: manager?.id },
+        data: {
+          balance: {
+            increment: rawData.endBalance, // adds cash withdraw to the current balance
+          },
+        },
+      });
+
+      await prisma.user.findFirst({
+        where: {
+          id: rawData.managerId,
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "RETIRO",
+          amount: Math.round(rawData.endBalance),
+          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager?.name})`,
+          cashRegisterId: driverRegister.id,
+          userId: user?.id,
+        },
+      });
+      await prisma.cashTransaction.create({
+        data: {
+          type: "DEPOSITO",
+          amount: Math.round(rawData.endBalance),
+          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager?.name})`,
+          cashRegisterId: branchRegister.id,
+          userId: manager?.id,
+        },
+      });
+    });
+    revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/auditoria");
+    revalidatePath(`/sistema/cajas/personal/${user?.id}`);
+    revalidatePath(`/sistema/cajas/personal/${manager?.id}`);
     return {
       errors: {},
       success: true,
