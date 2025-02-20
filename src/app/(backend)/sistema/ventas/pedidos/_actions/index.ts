@@ -148,7 +148,7 @@ export async function createNewOrder(
                 }
 
                 const newAvailableQty =
-                  stock.availableQty - groupOrderItem.quantity;
+                  stock.quantity - groupOrderItem.quantity;
 
                 if (newAvailableQty < 0) {
                   const shortageAmount = Math.abs(newAvailableQty);
@@ -162,6 +162,7 @@ export async function createNewOrder(
                   prisma.stock.update({
                     where: { id: stock.id },
                     data: {
+                      quantity: newAvailableQty,
                       availableQty: newAvailableQty,
                       reservedQty: stock.reservedQty + groupOrderItem.quantity,
                     },
@@ -191,7 +192,7 @@ export async function createNewOrder(
               throw new Error(`Stock not found for item ${orderItem.id}`);
             }
 
-            const newAvailableQty = stock.availableQty - orderItem.quantity;
+            const newAvailableQty = stock.quantity - orderItem.quantity;
 
             if (newAvailableQty < 0) {
               const shortageAmount = Math.abs(newAvailableQty);
@@ -204,6 +205,7 @@ export async function createNewOrder(
               prisma.stock.update({
                 where: { id: stock.id },
                 data: {
+                  quantity: newAvailableQty,
                   availableQty: newAvailableQty,
                   reservedQty: stock.reservedQty + orderItem.quantity,
                 },
