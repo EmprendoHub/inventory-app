@@ -69,7 +69,9 @@ const SystemHeader = () => {
                   onClick={toggleMenu}
                 >
                   <Image
-                    src={session?.user?.image || "/images/avatar.jpg"}
+                    src={
+                      session?.user?.image || "/images/avatar_placeholder.jpg"
+                    }
                     width={30}
                     height={30}
                     className="rounded-full"
@@ -100,7 +102,7 @@ const SystemHeader = () => {
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-2">
                 <Image
-                  src={session?.user?.image || "/images/avatar.jpg"}
+                  src={session?.user?.image || "/images/avatar_placeholder.jpg"}
                   width={40}
                   height={40}
                   className="rounded-full"
