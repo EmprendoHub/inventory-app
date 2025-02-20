@@ -40,8 +40,12 @@ import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
 import { deleteBrandAction } from "../_actions";
+import { UserType } from "@/types/users";
+import { useSession } from "next-auth/react";
 
 export function BrandList({ brands }: { brands: brandType[] }) {
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -90,7 +94,7 @@ export function BrandList({ brands }: { brands: brandType[] }) {
           const ActionCell = () => {
             const { showModal } = useModal();
 
-            const deleteItem = React.useCallback(async () => {
+            const deleteBrand = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
                 title: "Verificación de Supervisor",
@@ -179,13 +183,19 @@ export function BrandList({ brands }: { brands: brandType[] }) {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteItem}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteBrand}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

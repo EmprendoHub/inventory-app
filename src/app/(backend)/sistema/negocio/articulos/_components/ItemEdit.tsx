@@ -37,8 +37,8 @@ export default function ProductEdit({
     id: item?.id,
     name: item?.name,
     description: item?.description,
-    sku: item?.sku,
-    barcode: item?.barcode,
+    // sku: item?.sku,
+    // barcode: item?.barcode,
     dimensions: item?.dimensions,
     price: item?.price,
     cost: item?.cost,
@@ -238,7 +238,7 @@ export default function ProductEdit({
         />
       </div>
 
-      <div className="flex maxsm:flex-col gap-3">
+      {/* <div className="flex maxsm:flex-col gap-3">
         <TextInput
           value={formData.sku}
           onChange={handleInputChange}
@@ -253,7 +253,7 @@ export default function ProductEdit({
           label="Código de Barras"
           state={state}
         />
-      </div>
+      </div> */}
 
       {/* Numeric inputs */}
       <div className="flex maxsm:flex-col gap-3">

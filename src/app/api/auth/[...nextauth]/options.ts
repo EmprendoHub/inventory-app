@@ -197,35 +197,21 @@ export const options = {
             throw new Error("User not found");
           }
 
-          const currentUser = {
-            avatar: user.image,
+          token.user = {
             id: existinguser.id,
             name: user.name,
             email: user.email,
-            phone: user.phone,
             role: existinguser.role,
-            createdAt: existinguser.createdAt,
-            updatedAt: existinguser.updatedAt,
-            accessToken: account.access_token,
           };
-
-          token.accessToken = account.access_token;
-          token.id = currentUser.id;
-          token.user = currentUser;
         }
-      } else {
+      } else if (account?.provider == "credentials") {
         if (user) {
-          token.accessToken = user.accessToken;
-          token.id = user.id;
-          token.user = user;
-
-          const updatedUser = await prisma.user.findUnique({
-            where: {
-              id: token.user.id,
-            },
-          });
-
-          token.user = updatedUser;
+          token.user = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          };
         }
       }
 
@@ -233,13 +219,12 @@ export const options = {
     },
     async session({ session, token }: { session: any; token: any }) {
       if (token) {
-        session.user.id = token.user.id;
-        session.user.accessToken = token.accessToken;
-        session.user.createdAt = token.user.createdAt;
-        session.user.role = token.user.role;
-        session.user.image = token.user.avatar;
-        session.user.phone = token.user.phone;
-        session.user.stripeId = token.user.stripe_id || token.user.stripeId;
+        session.user = {
+          id: token.user.id,
+          name: token.user.name,
+          email: token.user.email,
+          role: token.user.role,
+        };
       }
       return session;
     },

@@ -1,85 +1,51 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-
-// Define protected paths that require specific roles
-const PROTECTED_PATHS = [
-  "/sistema/compras", // Protect the entire /sistema/compras/* path
-  "/sistema/negocio", // Protect the entire /sistema/compras/* path
-  "/sistema/contabilidad/transacciones",
-  "/sistema/contabilidad/cuentas",
-];
+import { isRouteAllowed } from "./lib/utils";
 
 export async function middleware(request: any) {
   const token: any = await getToken({ req: request });
-  request.nextauth = request.nextauth || {};
-  request.nextauth.token = token;
   const pathname = request.nextUrl.pathname;
-  let signInUrl;
+  let redirectUrl;
 
-  // Check if user is authenticated and redirect to sistema/home if accessing public routes
-  if (token?.user) {
-    if (!pathname.includes("sistema") && !pathname.includes("admin")) {
-      signInUrl = new URL("/sistema/home", request.url);
-      return NextResponse.redirect(signInUrl);
-    }
+  console.log("Middleware triggered for path:", pathname);
+
+  // Redirect to login if not authenticated
+  if (!token) {
+    console.log("User not authenticated, redirecting to login");
+    redirectUrl = new URL("/iniciar", request.url);
+    redirectUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
-  // Handle protected sistema routes
-  if (pathname.includes("sistema")) {
-    // Redirect to login if not authenticated
-    if (!token) {
-      signInUrl = new URL("/api/auth/signin", request.url);
-      signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
-    }
+  // Check if the user's role has access to the requested route
+  const userRole = token?.user?.role;
+  console.log(
+    "isRouteAllowed(userRole, pathname)",
+    isRouteAllowed(userRole, pathname)
+  );
 
-    // Check if the path ends with "editar", "nueva", or "nuevo"
-    // const isDynamicProtectedPath =
-    //   pathname.endsWith("editar") ||
-    //   pathname.endsWith("nueva") ||
-    //   pathname.endsWith("nuevo");
+  if (!isRouteAllowed(userRole, pathname)) {
+    console.log("User role:", userRole);
+    console.log("Requested path:", pathname);
 
-    // Check if the path matches any of the protected paths or their subpaths
-    const isStaticProtectedPath = PROTECTED_PATHS.some((path) =>
-      pathname.startsWith(path)
-    );
-
-    // If the path is protected (dynamic or static), enforce role-based access
-    if (isStaticProtectedPath) {
-      // Only allow SUPER_ADMIN and ADMIN roles for protected paths
-      if (
-        token?.user?.role !== "SUPER_ADMIN" &&
-        token?.user?.role !== "ADMIN"
-      ) {
-        signInUrl = new URL("/no-autorizado", request.url);
-        return NextResponse.redirect(signInUrl);
-      }
+    // Redirect to a default route if the user is authenticated but not authorized
+    if (pathname !== "/sistema/home") {
+      // If the user is already on /no-autorizado, redirect them to a default route (e.g., /sistema/home)
+      redirectUrl = new URL("/sistema/home", request.url);
+      return NextResponse.redirect(redirectUrl);
     } else {
-      // For non-protected sistema paths, allow SUPER_ADMIN, ADMIN, and GERENTE
-      if (
-        token?.user?.role !== "SUPER_ADMIN" &&
-        token?.user?.role !== "ADMIN" &&
-        token?.user?.role !== "CHOFER" &&
-        token?.user?.role !== "GERENTE"
-      ) {
-        signInUrl = new URL("/no-autorizado", request.url);
-        return NextResponse.redirect(signInUrl);
-      }
+      // If the user is already on /no-autorizado, redirect them to a default route (e.g., /sistema/home)
+      redirectUrl = new URL("/sistema/home", request.url);
+      return NextResponse.redirect(redirectUrl);
     }
   }
 
-  // Handle perfil routes
-  if (pathname.includes("perfil")) {
-    if (!token) {
-      signInUrl = new URL("/api/auth/signin", request.url);
-      signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
-    }
-  }
+  console.log("User authorized, allowing access to route:", pathname);
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|images|icons|logos|covers).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|images|icons|logos|covers|iniciar|error|no-autorizado).*)",
   ],
 };

@@ -6,6 +6,7 @@ import SelectInput from "@/components/SelectInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { MinusCircle, PlusCircle } from "lucide-react";
+import { StockMovement } from "@/types/accounting";
 
 type AdjustType = {
   items: {
@@ -24,9 +25,14 @@ type AdjustType = {
     image?: string;
   }[];
   warehouses: { id: string; title: string; description?: string }[];
+  stockMovements: StockMovement[];
 };
 
-export default function AdjustmentForm({ items, warehouses }: AdjustType) {
+export default function AdjustmentForm({
+  items,
+  warehouses,
+  stockMovements,
+}: AdjustType) {
   const [state, formAction] = useFormState(createAdjustment, {
     errors: {},
     success: false,
@@ -68,9 +74,9 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
       </ul>
 
       {formType === "add" ? (
-        <form className="space-y-4">
+        <form action={formAction} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
-          <div className="flex gap-3 items-center">
+          <div className="flex maxsm:flex-col gap-3 items-start">
             <div className="flex flex-col gap-3 w-full">
               <SelectInput
                 className="w-full"
@@ -92,25 +98,23 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
               <NumericInput name="transAmount" label="Cantidad" state={state} />
             </div>
 
-            <div className="w-full flex flex-col gap-3 items-start justify-start h-full">
-              <SelectInput
-                className="w-full"
-                name="sendingWarehouse"
-                label="Bodega"
-                options={warehouses.map(
-                  (warehouse: {
-                    id: string;
-                    title: string;
-                    description?: string;
-                  }) => ({
-                    value: warehouse.id,
-                    name: warehouse.title,
-                    description: warehouse.description || "",
-                  })
-                )}
-                state={state}
-              />
-            </div>
+            <SelectInput
+              className="w-full"
+              name="sendingWarehouse"
+              label="Bodega"
+              options={warehouses.map(
+                (warehouse: {
+                  id: string;
+                  title: string;
+                  description?: string;
+                }) => ({
+                  value: warehouse.id,
+                  name: warehouse.title,
+                  description: warehouse.description || "",
+                })
+              )}
+              state={state}
+            />
           </div>
 
           <TextAreaInput state={state} name="notes" label="Notas de Ajuste" />
@@ -219,6 +223,17 @@ export default function AdjustmentForm({ items, warehouses }: AdjustType) {
           )}
         </form>
       )}
+
+      {stockMovements &&
+        stockMovements.map((stock) => {
+          return (
+            <div key={stock.id}>
+              {stock.id}
+
+              {stock.quantity}
+            </div>
+          );
+        })}
     </div>
   );
 }

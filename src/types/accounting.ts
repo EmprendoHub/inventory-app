@@ -1,5 +1,7 @@
 // types/accounting.ts
 
+import { MovementStatus, MovementType } from "@prisma/client";
+
 export type AccountGroupType = {
   accounts: { id: string; code: string; name: string; type: string }[];
   account?: AccountOneType;
@@ -39,7 +41,7 @@ export type CashRegisterResponse = {
 };
 
 export type CashTransactionFormData = {
-  type: "DEPOSIT" | "WITHDRAWAL";
+  type: "DEPOSITO" | "RETIRO";
   amount: number;
   description?: string;
   cashRegisterId: string;
@@ -47,7 +49,7 @@ export type CashTransactionFormData = {
 
 export type CashTransactionResponse = {
   id: string;
-  type: "DEPOSIT" | "WITHDRAWAL";
+  type: "DEPOSITO" | "RETIRO";
   amount: number;
   description: string | null;
   cashRegisterId: string;
@@ -73,4 +75,18 @@ export type CashAuditResponse = {
   updatedAt: Date;
   managerId: string | null;
   userId: string | null;
+};
+
+export type StockMovement = {
+  id: string;
+  itemId: string;
+  type: MovementType;
+  quantity: number;
+  fromWarehouseId?: string | null;
+  toWarehouseId?: string | null;
+  reference?: string | null;
+  reason?: string | null;
+  status: MovementStatus;
+  createdBy: string;
+  approvedBy?: string | null;
 };

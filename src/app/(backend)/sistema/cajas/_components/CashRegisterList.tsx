@@ -155,6 +155,10 @@ export function CashRegisterList({
                   if (result.confirmed) {
                     try {
                       const formData = new FormData();
+                      formData.set(
+                        "managerId",
+                        isAuthorized.authUserId.toString()
+                      );
                       formData.set("id", row.original.id);
                       formData.set("userId", user.id);
                       const response = await deleteCashRegisterAction(formData);

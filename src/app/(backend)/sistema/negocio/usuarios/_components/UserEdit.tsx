@@ -28,6 +28,7 @@ export default function UserEdit({ roles, user }: UserGroupType) {
     id: user?.id,
     name: user?.name,
     email: user?.email,
+    authCode: user?.authCode,
     phone: user?.phone,
     password: user?.password,
     role: user?.role,
@@ -72,7 +73,7 @@ export default function UserEdit({ roles, user }: UserGroupType) {
         text: "El usuario ha sido actualizado exitosamente.",
         icon: "success",
       });
-      router.push("/sistema/admin/usuarios");
+      router.push("/sistema/negocio/usuarios");
       setSending((prev) => !prev);
     }
   };
@@ -159,6 +160,13 @@ export default function UserEdit({ roles, user }: UserGroupType) {
             onChange={handleInputChange}
             name="phone"
             label="Teléfono"
+            state={state}
+          />
+          <TextInput
+            onChange={handleInputChange}
+            value={formData.authCode ?? ""}
+            name="authCode"
+            label="Código de supervisor"
             state={state}
           />
           <PasswordInput

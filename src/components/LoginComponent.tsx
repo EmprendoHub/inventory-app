@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { IoLogoGoogle } from "react-icons/io";
+// import { IoLogoGoogle } from "react-icons/io";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import Image from "next/image";
 
@@ -88,7 +88,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
             Iniciar Session
           </h2>
 
-          <button
+          {/* <button
             className="w-auto px-8 hover:text-foreground rounded-md text-white hover:bg-slate-300 duration-500 ease-in-out text-xs bg-black mb-4 flex flex-row gap-4 items-center py-4 justify-center"
             onClick={() => {
               signIn("google");
@@ -96,7 +96,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
           >
             <IoLogoGoogle />
             Iniciar con Google
-          </button>
+          </button> */}
           <div className="text-center text-slate-900 mb-2 ">- o -</div>
           <form
             className="flex flex-col justify-center items-center text-center gap-y-4"

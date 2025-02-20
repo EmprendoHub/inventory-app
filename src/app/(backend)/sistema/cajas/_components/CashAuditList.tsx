@@ -184,14 +184,19 @@ export function CashAuditList({ audits }: { audits: CashAuditResponse[] }) {
                     Acciones
                   </DropdownMenuLabel>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteAudit}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Cancelar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        onClick={deleteAudit}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

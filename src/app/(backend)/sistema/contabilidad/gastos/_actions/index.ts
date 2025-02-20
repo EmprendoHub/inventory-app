@@ -37,29 +37,41 @@ export const createExpenseAction = async (
   const truck = JSON.parse(rawData.truck);
   const supplier = JSON.parse(rawData.supplier);
   try {
-    await prisma.expense.create({
-      data: {
-        type: rawData.type as ExpenseType,
-        amount: rawData.amount,
-        description: rawData.description as string,
-        reference: rawData.reference as string,
-        status: rawData.status as ExpenseStatus,
-        paymentDate: rawData.paymentDate
-          ? new Date(rawData.paymentDate as string)
-          : undefined,
-        driverId: driver && (driver.id as string),
-        truckId: truck && (truck.id as string),
-        supplierId: supplier && (supplier.id as string),
-      },
-    });
-
-    await prisma.cashRegister.update({
-      where: { userId: user.id || "" },
-      data: {
-        balance: {
-          decrement: rawData.amount, // deducts cash withdraw to the current balance
+    await prisma.$transaction(async (prisma) => {
+      await prisma.expense.create({
+        data: {
+          type: rawData.type as ExpenseType,
+          amount: rawData.amount,
+          description: rawData.description as string,
+          reference: rawData.reference as string,
+          status: rawData.status as ExpenseStatus,
+          paymentDate: rawData.paymentDate
+            ? new Date(rawData.paymentDate as string)
+            : undefined,
+          driverId: driver && (driver.id as string),
+          truckId: truck && (truck.id as string),
+          supplierId: supplier && (supplier.id as string),
         },
-      },
+      });
+
+      const updatedRegister = await prisma.cashRegister.update({
+        where: { userId: user.id || "" },
+        data: {
+          balance: {
+            decrement: rawData.amount, // deducts cash withdraw to the current balance
+          },
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "RETIRO",
+          amount: Number(rawData.amount),
+          description: `GASTO ${rawData.type}: ${rawData.description}`,
+          cashRegisterId: updatedRegister.id,
+          userId: user.id,
+        },
+      });
     });
 
     revalidatePath("/sistema/cajas");

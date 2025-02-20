@@ -62,7 +62,7 @@ export default async function ListUsers() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <SalesHeader title={"Envíos"} link={`envios/nuevo`} role={user.role} />
+      <SalesHeader title={"Envíos"} link={`envios/nuevo`} />
       <DeliveryList deliveries={deliveries} />
     </div>
   );

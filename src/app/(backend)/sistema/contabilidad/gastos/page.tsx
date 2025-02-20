@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { ExpenseList } from "./_components/ExpenseList";
 import { ExpenseType } from "@/types/expenses";
-import BusinessHeader from "../../_components/BusinessHeader";
+import SalesHeader from "../../ventas/_components/SalesHeader";
 
 export default async function ListTrucks() {
   const session = await getServerSession(options);
@@ -33,7 +33,7 @@ export default async function ListTrucks() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <BusinessHeader
+      <SalesHeader
         title={"Gastos"}
         link={`contabilidad/gastos/nuevo`}
         btn="Nuevo"

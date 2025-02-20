@@ -1,5 +1,7 @@
 import prisma from "@/lib/db";
 import { CashTransactionList } from "../../_components/CashTransactionList";
+import Link from "next/link";
+import { BanknoteIcon } from "lucide-react";
 
 export default async function CashRegisterDetailsPage({
   params,
@@ -8,7 +10,14 @@ export default async function CashRegisterDetailsPage({
 }) {
   const cashRegister = await prisma.cashRegister.findUnique({
     where: { userId: params.id },
-    include: { transactions: true },
+    include: {
+      transactions: {
+        orderBy: {
+          createdAt: "desc", // Latest product
+        },
+      },
+      user: true,
+    },
   });
 
   if (!cashRegister) {
@@ -17,8 +26,27 @@ export default async function CashRegisterDetailsPage({
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">{cashRegister.name}</h1>
-      <p className="mb-4">Balance: ${cashRegister.balance}</p>
+      <div className="p-4 flex items-end justify-between w-full">
+        <div className="flex flex-col items-start w-fit gap-3 bg-card p-4 rounded-md">
+          <h1 className="text-2xl font-bold mb-4 uppercase">
+            {cashRegister.name}
+          </h1>
+
+          <div className="p-4 bg-blue-800 text-white rounded-md flex flex-col w-full">
+            <p>Balance:</p>{" "}
+            <span className="text-4xl">
+              ${cashRegister.balance.toLocaleString()}
+            </span>
+          </div>
+        </div>
+        <Link
+          className={`flex items-center gap-2 bg-purple-800 text-white text-xs px-6 py-1 rounded-md`}
+          href={"/sistema/cajas/auditoria/nueva"}
+        >
+          <BanknoteIcon size={16} />
+          <span className={`text-xs `}>CORTE DE CAJA</span>
+        </Link>
+      </div>
       <CashTransactionList transactions={cashRegister.transactions} />
     </div>
   );

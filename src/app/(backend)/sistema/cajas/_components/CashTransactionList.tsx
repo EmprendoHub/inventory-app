@@ -13,13 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  DownloadCloud,
-  Eye,
-  MoreHorizontal,
-  X,
-} from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -40,23 +34,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { paymentType } from "@/types/sales";
 import { useModal } from "@/app/context/ModalContext";
-import { MdCurrencyExchange, MdSms } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
-import {
-  deleteOrderAction,
-  payOrderAction,
-} from "../../ventas/pedidos/_actions";
+import { deleteOrderAction } from "../../ventas/pedidos/_actions";
 import { CashTransactionResponse } from "@/types/accounting";
-
-function calculatePaymentsTotal(payments: paymentType[]) {
-  const total = payments.reduce((sum, item) => sum + item.amount, 0);
-  return total;
-}
 
 export function CashTransactionList({
   transactions,
@@ -73,121 +57,90 @@ export function CashTransactionList({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const { showModal } = useModal();
-
-  const sendEmailReminder = async (id: string) => {
-    try {
-      const res = await fetch(`/api/email`, {
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: "ojñolasidfioasdfuñoasdikfh",
-        },
-        method: "POST",
-        body: JSON.stringify({
-          id,
-        }),
-      });
-
-      if (res.ok) {
-        await showModal({
-          title: "Correo Enviado!",
-          type: "delete",
-          text: "El correo se envió exitosamente",
-          icon: "success",
-        });
-      } else {
-        await showModal({
-          title: "¡Correo No Enviado!",
-          type: "delete",
-          text: "El correo no se envió correctamente",
-          icon: "error",
-        });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   const columns = React.useMemo<ColumnDef<CashTransactionResponse>[]>(
     () => [
       {
-        accessorKey: "orderNo",
+        accessorKey: "id",
         header: ({ column }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="text-xs w-16 px-2"
           >
-            Pedido
+            ID
             <ArrowUpDown />
           </Button>
         ),
-        cell: ({ row }) => (
-          <div className="uppercase text-xs w-16">
-            {row.getValue("orderNo")}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const id = row.getValue("id") as string;
+          return (
+            <div className="uppercase text-xs w-16">{id.substring(0, 10)}</div>
+          );
+        },
       },
       {
-        accessorKey: "status",
+        accessorKey: "description",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden w-20">Estado</div>
+          <div className="text-left text-xs maxsm:hidden w-20">Ref</div>
         ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-24 px-2 `}
+            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-60 px-2 `}
           >
-            {row.getValue("status")}
+            {row.getValue("description")}
           </div>
         ),
       },
       {
-        accessorKey: "startBalance",
-        header: () => <div className="text-left text-xs">Balance Inicial</div>,
+        accessorKey: "amount",
+        header: () => <div className="text-left text-xs">Cantidad</div>,
         cell: ({ row }) => {
-          const amount = calculatePaymentsTotal(row.getValue("startBalance"));
+          const amount = row.getValue("amount");
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
-          }).format(amount);
+          }).format(Number(amount));
           return (
             <div className="text-left text-xs font-medium">{formatted}</div>
           );
         },
       },
       {
-        accessorKey: "endBalance",
-        header: () => <div className="text-left text-xs">Balance Final</div>,
-        cell: ({ row }) => {
-          const amount = calculatePaymentsTotal(row.getValue("endBalance"));
-          const formatted = new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(amount);
-          return (
-            <div className="text-left text-xs font-medium">{formatted}</div>
-          );
-        },
+        accessorKey: "type",
+        header: () => <div className="text-left text-xs">Tipo</div>,
+        cell: ({ row }) => (
+          <div
+            className={`uppercase text-[12px] text-center text-white maxsm:hidden ${
+              row.getValue("type") === "RETIRO"
+                ? "bg-emerald-800"
+                : "bg-blue-700"
+            } rounded-md w-auto px-2 `}
+          >
+            {row.getValue("type")}
+          </div>
+        ),
       },
+      // {
+      //   accessorKey: "user",
+      //   header: () => <div className="text-left text-xs">Pedido</div>,
+      //   cell: ({ row }) => {
+      //     const user = row.getValue("user") as UserType;
+
+      //     return (
+      //       <div
+      //         className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-auto px-2 `}
+      //       >
+      //         {user.name}
+      //       </div>
+      //     );
+      //   },
+      // },
       {
-        accessorKey: "totalAmount",
-        header: () => <div className="text-left text-xs">Pedido</div>,
-        cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("totalAmount"));
-          const formatted = new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(amount);
-          return (
-            <div className="text-left text-xs font-medium">{formatted}</div>
-          );
-        },
-      },
-      {
-        accessorKey: "auditDate",
+        accessorKey: "createdAt",
         header: () => <div className="text-left text-xs">Fecha</div>,
         cell: ({ row }) => {
-          const date = new Date(row.getValue("auditDate")).toLocaleDateString();
+          const date = new Date(row.getValue("createdAt")).toLocaleDateString();
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },
@@ -261,57 +214,6 @@ export function CashTransactionList({
               }
             }, [showModal]);
 
-            // In your OrderList component
-            const receivePayment = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Cuanto te gustaría pagar?",
-                type: "payment",
-                text: "Puedes realizar un pago parcial o completo.",
-                icon: "success",
-                showCancelButton: true,
-                confirmButtonText: "Sí, pagar",
-                cancelButtonText: "Cancelar",
-              });
-
-              if (result.confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
-                  formData.set("amount", result.data?.amount || "0"); // Handle empty input
-                  formData.set("reference", result.data?.reference || "");
-                  formData.set("method", result.data?.method || "");
-
-                  const response = await payOrderAction(formData);
-
-                  if (response.success) {
-                    await showModal({
-                      title: "¡Pago Aplicado!",
-                      type: "delete",
-                      text: response.message,
-                      icon: "success",
-                    });
-                  } else {
-                    await showModal({
-                      title: "¡Pago No Aplicado!",
-                      type: "delete",
-                      text: response.message,
-                      icon: "error",
-                    });
-                  }
-                } catch (error) {
-                  console.log("Error processing payment:", error);
-                  await showModal({
-                    title: "Error",
-                    type: "delete",
-                    text: "No se pudo aplicar el pago",
-                    icon: "error",
-                  });
-                }
-              }
-
-              // eslint-disable-next-line
-            }, [showModal, row.original.id]);
-
             const viewOrder = React.useCallback(async () => {
               router.push(`/sistema/ventas/pedidos/${row.original.id}`);
             }, []);
@@ -335,26 +237,6 @@ export function CashTransactionList({
                     Ver detalles
                   </DropdownMenuItem>
                   <>
-                    <DropdownMenuItem
-                      onClick={receivePayment}
-                      className="text-xs cursor-pointer"
-                    >
-                      <MdCurrencyExchange /> Recibir pago
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => sendEmailReminder(row.original.id)}
-                      className="text-xs cursor-pointer"
-                    >
-                      <MdSms /> Enviar recordatorio
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() =>
-                        router.push(`/api/recibo/${row.original.id}`)
-                      }
-                      className="text-xs cursor-pointer"
-                    >
-                      <DownloadCloud /> Descargar PDF
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={deleteOrder}
@@ -401,9 +283,9 @@ export function CashTransactionList({
       <div className="flex items-center py-4">
         <Input
           placeholder="Filtrar..."
-          value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
+          value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("orderNo")?.setFilterValue(event.target.value)
+            table.getColumn("id")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />

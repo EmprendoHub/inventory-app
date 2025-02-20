@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { unlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { uploadToBucket } from "@/app/_actions";
+import sharp from "sharp";
 
 export const createSupplier = async (
   state: {
@@ -43,72 +44,88 @@ export const createSupplier = async (
     return { success: false, message: "Error al crear producto" };
 
   // Convert the image file to Base64
-  let base64Image = "";
   if (
     rawData.image &&
     rawData.image instanceof File &&
     rawData.image.size > 0
   ) {
+    // Convert the image file to ArrayBuffer
     const arrayBuffer = await rawData.image.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    base64Image = buffer.toString("base64");
-  }
 
-  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
-  const imageBuffer = Buffer.from(base64Data, "base64");
+    // Optimize the image using sharp
+    const optimizedImageBuffer = await sharp(buffer)
+      .resize(800, 800, {
+        // Resize to a maximum of 800x800 pixels
+        fit: "inside", // Maintain aspect ratio
+        withoutEnlargement: true, // Don't enlarge images smaller than 800x800
+      })
+      .webp({
+        // Convert to WebP format
+        quality: 80, // Adjust quality (0-100)
+        lossless: false, // Use lossy compression for smaller file size
+      })
+      .toBuffer();
 
-  const newFilename = `${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2)}.png`;
-  const path = join("/", "tmp", newFilename);
+    // Generate a unique filename
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.webp`;
+    const path = join("/", "tmp", newFilename);
 
-  // Save to temporary file
-  const uint8Array = new Uint8Array(imageBuffer);
-  await writeFile(path, uint8Array);
+    // Save the optimized image to a temporary file
+    await writeFile(path, optimizedImageBuffer);
 
-  await uploadToBucket("inventario", "suppliers/" + newFilename, path);
-  const savedImageUrl = `${process.env.MINIO_URL}suppliers/${newFilename}`;
+    // Upload the optimized image to Minio
+    await uploadToBucket("inventario", "suppliers/" + newFilename, path);
+    const savedImageUrl = `${process.env.MINIO_URL}suppliers/${newFilename}`;
 
-  try {
-    const result = await prisma.$transaction(async (prisma) => {
-      // Step 1: Create Supplier
-      const newSupplier = await prisma.supplier.create({
-        data: {
-          name: validatedData.data.name,
-          phone: validatedData.data.phone,
-          email: validatedData.data.email,
-          address: validatedData.data.address,
-          contactPerson: validatedData.data.contactPerson,
-          supplierCode: validatedData.data.supplierCode,
-          paymentTerms: validatedData.data.paymentTerms,
-          taxId: validatedData.data.taxId,
-          notes: validatedData.data.notes,
-          image: savedImageUrl,
-        },
+    try {
+      const result = await prisma.$transaction(async (prisma) => {
+        // Step 1: Create Supplier
+        const newSupplier = await prisma.supplier.create({
+          data: {
+            name: validatedData.data.name,
+            phone: validatedData.data.phone,
+            email: validatedData.data.email,
+            address: validatedData.data.address,
+            contactPerson: validatedData.data.contactPerson,
+            supplierCode: validatedData.data.supplierCode,
+            paymentTerms: validatedData.data.paymentTerms,
+            taxId: validatedData.data.taxId,
+            notes: validatedData.data.notes,
+            image: savedImageUrl,
+          },
+        });
+
+        return newSupplier;
       });
 
-      return newSupplier;
-    });
-
-    // Clean up the temporary file
-    await unlink(path);
-    revalidatePath("/sistema/negocio/proveedores");
+      // Clean up the temporary file
+      await unlink(path);
+      revalidatePath("/sistema/negocio/proveedores");
+      return {
+        success: true,
+        message: "Proveedor creado exitosamente!",
+        product: result,
+      };
+    } catch (error) {
+      console.error("Error al crear Proveedor:", error);
+      return { success: false, message: "Error al crear Proveedor." };
+    }
+  } else {
     return {
-      success: true,
-      message: "Proveedor creado exitosamente!",
-      product: result,
+      success: false,
+      message: "Falto una imagen!",
     };
-  } catch (error) {
-    console.error("Error al crear Proveedor:", error);
-    return { success: false, message: "Error al crear Proveedor." };
   }
 };
 
 export async function updateSupplierAction(
   state: {
-    errors: { [key: string]: string[] };
-    success: boolean;
-    message: string;
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
   },
   formData: FormData
 ) {
@@ -147,84 +164,100 @@ export async function updateSupplierAction(
     };
 
   // Convert the image file to Base64
-  let base64Image = "";
   if (
     rawData.image &&
     rawData.image instanceof File &&
     rawData.image.size > 0
   ) {
+    // Convert the image file to ArrayBuffer
     const arrayBuffer = await rawData.image.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    base64Image = buffer.toString("base64");
-  }
 
-  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
-  const imageBuffer = Buffer.from(base64Data, "base64");
+    // Optimize the image using sharp
+    const optimizedImageBuffer = await sharp(buffer)
+      .resize(800, 800, {
+        // Resize to a maximum of 800x800 pixels
+        fit: "inside", // Maintain aspect ratio
+        withoutEnlargement: true, // Don't enlarge images smaller than 800x800
+      })
+      .webp({
+        // Convert to WebP format
+        quality: 80, // Adjust quality (0-100)
+        lossless: false, // Use lossy compression for smaller file size
+      })
+      .toBuffer();
 
-  const newFilename = `${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2)}.png`;
-  const path = join("/", "tmp", newFilename);
+    // Generate a unique filename
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.webp`;
+    const path = join("/", "tmp", newFilename);
 
-  // Save to temporary file
-  const uint8Array = new Uint8Array(imageBuffer);
-  await writeFile(path, uint8Array);
+    // Save the optimized image to a temporary file
+    await writeFile(path, optimizedImageBuffer);
 
-  await uploadToBucket("inventario", "avatars/" + newFilename, path);
-  const savedImageUrl = `${process.env.MINIO_URL}avatars/${newFilename}`;
+    // Upload the optimized image to Minio
+    await uploadToBucket("inventario", "avatars/" + newFilename, path);
+    const savedImageUrl = `${process.env.MINIO_URL}avatars/${newFilename}`;
 
-  try {
-    if (rawData.image) {
-      await prisma.supplier.update({
-        where: {
-          id: rawData.supplierId,
-        },
-        data: {
-          name: validatedData.data.name,
-          phone: validatedData.data.phone,
-          email: validatedData.data.email,
-          address: validatedData.data.address,
-          contactPerson: validatedData.data.contactPerson,
-          supplierCode: validatedData.data.supplierCode,
-          paymentTerms: validatedData.data.paymentTerms,
-          taxId: validatedData.data.taxId,
-          notes: validatedData.data.notes,
-          image: savedImageUrl,
-        },
-      });
-    } else {
-      await prisma.supplier.update({
-        where: {
-          id: rawData.supplierId,
-        },
-        data: {
-          name: validatedData.data.name,
-          phone: validatedData.data.phone,
-          email: validatedData.data.email,
-          address: validatedData.data.address,
-          contactPerson: validatedData.data.contactPerson,
-          supplierCode: validatedData.data.supplierCode,
-          paymentTerms: validatedData.data.paymentTerms,
-          taxId: validatedData.data.taxId,
-          notes: validatedData.data.notes,
-        },
-      });
+    try {
+      if (rawData.image) {
+        await prisma.supplier.update({
+          where: {
+            id: rawData.supplierId,
+          },
+          data: {
+            name: validatedData.data.name,
+            phone: validatedData.data.phone,
+            email: validatedData.data.email,
+            address: validatedData.data.address,
+            contactPerson: validatedData.data.contactPerson,
+            supplierCode: validatedData.data.supplierCode,
+            paymentTerms: validatedData.data.paymentTerms,
+            taxId: validatedData.data.taxId,
+            notes: validatedData.data.notes,
+            image: savedImageUrl,
+          },
+        });
+      } else {
+        await prisma.supplier.update({
+          where: {
+            id: rawData.supplierId,
+          },
+          data: {
+            name: validatedData.data.name,
+            phone: validatedData.data.phone,
+            email: validatedData.data.email,
+            address: validatedData.data.address,
+            contactPerson: validatedData.data.contactPerson,
+            supplierCode: validatedData.data.supplierCode,
+            paymentTerms: validatedData.data.paymentTerms,
+            taxId: validatedData.data.taxId,
+            notes: validatedData.data.notes,
+          },
+        });
+      }
+      revalidatePath(
+        `/sistemas/negocio/proveedores/editar/${rawData.supplierId}`
+      );
+      return {
+        errors: {},
+        success: true,
+        message: "Articulo actualizado correctamente!",
+      };
+    } catch (error) {
+      console.error("Error al actualizar Articulo:", error);
+
+      return {
+        errors: {},
+        success: false,
+        message: "Fallo al actualizar Articulo",
+      };
     }
-    revalidatePath(
-      `/sistemas/negocio/proveedores/editar/${rawData.supplierId}`
-    );
+  } else {
     return {
-      errors: {},
-      success: true,
-      message: "Articulo actualizado correctamente!",
-    };
-  } catch (error) {
-    console.error("Error al actualizar Articulo:", error);
-
-    return {
-      errors: {},
       success: false,
-      message: "Fallo al actualizar Articulo",
+      message: "Falto una imagen!",
     };
   }
 }

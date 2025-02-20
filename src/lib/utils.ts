@@ -12,6 +12,7 @@ import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { GiPayMoney } from "react-icons/gi";
 import { PiInvoice } from "react-icons/pi";
 import { FaShippingFast } from "react-icons/fa";
+import { RBAC_CONFIG } from "./rbac-config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -184,3 +185,71 @@ export const iconMap: Record<string, IconComponent> = {
   PiInvoice,
   FaShippingFast,
 };
+
+export async function generateUniqueBarcode() {
+  let barcode = "";
+  for (let i = 0; i < 12; i++) {
+    barcode += Math.floor(Math.random() * 10); // Random digit between 0 and 9
+  }
+  return barcode;
+}
+
+export async function generateUniqueSKU() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let randomPart = "";
+  for (let i = 0; i < 4; i++) {
+    randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  const timestampPart = Date.now().toString().slice(-4); // Last 4 digits of the timestamp
+  return `SKU-${randomPart}-${timestampPart}`;
+}
+
+export function isRouteAllowed(role: string, pathname: string): boolean {
+  const roleConfig = RBAC_CONFIG[role as keyof typeof RBAC_CONFIG];
+
+  if (!roleConfig) {
+    return false; // Role not found in config
+  }
+
+  const { allowedRoutes } = roleConfig;
+  console.log("allowedRoutes", allowedRoutes);
+
+  // Always allow access to /no-autorizado
+  if (pathname === "/no-autorizado") {
+    return true;
+  }
+
+  // If the role has access to all routes
+  if (allowedRoutes.includes("*")) {
+    return true;
+  }
+
+  // Check if the pathname matches any allowed route
+  for (const route of allowedRoutes) {
+    if (route.startsWith("!")) {
+      console.log("route.startsWith(!):", route, route.startsWith("!"));
+
+      // Deny route (e.g., "!/sistema/config")
+      const denyRoute = route.slice(1);
+      if (pathname.startsWith(denyRoute)) {
+        return false;
+      }
+    } else {
+      // Allow route (e.g., "/sistema/ventas/envios")
+      console.log(
+        "pathname.startsWith(route):",
+        pathname.startsWith(route),
+        pathname,
+        route
+      );
+
+      if (pathname.startsWith(route)) {
+        console.log("TRUEEEEEEEEEEEEEEEE");
+
+        return true;
+      }
+    }
+  }
+
+  return false; // Route not allowed
+}

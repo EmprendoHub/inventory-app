@@ -96,7 +96,7 @@ export const createUserAction = async (
     }
 
     await unlink(path);
-    revalidatePath("/sistema/admin/usuarios");
+    revalidatePath("/sistema/negocio/usuarios");
     return {
       success: true,
       message: "Usuario creado exitosamente!",
@@ -115,12 +115,15 @@ export async function updateUserAction(
     id: formData.get("id") as string,
     name: formData.get("name") as string,
     email: formData.get("email") as string,
+    authCode: formData.get("authCode") as string,
     phone: formData.get("phone") as string,
     password: formData.get("password") as string,
     active: formData.get("active") === "true" ? true : false,
     role: formData.get("role") as string,
     avatar: formData.get("avatar") as File,
   };
+
+  console.log(rawData);
 
   const validatedData = UserSchema.safeParse(rawData);
 
@@ -176,6 +179,7 @@ export async function updateUserAction(
           name: validatedData.data.name,
           email: validatedData.data.email,
           phone: validatedData.data.phone,
+          authCode: validatedData.data.authCode,
           active: validatedData.data.active,
           password: hashedPassword,
           role: validatedData.data.role as Role,
@@ -191,13 +195,14 @@ export async function updateUserAction(
           name: validatedData.data.name,
           email: validatedData.data.email,
           phone: validatedData.data.phone,
+          authCode: validatedData.data.authCode,
           active: validatedData.data.active,
           password: hashedPassword,
           role: validatedData.data.role as Role,
         },
       });
     }
-    revalidatePath("/sistema/admin/usuarios");
+    revalidatePath("/sistema/negocio/usuarios");
     return {
       errors: {},
       success: true,
@@ -238,7 +243,7 @@ export async function deleteUserAction(formData: FormData) {
       },
     });
 
-    revalidatePath("/sistema/admin/usuarios");
+    revalidatePath("/sistema/negocio/usuarios");
     return {
       errors: {},
       success: true,

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { IoLogoGoogle } from "react-icons/io";
+// import { IoLogoGoogle } from "react-icons/io";
 import { useRouter } from "next/navigation";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { isValidEmail, isValidPhone } from "@/lib/utils";
@@ -130,7 +130,7 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
         <h2 className="my-4 text-foreground font-bold font-EB_Garamond text-xs">
           Registro Nuevo
         </h2>
-        <button
+        {/* <button
           className="w-full hover:text-foreground hover:bg-slate-300 duration-500 ease-in-out text-white bg-black mb-4 flex flex-row gap-4
             items-center py-4 justify-center text-xs"
           onClick={() => {
@@ -139,7 +139,7 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
         >
           <IoLogoGoogle />
           Continua con Google
-        </button>
+        </button> */}
         <form
           onSubmit={handleSubmit}
           className="flex flex-col justify-center items-center text-center gap-y-4 text-foreground"

@@ -37,9 +37,13 @@ import { TruckType } from "@/types/truck";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteTruckAction } from "../_actions";
 import { verifySupervisorCode } from "@/app/_actions";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function TruckList({ trucks }: { trucks: TruckType[] }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -197,14 +201,18 @@ export function TruckList({ trucks }: { trucks: TruckType[] }) {
                     Edit
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteTruck}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteTruck}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

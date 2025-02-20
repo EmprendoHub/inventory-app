@@ -10,6 +10,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export default function CashAuditForm({
   cashRegisters,
@@ -17,6 +19,8 @@ export default function CashAuditForm({
   cashRegisters: CashRegisterResponse[];
 }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const { showModal } = useModal();
   // eslint-disable-next-line
   const [state, formAction] = useFormState(createCashAuditAction, {
@@ -71,7 +75,7 @@ export default function CashAuditForm({
           ) as HTMLFormElement;
           formElement.reset();
           setSelectedRegister(null);
-          router.push("/sistema/cajas/auditoria");
+          router.push(`/sistema/cajas/personal/${user?.id || ""}`);
         }
       }
       setSending(false);

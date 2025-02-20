@@ -270,24 +270,31 @@ export default function SideBar({
                     Usuarios
                   </span>
                 </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                  } ${
-                    path === "/sistema/negocio/ajustes/nuevo"
-                      ? "bg-blue-600"
-                      : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/ajustes/nuevo"}
-                >
-                  <div className="flex items-center gap-1">
-                    <FaAdjust size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Ajustes inventario
-                    </span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
+                {["SUPER_ADMIN"].includes(user?.role || "") && (
+                  <Link
+                    className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    } ${
+                      path === "/sistema/negocio/ajustes/nuevo"
+                        ? "bg-blue-600"
+                        : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/negocio/ajustes/nuevo"}
+                  >
+                    <div className="flex items-center gap-1">
+                      <FaAdjust size={16} />
+                      <span
+                        className={`text-xs ${hidden ? "hidden" : "block"}`}
+                      >
+                        Ajustes inventario
+                      </span>
+                    </div>
+                    <PlusCircle
+                      className="hidden group-hover:block"
+                      size={16}
+                    />
+                  </Link>
+                )}
               </CollapsibleContent>
             </Collapsible>
           )}
@@ -400,25 +407,72 @@ export default function SideBar({
           </Collapsible>
 
           {/* Mi caja */}
-          <Link
-            className={`flex w-full items-center gap-2 p-1.5  ${
-              hidden ? "pl-2 pr-2" : "pl-2 pr-4"
-            }  ${
-              path === `/sistema/cajas/personal/${user?.id}`
-                ? "bg-blue-600"
-                : ""
-            } hover:bg-slate-900 rounded-md`}
-            href={`/sistema/cajas/personal/${user?.id}`}
-          >
-            <FaCashRegister size={16} />
-            <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-              Caja
-            </span>
-          </Link>
+          {!["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+            <>
+              <Link
+                className={`flex w-full items-center gap-2 p-1.5  ${
+                  hidden ? "pl-2 pr-2" : "pl-2 pr-4"
+                }  ${
+                  path === `/sistema/cajas/personal/${user?.id}`
+                    ? "bg-blue-600"
+                    : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={`/sistema/cajas/personal/${user?.id}`}
+              >
+                <FaCashRegister size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Caja
+                </span>
+              </Link>
+              <Link
+                className={`flex w-full items-center gap-2  p-1.5  pl-2 pr-2
+                 ${
+                   path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
+                 } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/contabilidad/gastos"}
+              >
+                <GiExpense size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Gastos
+                </span>
+              </Link>
+            </>
+          )}
+
+          {/*  */}
+          {["ADMIN"].includes(user?.role || "") && (
+            <>
+              {" "}
+              <Link
+                className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
+                ${
+                  path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/contabilidad/gastos"}
+              >
+                <GiExpense size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Gastos
+                </span>
+              </Link>
+              <Link
+                className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
+                  ${
+                    path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
+                  } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/cajas/auditoria"}
+              >
+                <BanknoteIcon size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Cortes
+                </span>
+              </Link>
+            </>
+          )}
           {/* Contabilidad */}
 
-          <Collapsible className="w-full">
-            {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (
+          {["SUPER_ADMIN"].includes(user?.role || "") && (
+            <Collapsible className="w-full">
               <CollapsibleTrigger className="w-full">
                 <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
                   <div className="flex items-center gap-2 ">
@@ -431,10 +485,8 @@ export default function SideBar({
                   <ChevronRight size={25} />
                 </div>
               </CollapsibleTrigger>
-            )}
 
-            <CollapsibleContent className="flex flex-col gap-1">
-              {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+              <CollapsibleContent className="flex flex-col gap-1">
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -450,55 +502,47 @@ export default function SideBar({
                     Cuentas
                   </span>
                 </Link>
-              )}
 
-              {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
-                user?.role || ""
-              ) && (
-                <>
-                  <Link
-                    className={`flex w-full items-center gap-2 p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                    }  ${
-                      path === "/sistema/cajas" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/cajas"}
-                  >
-                    <FaCashRegister size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Cajas
-                    </span>
-                  </Link>
-                  <Link
-                    className={`flex w-full items-center gap-2 p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                    }  ${
-                      path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/cajas/auditoria"}
-                  >
-                    <BanknoteIcon size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Cortes
-                    </span>
-                  </Link>
-                </>
-              )}
+                <Link
+                  className={`flex w-full items-center gap-2 p-1.5  ${
+                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  }  ${
+                    path === "/sistema/cajas" ? "bg-blue-600" : ""
+                  } hover:bg-slate-900 rounded-md`}
+                  href={"/sistema/cajas"}
+                >
+                  <FaCashRegister size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Cajas
+                  </span>
+                </Link>
+                <Link
+                  className={`flex w-full items-center gap-2 p-1.5  ${
+                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                  }  ${
+                    path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
+                  } hover:bg-slate-900 rounded-md`}
+                  href={"/sistema/cajas/auditoria"}
+                >
+                  <BanknoteIcon size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Cortes
+                  </span>
+                </Link>
+                <Link
+                  className={`flex w-full items-center gap-2  p-1.5  ${
+                    hidden ? "pl-2 pr-2" : "pl-6 adminpr-4"
+                  } ${
+                    path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
+                  } hover:bg-slate-900 rounded-md`}
+                  href={"/sistema/contabilidad/gastos"}
+                >
+                  <GiExpense size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Gastos
+                  </span>
+                </Link>
 
-              <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-6 adminpr-4"
-                } ${
-                  path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/contabilidad/gastos"}
-              >
-                <GiExpense size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Gastos
-                </span>
-              </Link>
-              {user?.role === "SUPER_ADMIN" && (
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-6 pr-4"
@@ -514,10 +558,9 @@ export default function SideBar({
                     Transacciones
                   </span>
                 </Link>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
-
+              </CollapsibleContent>
+            </Collapsible>
+          )}
           {/* Compras */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Collapsible className="w-full">
@@ -547,19 +590,21 @@ export default function SideBar({
                     Ordenes de Compra
                   </span>
                 </Link>
-                <Link
-                  className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 pr-4"
-                  } ${
-                    path === "/sistema/compras/recibos" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/compras/recibos"}
-                >
-                  <FaRegFileArchive size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Bienes
-                  </span>
-                </Link>
+                {["SUPER_ADMIN"].includes(user?.role || "") && (
+                  <Link
+                    className={`flex w-full items-center gap-2  p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-6 pr-4"
+                    } ${
+                      path === "/sistema/compras/recibos" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/compras/recibos"}
+                  >
+                    <FaRegFileArchive size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Bienes
+                    </span>
+                  </Link>
+                )}
               </CollapsibleContent>
             </Collapsible>
           )}
@@ -575,7 +620,7 @@ export default function SideBar({
               Integraciones
             </span>
           </Link> */}
-          {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+          {["SUPER_ADMIN"].includes(user?.role || "") && (
             <Link
               className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
                 path === "/sistema/reportes" ? "bg-blue-600" : ""

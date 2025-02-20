@@ -40,9 +40,12 @@ import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteUserAction } from "../_actions";
 import { verifySupervisorCode } from "@/app/_actions";
+import { useSession } from "next-auth/react";
 
 export function UserList({ users }: { users: UserType[] }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -204,15 +207,18 @@ export function UserList({ users }: { users: UserType[] }) {
                     <Eye />
                     Editar
                   </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteUser}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteUser}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

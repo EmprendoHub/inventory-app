@@ -87,8 +87,8 @@ export default function TransactionEdit({
         label="Tipo"
         name="type"
         options={[
-          { value: "DEBIT", name: "Débito" },
-          { value: "CREDIT", name: "Crédito" },
+          { value: "DEPOSITO", name: "DEPOSITO" },
+          { value: "RETIRO", name: "RETIRO" },
         ]}
         state={state}
       />

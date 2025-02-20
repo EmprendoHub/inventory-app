@@ -19,6 +19,7 @@ export default function SupplierEdit({ supplier }: { supplier: supplierType }) {
     success: false,
     message: "",
   });
+
   // Add state for form fields
   const [formData, setFormData] = useState({
     id: supplier?.id,

@@ -219,11 +219,6 @@ export default function ProductForm({
         />
       </div>
 
-      <div className="flex maxsm:flex-col gap-3">
-        <TextInput name="sku" label="SKU" state={state} />
-        <TextInput name="barcode" label="Código de Barras" state={state} />
-      </div>
-
       {/* Numeric inputs */}
       <div className="flex maxsm:flex-col gap-3">
         <NumericInput name="cost" label="Costo de Compra" state={state} />

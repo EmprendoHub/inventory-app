@@ -3,159 +3,245 @@ import React, { useState } from "react";
 import { useFormState } from "react-dom";
 import TextInput from "@/components/TextInput";
 import SelectInput from "@/components/SelectInput";
-import { ExpenseType } from "@/types/expenses";
-import { useRouter } from "next/navigation";
+import { ExpenseFormState, ExpenseType } from "@/types/expenses";
 import { updateExpenseAction } from "../_actions";
 import { useModal } from "@/app/context/ModalContext";
 import NumericInput from "@/components/NumericInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import DateInput from "@/components/DateInput";
+import { UserType } from "@/types/users";
+import { TruckType } from "@/types/truck";
+import { supplierType } from "@/types/categories";
+import { SearchSelectInput } from "@/components/SearchSelectInput";
 
-export default function ExpenseEdit({ expense }: { expense: ExpenseType }) {
-  const router = useRouter();
+export default function ExpenseEdit({
+  expense,
+  drivers,
+  trucks,
+  suppliers,
+}: {
+  expense: ExpenseType;
+  drivers: UserType[];
+  trucks: TruckType[];
+  suppliers: supplierType[];
+}) {
   // eslint-disable-next-line
-  const [state, formAction] = useFormState(updateExpenseAction, {
-    errors: {},
-    success: false,
-    message: "",
-  });
+  const [state, formAction] = useFormState<ExpenseFormState, FormData>(
+    updateExpenseAction,
+    {
+      errors: {},
+      success: false,
+      message: "",
+    }
+  );
+
+  const [selectedDriver, setSelectedDriver] = React.useState<UserType | null>(
+    drivers.find((driver) => driver.id === expense.driverId) || null
+  );
+  const [selectedTruck, setSelectedTruck] = React.useState<TruckType | null>(
+    trucks.find((truck) => truck.id === expense.truckId) || null
+  );
+  const [selectedSupplier, setSelectedSupplier] =
+    React.useState<supplierType | null>(
+      suppliers.find((supplier) => supplier.id === expense.supplierId) || null
+    );
+  const [selectedExpenseType, setSelectedExpenseType] = React.useState<
+    string | null
+  >(expense.type || null);
+
   const [sending, setSending] = useState(false);
   const { showModal } = useModal();
 
-  const [formData, setFormData] = useState({
-    id: expense?.id,
-    type: expense?.type || "",
-    amount: expense?.amount || 0,
-    description: expense?.description || "",
-    reference: expense?.reference || "",
-    status: expense?.status || "",
-    paymentDate: expense?.paymentDate?.toISOString().split("T")[0] || "",
-    deliveryId: expense?.deliveryId || "",
-    driverId: expense?.driverId || "",
-    truckId: expense?.truckId || "",
-    externalShipId: expense?.externalShipId || "",
-    supplierId: expense?.supplierId || "",
-  });
-
-  const handleInputChange = (name: string, value: string | number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (formSubmitData: FormData) => {
+  // Custom form submission handler
+  const handleSubmit = async (formData: FormData) => {
     setSending(true);
-    formSubmitData.set("id", expense?.id || "");
 
-    const result = await updateExpenseAction(state, formSubmitData);
+    formData.set("driver", JSON.stringify(selectedDriver));
+    formData.set("supplier", JSON.stringify(selectedSupplier));
+    formData.set("truck", JSON.stringify(selectedTruck));
+    const result = await updateExpenseAction(state, formData);
 
     if (result.success) {
       await showModal({
-        title: "Gasto Actualizado!",
+        title: "Gasto Creado!",
         type: "delete",
-        text: "El gasto ha sido actualizado exitosamente.",
+        text: "El gasto ha sido creado exitosamente.",
         icon: "success",
       });
-      router.push("/sistema/contabilidad/gastos");
+      const formElement = document.getElementById(
+        "expense-form"
+      ) as HTMLFormElement;
+      formElement.reset();
     }
     setSending(false);
   };
 
   return (
-    <form action={handleSubmit} className="space-y-4 flex flex-col gap-4">
-      <SelectInput
-        label="Tipo"
-        name="type"
-        options={[
-          { value: "NOMINA", name: "NOMINA" },
-          { value: "GASOLINA", name: "GASOLINA" },
-          { value: "PROVEEDOR", name: "PROVEEDOR" },
-          { value: "MANTENIMIENTO", name: "MANTENIMIENTO" },
-          { value: "OFICINA", name: "OFICINA" },
-          { value: "OTRO", name: "OTRO" },
-        ]}
-        state={state}
-      />
-      <NumericInput
-        onChange={(value) => handleInputChange("amount", value)}
-        name="amount"
-        label="Monto"
-        state={state}
-      />
+    <form
+      id="expense-form"
+      action={handleSubmit}
+      className="space-y-4 flex flex-col gap-4"
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // Prevent form submission
+        }
+      }}
+    >
+      <div className="flex items-center gap-4">
+        <SelectInput
+          label="Tipo"
+          name="type"
+          options={[
+            { value: "", name: "Seleccionar..." },
+            { value: "GASOLINA", name: "GASOLINA" },
+            { value: "PROVEEDOR", name: "PROVEEDOR" },
+            { value: "MANTENIMIENTO", name: "MANTENIMIENTO" },
+            { value: "OFICINA", name: "OFICINA" },
+            { value: "OTRO", name: "OTRO" },
+          ]}
+          state={state}
+          isSelected={expense.type}
+          onChange={(e) => setSelectedExpenseType(e.target.value)}
+        />
+        <SelectInput
+          label="Estado"
+          name="status"
+          options={[
+            { value: "PENDING", name: "Pendiente" },
+            { value: "APPROVED", name: "Aprobado" },
+            { value: "PAID", name: "Pagado" },
+            { value: "REJECTED", name: "Rechazado" },
+          ]}
+          state={state}
+          isSelected={expense.status}
+        />
+        <TextInput
+          name="reference"
+          label="Referencia (opcional)"
+          state={state}
+          value={expense.reference || undefined}
+        />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <NumericInput
+          name="amount"
+          label="Monto"
+          state={state}
+          defaultValue={expense.amount}
+        />
+        <DateInput
+          name="paymentDate"
+          label="Fecha de Gasto"
+          state={state}
+          defaultValue={
+            expense.paymentDate ? new Date(expense.paymentDate) : new Date()
+          }
+        />
+      </div>
+      <div className="flex items-center gap-4">
+        {selectedExpenseType === "GASOLINA" && (
+          <SearchSelectInput
+            label="Seleccionar Chofer:"
+            name="driver"
+            state={state}
+            className="flex-1 mb-4"
+            options={drivers.map((item) => ({
+              value: item.id,
+              name: item.name,
+            }))}
+            value={expense.driverId || undefined}
+            onChange={(value) => {
+              const driver = drivers.find((d) => d.id === value);
+              setSelectedDriver(driver || null);
+            }}
+          />
+        )}
+        {selectedExpenseType === "MANTENIMIENTO" && (
+          <SearchSelectInput
+            label="Seleccionar Camioneta:"
+            name="truck"
+            state={state}
+            className="flex-1 mb-4"
+            options={trucks.map((item) => ({
+              value: item.id,
+              name: item.name,
+            }))}
+            value={expense.truckId || undefined}
+            onChange={(value) => {
+              const truck = trucks.find((t) => t.id === value);
+              setSelectedTruck(truck || null);
+            }}
+          />
+        )}
+        {selectedExpenseType === "PROVEEDOR" && (
+          <SearchSelectInput
+            label="Seleccionar Proveedor:"
+            name="supplier"
+            state={state}
+            className="flex-1 mb-4"
+            options={suppliers.map((item) => ({
+              value: item.id,
+              name: item.name,
+            }))}
+            value={expense.supplierId || undefined}
+            onChange={(value) => {
+              const supplier = suppliers.find((s) => s.id === value);
+              setSelectedSupplier(supplier || null);
+            }}
+          />
+        )}
+      </div>
+
       <TextAreaInput
-        value={formData.description}
-        onChange={handleInputChange}
         name="description"
         label="Descripción"
         state={state}
+        value={expense.description || undefined}
       />
-      <TextInput
-        value={formData.reference}
-        onChange={handleInputChange}
-        name="reference"
-        label="Referencia"
-        state={state}
-      />
-      <SelectInput
-        label="Estado"
-        name="status"
-        options={[
-          { value: "PENDING", name: "Pendiente" },
-          { value: "APPROVED", name: "Aprobado" },
-          { value: "PAID", name: "Pagado" },
-          { value: "REJECTED", name: "Rechazado" },
-        ]}
-        state={state}
-      />
-      <DateInput
-        defaultValue={formData.paymentDate}
-        name="paymentDate"
-        label="Fecha de Pago"
-        state={state}
-      />
-      <TextInput
-        value={formData.deliveryId}
-        onChange={handleInputChange}
-        name="deliveryId"
-        label="ID de Envió"
-        state={state}
-      />
-      <TextInput
-        value={formData.driverId}
-        onChange={handleInputChange}
-        name="driverId"
-        label="ID de Chofer"
-        state={state}
-      />
-      <TextInput
-        value={formData.truckId}
-        onChange={handleInputChange}
-        name="truckId"
-        label="ID de Vehículo"
-        state={state}
-      />
-      <TextInput
-        value={formData.externalShipId}
-        onChange={handleInputChange}
-        name="externalShipId"
-        label="ID de Envío Externo"
-        state={state}
-      />
-      <TextInput
-        value={formData.supplierId}
-        onChange={handleInputChange}
-        name="supplierId"
-        label="ID de Proveedor"
-        state={state}
-      />
+      <div className="space-y-2 bg-card p-4 rounded-lg">
+        {selectedDriver && (
+          <>
+            <h3 className="font-semibold text-lg">{selectedDriver.name}</h3>
+            <p className="text-sm text-muted leading-none">
+              Tel: {selectedDriver.phone}
+            </p>
+            {selectedDriver.email && (
+              <p className="text-sm text-muted leading-none">
+                Email: {selectedDriver.email}
+              </p>
+            )}
+          </>
+        )}
+        {selectedTruck && (
+          <>
+            <h3 className="font-semibold text-lg">{selectedTruck.name}</h3>
+            <p className="text-sm text-muted leading-none">
+              Km: {selectedTruck.km}
+            </p>
+          </>
+        )}
+        {selectedSupplier && (
+          <>
+            <h3 className="font-semibold text-lg">{selectedSupplier.name}</h3>
+            <p className="text-sm text-muted leading-none">
+              Tel: {selectedSupplier.phone}
+            </p>
+            {selectedSupplier.email && (
+              <p className="text-sm text-muted leading-none">
+                Email: {selectedSupplier.email}
+              </p>
+            )}
+          </>
+        )}
+      </div>
       <button
         type="submit"
         disabled={sending}
         className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
       >
         {sending && <span className="loader"></span>}
-        Actualizar Gasto
+        Crear Gasto
       </button>
 
       {state.message && (

@@ -1,6 +1,8 @@
 "use server";
+import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
 import { AddInventorySchema, AdjustmentSchema } from "@/lib/schemas";
+import { getServerSession } from "next-auth";
 
 export const createAdjustment = async (
   state: {
@@ -10,6 +12,8 @@ export const createAdjustment = async (
   },
   formData: FormData
 ) => {
+  const session = await getServerSession(options);
+  const user = session?.user;
   const rawData = {
     articulo: formData.get("articulo"),
     transAmount: parseFloat(formData.get("transAmount") as string),
@@ -18,6 +22,7 @@ export const createAdjustment = async (
     formType: formData.get("formType"),
     notes: formData.get("notes"),
   };
+  console.log(rawData);
 
   if (rawData.formType === "add") {
     const validatedData = AddInventorySchema.safeParse(rawData);
@@ -30,15 +35,33 @@ export const createAdjustment = async (
         message: "Validation failed. Please check the fields.",
       };
     }
-    await prisma.stock.update({
-      where: {
-        itemId_warehouseId: {
-          itemId: validatedData.data.articulo,
-          warehouseId: validatedData.data.sendingWarehouse,
-        },
-      },
-      data: { quantity: { increment: validatedData.data.transAmount } },
-    });
+    try {
+      await prisma.$transaction(async (prisma) => {
+        await prisma.stock.update({
+          where: {
+            itemId_warehouseId: {
+              itemId: validatedData.data.articulo,
+              warehouseId: validatedData.data.sendingWarehouse,
+            },
+          },
+          data: { availableQty: { increment: validatedData.data.transAmount } },
+        });
+
+        // Create a stock movement record for the release
+        await prisma.stockMovement.create({
+          data: {
+            itemId: validatedData.data.articulo,
+            type: "RETURN", // Indicates stock is being returned to available
+            quantity: validatedData.data.transAmount,
+            reference: `Ajuste de inventario`,
+            status: "COMPLETED",
+            createdBy: user.id as string, // Or the user ID who cancelled the order
+          },
+        });
+      });
+    } catch (error) {
+      console.log(error);
+    }
   } else {
     // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);

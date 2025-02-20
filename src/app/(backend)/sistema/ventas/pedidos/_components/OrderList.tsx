@@ -341,12 +341,17 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   </DropdownMenuItem>
                   {row.original.status !== "CANCELADO" && (
                     <>
-                      <DropdownMenuItem
-                        onClick={receivePayment}
-                        className="text-xs cursor-pointer"
-                      >
-                        <MdCurrencyExchange /> Recibir pago
-                      </DropdownMenuItem>
+                      {["SUPER_ADMIN", "GERENTE", "CHOFER"].includes(
+                        user?.role || ""
+                      ) && (
+                        <DropdownMenuItem
+                          onClick={receivePayment}
+                          className="text-xs cursor-pointer"
+                        >
+                          <MdCurrencyExchange /> Recibir pago
+                        </DropdownMenuItem>
+                      )}
+
                       <DropdownMenuItem
                         onClick={() => sendEmailReminder(row.original.id)}
                         className="text-xs cursor-pointer"
@@ -361,14 +366,21 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                       >
                         <DownloadCloud /> Descargar PDF
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={deleteOrder}
-                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        Cancelar
-                      </DropdownMenuItem>
+                      {["SUPER_ADMIN", "GERENTE"].includes(
+                        user?.role || ""
+                      ) && (
+                        <>
+                          {" "}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={deleteOrder}
+                            className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                          >
+                            <X />
+                            Cancelar
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </>
                   )}
                 </DropdownMenuContent>

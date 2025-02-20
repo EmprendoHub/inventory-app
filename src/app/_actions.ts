@@ -1,5 +1,5 @@
 "use server";
-
+import sharp from "sharp";
 import prisma from "@/lib/db";
 import { mc } from "@/lib/minio";
 import { VerifyEmailSchema } from "@/lib/schemas";
@@ -7,6 +7,53 @@ import axios from "axios";
 import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
 import { join } from "path";
+
+// Optimize and upload image
+export const uploadOptimizedImage = async (rawData: any) => {
+  try {
+    if (
+      rawData.image &&
+      rawData.image instanceof File &&
+      rawData.image.size > 0
+    ) {
+      // Convert the image file to ArrayBuffer
+      const arrayBuffer = await rawData.image.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      // Optimize the image using sharp
+      const optimizedImageBuffer = await sharp(buffer)
+        .resize(800, 800, {
+          // Resize to a maximum of 800x800 pixels
+          fit: "inside", // Maintain aspect ratio
+          withoutEnlargement: true, // Don't enlarge images smaller than 800x800
+        })
+        .webp({
+          // Convert to WebP format
+          quality: 80, // Adjust quality (0-100)
+          lossless: false, // Use lossy compression for smaller file size
+        })
+        .toBuffer();
+
+      // Generate a unique filename
+      const newFilename = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.webp`;
+      const path = join("/", "tmp", newFilename);
+
+      // Save the optimized image to a temporary file
+      await writeFile(path, optimizedImageBuffer);
+
+      // Upload the optimized image to Minio
+      await uploadToBucket("inventario", "products/" + newFilename, path);
+
+      console.log("Image uploaded successfully:", newFilename);
+      return newFilename;
+    }
+  } catch (error) {
+    console.error("Error optimizing or uploading image:", error);
+    throw error;
+  }
+};
 
 // Put a file in bucket my-bucketname
 export const uploadToBucket = async (

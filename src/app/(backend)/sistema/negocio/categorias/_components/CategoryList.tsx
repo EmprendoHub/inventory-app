@@ -40,14 +40,18 @@ import { useModal } from "@/app/context/ModalContext";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/app/_actions";
 import { deleteCategoryAction } from "../_actions";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function CategoryList({ categories }: { categories: categoryType[] }) {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
 
-  const router = useRouter();
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
@@ -181,15 +185,18 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
                     <Eye />
                     Editar
                   </DropdownMenuItem>
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteItem}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteItem}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

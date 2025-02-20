@@ -56,9 +56,15 @@ model Client {
   phone     String   @unique
   address   String
   image     String
+  status        ClientStatus @default(ACTIVE)
   orders    Order[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
 }
 
 model Driver {
@@ -486,6 +492,7 @@ model Transaction {
   account       Account   @relation(fields: [accountId], references: [id])
   accountId     String    @db.ObjectId
   orderId       String?   @db.ObjectId  // For sales orders
+  registerId    String?   @db.ObjectId  // For sales orders
   purchaseOrderId String? @db.ObjectId  // For purchase orders
   expenseId     String?   @db.ObjectId
   createdAt     DateTime  @default(now())
@@ -493,8 +500,8 @@ model Transaction {
 }
 
 enum TransactionType {
-  DEBITO
-  CREDITO
+  DEPOSITO
+  RETIRO
 }
 
 model Expense {
@@ -583,7 +590,14 @@ model CashRegister {
   user          User    @relation(fields: [userId], references: [id])
   userId        String  @db.ObjectId @unique
   managerId     String?
+  status     CashRegisterStatus? @default(ACTIVA)
 }
+
+enum CashRegisterStatus {
+  ACTIVA
+  INACTIVA
+}
+
 
 model CashTransaction {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -598,8 +612,8 @@ model CashTransaction {
 }
 
 enum CashTransactionType {
-  DEPOSIT
-  WITHDRAWAL
+  DEPOSITO
+  RETIRO
 }
 
 model CashAudit {

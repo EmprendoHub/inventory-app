@@ -182,7 +182,7 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
                   </DropdownMenuItem>
 
                   <DropdownMenuSeparator />
-                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
                     <DropdownMenuItem
                       onClick={deleteExpense}
                       className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"

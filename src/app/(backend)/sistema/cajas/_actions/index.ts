@@ -33,16 +33,29 @@ export const createCashRegisterAction = async (
   }
 
   try {
-    await prisma.cashRegister.create({
-      data: {
-        name: rawData.name,
-        balance: Number(rawData.fund),
-        managerId: rawData.managerId,
-        userId: rawData.ownerId,
-      },
+    await prisma.$transaction(async (prisma) => {
+      const newRegister = await prisma.cashRegister.create({
+        data: {
+          name: rawData.name,
+          balance: Number(rawData.fund),
+          managerId: rawData.managerId,
+          userId: rawData.ownerId,
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "DEPOSITO",
+          amount: Number(rawData.fund),
+          description: "FONDO DE CAJA",
+          cashRegisterId: newRegister.id,
+          userId: rawData.ownerId,
+        },
+      });
     });
 
-    revalidatePath("/sistema/caja");
+    revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
     return {
       success: true,
       message: "Cash Register created successfully!",
@@ -75,7 +88,7 @@ export const createCashTransactionAction = async (
   try {
     await prisma.cashTransaction.create({
       data: {
-        type: rawData.type as "DEPOSIT" | "WITHDRAWAL",
+        type: rawData.type as "DEPOSITO" | "RETIRO",
         amount: rawData.amount,
         description: rawData.description,
         cashRegisterId: rawData.cashRegisterId,
@@ -130,26 +143,71 @@ export const createCashAuditAction = async (
   const session = await getServerSession(options);
   const user = session?.user;
   try {
-    await prisma.cashAudit.create({
-      data: {
-        cashRegisterId: register.id,
-        startBalance: rawData.startBalance,
-        endBalance: rawData.endBalance,
-        auditDate: new Date(rawData.auditDate),
-        userId: user.id,
-        managerId: rawData.managerId,
-      },
-    });
-
-    await prisma.cashRegister.update({
-      where: { userId: user.id || "" },
-      data: {
-        balance: {
-          decrement: rawData.endBalance, // deducts cash withdraw to the current balance
+    await prisma.$transaction(async (prisma) => {
+      await prisma.cashAudit.create({
+        data: {
+          cashRegisterId: register.id,
+          startBalance: rawData.startBalance,
+          endBalance: rawData.endBalance,
+          auditDate: new Date(rawData.auditDate),
+          userId: user.id,
+          managerId: rawData.managerId,
         },
-      },
-    });
+      });
 
+      const updatedRegister = await prisma.cashRegister.update({
+        where: { userId: user?.id || "" },
+        data: {
+          balance: {
+            decrement: rawData.endBalance, // deducts cash withdraw to the current balance
+          },
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "RETIRO",
+          amount: Math.round(rawData.endBalance),
+          description: "CORTE DE CAJA",
+          cashRegisterId: updatedRegister.id,
+          userId: rawData.managerId,
+        },
+      });
+
+      const managerUser = await prisma.user.findFirst({
+        where: {
+          id: rawData.managerId,
+        },
+      });
+
+      const account = await prisma.account.findFirst({
+        where: {
+          parentAccount: null,
+        },
+      });
+
+      await prisma.transaction.create({
+        data: {
+          type: "DEPOSITO",
+          date: new Date(),
+          amount: Math.round(rawData.endBalance),
+          description: `CORTE DE CAJA (${updatedRegister.name}) RETIRADO POR: (${managerUser?.name})`,
+          registerId: updatedRegister.id,
+          accountId: account?.id || "",
+        },
+      });
+
+      await prisma.account.update({
+        where: {
+          id: account?.id,
+        },
+        data: {
+          balance: { increment: Math.round(rawData.endBalance) },
+        },
+      });
+    });
+    revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/cajas/auditoria");
     return {
@@ -193,13 +251,30 @@ export async function deleteCashAuditAction(formData: FormData) {
 export async function deleteCashRegisterAction(formData: FormData) {
   const rawData = {
     id: formData.get("id") as string,
+    managerId: formData.get("managerId") as string,
+    ownerId: formData.get("ownerId") as string,
   };
 
   try {
-    await prisma.cashRegister.delete({
-      where: {
-        id: rawData.id,
-      },
+    await prisma.$transaction(async (prisma) => {
+      const updatedRegister = await prisma.cashRegister.update({
+        where: {
+          id: rawData.id,
+        },
+        data: {
+          status: "INACTIVA",
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "RETIRO",
+          amount: Number(updatedRegister.balance),
+          description: `ELIMINACIÓN DE CAJA: ${updatedRegister.name}`,
+          cashRegisterId: updatedRegister.id,
+          userId: rawData.managerId,
+        },
+      });
     });
 
     revalidatePath("/sistema/cajas");

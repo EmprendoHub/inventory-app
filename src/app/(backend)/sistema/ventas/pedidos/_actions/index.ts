@@ -136,10 +136,14 @@ export async function createNewOrder(
                 const stock = await prisma.stock.findFirst({
                   where: { itemId: groupOrderItem.itemId },
                 });
-
+                const item = await prisma.item.findFirst({
+                  where: {
+                    id: groupOrderItem.itemId,
+                  },
+                });
                 if (!stock) {
                   throw new Error(
-                    `Stock not found for item ${groupOrderItem.itemId}`
+                    `No hay suficiente existencias del artículo ${orderItems.name}`
                   );
                 }
 
@@ -147,8 +151,10 @@ export async function createNewOrder(
                   stock.availableQty - groupOrderItem.quantity;
 
                 if (newAvailableQty < 0) {
+                  const shortageAmount = Math.abs(newAvailableQty);
+
                   throw new Error(
-                    `Insufficient stock for item ${groupOrderItem.itemId}`
+                    `No hay suficiente existencias del artículo ${item?.name}. Articulo: ${groupOrderItem.id}, Faltante: ${shortageAmount}`
                   );
                 }
 
@@ -188,7 +194,10 @@ export async function createNewOrder(
             const newAvailableQty = stock.availableQty - orderItem.quantity;
 
             if (newAvailableQty < 0) {
-              throw new Error(`Insufficient stock for item ${orderItem.id}`);
+              const shortageAmount = Math.abs(newAvailableQty);
+              throw new Error(
+                `No hay suficiente existencias del artículo ${orderItem.id}. Articulo: ${orderItem.name}, Faltante: ${shortageAmount}`
+              );
             }
 
             stockUpdates.push(
@@ -260,11 +269,35 @@ export async function createNewOrder(
       message: "Order created successfully!",
     };
   } catch (error) {
-    console.error("Error creating order:", error);
+    // console.error("Error creating order:", error);
+
+    // Check if the error is related to insufficient stock
+    if (
+      error instanceof Error &&
+      error.message.includes("No hay suficiente existencias")
+    ) {
+      // Extract the item ID, name, and shortage amount from the error message
+      //const itemIdMatch = error.message.match(/item\s+([a-f0-9]+)/);
+      const itemNameMatch = error.message.match(/Articulo:\s+([^,]+)/);
+      const shortageMatch = error.message.match(/Faltante:\s+(\d+)/);
+
+      //const itemId = itemIdMatch ? itemIdMatch[1] : null;
+      const itemName = itemNameMatch ? itemNameMatch[1] : "Unknown Item";
+      const shortageAmount = shortageMatch ? shortageMatch[1] : "Unknown";
+
+      // Return a custom error message with item name and shortage amount
+      return {
+        errors: {},
+        success: false,
+        message: `No hay suficiente existencias del artículo "${itemName}". Faltan ${shortageAmount} unidades. Ajuste la cantidad o elimine el artículo del pedido.`,
+      };
+    }
+
+    // Handle other generic errors
     return {
       errors: {},
       success: false,
-      message: "Failed to create order",
+      message: "An unexpected error occurred while creating the order.",
     };
   }
 }
@@ -340,75 +373,84 @@ export async function payOrderAction(formData: FormData) {
         message: `El monto del pago de $${paymentAmount} excedería el total del pedido!.`,
       };
     }
-
-    // Create new payment
-    const payment = await prisma.payment.create({
-      data: {
-        amount: Math.round(paymentAmount),
-        method: method || "Efectivo",
-        orderNo: order.orderNo,
-        orderId: order.id,
-        reference,
-        status: "PAGADO",
-        invoiceId: "",
-      },
-    });
-
-    if (payment.method === "Efectivo") {
-      await prisma.cashRegister.update({
-        where: { userId: user.id || "" },
+    await prisma.$transaction(async (prisma) => {
+      // Create new payment
+      const payment = await prisma.payment.create({
         data: {
-          balance: {
-            increment: Math.round(paymentAmount), // deducts cash withdraw to the current balance
-          },
+          amount: Math.round(paymentAmount),
+          method: method || "Efectivo",
+          orderNo: order.orderNo,
+          orderId: order.id,
+          reference,
+          status: "PAGADO",
+          invoiceId: "",
         },
       });
-    }
 
-    let orderStatus = "PENDIENTE";
-
-    if (previousPayments + paymentAmount >= order.totalAmount) {
-      orderStatus = "PROCESANDO";
-
-      if (order.delivery) {
-        await prisma.delivery.update({
-          where: {
-            id: order.delivery.id,
-          },
+      if (payment.method === "Efectivo") {
+        const updatedRegister = await prisma.cashRegister.update({
+          where: { userId: user.id || "" },
           data: {
-            status: orderStatus,
+            balance: {
+              increment: Math.round(paymentAmount), // deducts cash withdraw to the current balance
+            },
+          },
+        });
+        await prisma.cashTransaction.create({
+          data: {
+            type: "DEPOSITO",
+            amount: Math.round(paymentAmount),
+            description: `PAGO DE PEDIDO: ${order.orderNo}`,
+            cashRegisterId: updatedRegister.id,
+            userId: user.id,
           },
         });
       }
-    }
 
-    await prisma.order.update({
-      where: {
-        id: order.id,
-      },
-      data: {
-        status: orderStatus as OrderStatus,
-      },
+      let orderStatus = "PENDIENTE";
+
+      if (previousPayments + paymentAmount >= order.totalAmount) {
+        orderStatus = "PROCESANDO";
+
+        if (order.delivery) {
+          await prisma.delivery.update({
+            where: {
+              id: order.delivery.id,
+            },
+            data: {
+              status: orderStatus,
+            },
+          });
+        }
+      }
+
+      await prisma.order.update({
+        where: {
+          id: order.id,
+        },
+        data: {
+          status: orderStatus as OrderStatus,
+        },
+      });
     });
 
     revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
     revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pagos");
 
     return {
-      payment,
       errors: {},
       success: true,
       message: `Pago de $${paymentAmount} aceptado.`,
     };
   } catch (error) {
-    console.error("Error processing payment:", error);
     return {
       errors: {},
       success: false,
-      message: "Failed to process payment",
+      message: `Failed to process payment ${error}`,
     };
   }
 }
@@ -497,53 +539,67 @@ export async function payOrderActionOnDelivery(formData: FormData) {
         message: `Debe pagar total remanente: $${balance} del pedido para entregar!.`,
       };
     }
-    // Create new payment
-    const payment = await prisma.payment.create({
-      data: {
-        amount: Math.round(paymentAmount),
-        method: method || "Efectivo",
-        orderNo: order.orderNo,
-        orderId: order.id,
-        reference,
-        status: "PAGADO",
-        invoiceId: "",
-      },
-    });
 
-    await prisma.cashRegister.update({
-      where: { userId: user.id },
-      data: {
-        balance: {
-          increment: paymentAmount, // Adds paymentAmount to the current balance
+    await prisma.$transaction(async (prisma) => {
+      // Create new payment
+      await prisma.payment.create({
+        data: {
+          amount: Math.round(paymentAmount),
+          method: method || "Efectivo",
+          orderNo: order.orderNo,
+          orderId: order.id,
+          reference,
+          status: "PAGADO",
+          invoiceId: "",
         },
-      },
+      });
+
+      const updatedRegister = await prisma.cashRegister.update({
+        where: { userId: user.id },
+        data: {
+          balance: {
+            increment: paymentAmount, // Adds paymentAmount to the current balance
+          },
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "DEPOSITO",
+          amount: Math.round(paymentAmount),
+          description: `PAGO A LA ENTREGA PEDIDO: ${order.orderNo}`,
+          cashRegisterId: updatedRegister.id,
+          userId: user.id,
+        },
+      });
+
+      if (
+        previousPayments + paymentAmount ===
+        order.totalAmount + (order.delivery?.price || 0)
+      ) {
+        const deliveryStatus = "ENTREGADO";
+
+        if (order.delivery) {
+          await prisma.delivery.update({
+            where: {
+              id: order.deliveryId || "",
+            },
+            data: {
+              status: deliveryStatus,
+            },
+          });
+        }
+      }
     });
 
-    if (
-      previousPayments + paymentAmount ===
-      order.totalAmount + (order.delivery?.price || 0)
-    ) {
-      const deliveryStatus = "ENTREGADO";
-
-      if (order.delivery) {
-        await prisma.delivery.update({
-          where: {
-            id: order.deliveryId || "",
-          },
-          data: {
-            status: deliveryStatus,
-          },
-        });
-      }
-    }
     revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
     revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
 
     return {
-      payment,
       errors: {},
       success: true,
       message: `Pago de $${paymentAmount} aceptado.`,
@@ -649,14 +705,27 @@ export async function deletePaymentAction(formData: FormData) {
       data: {
         status: "CANCELADO",
       },
+      include: {
+        order: true,
+      },
     });
 
-    await prisma.cashRegister.update({
+    const updatedRegister = await prisma.cashRegister.update({
       where: { userId: validatedData.data.userId || "" },
       data: {
         balance: {
           decrement: canceledPayment.amount, // Adds paymentAmount to the current balance
         },
+      },
+    });
+
+    await prisma.cashTransaction.create({
+      data: {
+        type: "RETIRO",
+        amount: Math.round(canceledPayment.amount),
+        description: `CANCELACIÓN DE PAGO - PEDIDO: ${canceledPayment.orderNo}`,
+        cashRegisterId: updatedRegister.id,
+        userId: validatedData.data.userId,
       },
     });
 
@@ -784,12 +853,22 @@ export async function deleteOrderAction(formData: FormData) {
         0
       );
 
-      await prisma.cashRegister.update({
+      const updatedRegister = await prisma.cashRegister.update({
         where: { userId: validatedData.data.userId || "" },
         data: {
           balance: {
             decrement: previousPayments, // Adds paymentAmount to the current balance
           },
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "RETIRO",
+          amount: Math.round(previousPayments),
+          description: `CANCELACIÓN DE PEDIDO: ${order.orderNo}`,
+          cashRegisterId: updatedRegister.id,
+          userId: validatedData.data.userId,
         },
       });
 
@@ -817,6 +896,7 @@ export async function deleteOrderAction(formData: FormData) {
 
     // console.log("Order deleted and stock updated successfully");
     revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
     return {

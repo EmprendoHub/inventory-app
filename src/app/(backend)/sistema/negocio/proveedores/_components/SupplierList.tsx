@@ -40,9 +40,14 @@ import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
 import { deleteSupplierAction } from "../_actions";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -104,7 +109,7 @@ export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
           const ActionCell = () => {
             const { showModal } = useModal();
 
-            const deleteItem = React.useCallback(async () => {
+            const deleteSupplier = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
                 title: "Verificación de Supervisor",
@@ -194,14 +199,18 @@ export function SupplierList({ suppliers }: { suppliers: supplierType[] }) {
                     Editar
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteItem}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteSupplier}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );

@@ -76,6 +76,7 @@ export async function createClient(
       data: {
         name,
         email,
+        status: "ACTIVE",
         phone,
         address,
         image: savedImageUrl,
@@ -256,9 +257,100 @@ export async function deleteClientAction(formData: FormData) {
 
   try {
     await prisma.$transaction([
+      // First, delete all OrderItems related to the Orders of the client
+      prisma.orderItem.deleteMany({
+        where: {
+          order: {
+            clientId: validatedData.data.id,
+          },
+        },
+      }),
+
+      // Then, delete all Payments related to the Orders of the client
+      prisma.payment.deleteMany({
+        where: {
+          order: {
+            clientId: validatedData.data.id,
+          },
+        },
+      }),
+
+      // Then, delete all Orders of the client
+      prisma.order.deleteMany({
+        where: {
+          clientId: validatedData.data.id,
+        },
+      }),
+
+      // Finally, delete the client
       prisma.client.delete({
         where: {
           id: validatedData.data.id,
+        },
+      }),
+    ]);
+
+    revalidatePath("/sistema/negocio/clientes");
+    return {
+      errors: {},
+      success: true,
+      message: "Client deleted successfully!",
+    };
+  } catch (error) {
+    console.error("Error deleting client:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Failed to delete client",
+    };
+  }
+}
+
+export async function toggleClientStatusAction(formData: FormData) {
+  const rawData = {
+    id: formData.get("id"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = idSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    const errors = validatedData.error.flatten().fieldErrors;
+    return {
+      errors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  if (!validatedData.data)
+    return { success: false, message: "Error al crear producto" };
+
+  try {
+    // Fetch the current status of the item
+    const client = await prisma.client.findUnique({
+      where: {
+        id: validatedData.data.id,
+      },
+      select: {
+        status: true,
+      },
+    });
+
+    if (!client) {
+      return {
+        success: false,
+        message: "Item not found",
+      };
+    }
+    // Toggle the status
+    const newStatus = client.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    await prisma.$transaction([
+      prisma.client.update({
+        where: {
+          id: validatedData.data.id,
+        },
+        data: {
+          status: newStatus,
         },
       }),
     ]);

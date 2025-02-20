@@ -1,3 +1,4 @@
+import { ClientStatus } from "@prisma/client";
 import { DeliveryType } from "./delivery";
 
 export type layawayAndProductType = {
@@ -32,19 +33,13 @@ export type receiptsAndProductType = {
 export type clientsAndProductType = {
   clients: {
     id: string;
-
     name: string;
-
     email: string;
-
     phone: string;
-
+    status: string;
     image: string;
-
     address: string;
-
     createdAt: Date;
-
     updatedAt: Date;
   }[];
 };
@@ -54,6 +49,7 @@ export type clientType = {
   name: string;
   email: string;
   phone: string;
+  status: ClientStatus;
   image: string;
   address: string;
   createdAt: Date;

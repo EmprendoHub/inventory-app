@@ -40,9 +40,13 @@ import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/app/_actions";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteUnitAction } from "../_actions";
+import { useSession } from "next-auth/react";
+import { UserType } from "@/types/users";
 
 export function UnitList({ units }: { units: unitType[] }) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const user = session?.user as UserType;
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -91,7 +95,7 @@ export function UnitList({ units }: { units: unitType[] }) {
           const ActionCell = () => {
             const { showModal } = useModal();
 
-            const deleteItem = React.useCallback(async () => {
+            const deleteUnit = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
                 title: "Verificación de Supervisor",
@@ -181,14 +185,18 @@ export function UnitList({ units }: { units: unitType[] }) {
                     Editar
                   </DropdownMenuItem>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={deleteItem}
-                    className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                  >
-                    <X />
-                    Eliminar
-                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteUnit}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
