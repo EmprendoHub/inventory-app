@@ -407,9 +407,7 @@ export default function SideBar({
           {!["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (
             <>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                } ${
+                className={`flex w-full items-center gap-2  p-1.5 pl-2 pr-2 ${
                   path === "/sistema/ventas/envios" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/ventas/envios"}
