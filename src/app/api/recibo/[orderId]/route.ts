@@ -1,4 +1,3 @@
-//// api pdf
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 import jsPDF from "jspdf";
@@ -78,6 +77,10 @@ async function createReceiptCopy(
 ) {
   const lineHeight = 10;
   const yPos = yOffset + 35;
+  const sectionHeight = 148.5; // Height of each receipt section
+  const termsHeight = 20;
+  const bottomSectionHeight = 35; // Height for the bottom section (client info + totals)
+  const notesHeight = order.notes ? 15 : 0;
 
   // Add background header
   pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
@@ -95,38 +98,56 @@ async function createReceiptCopy(
     productsEndY = await addOrderItems(pdf, order.orderItems, yPos, lineHeight);
   }
 
+  // Calculate the end of the products section to leave space for bottom elements
+  const maxProductsEndY =
+    yOffset +
+    sectionHeight -
+    bottomSectionHeight -
+    termsHeight -
+    notesHeight -
+    5;
+  if (productsEndY > maxProductsEndY) {
+    productsEndY = maxProductsEndY;
+  }
+
   // Draw the border around products
   pdf.rect(15, productsStartY, 180, productsEndY - productsStartY, "S");
 
-  // Add totals
-  addTotals(pdf, order.totalAmount, order.payments ?? [], productsEndY);
+  // Calculate the starting Y position for the bottom section
+  const bottomSectionY =
+    yOffset + sectionHeight - bottomSectionHeight - termsHeight;
 
   // Add client section at the bottom left
   if (order.client) {
-    addClientSection(pdf, order.client, productsEndY);
+    addClientSection(pdf, order.client, bottomSectionY);
   }
 
+  // Add totals at the bottom right, aligned with client section
+  addTotals(pdf, order.totalAmount, order.payments ?? [], bottomSectionY);
+
+  // Add notes if present
   if (order.notes) {
-    addNotes(pdf, order.notes, pdf.internal.pageSize.height - 20);
+    addNotes(pdf, order.notes, bottomSectionY - notesHeight);
   }
 
-  // Add terms and conditions at the bottom
+  // Add terms and conditions at the very bottom
+  const termsY = yOffset + sectionHeight - termsHeight;
   pdf.setFontSize(8);
   pdf.setTextColor(100);
   pdf.text(
     "Los muebles son artículos de liquidación de hoteles y no son nuevos. No aplican garantías. El costo de envío",
-    28,
-    pdf.internal.pageSize.height - 10
+    34,
+    termsY + 10
   );
   pdf.text(
     "varía según la localidad. Las entregas son solo a primer nivel. En caso de entregas fallidas, los costos de",
-    30,
-    pdf.internal.pageSize.height - 7
+    36,
+    termsY + 13
   );
   pdf.text(
     "envío serán acumulables. Se requiere liquidación total del saldo antes de la descarga de los muebles.",
-    32,
-    pdf.internal.pageSize.height - 4
+    38,
+    termsY + 16
   );
 }
 
@@ -142,14 +163,16 @@ async function addFromSection(pdf: jsPDF, yOffset: number) {
   const dataUrl = `data:image/png;base64,${base64}`;
 
   pdf.addImage(dataUrl, "PNG", 13, yOffset + 3, 15, 15);
+
+  // Company name
   pdf.setFontSize(18);
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   pdf.text("MUEBLES YUNY", 30, yOffset + 8);
 
+  // Address and phone on separate lines with more spacing
   pdf.setFontSize(11);
-  pdf.text(["Blvd. Lazaro Cardenas 380", "353 111 0826"], 30, yOffset + 12);
-
-  pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  pdf.text("Blvd. Lazaro Cardenas 380", 30, yOffset + 13);
+  pdf.text("353 111 0826", 30, yOffset + 17);
 }
 
 function addClientSection(pdf: jsPDF, client: clientType, yPos: number) {
@@ -158,14 +181,17 @@ function addClientSection(pdf: jsPDF, client: clientType, yPos: number) {
     COLORS.secondary[1],
     COLORS.secondary[2]
   );
-  pdf.rect(15, yPos + 5, 80, 25, "F");
+  pdf.rect(15, yPos + 18, 80, 22, "F");
 
   pdf.setFontSize(12);
-  pdf.text("ENVIAR A", 20, yPos + 12);
+  pdf.setFont("helvetica", "bold");
+  pdf.text("ENVIAR A:", 20, yPos + 26);
 
-  pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10);
-  pdf.text([client.name, client.email, client.address], 20, yPos + 18);
+  pdf.text(client.name, 20, yPos + 30);
+  pdf.text(client.address, 20, yPos + 34);
+  pdf.text(client.phone, 20, yPos + 38);
 }
 
 function addInvoiceDetails(pdf: jsPDF, order: FullOderType, yOffset: number) {
@@ -204,8 +230,20 @@ async function addOrderItems(
   pdf.setFont("helvetica", "normal");
 
   for (const item of orderItems) {
+    // Product name
+    pdf.setFont("helvetica", "bold");
     pdf.text(item.name, 20, yPos);
-    pdf.text(item.description, 20, yPos + 5);
+
+    // Product description (if available)
+    if (item.description) {
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.text(item.description, 20, yPos + 4);
+      pdf.setFontSize(10);
+    }
+
+    // Quantity and price
+    pdf.setFont("helvetica", "normal");
     pdf.text(item.quantity.toString(), 110, yPos);
     pdf.text(
       formatCurrency({ amount: item.price * item.quantity, currency: "MXN" }),
@@ -213,7 +251,7 @@ async function addOrderItems(
       yPos
     );
 
-    yPos += lineHeight - 2;
+    yPos += lineHeight + (item.description ? 4 : 0);
   }
 
   return yPos;
@@ -235,25 +273,28 @@ function addTotals(
     COLORS.secondary[1],
     COLORS.secondary[2]
   );
-  pdf.rect(110, yPos + 5, 85, 25, "F");
+  pdf.rect(110, yPos + 18, 85, 22, "F");
 
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   pdf.setFont("helvetica", "bold");
 
   const pendingAmount = totalAmount - totalPaymentAmount;
-  pdf.text("Pendiente:", 115, yPos + 15);
+  pdf.text("Pendiente:", 115, yPos + 27);
   pdf.setFontSize(14);
   pdf.text(
     formatCurrency({ amount: pendingAmount, currency: "MXN" }),
-    140,
-    yPos + 15
+    190,
+    yPos + 27,
+    { align: "right" }
   );
-  pdf.text("Total:", 115, yPos + 23);
+
+  pdf.text("Total:", 115, yPos + 37);
   pdf.setFontSize(16);
   pdf.text(
     formatCurrency({ amount: totalAmount, currency: "MXN" }),
-    140,
-    yPos + 23
+    190,
+    yPos + 37,
+    { align: "right" }
   );
 }
 
