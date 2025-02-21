@@ -605,6 +605,11 @@ export function DeliveryList({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    initialState: {
+      pagination: {
+        pageSize: 7, // Set the default page size to 5
+      },
+    },
     state: {
       sorting,
       columnFilters,
@@ -615,7 +620,7 @@ export function DeliveryList({
 
   return (
     <div className="w-full">
-      <div className="flex  maxsm:flex-col maxsm:items-start gap-3 items-center justify-between py-4">
+      <div className="flex maxsm:flex-col maxsm:items-start gap-3 items-center justify-between py-4">
         <Input
           placeholder="No de Pedido..."
           value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}

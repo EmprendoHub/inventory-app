@@ -9,6 +9,7 @@ export interface InventoryItem {
   iconName: string;
   description: string;
   link: string;
+  linkAll: string;
   buttonText: string;
 }
 
@@ -19,6 +20,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     description:
       "Crea multiples variantes del mismo articulo usando artículos agrupados",
     link: "/sistema/negocio/marcas/nueva",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Marca Nueva",
   },
   {
@@ -27,6 +29,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     description:
       "Crea un articulo individual y servicio que puedes comprar y vender.",
     link: "/sistema/negocio/articulos/nuevo",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Articulo Nuevo",
   },
   {
@@ -34,6 +37,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     iconName: "GiClothes",
     description: "Agrupa varios artículos y véndelos en paquetes.",
     link: "/sistema/negocio/articulos/conjuntos/nuevo",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Articulo Nuevo",
   },
   {
@@ -42,6 +46,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     description:
       "Modifica los precios de tus articulos para contratos o transacciones espesificas.",
     link: "/sistema/negocio/unidades/nueva",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Nueva Unidad",
   },
   {
@@ -50,6 +55,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     description:
       "Crea una nueva categoría para clasificar tus artículos o servicios.",
     link: "/sistema/negocio/categorias/nueva",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Categoría Nueva",
   },
   {
@@ -57,6 +63,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     iconName: "FaWarehouse",
     description: "Agrega nueva bodega para mantener tu inventario organizado.",
     link: "/sistema/negocio/bodegas/nueva",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Nueva Bodega",
   },
   {
@@ -65,45 +72,43 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     description:
       "Agrega nuevo Proveedor para mantener tu inventario organizado.",
     link: "/sistema/negocio/proveedores/nuevo",
+    linkAll: "/sistema/ventas/envios",
     buttonText: "Nuevo Proveedor",
   },
 ];
 
 export const SALES_ITEMS: InventoryItem[] = [
   {
-    title: "Clientes",
-    iconName: "FaUsers",
-    description: "Crea un nuevo cliente a tu sistema.",
-    link: "/sistema/ventas/clientes/crear",
-    buttonText: "Cliente Nuevo",
-  },
-  {
     title: "Pedidos",
     iconName: "LiaFileInvoiceDollarSolid",
     description: "Crea un pedido nuevo.",
     link: "/sistema/ventas/pedidos/nuevo",
+    linkAll: "/sistema/ventas/pedidos",
     buttonText: "Pedido Nuevo",
+  },
+  {
+    title: "Clientes",
+    iconName: "FaUsers",
+    description: "Crea un nuevo cliente a tu sistema.",
+    link: "/sistema/ventas/clientes/crear",
+    linkAll: "/sistema/ventas/clientes",
+    buttonText: "Cliente Nuevo",
   },
   {
     title: "Envíos",
     iconName: "FaShippingFast",
     description: "Crea un nuevo envió para entrega.",
-    link: "/sistema/ventas/envios/nuevo",
-    buttonText: "Envió Nuevo",
+    link: "",
+    linkAll: "/sistema/ventas/envios",
+    buttonText: "",
   },
   {
     title: "Pagos",
     iconName: "GiPayMoney",
     description: "Recibe pagos para tus pedidos.",
-    link: "/sistema/negocio/unidades/nueva",
-    buttonText: "Nueva Unidad",
-  },
-  {
-    title: "Facturas",
-    iconName: "PiInvoice",
-    description: "Crea una nueva factura CFDI para tu contabilidad.",
-    link: "/sistema/negocio/facturas",
-    buttonText: "Factura Nueva",
+    link: "",
+    linkAll: "/sistema/ventas/pagos",
+    buttonText: "",
   },
 ];
 

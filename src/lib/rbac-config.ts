@@ -34,6 +34,7 @@ export const RBAC_CONFIG = {
       "/sistema/ventas/pedidos",
       "/sistema/ventas/pagos",
       "/sistema/ventas/envios", // Only allow /sistema/ventas/envios
+      "/sistema/ventas",
       "/sistema/cajas/personal/", // Allow all sistema routes
       "/sistema/contabilidad/gastos", // Allow all sistema routes
       "/sistema/cajas/auditoria/nueva",

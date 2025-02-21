@@ -407,6 +407,11 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    initialState: {
+      pagination: {
+        pageSize: 7, // Set the default page size to 5
+      },
+    },
     state: {
       sorting,
       columnFilters,

@@ -215,6 +215,11 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    initialState: {
+      pagination: {
+        pageSize: 7, // Set the default page size to 5
+      },
+    },
     state: {
       sorting,
       columnFilters,
@@ -232,7 +237,7 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
           onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
             table.getColumn("type")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="max-w-sm text-xs"
         />
         <DropdownMenu>
           <DropdownMenuContent align="end">
@@ -307,10 +312,10 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+        {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} gasto(s) seleccionado(s).
-        </div>
+        </div> */}
         <div className="space-x-2">
           <Button
             variant="outline"

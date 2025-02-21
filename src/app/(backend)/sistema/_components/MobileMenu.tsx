@@ -6,6 +6,7 @@ import {
   Boxes,
   Building2,
   ChevronRight,
+  DollarSign,
   FilesIcon,
   Group,
   Home,
@@ -52,7 +53,7 @@ export default function MobileMenu() {
       {/* left */}
       <div className="flex flex-col text-sm justify-center">
         {/*   Links */}
-        <nav className="flex  gap-1 px-1 py-1.5 ">
+        <nav className="flex  gap-4 px-1 py-1.5 ">
           <Link
             className={`flex items-center gap-2 ${
               path === "/sistema/home" ? "bg-blue-600" : ""
@@ -229,7 +230,7 @@ export default function MobileMenu() {
           )}
 
           {/* Ventas */}
-          {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (
+          {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <>
               <Collapsible className="w-full">
                 <CollapsibleTrigger className="w-full">
@@ -341,6 +342,15 @@ export default function MobileMenu() {
           {/* GERENTE */}
           {!["SUPER_ADMIN", "ADMIN", "CHOFER"].includes(user?.role || "") && (
             <>
+              <Link
+                className={`flex w-full items-center gap-2 p-1.5    ${
+                  path === "/sistema/ventas" ? "bg-blue-600" : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/ventas"}
+              >
+                <DollarSign size={16} />
+                <span className={`text-xs `}>Ventas</span>
+              </Link>
               <Link
                 className={`flex w-full items-center gap-2 p-1.5   ${
                   path === `/sistema/cajas/personal/${user?.id}`
@@ -515,7 +525,7 @@ export default function MobileMenu() {
       </div>
       {/*   Middle Logo  */}
       <div className="flex items-center gap-2 p-3 bg-slate-900">
-        <LogoIcon className="w-5 h-auto" />
+        <LogoIcon className="w-8 h-auto" />
       </div>
     </div>
   );
