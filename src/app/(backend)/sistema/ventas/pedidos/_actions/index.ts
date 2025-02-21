@@ -438,7 +438,7 @@ export async function payOrderAction(formData: FormData) {
 
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/cajas/personal");
-    revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
+    revalidatePath(`/sistema/ventas/pedidos/ver/${order.id}`);
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pagos");
@@ -596,7 +596,7 @@ export async function payOrderActionOnDelivery(formData: FormData) {
 
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/cajas/personal");
-    revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
+    revalidatePath(`/sistema/ventas/pedidos/ver/${order.id}`);
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
@@ -659,7 +659,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
       };
     }
 
-    revalidatePath(`/sistema/ventas/pedidos/${order.id}`);
+    revalidatePath(`/sistema/ventas/pedidos/ver/${order.id}`);
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
@@ -734,7 +734,7 @@ export async function deletePaymentAction(formData: FormData) {
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
-    revalidatePath(`/sistema/ventas/pedidos/${validatedData.data.id}`);
+    revalidatePath(`/sistema/ventas/pedidos/ver/${validatedData.data.id}`);
     return {
       errors: {},
       success: true,
@@ -1029,7 +1029,7 @@ export async function deleteOrderItemsAction(formData: FormData) {
 
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
-    revalidatePath(`/sistema/ventas/pedidos/${orderId}`);
+    revalidatePath(`/sistema/ventas/pedidos/ver/${orderId}`);
     revalidatePath("/sistema/cajas");
 
     return {

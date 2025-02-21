@@ -318,7 +318,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             }, [showModal, row.original.id, row.original.totalAmount]);
 
             const viewOrder = React.useCallback(async () => {
-              router.push(`/sistema/ventas/pedidos/${row.original.id}`);
+              router.push(`/sistema/ventas/pedidos/ver/${row.original.id}`);
             }, []);
             return (
               <DropdownMenu>
@@ -512,10 +512,10 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+        {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} pedido(s) seleccionada(s).
-        </div>
+        </div> */}
         <div className="space-x-2">
           <Button
             variant="outline"

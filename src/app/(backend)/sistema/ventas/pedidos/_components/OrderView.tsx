@@ -292,22 +292,28 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
   return (
     <div className="order-view relative">
-      <div className="absolute flex items-center gap-4 z-40 top-24 maxmd:top-64">
-        {order.status === "CANCELADO" ? (
-          <h2 className="text-6xl maxmd:text-4xl text-red-900 font-black ">
-            CANCELADO
-          </h2>
-        ) : order.status === "PAGADO" ? (
-          <h2 className="text-6xl maxmd:text-4xl text-emerald-900 font-black ">
-            PAGADO Y ENTREGADO
-          </h2>
-        ) : order.status === "ENTREGADO" ? (
-          <h2 className="text-6xl maxmd:text-4xl text-yellow-600 font-black ">
-            ENTREGADO
-          </h2>
-        ) : (
-          ""
-        )}
+      <div className="absolute flex maxsm:flex-col-reverse items-start gap-4 maxsm:gap-0 z-40 top-20 maxmd:top-20">
+        <div className="flex flex-col leading-none">
+          {order.status === "CANCELADO" ? (
+            <h2 className="text-2xl maxmd:text-2xl text-red-900 font-black ">
+              CANCELADO POR:
+            </h2>
+          ) : order.status === "PAGADO" ? (
+            <h2 className="text-2xl maxmd:text-2xl text-emerald-900 font-black ">
+              PAGADO Y ENTREGADO
+            </h2>
+          ) : order.status === "ENTREGADO" ? (
+            <div>
+              <h2 className="text-2xl maxmd:text-2xl text-emerald-700 font-black ">
+                ENTREGADO A:
+              </h2>
+            </div>
+          ) : (
+            ""
+          )}
+          <span className="text-xs">{order.client?.name}</span>
+          <span className="text-xs">{order.client?.address}</span>
+        </div>
         {order.signature && (
           <div className="bg-white w-fit rounded-md">
             <div
@@ -354,13 +360,19 @@ export default function OrderView({ order }: { order: FullOderType }) {
       <div className="flex maxmd:flex-col justify-between gap-3 items-start maxsm:items-end border-b pt-0 pb-8 px-4 maxmd:pr-10 maxsm:pl-0">
         <div className="flex maxsm:items-start items-center gap-1">
           <div className=" p-2 rounded-lg">
-            <LogoIcon className="h-20 w-20" />
+            <LogoIcon className="h-12 w-14" />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-muted">MUEBLES YUNY</h2>
-            <p className="text-sm text-muted">Blvd. Lazaro Cardenas 380</p>
-            <p className="text-sm text-muted">Sahuayo, Michoacan 59000</p>
-            <p className="text-sm text-muted">Tel: (353) 153-0042</p>
+          <div className="leading-none">
+            <p className="text-xs font-semibold text-muted leading-none">
+              Yunuen Company Liquidación de Muebles Americanos
+            </p>
+            <span className="text-xs text-muted">
+              Blvd. Lazaro Cardenas 380{" "}
+            </span>
+            <span className="text-xs text-muted">
+              Sahuayo, Michoacan 59000{" "}
+            </span>
+            <p className="text-xs text-muted">Tel: (353) 153-0042</p>
           </div>
         </div>
 

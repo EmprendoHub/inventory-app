@@ -39,15 +39,6 @@ export default function HomeNavbar() {
           </li>
           <li
             className={` ${
-              path === "/sistema/home/actualizaciones"
-                ? "border-b-2 border-primary"
-                : ""
-            }`}
-          >
-            <Link href="/sistema/home/actualizaciones">Actualizaciones</Link>
-          </li>
-          <li
-            className={` ${
               path === "/sistema/home/notificaciones"
                 ? "border-b-2 border-primary"
                 : ""

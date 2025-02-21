@@ -58,7 +58,7 @@ const SystemHeader = () => {
             </Tooltip>
           </div>
         </div>
-        <div className="flex gap-2 items-center maxsm:w-full">
+        <div className="flex gap-2 items-center justify-end maxsm:w-full">
           {/*  User Info  */}
           <div className="flex">
             <Tooltip>

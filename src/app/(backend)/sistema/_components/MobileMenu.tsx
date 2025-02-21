@@ -5,7 +5,6 @@ import {
   Box,
   Boxes,
   Building2,
-  ChevronLeft,
   ChevronRight,
   FilesIcon,
   Group,
@@ -14,10 +13,11 @@ import {
   Truck,
   Users,
   Users2,
+  Wallet2,
   Warehouse,
 } from "lucide-react";
 import Link from "next/link";
-import React, { Dispatch, SetStateAction } from "react";
+import React from "react";
 import {
   FaAdjust,
   FaDollyFlatbed,
@@ -40,41 +40,19 @@ import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 
-export default function SideBar({
-  setHidden,
-  hidden,
-}: {
-  setHidden: Dispatch<SetStateAction<boolean>>;
-  hidden: boolean;
-}) {
+export default function MobileMenu() {
   const path = usePathname();
   const { data: session } = useSession();
 
   const user = session?.user as UserType;
   return (
-    <aside
-      className={`maxsm:hidden duration-300 ease-in-out min-h-screen bg-slate-800  text-slate-50 flex flex-col justify-between fixed ${
-        hidden ? "w-10" : "w-44"
-      }`}
+    <div
+      className={`minsm:hidden duration-300 ease-in-out  bg-slate-800  text-slate-50 flex w-full justify-between fixed bottom-0 `}
     >
-      {/* Top */}
+      {/* left */}
       <div className="flex flex-col text-sm justify-center">
-        {/*   Logo  */}
-        <div className="flex items-center gap-2 p-3 bg-slate-900">
-          <LogoIcon className="min-w-5 w-10 h-auto" />
-          <div
-            className={`gap-0 flex flex-col leading-[0] ${
-              hidden ? "hidden" : "block"
-            }`}
-          >
-            <span className="text-sm tracking-widest  leading-none">
-              MUEBLES
-            </span>
-            <span className="text-2xl font-black  leading-none">YUNY</span>
-          </div>
-        </div>
         {/*   Links */}
-        <nav className="flex flex-col gap-1 px-1 py-1.5 ">
+        <nav className="flex  gap-1 px-1 py-1.5 ">
           <Link
             className={`flex items-center gap-2 ${
               path === "/sistema/home" ? "bg-blue-600" : ""
@@ -82,9 +60,6 @@ export default function SideBar({
             href={"/sistema/home"}
           >
             <Home size={16} />
-            <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-              Home
-            </span>
           </Link>
 
           {/* Negocio */}
@@ -94,9 +69,7 @@ export default function SideBar({
                 <div className="flex  items-center gap-2 hover:bg-slate-900 p-2 rounded-md justify-between">
                   <div className="flex items-center gap-2 ">
                     <FaDollyFlatbed size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Negocio
-                    </span>
+                    <span className={`text-xs `}>Negocio</span>
                   </div>
 
                   <ChevronRight size={25} />
@@ -105,9 +78,7 @@ export default function SideBar({
               <CollapsibleContent className="flex flex-col gap-1  ">
                 {/* {user?.role === "SUPER_ADMIN" && (
                   <Link
-                    className={`group flex w-full items-center justify-between gap-2 p-1.5   ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
+                    className={`group flex w-full items-center justify-between gap-2 p-1.5    ${
                       path === "/sistema/negocio" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
                     href={"/sistema/negocio"}
@@ -115,7 +86,7 @@ export default function SideBar({
                     <div className="flex items-center gap-1">
                       <Box size={16} />
                       <span
-                        className={`text-xs ${hidden ? "hidden" : "block"}`}
+                        className={`text-xs `}
                       >
                         Articulo
                       </span>
@@ -128,25 +99,19 @@ export default function SideBar({
                 )} */}
 
                 <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
                     path === "/sistema/negocio/articulos" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/articulos"}
                 >
                   <div className="flex items-center gap-1">
                     <Box size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Productos
-                    </span>
+                    <span className={`text-xs $`}>Productos</span>
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
                 <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
                     path === "/sistema/negocio/articulos/conjuntos"
                       ? "bg-blue-600"
                       : ""
@@ -155,42 +120,32 @@ export default function SideBar({
                 >
                   <div className="flex items-center gap-1">
                     <Boxes size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Conjuntos
-                    </span>
+                    <span className={`text-xs `}>Conjuntos</span>
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
                 <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
                     path === "/sistema/negocio/categorias" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/categorias"}
                 >
                   <div className="flex items-center gap-1">
                     <Group size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Categorías
-                    </span>
+                    <span className={`text-xs `}>Categorías</span>
                   </div>
 
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
                     path === "/sistema/negocio/proveedores" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/proveedores"}
                 >
                   <div className="flex items-center gap-1">
                     <BiSupport size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Proveedores
-                    </span>
+                    <span className={`text-xs `}>Proveedores</span>
                   </div>
 
                   <PlusCircle className="hidden group-hover:block" size={16} />
@@ -198,83 +153,61 @@ export default function SideBar({
 
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
                     path === "/sistema/negocio/marcas" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/marcas"}
                 >
                   <div className="flex items-center gap-1">
                     <TbBrandAmigo size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Marcas
-                    </span>
+                    <span className={`text-xs `}>Marcas</span>
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
                 <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`group justify-between flex w-full items-center gap-2  p-1.5 ${
                     path === "/sistema/negocio/bodegas" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/bodegas"}
                 >
                   <div className="flex items-center gap-1">
                     <Warehouse size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Bodegas
-                    </span>
+                    <span className={`text-xs `}>Bodegas</span>
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
                 <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`group justify-between flex w-full items-center gap-2  p-1.5 ${
                     path === "/sistema/negocio/unidades" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/unidades"}
                 >
                   <div className="flex items-center gap-1">
                     <GoSingleSelect size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Unidades
-                    </span>
+                    <span className={`text-xs `}>Unidades</span>
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
                 <Link
-                  className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`flex w-full items-center gap-2  p-1.5 ${
                     path === "/sistema/negocio/vehiculos" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/vehiculos"}
                 >
                   <FaShippingFast size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Vehículos
-                  </span>
+                  <span className={`text-xs `}>Vehículos</span>
                 </Link>
                 <Link
-                  className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`flex w-full items-center gap-2  p-1.5 ${
                     path === "/sistema/negocio/usuarios" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/negocio/usuarios"}
                 >
                   <Users size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Usuarios
-                  </span>
+                  <span className={`text-xs `}>Usuarios</span>
                 </Link>
                 {["SUPER_ADMIN"].includes(user?.role || "") && (
                   <Link
-                    className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
+                    className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
                       path === "/sistema/negocio/ajustes/nuevo"
                         ? "bg-blue-600"
                         : ""
@@ -283,11 +216,7 @@ export default function SideBar({
                   >
                     <div className="flex items-center gap-1">
                       <FaAdjust size={16} />
-                      <span
-                        className={`text-xs ${hidden ? "hidden" : "block"}`}
-                      >
-                        Ajustes inventario
-                      </span>
+                      <span className={`text-xs `}>Ajustes inventario</span>
                     </div>
                     <PlusCircle
                       className="hidden group-hover:block"
@@ -307,11 +236,7 @@ export default function SideBar({
                   <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
                     <div className="flex items-center gap-2 ">
                       <FaShop size={16} />
-                      <span
-                        className={`text-xs ${hidden ? "hidden" : "block"}`}
-                      >
-                        Ventas
-                      </span>
+                      <span className={`text-xs `}>Ventas</span>
                     </div>
 
                     <ChevronRight size={25} />
@@ -319,44 +244,32 @@ export default function SideBar({
                 </CollapsibleTrigger>
                 <CollapsibleContent className="flex flex-col gap-1">
                   <Link
-                    className={`flex w-full items-center gap-2 p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    }  ${
+                    className={`flex w-full items-center gap-2 p-1.5    ${
                       path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
                     href={"/sistema/ventas/clientes"}
                   >
                     <Users2 size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Clientes
-                    </span>
+                    <span className={`text-xs `}>Clientes</span>
                   </Link>
                   <Link
-                    className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
+                    className={`flex w-full items-center gap-2  p-1.5   ${
                       path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
                     href={"/sistema/ventas/pedidos"}
                   >
                     <PiInvoice size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Pedidos
-                    </span>
+                    <span className={`text-xs `}>Pedidos</span>
                   </Link>
 
                   <Link
-                    className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
+                    className={`flex w-full items-center gap-2  p-1.5   ${
                       path === "/sistema/ventas/envios" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
                     href={"/sistema/ventas/envios"}
                   >
                     <Truck size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Envíos
-                    </span>
+                    <span className={`text-xs `}>Envíos</span>
                   </Link>
                   {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
@@ -367,7 +280,7 @@ export default function SideBar({
                 href={"/sistema/ventas/facturas"}
               >
                 <PiInvoice size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                <span className={`text-xs `}>
                   Facturas
                 </span>
               </Link> */}
@@ -380,23 +293,19 @@ export default function SideBar({
                 href={"/sistema/ventas/recibos"}
               >
                 <Receipt size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                <span className={`text-xs `}>
                   Recibos
                 </span>
               </Link> */}
 
                   <Link
-                    className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
+                    className={`flex w-full items-center gap-2  p-1.5   ${
                       path === "/sistema/ventas/pagos" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
                     href={"/sistema/ventas/pagos"}
                   >
                     <GiPayMoney size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Pagos
-                    </span>
+                    <span className={`text-xs `}>Pagos</span>
                   </Link>
                 </CollapsibleContent>
               </Collapsible>
@@ -413,24 +322,18 @@ export default function SideBar({
                 href={"/sistema/ventas/envios"}
               >
                 <Truck size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Envíos
-                </span>
+                <span className={`text-xs `}>Envíos</span>
               </Link>
               <Link
-                className={`flex w-full items-center gap-2 p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-2 pr-4"
-                }  ${
+                className={`flex w-full items-center gap-2 p-1.5   ${
                   path === `/sistema/cajas/personal/${user?.id}`
                     ? "bg-blue-600"
                     : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
-                <FaCashRegister size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Caja
-                </span>
+                <Wallet2 size={16} />
+                <span className={`text-xs `}>Cartera</span>
               </Link>
             </>
           )}
@@ -439,9 +342,7 @@ export default function SideBar({
           {!["SUPER_ADMIN", "ADMIN", "CHOFER"].includes(user?.role || "") && (
             <>
               <Link
-                className={`flex w-full items-center gap-2 p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-2 pr-4"
-                }  ${
+                className={`flex w-full items-center gap-2 p-1.5   ${
                   path === `/sistema/cajas/personal/${user?.id}`
                     ? "bg-blue-600"
                     : ""
@@ -449,9 +350,7 @@ export default function SideBar({
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
                 <FaCashRegister size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Caja
-                </span>
+                <span className={`text-xs `}>Caja</span>
               </Link>
               <Link
                 className={`flex w-full items-center gap-2  p-1.5  pl-2 pr-2
@@ -461,9 +360,7 @@ export default function SideBar({
                 href={"/sistema/contabilidad/gastos"}
               >
                 <GiExpense size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Gastos
-                </span>
+                <span className={`text-xs `}>Gastos</span>
               </Link>
             </>
           )}
@@ -480,9 +377,7 @@ export default function SideBar({
                 href={"/sistema/contabilidad/gastos"}
               >
                 <GiExpense size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Gastos
-                </span>
+                <span className={`text-xs `}>Gastos</span>
               </Link>
               <Link
                 className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
@@ -492,9 +387,7 @@ export default function SideBar({
                 href={"/sistema/cajas/auditoria"}
               >
                 <BanknoteIcon size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Cortes
-                </span>
+                <span className={`text-xs `}>Cortes</span>
               </Link>
             </>
           )}
@@ -506,9 +399,7 @@ export default function SideBar({
                 <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
                   <div className="flex items-center gap-2 ">
                     <Building2 size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Contabilidad
-                    </span>
+                    <span className={`text-xs `}>Contabilidad</span>
                   </div>
 
                   <ChevronRight size={25} />
@@ -517,9 +408,7 @@ export default function SideBar({
 
               <CollapsibleContent className="flex flex-col gap-1">
                 <Link
-                  className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  }  ${
+                  className={`flex w-full items-center gap-2 p-1.5    ${
                     path === "/sistema/contabilidad/cuentas"
                       ? "bg-blue-600"
                       : ""
@@ -527,55 +416,39 @@ export default function SideBar({
                   href={"/sistema/contabilidad/cuentas"}
                 >
                   <FilesIcon size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Cuentas
-                  </span>
+                  <span className={`text-xs `}>Cuentas</span>
                 </Link>
 
                 <Link
-                  className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  }  ${
+                  className={`flex w-full items-center gap-2 p-1.5    ${
                     path === "/sistema/cajas" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/cajas"}
                 >
                   <FaCashRegister size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Cajas
-                  </span>
+                  <span className={`text-xs `}>Cajas</span>
                 </Link>
                 <Link
-                  className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  }  ${
+                  className={`flex w-full items-center gap-2 p-1.5    ${
                     path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/cajas/auditoria"}
                 >
                   <BanknoteIcon size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Cortes
-                  </span>
+                  <span className={`text-xs `}>Cortes</span>
                 </Link>
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-6 adminpr-4"
-                  } ${
                     path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/contabilidad/gastos"}
                 >
                   <GiExpense size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Gastos
-                  </span>
+                  <span className={`text-xs `}>Gastos</span>
                 </Link>
 
                 <Link
-                  className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
+                  className={`flex w-full items-center gap-2  p-1.5   ${
                     path === "/sistema/contabilidad/transacciones"
                       ? "bg-blue-600"
                       : ""
@@ -583,13 +456,12 @@ export default function SideBar({
                   href={"/sistema/contabilidad/transacciones"}
                 >
                   <TbTransactionDollar size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Transacciones
-                  </span>
+                  <span className={`text-xs `}>Transacciones</span>
                 </Link>
               </CollapsibleContent>
             </Collapsible>
           )}
+
           {/* Compras */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Collapsible className="w-full">
@@ -597,9 +469,7 @@ export default function SideBar({
                 <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
                   <div className="flex items-center gap-2 ">
                     <BiPurchaseTag size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Compras
-                    </span>
+                    <span className={`text-xs `}>Compras</span>
                   </div>
 
                   <ChevronRight size={25} />
@@ -607,48 +477,29 @@ export default function SideBar({
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-1">
                 <Link
-                  className={`flex w-full items-center gap-2 p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  }  ${
+                  className={`flex w-full items-center gap-2 p-1.5    ${
                     path === "/sistema/compras" ? "bg-blue-600" : ""
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/compras"}
                 >
                   <FilesIcon size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Ordenes de Compra
-                  </span>
+                  <span className={`text-xs `}>Ordenes de Compra</span>
                 </Link>
                 {["SUPER_ADMIN"].includes(user?.role || "") && (
                   <Link
-                    className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
+                    className={`flex w-full items-center gap-2  p-1.5   ${
                       path === "/sistema/compras/recibos" ? "bg-blue-600" : ""
                     } hover:bg-slate-900 rounded-md`}
                     href={"/sistema/compras/recibos"}
                   >
                     <FaRegFileArchive size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Bienes
-                    </span>
+                    <span className={`text-xs `}>Bienes</span>
                   </Link>
                 )}
               </CollapsibleContent>
             </Collapsible>
           )}
 
-          {/* <Link
-            className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
-              path === "/sistema/integraciones" ? "bg-blue-600" : ""
-            }`}
-            href={"/sistema/integraciones"}
-          >
-            <VscDebugDisconnect size={16} />
-            <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-              Integraciones
-            </span>
-          </Link> */}
           {["SUPER_ADMIN"].includes(user?.role || "") && (
             <Link
               className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
@@ -657,28 +508,15 @@ export default function SideBar({
               href={"/sistema/reportes"}
             >
               <BarChart size={16} />
-              <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                Reportes
-              </span>
+              <span className={`text-xs `}>Reportes</span>
             </Link>
           )}
         </nav>
       </div>
-
-      {/* Bottom */}
-      <div className="flex flex-col gap-4 w-full">
-        {/* <SubscriptionCard
-          className={`text-xs ${hidden ? "hidden" : "block"}`}
-        /> */}
-        {/*   Logo  */}
-        <button
-          onClick={() => setHidden((prev) => !prev)}
-          className="flex items-end justify-end w-full gap-1 p-3 bg-slate-900"
-        >
-          {hidden ? <ChevronRight size={30} /> : <ChevronLeft size={30} />}
-        </button>
+      {/*   Middle Logo  */}
+      <div className="flex items-center gap-2 p-3 bg-slate-900">
+        <LogoIcon className="w-5 h-auto" />
       </div>
-      {/*   Footer Icon*/}
-    </aside>
+    </div>
   );
 }

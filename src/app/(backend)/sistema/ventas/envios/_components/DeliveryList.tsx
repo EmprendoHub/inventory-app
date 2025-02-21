@@ -80,25 +80,27 @@ export function DeliveryList({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-10"
+            className="maxsm:text-[12px] maxsm:w-8"
           >
             Pedido
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="text-xs font-medium max-w-10">
+          <div className="text-[12px] font-medium max-w-8">
             {row.original.orderNo}
           </div>
         ),
       },
       {
         accessorKey: "driver",
-        header: () => <div className="text-xs maxsm:hidden">Chofer</div>,
+        header: () => (
+          <div className="text-xs maxsm:hidden  maxsm:absolute">Chofer</div>
+        ),
         cell: ({ row }) => {
           const driver = row.original?.driver?.name || "BODEGA";
           return (
-            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxsm:hidden">
+            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxsm:hidden maxsm:absolute">
               {driver}
             </div>
           );
@@ -106,9 +108,9 @@ export function DeliveryList({
       },
       {
         accessorKey: "price",
-        header: () => <div className="text-xs max-w-10">Precio</div>,
+        header: () => <div className="text-xs w-5">Precio</div>,
         cell: ({ row }) => (
-          <div className="text-xs font-medium w-10">
+          <div className="text-xs font-medium w-5">
             ${row.original.price.toLocaleString()}
           </div>
         ),
@@ -116,20 +118,22 @@ export function DeliveryList({
       {
         accessorKey: "trackingNumber",
         header: () => (
-          <div className="text-xs maxsm:hidden maxsm:p-0">No. de rastreo</div>
+          <div className="text-xs maxsm:hidden maxsm:absolute">
+            No. de rastreo
+          </div>
         ),
         cell: ({ row }) => (
-          <div className="text-[12px] maxsm:hidden maxsm:p-0">
+          <div className="text-[12px] maxsm:hidden maxsm:absolute">
             {row.original.trackingNumber}
           </div>
         ),
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-xs max-w-22">Estado</div>,
+        header: () => <div className="text-xs max-w-16">Estado</div>,
         cell: ({ row }) => (
           <div
-            className={`text-[12px] maxsm:w-22 text-center font-medium px-2 rounded-md text-white ${
+            className={`text-[10px] maxsm:w-16 text-center font-medium px-2 rounded-md text-white ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "ENTREGADO"
@@ -147,9 +151,11 @@ export function DeliveryList({
       },
       {
         accessorKey: "deliveryDate",
-        header: () => <div className="text-xs">Fecha Entrega</div>,
+        header: () => (
+          <div className="text-xs  maxsm:hidden">Fecha Entrega</div>
+        ),
         cell: ({ row }) => (
-          <div className="text-xs font-medium">
+          <div className="text-xs font-medium  maxsm:hidden">
             {row.original.deliveryDate
               ? new Date(row.original.deliveryDate).toLocaleDateString()
               : "N/A"}
@@ -507,14 +513,15 @@ export function DeliveryList({
             }, []);
 
             const viewOrder = React.useCallback(async () => {
-              router.push(`/sistema/ventas/pedidos/${row.original.orderId}`);
+              router.push(
+                `/sistema/ventas/pedidos/ver/${row.original.orderId}`
+              );
             }, []);
 
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Open menu</span>
                     <MoreHorizontal />
                   </Button>
                 </DropdownMenuTrigger>
@@ -628,7 +635,7 @@ export function DeliveryList({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="max-sm:hidden">
+                  <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -645,7 +652,7 @@ export function DeliveryList({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="max-sm:hidden">
+                    <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()

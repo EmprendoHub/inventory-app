@@ -25,12 +25,8 @@ export default async function CashRegisterDetailsPage({
 
   return (
     <div className="p-4">
-      <div className="p-4 flex items-end justify-between w-full bg-card rounded-md">
+      <div className="p-4 flex maxsm:flex-col items-end justify-between w-full bg-card rounded-md">
         <div className="flex flex-col items-start w-fit gap-3  p-4 ">
-          <h1 className="text-2xl font-bold mb-4 uppercase">
-            {cashRegister.name}
-          </h1>
-
           <div className="p-4 bg-blue-800 text-white rounded-md flex flex-col w-full">
             <p>Balance:</p>{" "}
             <span className="text-4xl">

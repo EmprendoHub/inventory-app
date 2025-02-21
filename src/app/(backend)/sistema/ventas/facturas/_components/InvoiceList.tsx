@@ -227,10 +227,10 @@ export function InvoiceList({ invoices }: { invoices: invoiceType[] }) {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+        {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} factura(s) seleccionada(s).
-        </div>
+        </div> */}
         <div className="space-x-2">
           <Button
             variant="outline"

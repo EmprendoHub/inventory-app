@@ -53,7 +53,7 @@ export function CashTransactionList({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-16 px-2"
+            className="text-xs w-2 px-2 "
           >
             ID
             <ArrowUpDown />
@@ -62,7 +62,7 @@ export function CashTransactionList({
         cell: ({ row }) => {
           const id = row.getValue("id") as string;
           return (
-            <div className="uppercase text-xs w-16">{id.substring(0, 10)}</div>
+            <div className="uppercase text-xs w-2">{id.substring(2, 7)}</div>
           );
         },
       },
@@ -98,7 +98,7 @@ export function CashTransactionList({
         header: () => <div className="text-left text-xs">Tipo</div>,
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxsm:hidden ${
+            className={`uppercase text-[12px] text-center text-white  ${
               row.getValue("type") === "RETIRO"
                 ? "bg-emerald-800"
                 : "bg-blue-700"
@@ -125,10 +125,12 @@ export function CashTransactionList({
       // },
       {
         accessorKey: "createdAt",
-        header: () => <div className="text-left text-xs">Fecha</div>,
+        header: () => <div className="text-left text-xs w-5">Fecha</div>,
         cell: ({ row }) => {
           const date = new Date(row.getValue("createdAt")).toLocaleDateString();
-          return <div className="text-left text-xs font-medium">{date}</div>;
+          return (
+            <div className="text-left text-xs font-medium w-5">{date}</div>
+          );
         },
       },
       {
@@ -202,7 +204,7 @@ export function CashTransactionList({
             // }, [showModal]);
 
             // const viewOrder = React.useCallback(async () => {
-            //   router.push(`/sistema/ventas/pedidos/${row.original.id}`);
+            //   router.push(`/sistema/ventas/pedidos/ver/${row.original.id}`);
             // }, []);
             return (
               <>
@@ -353,10 +355,10 @@ export function CashTransactionList({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
+        {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} pedido(s) seleccionada(s).
-        </div>
+        </div> */}
         <div className="space-x-2">
           <Button
             variant="outline"

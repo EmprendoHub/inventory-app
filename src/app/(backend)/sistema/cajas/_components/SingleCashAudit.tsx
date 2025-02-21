@@ -124,21 +124,17 @@ export default function SingleCashAuditForm({
             }
           }}
         >
-          <NumericInput
-            label="Cantidad que se recibe"
-            name="endBalance"
-            state={state}
-          />
+          <NumericInput label="Se recibe" name="endBalance" state={state} />
 
           <input type="hidden" name="auditDate" value={formattedDate} />
 
           <button
             type="submit"
             disabled={sending}
-            className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-xs font-medium rounded-md text-white bg-emerald-700 hover:bg-emerald-900 mt-5 w-full`}
+            className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-[12px] font-medium rounded-md text-white bg-emerald-700 hover:bg-emerald-900 mt-5 w-full`}
           >
             {sending && <span className="loader"></span>}
-            {user?.role === "CHOFER" ? "ENTREGAR EFECTIVO" : "REALIZAR CORTE"}
+            {user?.role === "CHOFER" ? "ENTREGAR" : "RECIBIR"}
           </button>
           {state.message && (
             <p className="text-sm text-gray-600">{state.message}</p>
@@ -148,10 +144,10 @@ export default function SingleCashAuditForm({
 
       <button
         onClick={() => setHidden((prev) => !prev)}
-        className={`flex items-center gap-2 bg-purple-800 text-white text-xs px-6 py-1 rounded-md mt-2`}
+        className={`flex items-center gap-2 bg-purple-800 text-white text-xs px-6 py-1 rounded-md mt-2  leading-none`}
       >
-        <BanknoteIcon size={16} />
-        <span className={`text-xs `}>
+        <BanknoteIcon size={18} className="text-2xl" />
+        <span className={`text-[12px] `}>
           {user?.role === "CHOFER" ? "ENTREGAR EFECTIVO" : "CORTE DE CAJA"}
         </span>
       </button>
