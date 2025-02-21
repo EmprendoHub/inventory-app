@@ -1,3 +1,4 @@
+//// api pdf
 import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 import jsPDF from "jspdf";
@@ -106,8 +107,27 @@ async function createReceiptCopy(
   }
 
   if (order.notes) {
-    addNotes(pdf, order.notes, productsEndY + 35);
+    addNotes(pdf, order.notes, pdf.internal.pageSize.height - 20);
   }
+
+  // Add terms and conditions at the bottom
+  pdf.setFontSize(8);
+  pdf.setTextColor(100);
+  pdf.text(
+    "Los muebles son artículos de liquidación de hoteles y no son nuevos. No aplican garantías. El costo de envío",
+    28,
+    pdf.internal.pageSize.height - 10
+  );
+  pdf.text(
+    "varía según la localidad. Las entregas son solo a primer nivel. En caso de entregas fallidas, los costos de",
+    30,
+    pdf.internal.pageSize.height - 7
+  );
+  pdf.text(
+    "envío serán acumulables. Se requiere liquidación total del saldo antes de la descarga de los muebles.",
+    32,
+    pdf.internal.pageSize.height - 4
+  );
 }
 
 async function addFromSection(pdf: jsPDF, yOffset: number) {
@@ -185,6 +205,7 @@ async function addOrderItems(
 
   for (const item of orderItems) {
     pdf.text(item.name, 20, yPos);
+    pdf.text(item.description, 20, yPos + 5);
     pdf.text(item.quantity.toString(), 110, yPos);
     pdf.text(
       formatCurrency({ amount: item.price * item.quantity, currency: "MXN" }),
