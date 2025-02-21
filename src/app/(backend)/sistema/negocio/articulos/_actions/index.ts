@@ -144,6 +144,7 @@ export const createItemAction = async (
       // Clean up the temporary file
       await unlink(path);
       revalidatePath("/sistema/negocio/articulos");
+      revalidatePath("/sistema/ventas/pedidos/nuevo");
       return {
         success: true,
         message: "Producto creado exitosamente!",
@@ -340,6 +341,7 @@ export async function deleteItemAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
     return {
       errors: {},
       success: true,
@@ -406,6 +408,7 @@ export async function toggleItemStatusAction(formData: FormData) {
     });
 
     revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
     return {
       errors: {},
       success: true,

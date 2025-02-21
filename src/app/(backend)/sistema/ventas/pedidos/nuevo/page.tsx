@@ -9,11 +9,21 @@ export default async function NewOrder() {
     orderBy: {
       createdAt: "desc",
     },
+    where: {
+      NOT: {
+        status: "INACTIVE",
+      },
+    },
   });
 
   const items = await prisma.item.findMany({
     orderBy: {
       createdAt: "desc",
+    },
+    where: {
+      NOT: {
+        status: "INACTIVE",
+      },
     },
   });
 

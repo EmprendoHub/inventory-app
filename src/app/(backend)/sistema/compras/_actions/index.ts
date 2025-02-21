@@ -288,6 +288,7 @@ export async function receivePurchaseOrderAction(
 
     revalidatePath("/sistema/compras");
     revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
     return {
       success: true,
       message: "Orden compra recibida exitosamente!",

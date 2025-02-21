@@ -84,7 +84,7 @@ async function createReceiptCopy(
 
   // Add background header
   pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-  pdf.rect(0, yOffset, pdf.internal.pageSize.width, 20, "F");
+  pdf.rect(0, yOffset, pdf.internal.pageSize.width, 22, "F");
 
   await addFromSection(pdf, yOffset);
   addInvoiceDetails(pdf, order, yOffset);
@@ -165,9 +165,9 @@ async function addFromSection(pdf: jsPDF, yOffset: number) {
   pdf.addImage(dataUrl, "PNG", 13, yOffset + 3, 15, 15);
 
   // Company name
-  pdf.setFontSize(18);
+  pdf.setFontSize(12);
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  pdf.text("MUEBLES YUNY", 30, yOffset + 8);
+  pdf.text("Yunuen Company Liquidación de Muebles Americanos", 30, yOffset + 8);
 
   // Address and phone on separate lines with more spacing
   pdf.setFontSize(11);
@@ -279,14 +279,18 @@ function addTotals(
   pdf.setFont("helvetica", "bold");
 
   const pendingAmount = totalAmount - totalPaymentAmount;
-  pdf.text("Pendiente:", 115, yPos + 27);
-  pdf.setFontSize(14);
+  pdf.text("Pendiente:", 115, yPos + 24);
   pdf.text(
     formatCurrency({ amount: pendingAmount, currency: "MXN" }),
     190,
-    yPos + 27,
+    yPos + 24,
     { align: "right" }
   );
+
+  pdf.text("Envió:", 115, yPos + 29);
+  pdf.text(formatCurrency({ amount: 0, currency: "MXN" }), 190, yPos + 29, {
+    align: "right",
+  });
 
   pdf.text("Total:", 115, yPos + 37);
   pdf.setFontSize(16);
