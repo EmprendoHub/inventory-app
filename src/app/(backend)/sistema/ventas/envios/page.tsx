@@ -3,8 +3,8 @@ import React from "react";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { DeliveryList } from "./_components/DeliveryList";
-import SalesHeader from "../_components/SalesHeader";
 import { UserType } from "@/types/users";
+import SuperHeader from "../../_components/SuperHeader";
 
 export default async function ListUsers() {
   const session = await getServerSession(options);
@@ -67,7 +67,7 @@ export default async function ListUsers() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <SalesHeader title={"Envíos"} link={`envios/nuevo`} />
+      <SuperHeader title={"Envíos"} link={`envios/nuevo`} />
       <DeliveryList deliveries={deliveries} />
     </div>
   );

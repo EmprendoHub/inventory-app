@@ -28,6 +28,7 @@ export const RBAC_CONFIG = {
       "!/sistema/contabilidad/*", // Deny /sistema/contabilidad/*
       "!/sistema/cajas/*", // Deny /sistema/contabilidad/*
       "!/sistema/negocio/*", // Deny /sistema/contabilidad/*
+      "!/sistema/ventas/pagos/nuevo", // Deny /sistema/contabilidad/*
       "/sistema/home", // Allow all sistema routes
       "/sistema/ventas/clientes", // Allow all sistema routes
       "/sistema/ventas/pedidos",

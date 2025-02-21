@@ -121,269 +121,285 @@ export default function OrderForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit} // Use custom submit handler
-      className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
-    >
-      {/* Customer Info */}
-      <div className="flex maxsm:flex-col-reverse gap-4 mb-8">
-        <div className="flex flex-col gap-3 w-1/2 maxsm:w-full">
-          <SearchSelectInput
-            label="Seleccionar Cliente:"
-            name="client"
-            state={state}
-            className="flex-1 mb-4"
-            options={clients.map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
-            onChange={(value) => {
-              const client = clients.find((c) => c.id === value);
-              setSelectedClient(client || null);
-            }}
-          />
-          {/* Delivery info */}
-          {/* <NumericInput
+    <section>
+      {sending && (
+        <div
+          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
+        >
+          <h3>Generado pedido...</h3>
+          <span className="loader" />
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit} // Use custom submit handler
+        className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+      >
+        {/* Customer Info */}
+        <div className="flex maxsm:flex-col-reverse gap-4 mb-8">
+          <div className="flex flex-col gap-3 w-1/2 maxsm:w-full">
+            <SearchSelectInput
+              label="Seleccionar Cliente:"
+              name="client"
+              state={state}
+              className="flex-1 mb-4"
+              options={clients.map((item) => ({
+                value: item.id,
+                name: item.name,
+              }))}
+              onChange={(value) => {
+                const client = clients.find((c) => c.id === value);
+                setSelectedClient(client || null);
+              }}
+            />
+            {/* Delivery info */}
+            {/* <NumericInput
             label="Costo de Envió"
             name="price"
             state={state}
             onChange={(e) => setDeliveryCost(Number(e.target.value))}
           /> */}
-          <SelectInput
-            label="Costo de Envió"
-            name="price"
-            options={[
-              { value: "0", name: "Seleccionar..." },
-              { value: "500", name: "5km" },
-              { value: "600", name: "10km" },
-              { value: "800", name: "20Km" },
-              { value: "1000", name: "30Km" },
-              { value: "1200", name: "40km" },
-              { value: "1400", name: "50km" },
-              { value: "1600", name: "60km" },
-              { value: "1800", name: "70km" },
-            ]}
-            onChange={(e) => setDeliveryCost(Number(e.target.value))}
-            state={state}
-          />
-          <DateInput
-            defaultValue={new Date()}
-            name="deliveryDate"
-            label="Fecha Entrega"
-            state={state}
-          />
-        </div>
-        <div className="space-y-2 bg-card p-4 rounded-lg">
-          {selectedClient && (
-            <>
-              <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
-              <p className="text-sm text-muted leading-none">
-                {selectedClient.address}
-              </p>
-              <p className="text-sm text-muted leading-none">
-                Tel: {selectedClient.phone}
-              </p>
-              {selectedClient.email && (
-                <p className="text-sm text-muted leading-none">
-                  Email: {selectedClient.email}
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Items Selection */}
-      <div className="flex items-end gap-4 mb-4">
-        <SearchSelectInput
-          label="Seleccionar Producto:"
-          name="productId"
-          state={state}
-          className="flex-1"
-          options={[
-            ...items.map((item) => ({
-              value: item.id,
-              name: item.name,
-              image: item.mainImage, // Assuming `item.image` contains the image URL
-            })),
-            ...itemGroups.map((group) => ({
-              value: group.id,
-              name: `${group.name} (Agrupado)`,
-              image: group.mainImage, // Assuming `group.image` contains the image URL
-            })),
-          ]}
-          onChange={setSelectedItemId}
-        />
-        <Input
-          type="number"
-          min="1"
-          value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))}
-          className="w-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          placeholder="Qty"
-        />
-        <Button type="button" onClick={handleAddItem} className="text-white">
-          +
-        </Button>
-      </div>
-
-      {/* Items Table */}
-      <Table className="mb-8 border rounded-lg">
-        <TableHeader className="bg-card">
-          <TableRow>
-            <TableHead className="w-[150px]">Img.</TableHead>
-            <TableHead className="w-[300px]">Articulo</TableHead>
-            <TableHead>Cant.</TableHead>
-            <TableHead>Precio</TableHead>
-            <TableHead>Total</TableHead>
-            <TableHead className="text-right">Acción</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {selectedItems.map((item, index) => (
-            <TableRow key={index} className="bg-black bg-opacity-20">
-              <TableCell className="font-medium">
-                <Image
-                  src={item.mainImage || "/images/item_placeholder.png"}
-                  width={150}
-                  height={150}
-                  alt="img"
-                />
-              </TableCell>
-              <TableCell className="font-medium">
-                <div className="flex flex-col">
-                  <span className="text-xs">{item.name}</span>
-                  <span className="text-[12px] leading-none">
-                    {item.description}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) => {
-                    const newItems = [...selectedItems];
-                    newItems[index].quantity = Number(e.target.value);
-                    setSelectedItems(newItems);
-                  }}
-                  className="w-20"
-                />
-              </TableCell>
-              <TableCell>
-                $
-                {item.price.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </TableCell>
-              <TableCell>
-                $
-                {(item.price * item.quantity).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() =>
-                    setSelectedItems((prev) =>
-                      prev.filter((_, i) => i !== index)
-                    )
-                  }
-                >
-                  <X />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {/* Totals */}
-      <div className="flex maxsm:flex-col-reverse items-center justify-between gap-8 space-y-2 mt-4">
-        <TextAreaInput
-          name="notes"
-          label="Notas"
-          state={state}
-          className="w-full"
-        />
-        <div className="flex flex-col gap-4 w-full">
-          <div className="flex justify-between">
-            <span className="font-medium">Subtotal:</span>
-            <span>
-              $
-              {subtotal.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="font-medium">Descuento:</span>
-            <NumericInput
-              label=""
-              name="discount"
+            <SelectInput
+              label="Costo de Envió"
+              name="price"
+              options={[
+                { value: "0", name: "Seleccionar..." },
+                { value: "500", name: "5km" },
+                { value: "600", name: "10km" },
+                { value: "800", name: "20Km" },
+                { value: "1000", name: "30Km" },
+                { value: "1200", name: "40km" },
+                { value: "1400", name: "50km" },
+                { value: "1600", name: "60km" },
+                { value: "1800", name: "70km" },
+              ]}
+              onChange={(e) => setDeliveryCost(Number(e.target.value))}
               state={state}
-              defaultValue={discount}
-              onChange={setDiscount}
-              className="w-20"
+            />
+            <DateInput
+              defaultValue={new Date()}
+              name="deliveryDate"
+              label="Fecha Entrega"
+              state={state}
             />
           </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Envió:</span>
-            <span>
-              $
-              {deliveryCost.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          <div className="flex justify-between border-t pt-2 font-bold text-2xl">
-            <span className="text-xl">Grand Total:</span>
-            <span>
-              $
-              {grandTotal.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
+          <div className="space-y-2 bg-card p-4 rounded-lg">
+            {selectedClient && (
+              <>
+                <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
+                <p className="text-sm text-muted leading-none">
+                  {selectedClient.address}
+                </p>
+                <p className="text-sm text-muted leading-none">
+                  Tel: {selectedClient.phone}
+                </p>
+                {selectedClient.email && (
+                  <p className="text-sm text-muted leading-none">
+                    Email: {selectedClient.email}
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Hidden Form Data */}
-      <input
-        type="hidden"
-        name="client"
-        value={JSON.stringify(selectedClient)}
-      />
-      <input type="hidden" name="items" value={JSON.stringify(selectedItems)} />
+        {/* Items Selection */}
+        <div className="flex items-end gap-4 mb-4">
+          <SearchSelectInput
+            label="Seleccionar Producto:"
+            name="productId"
+            state={state}
+            className="flex-1"
+            options={[
+              ...items.map((item) => ({
+                value: item.id,
+                name: item.name,
+                image: item.mainImage, // Assuming `item.image` contains the image URL
+              })),
+              ...itemGroups.map((group) => ({
+                value: group.id,
+                name: `${group.name} (Agrupado)`,
+                image: group.mainImage, // Assuming `group.image` contains the image URL
+              })),
+            ]}
+            onChange={setSelectedItemId}
+          />
+          <Input
+            type="number"
+            min="1"
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="w-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            placeholder="Qty"
+          />
+          <Button type="button" onClick={handleAddItem} className="text-white">
+            +
+          </Button>
+        </div>
 
-      {/* Submit Section */}
-      <div className="mt-8 flex justify-end gap-4 border-t pt-8">
-        <button
-          type="submit"
-          disabled={sending}
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-        >
-          {sending && <span className="loader"></span>}
-          {sending ? "Creando Pedido..." : "Crear Pedido"}
-        </button>
-        {state.message && (
-          <p
-            className={`mt-4 text-sm ${
-              state.success ? "text-green-700" : "text-red-500"
-            }`}
+        {/* Items Table */}
+        <Table className="mb-8 border rounded-lg">
+          <TableHeader className="bg-card">
+            <TableRow>
+              <TableHead className="w-[150px]">Img.</TableHead>
+              <TableHead className="w-[300px]">Articulo</TableHead>
+              <TableHead>Cant.</TableHead>
+              <TableHead>Precio</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead className="text-right">Acción</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {selectedItems.map((item, index) => (
+              <TableRow key={index} className="bg-black bg-opacity-20">
+                <TableCell className="font-medium overflow-hidden relative w-20 h-20">
+                  <Image
+                    src={item.mainImage || "/images/item_placeholder.png"}
+                    width={150}
+                    height={150}
+                    alt="img"
+                    className="object-cover absolute top-0 left-0 w-full h-auto"
+                  />
+                </TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex flex-col">
+                    <span className="text-xs">{item.name}</span>
+                    <span className="text-[12px] leading-none">
+                      {item.description}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const newItems = [...selectedItems];
+                      newItems[index].quantity = Number(e.target.value);
+                      setSelectedItems(newItems);
+                    }}
+                    className="w-20"
+                  />
+                </TableCell>
+                <TableCell>
+                  $
+                  {item.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </TableCell>
+                <TableCell>
+                  $
+                  {(item.price * item.quantity).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() =>
+                      setSelectedItems((prev) =>
+                        prev.filter((_, i) => i !== index)
+                      )
+                    }
+                  >
+                    <X />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {/* Totals */}
+        <div className="flex maxsm:flex-col-reverse items-center justify-between gap-8 space-y-2 mt-4">
+          <TextAreaInput
+            name="notes"
+            label="Notas"
+            state={state}
+            className="w-full"
+          />
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex justify-between">
+              <span className="font-medium">Subtotal:</span>
+              <span>
+                $
+                {subtotal.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium">Descuento:</span>
+              <NumericInput
+                label=""
+                name="discount"
+                state={state}
+                defaultValue={discount}
+                onChange={setDiscount}
+                className="w-20"
+              />
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Envió:</span>
+              <span>
+                $
+                {deliveryCost.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between border-t pt-2 font-bold text-2xl">
+              <span className="text-xl">Grand Total:</span>
+              <span>
+                $
+                {grandTotal.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hidden Form Data */}
+        <input
+          type="hidden"
+          name="client"
+          value={JSON.stringify(selectedClient)}
+        />
+        <input
+          type="hidden"
+          name="items"
+          value={JSON.stringify(selectedItems)}
+        />
+
+        {/* Submit Section */}
+        <div className="mt-8 flex justify-end gap-4 border-t pt-8">
+          <button
+            type="submit"
+            disabled={sending}
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
-            {state.message}
-          </p>
-        )}
-      </div>
-    </form>
+            {sending && <span className="loader"></span>}
+            {sending ? "Creando Pedido..." : "Crear Pedido"}
+          </button>
+          {state.message && (
+            <p
+              className={`mt-4 text-sm ${
+                state.success ? "text-green-700" : "text-red-500"
+              }`}
+            >
+              {state.message}
+            </p>
+          )}
+        </div>
+      </form>
+    </section>
   );
 }
