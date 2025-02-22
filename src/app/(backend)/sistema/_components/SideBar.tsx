@@ -68,9 +68,8 @@ export default function SideBar({
             }`}
           >
             <span className="text-sm tracking-widest  leading-none">
-              MUEBLES
+              NEGOCIO
             </span>
-            <span className="text-2xl font-black  leading-none">YUNY</span>
           </div>
         </div>
         {/*   Links */}
@@ -103,7 +102,7 @@ export default function SideBar({
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-col gap-1  ">
-                {/* {user?.role === "SUPER_ADMIN" && (
+                {user?.role === "SUPER_ADMIN" && (
                   <Link
                     className={`group flex w-full items-center justify-between gap-2 p-1.5   ${
                       hidden ? "pl-2 pr-2" : "pl-4 pr-2"
@@ -125,7 +124,7 @@ export default function SideBar({
                       size={16}
                     />
                   </Link>
-                )} */}
+                )}
 
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
@@ -161,6 +160,7 @@ export default function SideBar({
                   </div>
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
+
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-4 pr-2"
@@ -178,6 +178,7 @@ export default function SideBar({
 
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
+
                 <Link
                   className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-4 pr-2"
@@ -195,55 +196,76 @@ export default function SideBar({
 
                   <PlusCircle className="hidden group-hover:block" size={16} />
                 </Link>
+                {["SUPER_ADMIN"].includes(user?.role || "") && (
+                  <>
+                    <Link
+                      className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                        hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                      } ${
+                        path === "/sistema/negocio/marcas" ? "bg-blue-600" : ""
+                      } hover:bg-slate-900 rounded-md`}
+                      href={"/sistema/negocio/marcas"}
+                    >
+                      <div className="flex items-center gap-1">
+                        <TbBrandAmigo size={16} />
+                        <span
+                          className={`text-xs ${hidden ? "hidden" : "block"}`}
+                        >
+                          Marcas
+                        </span>
+                      </div>
+                      <PlusCircle
+                        className="hidden group-hover:block"
+                        size={16}
+                      />
+                    </Link>
+                    <Link
+                      className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                        hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                      } ${
+                        path === "/sistema/negocio/bodegas" ? "bg-blue-600" : ""
+                      } hover:bg-slate-900 rounded-md`}
+                      href={"/sistema/negocio/bodegas"}
+                    >
+                      <div className="flex items-center gap-1">
+                        <Warehouse size={16} />
+                        <span
+                          className={`text-xs ${hidden ? "hidden" : "block"}`}
+                        >
+                          Bodegas
+                        </span>
+                      </div>
+                      <PlusCircle
+                        className="hidden group-hover:block"
+                        size={16}
+                      />
+                    </Link>
+                    <Link
+                      className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
+                        hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                      } ${
+                        path === "/sistema/negocio/unidades"
+                          ? "bg-blue-600"
+                          : ""
+                      } hover:bg-slate-900 rounded-md`}
+                      href={"/sistema/negocio/unidades"}
+                    >
+                      <div className="flex items-center gap-1">
+                        <GoSingleSelect size={16} />
+                        <span
+                          className={`text-xs ${hidden ? "hidden" : "block"}`}
+                        >
+                          Unidades
+                        </span>
+                      </div>
+                      <PlusCircle
+                        className="hidden group-hover:block"
+                        size={16}
+                      />
+                    </Link>
+                  </>
+                )}
 
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
-                    path === "/sistema/negocio/marcas" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/marcas"}
-                >
-                  <div className="flex items-center gap-1">
-                    <TbBrandAmigo size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Marcas
-                    </span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
-                    path === "/sistema/negocio/bodegas" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/bodegas"}
-                >
-                  <div className="flex items-center gap-1">
-                    <Warehouse size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Bodegas
-                    </span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
-                    path === "/sistema/negocio/unidades" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/unidades"}
-                >
-                  <div className="flex items-center gap-1">
-                    <GoSingleSelect size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Unidades
-                    </span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
                     hidden ? "pl-2 pr-2" : "pl-4 pr-2"
@@ -404,7 +426,7 @@ export default function SideBar({
           )}
 
           {/* CHOFER */}
-          {!["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (
+          {["CHOFER"].includes(user?.role || "") && (
             <>
               <Link
                 className={`flex w-full items-center gap-2  p-1.5 pl-2 pr-2 ${
@@ -436,7 +458,7 @@ export default function SideBar({
           )}
 
           {/* GERENTE */}
-          {!["SUPER_ADMIN", "ADMIN", "CHOFER"].includes(user?.role || "") && (
+          {["GERENTE"].includes(user?.role || "") && (
             <>
               <Link
                 className={`flex w-full items-center gap-2 p-1.5  ${
@@ -468,7 +490,7 @@ export default function SideBar({
             </>
           )}
 
-          {/*  */}
+          {/* ADMIN */}
           {["ADMIN"].includes(user?.role || "") && (
             <>
               {" "}
@@ -590,6 +612,7 @@ export default function SideBar({
               </CollapsibleContent>
             </Collapsible>
           )}
+
           {/* Compras */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Collapsible className="w-full">

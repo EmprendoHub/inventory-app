@@ -17,12 +17,12 @@ export default function SystemLayout({
       <ModalProvider>
         <SideBar setHidden={setHidden} hidden={hidden} />
         <main
-          className={` w-full bg-background min-h-screen ${
+          className={` w-full bg-background min-h-screen maxsm:mb-10 ${
             hidden ? "ml-10 maxsm:ml-0" : "ml-44 maxsm:ml-0"
           } duration-300 ease-in-out`}
         >
           <SystemHeader />
-          <div className="p-4 flex-1">{children}</div>
+          <div className="p-4 flex-1  maxsm:pt-14">{children}</div>
         </main>
         <MobileMenu />
       </ModalProvider>

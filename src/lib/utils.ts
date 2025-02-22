@@ -11,6 +11,7 @@ import { FaUsers } from "react-icons/fa";
 import { LiaFileInvoiceDollarSolid } from "react-icons/lia";
 import { GiPayMoney } from "react-icons/gi";
 import { PiInvoice } from "react-icons/pi";
+import { RiSofaFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import { RBAC_CONFIG } from "./rbac-config";
 
@@ -184,6 +185,7 @@ export const iconMap: Record<string, IconComponent> = {
   GiPayMoney,
   PiInvoice,
   FaShippingFast,
+  RiSofaFill,
 };
 
 export async function generateUniqueBarcode() {

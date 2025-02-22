@@ -15,21 +15,12 @@ export interface InventoryItem {
 
 export const INVENTORY_ITEMS: InventoryItem[] = [
   {
-    title: "Marcas",
-    iconName: "TbComponents",
-    description:
-      "Crea multiples variantes del mismo articulo usando artículos agrupados",
-    link: "/sistema/negocio/marcas/nueva",
-    linkAll: "/sistema/ventas/envios",
-    buttonText: "Marca Nueva",
-  },
-  {
     title: "Articulo",
-    iconName: "Shirt",
+    iconName: "RiSofaFill",
     description:
       "Crea un articulo individual y servicio que puedes comprar y vender.",
     link: "/sistema/negocio/articulos/nuevo",
-    linkAll: "/sistema/ventas/envios",
+    linkAll: "/sistema/negocio/articulos",
     buttonText: "Articulo Nuevo",
   },
   {
@@ -37,34 +28,27 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     iconName: "GiClothes",
     description: "Agrupa varios artículos y véndelos en paquetes.",
     link: "/sistema/negocio/articulos/conjuntos/nuevo",
-    linkAll: "/sistema/ventas/envios",
+    linkAll: "/sistema/negocio/articulos/conjuntos",
     buttonText: "Articulo Nuevo",
   },
-  {
-    title: "Unidades de Medida",
-    iconName: "TbRulerMeasure",
-    description:
-      "Modifica los precios de tus articulos para contratos o transacciones espesificas.",
-    link: "/sistema/negocio/unidades/nueva",
-    linkAll: "/sistema/ventas/envios",
-    buttonText: "Nueva Unidad",
-  },
+
   {
     title: "Categoría",
     iconName: "BiCategory",
     description:
       "Crea una nueva categoría para clasificar tus artículos o servicios.",
     link: "/sistema/negocio/categorias/nueva",
-    linkAll: "/sistema/ventas/envios",
+    linkAll: "/sistema/negocio/categorias",
     buttonText: "Categoría Nueva",
   },
   {
-    title: "Bodegas",
+    title: "Vehículos",
     iconName: "FaWarehouse",
-    description: "Agrega nueva bodega para mantener tu inventario organizado.",
+    description:
+      "Agrega nuevo vehículo para mantener tu inventario organizado.",
     link: "/sistema/negocio/bodegas/nueva",
-    linkAll: "/sistema/ventas/envios",
-    buttonText: "Nueva Bodega",
+    linkAll: "/sistema/negocio/bodegas",
+    buttonText: "Nuevo vehículo",
   },
   {
     title: "Proveedor",
@@ -72,7 +56,7 @@ export const INVENTORY_ITEMS: InventoryItem[] = [
     description:
       "Agrega nuevo Proveedor para mantener tu inventario organizado.",
     link: "/sistema/negocio/proveedores/nuevo",
-    linkAll: "/sistema/ventas/envios",
+    linkAll: "/sistema/negocio/proveedores",
     buttonText: "Nuevo Proveedor",
   },
 ];
@@ -109,6 +93,34 @@ export const SALES_ITEMS: InventoryItem[] = [
     link: "",
     linkAll: "/sistema/ventas/pagos",
     buttonText: "",
+  },
+];
+
+export const ACCOUNTING_ITEMS: InventoryItem[] = [
+  {
+    title: "Gastos",
+    iconName: "LiaFileInvoiceDollarSolid",
+    description: "Historial de gastos de negocio.",
+    link: "/sistema/contabilidad/gastos/nuevo",
+    linkAll: "/sistema/contabilidad/gastos",
+    buttonText: "Gasto Nuevo",
+  },
+  {
+    title: "Cortes",
+    iconName: "FaUsers",
+    description: "Historial de cortes de caja.",
+    link: "",
+    linkAll: "sistema/cajas/auditoria",
+    buttonText: "",
+  },
+
+  {
+    title: "Ordenes de Compra",
+    iconName: "GiPayMoney",
+    description: "Historial de ordenes de compra.",
+    link: "/sistema/compras/nueva",
+    linkAll: "/sistema/compras",
+    buttonText: "Nueva Orden",
   },
 ];
 

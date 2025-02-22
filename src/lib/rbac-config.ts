@@ -17,6 +17,7 @@ export const RBAC_CONFIG = {
       "/sistema/home", // Allow all sistema routes
       "/sistema/negocio", // Allow all negocio routes
       "/sistema/ventas", // Allow all negocio routes
+      "/sistema/contabilidad", // Allow contabilidad sistema routes
       "/sistema/contabilidad/gastos", // Allow all sistema routes
       "/sistema/compras", // Allow all sistema routes
       "/sistema/cajas/auditoria",

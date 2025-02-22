@@ -41,7 +41,7 @@ const SystemHeader = () => {
   };
 
   return (
-    <div className="bg-primary h-10 flex items-center justify-between px-4 maxsm:px-2">
+    <div className="fixed w-full bg-primary h-10 flex items-center justify-between px-4 maxsm:px-2">
       <TooltipProvider>
         <div className="flex items-center maxsm:w-[65%] maxsm:pr-2">
           {/* <!-- Notification --> */}

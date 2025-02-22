@@ -2,41 +2,26 @@
 import {
   BanknoteIcon,
   BarChart,
-  Box,
-  Boxes,
   Building2,
   ChevronRight,
   DollarSign,
   FilesIcon,
-  Group,
   Home,
-  PlusCircle,
   Truck,
-  Users,
-  Users2,
   Wallet2,
-  Warehouse,
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import {
-  FaAdjust,
-  FaDollyFlatbed,
-  FaRegFileArchive,
-  FaShippingFast,
-} from "react-icons/fa";
-import { FaCashRegister, FaShop } from "react-icons/fa6";
+import { FaDollyFlatbed } from "react-icons/fa";
+import { FaCashRegister } from "react-icons/fa6";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { usePathname } from "next/navigation";
-import { PiInvoice } from "react-icons/pi";
-import { GoSingleSelect } from "react-icons/go";
-import { TbBrandAmigo, TbTransactionDollar } from "react-icons/tb";
-import { BiPurchaseTag, BiSupport } from "react-icons/bi";
-import { GiExpense, GiPayMoney } from "react-icons/gi";
+import { TbTransactionDollar } from "react-icons/tb";
+import { GiExpense } from "react-icons/gi";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
@@ -53,7 +38,7 @@ export default function MobileMenu() {
       {/* left */}
       <div className="flex flex-col text-sm justify-center">
         {/*   Links */}
-        <nav className="flex  gap-4 px-1 py-1.5 ">
+        <nav className="flex  gap-3 px-1 py-1.5 ">
           <Link
             className={`flex items-center gap-2 ${
               path === "/sistema/home" ? "bg-blue-600" : ""
@@ -65,252 +50,30 @@ export default function MobileMenu() {
 
           {/* Negocio */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
-            <Collapsible className="w-full">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex  items-center gap-2 hover:bg-slate-900 p-2 rounded-md justify-between">
-                  <div className="flex items-center gap-2 ">
-                    <FaDollyFlatbed size={16} />
-                    <span className={`text-xs `}>Negocio</span>
-                  </div>
-
-                  <ChevronRight size={25} />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="flex flex-col gap-1  ">
-                {/* {user?.role === "SUPER_ADMIN" && (
-                  <Link
-                    className={`group flex w-full items-center justify-between gap-2 p-1.5    ${
-                      path === "/sistema/negocio" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/negocio"}
-                  >
-                    <div className="flex items-center gap-1">
-                      <Box size={16} />
-                      <span
-                        className={`text-xs `}
-                      >
-                        Articulo
-                      </span>
-                    </div>
-                    <PlusCircle
-                      className="hidden group-hover:block"
-                      size={16}
-                    />
-                  </Link>
-                )} */}
-
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
-                    path === "/sistema/negocio/articulos" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/articulos"}
-                >
-                  <div className="flex items-center gap-1">
-                    <Box size={16} />
-                    <span className={`text-xs $`}>Productos</span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
-                    path === "/sistema/negocio/articulos/conjuntos"
-                      ? "bg-blue-600"
-                      : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/articulos/conjuntos"}
-                >
-                  <div className="flex items-center gap-1">
-                    <Boxes size={16} />
-                    <span className={`text-xs `}>Conjuntos</span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
-                    path === "/sistema/negocio/categorias" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/categorias"}
-                >
-                  <div className="flex items-center gap-1">
-                    <Group size={16} />
-                    <span className={`text-xs `}>Categorías</span>
-                  </div>
-
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    path === "/sistema/negocio/proveedores" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/proveedores"}
-                >
-                  <div className="flex items-center gap-1">
-                    <BiSupport size={16} />
-                    <span className={`text-xs `}>Proveedores</span>
-                  </div>
-
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
-                    path === "/sistema/negocio/marcas" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/marcas"}
-                >
-                  <div className="flex items-center gap-1">
-                    <TbBrandAmigo size={16} />
-                    <span className={`text-xs `}>Marcas</span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5 ${
-                    path === "/sistema/negocio/bodegas" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/bodegas"}
-                >
-                  <div className="flex items-center gap-1">
-                    <Warehouse size={16} />
-                    <span className={`text-xs `}>Bodegas</span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`group justify-between flex w-full items-center gap-2  p-1.5 ${
-                    path === "/sistema/negocio/unidades" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/unidades"}
-                >
-                  <div className="flex items-center gap-1">
-                    <GoSingleSelect size={16} />
-                    <span className={`text-xs `}>Unidades</span>
-                  </div>
-                  <PlusCircle className="hidden group-hover:block" size={16} />
-                </Link>
-                <Link
-                  className={`flex w-full items-center gap-2  p-1.5 ${
-                    path === "/sistema/negocio/vehiculos" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/vehiculos"}
-                >
-                  <FaShippingFast size={16} />
-                  <span className={`text-xs `}>Vehículos</span>
-                </Link>
-                <Link
-                  className={`flex w-full items-center gap-2  p-1.5 ${
-                    path === "/sistema/negocio/usuarios" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/negocio/usuarios"}
-                >
-                  <Users size={16} />
-                  <span className={`text-xs `}>Usuarios</span>
-                </Link>
-                {["SUPER_ADMIN"].includes(user?.role || "") && (
-                  <Link
-                    className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
-                      path === "/sistema/negocio/ajustes/nuevo"
-                        ? "bg-blue-600"
-                        : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/negocio/ajustes/nuevo"}
-                  >
-                    <div className="flex items-center gap-1">
-                      <FaAdjust size={16} />
-                      <span className={`text-xs `}>Ajustes inventario</span>
-                    </div>
-                    <PlusCircle
-                      className="hidden group-hover:block"
-                      size={16}
-                    />
-                  </Link>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
+            <Link
+              className={`group justify-between flex w-full items-center gap-2  p-1.5   ${
+                path === "/sistema/negocio" ? "bg-blue-600" : ""
+              } hover:bg-slate-900 rounded-md`}
+              href={"/sistema/negocio"}
+            >
+              <div className="flex items-center gap-1">
+                <FaDollyFlatbed size={16} />
+                <span className={`text-xs $`}>Negocio</span>
+              </div>
+            </Link>
           )}
 
           {/* Ventas */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
-            <>
-              <Collapsible className="w-full">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
-                    <div className="flex items-center gap-2 ">
-                      <FaShop size={16} />
-                      <span className={`text-xs `}>Ventas</span>
-                    </div>
-
-                    <ChevronRight size={25} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="flex flex-col gap-1">
-                  <Link
-                    className={`flex w-full items-center gap-2 p-1.5    ${
-                      path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/ventas/clientes"}
-                  >
-                    <Users2 size={16} />
-                    <span className={`text-xs `}>Clientes</span>
-                  </Link>
-                  <Link
-                    className={`flex w-full items-center gap-2  p-1.5   ${
-                      path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/ventas/pedidos"}
-                  >
-                    <PiInvoice size={16} />
-                    <span className={`text-xs `}>Pedidos</span>
-                  </Link>
-
-                  <Link
-                    className={`flex w-full items-center gap-2  p-1.5   ${
-                      path === "/sistema/ventas/envios" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/ventas/envios"}
-                  >
-                    <Truck size={16} />
-                    <span className={`text-xs `}>Envíos</span>
-                  </Link>
-                  {/* <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                } ${
-                  path === "/sistema/ventas/facturas" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/facturas"}
-              >
-                <PiInvoice size={16} />
-                <span className={`text-xs `}>
-                  Facturas
-                </span>
-              </Link> */}
-                  {/* <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                } ${
-                  path === "/sistema/ventas/recibos" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/recibos"}
-              >
-                <Receipt size={16} />
-                <span className={`text-xs `}>
-                  Recibos
-                </span>
-              </Link> */}
-
-                  <Link
-                    className={`flex w-full items-center gap-2  p-1.5   ${
-                      path === "/sistema/ventas/pagos" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/ventas/pagos"}
-                  >
-                    <GiPayMoney size={16} />
-                    <span className={`text-xs `}>Pagos</span>
-                  </Link>
-                </CollapsibleContent>
-              </Collapsible>
-            </>
+            <Link
+              className={`flex w-full items-center gap-2 p-1.5    ${
+                path === "/sistema/ventas" ? "bg-blue-600" : ""
+              } hover:bg-slate-900 rounded-md`}
+              href={"/sistema/ventas"}
+            >
+              <DollarSign size={16} />
+              <span className={`text-xs `}>Ventas</span>
+            </Link>
           )}
 
           {/* CHOFER */}
@@ -377,29 +140,16 @@ export default function MobileMenu() {
 
           {/*  */}
           {["ADMIN"].includes(user?.role || "") && (
-            <>
-              {" "}
-              <Link
-                className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
-                ${
-                  path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/contabilidad/gastos"}
-              >
-                <GiExpense size={16} />
-                <span className={`text-xs `}>Gastos</span>
-              </Link>
-              <Link
-                className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
-                  ${
-                    path === "/sistema/cajas/auditoria" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/cajas/auditoria"}
-              >
-                <BanknoteIcon size={16} />
-                <span className={`text-xs `}>Cortes</span>
-              </Link>
-            </>
+            <Link
+              className={`flex w-full items-center gap-2 p-1.5 pl-2 pr-2 
+           ${
+             path === "/sistema/contabilidad" ? "bg-blue-600" : ""
+           } hover:bg-slate-900 rounded-md`}
+              href={"/sistema/contabilidad"}
+            >
+              <GiExpense size={16} />
+              <span className={`text-xs `}>Conta</span>
+            </Link>
           )}
           {/* Contabilidad */}
 
@@ -474,40 +224,15 @@ export default function MobileMenu() {
 
           {/* Compras */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
-            <Collapsible className="w-full">
-              <CollapsibleTrigger className="w-full">
-                <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
-                  <div className="flex items-center gap-2 ">
-                    <BiPurchaseTag size={16} />
-                    <span className={`text-xs `}>Compras</span>
-                  </div>
-
-                  <ChevronRight size={25} />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="flex flex-col gap-1">
-                <Link
-                  className={`flex w-full items-center gap-2 p-1.5    ${
-                    path === "/sistema/compras" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/compras"}
-                >
-                  <FilesIcon size={16} />
-                  <span className={`text-xs `}>Ordenes de Compra</span>
-                </Link>
-                {["SUPER_ADMIN"].includes(user?.role || "") && (
-                  <Link
-                    className={`flex w-full items-center gap-2  p-1.5   ${
-                      path === "/sistema/compras/recibos" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/compras/recibos"}
-                  >
-                    <FaRegFileArchive size={16} />
-                    <span className={`text-xs `}>Bienes</span>
-                  </Link>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
+            <Link
+              className={`flex w-full items-center gap-2 p-1.5    ${
+                path === "/sistema/compras" ? "bg-blue-600" : ""
+              } hover:bg-slate-900 rounded-md`}
+              href={"/sistema/compras"}
+            >
+              <FilesIcon size={16} />
+              <span className={`text-xs `}>OC</span>
+            </Link>
           )}
 
           {["SUPER_ADMIN"].includes(user?.role || "") && (
