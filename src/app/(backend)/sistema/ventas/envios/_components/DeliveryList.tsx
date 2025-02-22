@@ -133,7 +133,7 @@ export function DeliveryList({
         header: () => <div className="text-xs max-w-16">Estado</div>,
         cell: ({ row }) => (
           <div
-            className={`text-[10px] maxsm:w-16 text-center font-medium px-2 rounded-md text-white ${
+            className={`text-[10px] maxsm:w-18 text-center font-medium px-2 rounded-md text-white ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "ENTREGADO"
