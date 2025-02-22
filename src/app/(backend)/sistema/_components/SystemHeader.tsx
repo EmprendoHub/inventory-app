@@ -41,50 +41,44 @@ const SystemHeader = () => {
   };
 
   return (
-    <div className="fixed w-full bg-primary h-10 flex items-center justify-between px-4 maxsm:px-2">
+    <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxsm:px-4  z-30">
       <TooltipProvider>
-        <div className="flex items-center maxsm:w-[65%] maxsm:pr-2">
-          {/* <!-- Notification --> */}
-          <div className="flex">
-            <Tooltip>
-              <TooltipTrigger>
-                <div className="bg-muted text-white hover:text-accent p-1 rounded-lg">
-                  <Bell size={18} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Notificaciones</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+        {/* <!-- Notification --> */}
+        <div className="w-full flex">
+          <Tooltip>
+            <TooltipTrigger>
+              <div className="bg-muted text-white hover:text-accent p-1 rounded-lg">
+                <Bell size={18} />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Notificaciones</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-        <div className="flex gap-2 items-center justify-end maxsm:w-full">
-          {/*  User Info  */}
-          <div className="flex">
-            <Tooltip>
-              <TooltipTrigger>
-                <div
-                  ref={buttonRef}
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={toggleMenu}
-                >
-                  <Image
-                    src={
-                      session?.user?.image || "/images/avatar_placeholder.jpg"
-                    }
-                    width={30}
-                    height={30}
-                    className="rounded-full"
-                    alt="avatar"
-                  />
-                  <span className="text-xs">{session?.user?.name}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Cuenta</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
+        {/*  User Info  */}
+        <div className="w-full flex justify-end">
+          <Tooltip>
+            <TooltipTrigger>
+              <div
+                ref={buttonRef}
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={toggleMenu}
+              >
+                <Image
+                  src={session?.user?.image || "/images/avatar_placeholder.jpg"}
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                  alt="avatar"
+                />
+                <span className="text-xs">{session?.user?.name}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Cuenta</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </TooltipProvider>
 
@@ -97,7 +91,7 @@ const SystemHeader = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.5 }}
-            className="absolute top-0 right-0 bg-background shadow-lg rounded-lg p-6 z-[9999]"
+            className="fixed top-0 right-0 bg-background shadow-lg rounded-lg p-6 z-[9999]"
           >
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-2">
