@@ -607,7 +607,7 @@ export function DeliveryList({
     onRowSelectionChange: setRowSelection,
     initialState: {
       pagination: {
-        pageSize: 7, // Set the default page size to 5
+        pageSize: 5, // Set the default page size to 5
       },
     },
     state: {
