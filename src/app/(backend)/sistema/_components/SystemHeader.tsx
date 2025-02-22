@@ -97,7 +97,7 @@ const SystemHeader = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.5 }}
-            className="fixed top-0 right-0 bg-background shadow-lg rounded-lg p-6 z-50"
+            className="absolute top-0 right-0 bg-background shadow-lg rounded-lg p-6 z-[9999]"
           >
             <div className="flex flex-col gap-3">
               <div className="flex items-start gap-2">

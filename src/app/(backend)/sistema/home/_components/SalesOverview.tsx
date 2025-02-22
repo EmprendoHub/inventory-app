@@ -45,10 +45,10 @@ export default function SalesOverview({
     },
   ];
   return (
-    <div className="bg-secondary border-b border-slate-300 p-8 flex maxxlg:flex-wrap items-center justify-between gap-12 rounded-lg ">
+    <div className="bg-secondary border-b border-slate-300 p-8 maxsm:p-4 flex maxxlg:flex-wrap items-center justify-between gap-12 rounded-lg ">
       {/* SUPER ADMIN */}
       {user?.role === "SUPER_ADMIN" && (
-        <div>
+        <>
           {/* Sales Activity */}
           <div className="flex flex-col gap-4">
             <div className="flex-1">
@@ -98,7 +98,7 @@ export default function SalesOverview({
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ADMIN */}
@@ -110,11 +110,11 @@ export default function SalesOverview({
               <h2 className="text-2xl font-bold">Envíos</h2>
               <p className="text-xs text-muted">Actividad de Envíos</p>
             </div>
-            <div className="flex maxlg:flex-wrap items-center gap-4">
+            <div className="flex maxlg:flex-wrap  items-center gap-4">
               {salesActivity.map((activity) => (
                 <button
                   key={activity.title}
-                  className={`flex flex-col items-center gap-2 bg-card p-6 rounded-md shadow-md hover:border-${activity.color}-300 hover:border-1 border w-40`}
+                  className={`flex flex-col items-center gap-2 bg-card p-6 rounded-md shadow-md hover:border-${activity.color}-300 hover:border-1 border w-32`}
                 >
                   <p className={`text-4xl text-${activity.color}-500`}>
                     {activity.qty}

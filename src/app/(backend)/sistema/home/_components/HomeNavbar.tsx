@@ -19,7 +19,7 @@ export default function HomeNavbar() {
         </div>
       </div>
       {/* Navigation */}
-      <nav className="sticky top-0 z-10 h-12 p-2 rounded-md">
+      <div className=" h-12 p-2 rounded-md">
         <ul className="flex text-sm text-muted items-center gap-6">
           <li
             className={` ${
@@ -47,7 +47,7 @@ export default function HomeNavbar() {
             <Link href="/sistema/home/notificaciones">Notificaciones</Link>
           </li>
         </ul>
-      </nav>
+      </div>
     </div>
   );
 }
