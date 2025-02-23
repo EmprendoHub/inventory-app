@@ -73,7 +73,7 @@ export function CashTransactionList({
         ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-60 px-2 `}
+            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-60 px-2 leading-none`}
           >
             {row.getValue("description")}
           </div>
@@ -263,7 +263,7 @@ export function CashTransactionList({
     onRowSelectionChange: setRowSelection,
     initialState: {
       pagination: {
-        pageSize: 7, // Set the default page size to 5
+        pageSize: 5, // Set the default page size to 5
       },
     },
     state: {
