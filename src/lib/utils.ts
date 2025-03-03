@@ -97,7 +97,7 @@ export function getMexicoTime(date: Date | string) {
 
 export function getMexicoDate(date: Date | string) {
   const d = new Date(date);
-  return d.toLocaleString("en-US", {
+  return d.toLocaleString("es-MX", {
     timeZone: "America/Mexico_City",
     dateStyle: "medium",
   });

@@ -21,12 +21,15 @@ import {
 import Link from "next/link";
 import { getMexicoDate, getMexicoTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { BsEnvelopeArrowUp } from "react-icons/bs";
+import { BsEnvelopeArrowUp, BsWhatsapp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { useModal } from "@/app/context/ModalContext";
-import { verifySupervisorCode } from "@/app/_actions";
+import {
+  sendWATemplatePaymentPendingMessage,
+  verifySupervisorCode,
+} from "@/app/_actions";
 
 export default function OrderView({ order }: { order: FullOderType }) {
   const { data: session } = useSession();
@@ -62,33 +65,59 @@ export default function OrderView({ order }: { order: FullOderType }) {
     setLightboxImage("");
   };
 
-  const sendEmailReminder = async (id: string) => {
+  // const sendEmailReminder = async (id: string) => {
+  //   setSending((prev) => !prev);
+
+  //   try {
+  //     const res = await fetch(`/api/email`, {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Cookie: "ojñolasidfioasdfuñoasdikfh",
+  //       },
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         id,
+  //       }),
+  //     });
+
+  //     if (res.ok) {
+  //       await showModal({
+  //         title: "Correo Enviado!",
+  //         type: "delete",
+  //         text: "El correo se envió exitosamente",
+  //         icon: "success",
+  //       });
+  //     } else {
+  //       await showModal({
+  //         title: "¡Correo No Enviado!",
+  //         type: "delete",
+  //         text: "El correo no se envió correctamente",
+  //         icon: "error",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  //   setSending((prev) => !prev);
+  // };
+
+  const sendWhatsAppReminder = async (orderId: string) => {
     setSending((prev) => !prev);
 
     try {
-      const res = await fetch(`/api/email`, {
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: "ojñolasidfioasdfuñoasdikfh",
-        },
-        method: "POST",
-        body: JSON.stringify({
-          id,
-        }),
-      });
-
-      if (res.ok) {
+      const success = await sendWATemplatePaymentPendingMessage(orderId);
+      if (success) {
         await showModal({
-          title: "Correo Enviado!",
+          title: "WhatsApp Enviado!",
           type: "delete",
-          text: "El correo se envió exitosamente",
+          text: "El WhatsApp se envió exitosamente",
           icon: "success",
         });
       } else {
         await showModal({
-          title: "¡Correo No Enviado!",
+          title: "WhatsApp No Enviado!",
           type: "delete",
-          text: "El correo no se envió correctamente",
+          text: "El WhatsApp no se envió correctamente",
           icon: "error",
         });
       }
@@ -376,7 +405,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
           </div>
         </div>
 
-        <div className="text-right w-1/2 flex flex-col gap-1">
+        <div className="text-right w-1/2 maxmd:w-full flex flex-col gap-1">
           <div>
             <h2 className="text-2xl maxsm:text-lg font-bold text-muted mb-2">
               Pedido #: {order.orderNo}
@@ -396,7 +425,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
             >
               <DownloadCloud /> PDF
             </Link>
-            {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(user?.role || "") &&
+            {/* {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(user?.role || "") &&
               order.status !== "CANCELADO" && (
                 <Button
                   disabled={sending}
@@ -404,6 +433,17 @@ export default function OrderView({ order }: { order: FullOderType }) {
                   className=" text-center bg-emerald-700 text-white text-xs rounded-md "
                 >
                   <BsEnvelopeArrowUp /> Enviar Email{" "}
+                  {sending && <span className="loader"></span>}
+                </Button>
+              )} */}
+            {["SUPER_ADMIN", "GERENTE", "ADMIN"].includes(user?.role || "") &&
+              order.status !== "CANCELADO" && (
+                <Button
+                  disabled={sending}
+                  onClick={() => sendWhatsAppReminder(order.id)}
+                  className=" text-center bg-emerald-700 text-white text-xs rounded-md "
+                >
+                  <BsWhatsapp /> Enviar WhatsApp{" "}
                   {sending && <span className="loader"></span>}
                 </Button>
               )}

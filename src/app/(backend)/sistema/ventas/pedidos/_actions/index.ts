@@ -83,7 +83,8 @@ export async function createNewOrder(
     const carrier = "YUNUEN COMPANY";
     const deliveryStatus = "PENDIENTE";
 
-    const dueDate = new Date();
+    const dueDate = new Date(); // Current date and time
+    dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
     const orderNo = await generateOrderId(prisma);
     const session = await getServerSession(options);
     const user = session?.user;

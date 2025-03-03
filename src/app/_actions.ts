@@ -7,6 +7,7 @@ import axios from "axios";
 import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
 import { join } from "path";
+import { formatCurrency, getMexicoDate } from "@/lib/utils";
 
 // Optimize and upload image
 export const uploadOptimizedImage = async (rawData: any) => {
@@ -241,3 +242,251 @@ export const verifySupervisorCode = async (
   // This is a placeholder implementation
   return { authUserId: authorizedUser.id, success: true }; // Replace with actual verification logic
 };
+
+export async function sendSMSMessage(
+  message: string,
+  phone: string
+): Promise<boolean> {
+  const data = JSON.stringify({
+    message: message,
+    tpoa: "Sender",
+    recipient: [
+      {
+        msisdn: `521${phone}`,
+      },
+    ],
+  });
+
+  const config = {
+    method: "post",
+    maxBodyLength: Infinity,
+    url: "https://api.labsmobile.com/json/send",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization:
+        "Basic " +
+        Buffer.from(
+          `${process.env.LABS_MOBILE_API_USER}:${process.env.LABS_MOBILE_API_KEY}`
+        ).toString("base64"),
+    },
+    data: data,
+  };
+
+  try {
+    const response = await axios.request(config);
+
+    // Check for success based on API response
+    if (response.data && response.data.success) {
+      return true; // SMS sent successfully
+    } else {
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("SMS sending failed:", error);
+    return false; // Request failed
+  }
+}
+
+export async function sendWATemplateMessage(phone: string): Promise<boolean> {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${phone}`,
+    type: "template",
+    template: {
+      name: "hello_world",
+      language: {
+        code: "en_US",
+      },
+    },
+  });
+  console.log(data, "data", process.env.WA_BUSINESS_TOKEN);
+
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  try {
+    const response: any = await axios(config);
+
+    // Check for success based on API response
+    if (response && response.status === 200) {
+      return true; // SMS sent successfully
+    } else {
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("WA Template sending failed:", error);
+    return false; // Request failed
+  }
+}
+
+export async function sendWATextMessage(
+  message: string,
+  phone: string
+): Promise<boolean> {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${phone}`,
+    type: "text",
+    text: {
+      body: message,
+    },
+  });
+
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  try {
+    const response: any = await axios(config);
+
+    // Check for success based on API response
+    if (response && response.status === 200) {
+      return true; // SMS sent successfully
+    } else {
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("WA text message sending failed:", error);
+    return false; // Request failed
+  }
+}
+
+export async function sendWAMediaMessage(
+  message: string,
+  phone: string,
+  mainImage: string
+): Promise<boolean> {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${phone}`,
+    type: "image",
+    image: {
+      link: mainImage,
+      caption: message,
+    },
+  });
+  console.log(data, "data");
+
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  try {
+    const response: any = await axios(config);
+
+    // Check for success based on API response
+    if (response && response.status === 200) {
+      return true; // SMS sent successfully
+    } else {
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("WA Template sending failed:", error);
+    return false; // Request failed
+  }
+}
+
+export async function sendWATemplatePaymentPendingMessage(
+  orderId: string
+): Promise<boolean> {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId },
+    include: {
+      payments: true,
+      client: true,
+    },
+  });
+
+  if (!order) return false;
+
+  const orderTotal = order.totalAmount;
+  const previousPayments = order.payments.reduce((total, payment) => {
+    return total + payment.amount;
+  }, 0);
+  const pendingPayment = orderTotal - previousPayments || 0;
+  const dueDate = getMexicoDate(order.dueDate);
+
+  const formattedTotal = formatCurrency({
+    amount: order.totalAmount,
+    currency: "USD",
+  });
+  const formattedPayments = formatCurrency({
+    amount: previousPayments,
+    currency: "USD",
+  });
+  const formattedPending = formatCurrency({
+    amount: pendingPayment,
+    currency: "USD",
+  });
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${order.client.phone}`,
+    type: "template",
+    template: {
+      name: "pago_pendiente_1",
+      language: {
+        code: "es_MX",
+      },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: order.client.name }, // Variable 1
+            { type: "text", text: order.orderNo }, // Variable 2
+            { type: "text", text: formattedTotal }, // Variable 3
+            { type: "text", text: formattedPayments }, // Variable 4
+            { type: "text", text: formattedPending }, // Variable 5
+            { type: "text", text: dueDate }, // Variable 6
+          ],
+        },
+      ],
+    },
+  });
+
+  console.log(data, "data", process.env.WA_BUSINESS_TOKEN);
+
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  try {
+    const response: any = await axios(config);
+
+    // Check for success based on API response
+    if (response && response.status === 200) {
+      console.error("API response indicates success");
+      return true; // Message sent successfully
+    } else {
+      console.error("API response indicates failure");
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("WA Template sending failed:", error);
+    return false; // Request failed
+  }
+}
