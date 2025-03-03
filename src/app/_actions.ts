@@ -299,7 +299,6 @@ export async function sendWATemplateMessage(phone: string): Promise<boolean> {
       },
     },
   });
-  console.log(data, "data", process.env.WA_BUSINESS_TOKEN);
 
   const config = {
     method: "post",
@@ -378,7 +377,6 @@ export async function sendWAMediaMessage(
       caption: message,
     },
   });
-  console.log(data, "data");
 
   const config = {
     method: "post",
@@ -461,8 +459,6 @@ export async function sendWATemplatePaymentPendingMessage(
       ],
     },
   });
-
-  console.log(data, "data", process.env.WA_BUSINESS_TOKEN);
 
   const config = {
     method: "post",
