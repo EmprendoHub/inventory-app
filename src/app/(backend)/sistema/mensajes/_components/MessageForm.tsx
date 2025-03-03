@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   sendWAMediaMessage,
-  sendWATemplateMessage,
   sendWATemplatePaymentPendingMessage,
   sendWATextMessage,
 } from "@/app/_actions";
