@@ -290,7 +290,7 @@ export async function sendSMSMessage(
 export async function sendWATemplateMessage(phone: string): Promise<boolean> {
   const data = JSON.stringify({
     messaging_product: "whatsapp",
-    to: `52${phone}`,
+    to: `${phone}`,
     type: "template",
     template: {
       name: "hello_world",
@@ -331,7 +331,7 @@ export async function sendWATextMessage(
 ): Promise<boolean> {
   const data = JSON.stringify({
     messaging_product: "whatsapp",
-    to: `52${phone}`,
+    to: `${phone}`,
     type: "text",
     text: {
       body: message,
@@ -370,7 +370,7 @@ export async function sendWAMediaMessage(
 ): Promise<boolean> {
   const data = JSON.stringify({
     messaging_product: "whatsapp",
-    to: `52${phone}`,
+    to: `${phone}`,
     type: "image",
     image: {
       link: mainImage,
@@ -437,7 +437,7 @@ export async function sendWATemplatePaymentPendingMessage(
   });
   const data = JSON.stringify({
     messaging_product: "whatsapp",
-    to: `52${order.client.phone}`,
+    to: `${order.client.phone}`,
     type: "template",
     template: {
       name: "pago_pendiente_1",

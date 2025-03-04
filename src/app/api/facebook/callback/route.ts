@@ -51,11 +51,10 @@ export async function POST(request: NextRequest) {
 
 // Process message events
 async function processMessageEvent(event: any) {
-  console.log("PROCESS contacts", event.contacts[0]);
   console.log("PROCESS messages", event.messages[0]);
   const client = await prisma.client.findFirst({
     where: {
-      phone: event.messages[0].from,
+      phone: event.contacts[0].wa_id,
     },
   });
   // const client = await prisma.client.findFirst({
@@ -64,41 +63,65 @@ async function processMessageEvent(event: any) {
   //   },
   // });
   try {
-    const senderPhone = event.metadata.display_phone_number;
+    // Convert the string to a number
+    const unixTimestamp = parseInt(event.messages[0].timestamp, 10);
+
+    // Convert to milliseconds and create a Date object
+    const timestamp = new Date(unixTimestamp * 1000);
+    const senderPhone = event.contacts[0].wa_id;
     const senderName = event.contacts[0].profile.name;
     const clientId = client?.id;
-    const timestamp = event.messages[0].timestamp;
-    const messageText = event.messages[0].text.body;
+    const messageType = event.messages[0].type;
 
-    await storeMessage({
-      senderPhone,
-      clientId,
-      timestamp,
-      messageText,
-      senderName,
-    });
+    if (messageType === "text") {
+      await storeTextMessage({
+        senderPhone,
+        clientId,
+        timestamp,
+        messageText: event.messages[0].text.body,
+        senderName,
+      });
+    }
+
+    if (messageType === "button") {
+      await storeButtonResponseMessage({
+        senderPhone,
+        clientId,
+        timestamp,
+        messageText: event.messages[0].text.body,
+        senderName,
+      });
+    }
   } catch (error) {
     console.error("Message processing failed:", error);
   }
 }
 
 // Store message (stub implementation)
-async function storeMessage(messageDetails: any) {
-  // Convert the string to a number
-  const unixTimestamp = parseInt(messageDetails.timestamp, 10);
-
-  // Convert to milliseconds and create a Date object
-  const timestamp = new Date(unixTimestamp * 1000);
-
+async function storeTextMessage(messageDetails: any) {
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
       phone: messageDetails.senderPhone,
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
-      timestamp,
+      timestamp: messageDetails.timestamp,
     },
   });
 
-  console.log("Message stored:", newWAMessage);
+  console.log("Text Message stored:", newWAMessage);
+}
+
+async function storeButtonResponseMessage(messageDetails: any) {
+  const newWAMessage = await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      message: messageDetails.messageText,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  console.log("Text Message stored:", newWAMessage);
 }
