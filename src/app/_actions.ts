@@ -232,7 +232,7 @@ export async function uploadAudioBlobAction(audioBlob: Blob) {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.ogg`;
-    const filePath = path.join(process.cwd(), "public", "tmp", newFilename);
+    const filePath = path.join("/", "public", "tmp", newFilename);
     const buffer = Buffer.from(await audioBlob.arrayBuffer());
 
     fs.writeFileSync(filePath, buffer);
@@ -252,7 +252,7 @@ export async function uploadImageBlobAction(imageBlob: Blob) {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.webp`;
-    const filePath = path.join(process.cwd(), "public", "tmp", newFilename);
+    const filePath = path.join("/", "public", "tmp", newFilename);
     const buffer = Buffer.from(await imageBlob.arrayBuffer());
 
     fs.writeFileSync(filePath, buffer);

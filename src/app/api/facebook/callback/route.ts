@@ -111,7 +111,7 @@ async function processMessageEvent(event: any) {
           timestamp,
           messageText: "no text",
           senderName,
-          itemId: event.messages[0].image.id,
+          itemId: event.messages[0].audio.id,
         });
       }
 
