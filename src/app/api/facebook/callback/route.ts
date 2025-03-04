@@ -51,13 +51,9 @@ export async function POST(request: NextRequest) {
 
 // Process message events
 async function processMessageEvent(event: any) {
-  if (event.statuses[0]) {
-    console.log("PROCESS statuses", event.statuses[0]);
-  }
+  console.log("PROCESS statuses", event.statuses[0]);
 
-  if (event.messages[0]) {
-    console.log("PROCESS messages", event.messages[0]);
-  }
+  console.log("PROCESS messages", event.messages[0]);
 
   const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
   const client = await prisma.client.findFirst({
