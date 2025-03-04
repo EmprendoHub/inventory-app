@@ -53,13 +53,17 @@ export async function POST(request: NextRequest) {
 async function processMessageEvent(event: any) {
   console.log("PROCESS contacts", event.contacts[0]);
   console.log("PROCESS messages", event.messages[0]);
-
+  const client = await prisma.client.findFirst({
+    where: {
+      phone: event.messages[0].from,
+    },
+  });
   try {
     const senderPhone = event.metadata.display_phone_number;
-    const senderName = event.sender.name;
-    const clientId = event.recipient.id;
-    const timestamp = event.timestamp;
-    const messageText = event.message.text;
+    const senderName = event.contacts[0].profile.name;
+    const clientId = client?.id;
+    const timestamp = event.messages[0].timestamp;
+    const messageText = event.messages[0].text.body;
 
     await storeMessage({
       senderPhone,
