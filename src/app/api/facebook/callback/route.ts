@@ -53,9 +53,14 @@ export async function POST(request: NextRequest) {
 async function processMessageEvent(event: any) {
   console.log("PROCESS contacts", event.contacts[0]);
   console.log("PROCESS messages", event.messages[0]);
+  // const client = await prisma.client.findFirst({
+  //   where: {
+  //     phone: event.messages[0].from,
+  //   },
+  // });
   const client = await prisma.client.findFirst({
     where: {
-      phone: event.messages[0].from,
+      phone: "3532464146",
     },
   });
   try {
@@ -79,13 +84,19 @@ async function processMessageEvent(event: any) {
 
 // Store message (stub implementation)
 async function storeMessage(messageDetails: any) {
+  // Convert the string to a number
+  const unixTimestamp = parseInt(messageDetails.timestamp, 10);
+
+  // Convert to milliseconds and create a Date object
+  const timestamp = new Date(unixTimestamp * 1000);
+
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
-      phone: messageDetails.phone,
+      phone: messageDetails.senderPhone,
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
-      timestamp: new Date(messageDetails.timestamp),
+      timestamp,
     },
   });
 
