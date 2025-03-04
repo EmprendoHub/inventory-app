@@ -20,9 +20,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const payload = await request.json();
-  console.log("PAYLOAD", payload);
   try {
-    if (payload.object === "page") {
+    if (payload.object === "whatsapp_business_account") {
       // Use Promise.all to handle all events concurrently
       await Promise.all(
         payload.entry.map(async (entry: any) => {
@@ -31,6 +30,8 @@ export async function POST(request: NextRequest) {
 
           if (webhookEvent) {
             const eventPromises = webhookEvent.map(async (event: any) => {
+              console.log("EVENT", event);
+
               if (event.message) {
                 return processMessageEvent(event);
               }
