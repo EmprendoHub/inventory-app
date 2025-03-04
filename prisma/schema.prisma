@@ -754,6 +754,7 @@ model WhatsAppMessage {
   clientId    String    @db.ObjectId
   phone       String    
   message     String    // The content of the message
+  type     String    
   sender      SenderType // Whether the message was sent by the client or the system
   status      MessageStatus @default(RECEIVED) // Status of the message (e.g., sent, delivered, read)
   timestamp   DateTime  @default(now()) // Timestamp of the message

@@ -8,6 +8,8 @@ import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
 import { join } from "path";
 import { formatCurrency, getMexicoDate } from "@/lib/utils";
+import fs from "fs";
+import path from "path";
 
 // Optimize and upload image
 export const uploadOptimizedImage = async (rawData: any) => {
@@ -217,6 +219,46 @@ export async function uploadImageAction(base64Image: string) {
 
     await uploadToBucket("inventario", "proofs/" + newFilename, path);
     const imageUrl = `${process.env.MINIO_URL}proofs/${newFilename}`;
+
+    return { success: true, imageUrl };
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    return { success: false, error: "Failed to upload image" };
+  }
+}
+
+export async function uploadAudioBlobAction(audioBlob: Blob) {
+  try {
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.ogg`;
+    const filePath = path.join(process.cwd(), "public", "tmp", newFilename);
+    const buffer = Buffer.from(await audioBlob.arrayBuffer());
+
+    fs.writeFileSync(filePath, buffer);
+
+    await uploadToBucket("inventario", "audio/" + newFilename, filePath);
+    const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
+
+    return { success: true, audioUrl };
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    return { success: false, error: "Failed to upload image" };
+  }
+}
+
+export async function uploadImageBlobAction(imageBlob: Blob) {
+  try {
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.webp`;
+    const filePath = path.join(process.cwd(), "public", "tmp", newFilename);
+    const buffer = Buffer.from(await imageBlob.arrayBuffer());
+
+    fs.writeFileSync(filePath, buffer);
+
+    await uploadToBucket("inventario", "images/" + newFilename, filePath);
+    const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
 
     return { success: true, imageUrl };
   } catch (error) {

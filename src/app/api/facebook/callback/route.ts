@@ -1,3 +1,4 @@
+import { uploadAudioBlobAction, uploadImageBlobAction } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { SenderType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -102,6 +103,28 @@ async function processMessageEvent(event: any) {
           senderName,
         });
       }
+
+      if (messageType === "audio") {
+        await storeAudioResponseMessage({
+          senderPhone,
+          clientId,
+          timestamp,
+          messageText: "no text",
+          senderName,
+          itemId: event.messages[0].image.id,
+        });
+      }
+
+      if (messageType === "image") {
+        await storeImageResponseMessage({
+          senderPhone,
+          clientId,
+          timestamp,
+          messageText: "no text",
+          senderName,
+          itemId: event.messages[0].image.id,
+        });
+      }
     } catch (error) {
       console.error("Message processing failed:", error);
     }
@@ -114,6 +137,7 @@ async function storeTextMessage(messageDetails: any) {
     data: {
       clientId: messageDetails.clientId,
       phone: messageDetails.senderPhone,
+      type: "text",
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
       timestamp: messageDetails.timestamp,
@@ -128,6 +152,7 @@ async function storeButtonResponseMessage(messageDetails: any) {
     data: {
       clientId: messageDetails.clientId,
       phone: messageDetails.senderPhone,
+      type: "button",
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
       timestamp: messageDetails.timestamp,
@@ -135,4 +160,92 @@ async function storeButtonResponseMessage(messageDetails: any) {
   });
 
   console.log("Text Message stored:", newWAMessage);
+}
+
+async function storeAudioResponseMessage(messageDetails: any) {
+  const audioResult = await processAudioFile(messageDetails.itemId);
+  if (!audioResult.success) {
+    throw new Error(`Failed to process audio file: ${audioResult.error}`);
+  }
+  const newWAMessage = await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "audio",
+      mediaUrl: audioResult.audioUrl,
+      message: messageDetails.messageText,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  console.log("Audio Message stored:", newWAMessage);
+}
+
+async function storeImageResponseMessage(messageDetails: any) {
+  const imageResult = await processImageFile(messageDetails.itemId);
+  if (!imageResult.success) {
+    throw new Error(`Failed to process audio file: ${imageResult.error}`);
+  }
+  const newWAMessage = await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "image",
+      mediaUrl: imageResult.imageUrl,
+      message: messageDetails.messageText,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  console.log("Image Message stored:", newWAMessage);
+}
+
+async function processAudioFile(audioId: string) {
+  const url = `https://graph.facebook.com/v22.0/${audioId}/`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download audio file: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const audioUrl = data.url; // URL to download the audio file
+
+  // Fetch the audio file as a blob
+  const audioResponse = await fetch(audioUrl);
+  const audioBlob = await audioResponse.blob();
+
+  const uploadedAudioUrl = await uploadAudioBlobAction(audioBlob);
+
+  return uploadedAudioUrl;
+}
+
+async function processImageFile(imageId: string) {
+  const url = `https://graph.facebook.com/v22.0/${imageId}/`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to downloadimage: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const imageUrl = data.url; // URL to download the audio file
+
+  // Fetch the image file as a blob
+  const imageResponse = await fetch(imageUrl);
+  const imageBlob = await imageResponse.blob();
+
+  const uploadedAudioUrl = await uploadImageBlobAction(imageBlob);
+
+  return uploadedAudioUrl;
 }
