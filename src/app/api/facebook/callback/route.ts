@@ -54,7 +54,7 @@ async function processMessageEvent(event: any) {
   if (event.statuses) {
     console.log("PROCESS statuses", event.statuses[0]);
 
-    const WAPhone = event.recipient_id.replace(/^521/, "");
+    const WAPhone = event.statuses[0].recipient_id.replace(/^521/, "");
     const client = await prisma.client.findFirst({
       where: {
         phone: WAPhone,
@@ -78,7 +78,7 @@ async function processMessageEvent(event: any) {
 
       // Convert to milliseconds and create a Date object
       const timestamp = new Date(unixTimestamp * 1000);
-      const senderPhone = event.contacts[0].wa_id;
+      const senderPhone = WAPhone;
       const senderName = event.contacts[0].profile.name;
       const clientId = client?.id;
       const messageType = event.messages[0].type;
