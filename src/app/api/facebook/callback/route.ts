@@ -51,53 +51,60 @@ export async function POST(request: NextRequest) {
 
 // Process message events
 async function processMessageEvent(event: any) {
-  console.log("PROCESS statuses", event.statuses[0]);
+  if (event.statuses) {
+    console.log("PROCESS statuses", event.statuses[0]);
 
-  console.log("PROCESS messages", event.messages[0]);
+    const WAPhone = event.recipient_id.replace(/^521/, "");
+    const client = await prisma.client.findFirst({
+      where: {
+        phone: WAPhone,
+      },
+    });
+    console.log(client);
+  }
 
-  const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
-  const client = await prisma.client.findFirst({
-    where: {
-      phone: WAPhone,
-    },
-  });
-  // const client = await prisma.client.findFirst({
-  //   where: {
-  //     phone: "3532464146",
-  //   },
-  // });
-  try {
-    // Convert the string to a number
-    const unixTimestamp = parseInt(event.messages[0].timestamp, 10);
+  if (event.messages) {
+    console.log("PROCESS messages", event.messages[0]);
 
-    // Convert to milliseconds and create a Date object
-    const timestamp = new Date(unixTimestamp * 1000);
-    const senderPhone = event.contacts[0].wa_id;
-    const senderName = event.contacts[0].profile.name;
-    const clientId = client?.id;
-    const messageType = event.messages[0].type;
+    const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
+    const client = await prisma.client.findFirst({
+      where: {
+        phone: WAPhone,
+      },
+    });
+    try {
+      // Convert the string to a number
+      const unixTimestamp = parseInt(event.messages[0].timestamp, 10);
 
-    if (messageType === "text") {
-      await storeTextMessage({
-        senderPhone,
-        clientId,
-        timestamp,
-        messageText: event.messages[0].text.body,
-        senderName,
-      });
+      // Convert to milliseconds and create a Date object
+      const timestamp = new Date(unixTimestamp * 1000);
+      const senderPhone = event.contacts[0].wa_id;
+      const senderName = event.contacts[0].profile.name;
+      const clientId = client?.id;
+      const messageType = event.messages[0].type;
+
+      if (messageType === "text") {
+        await storeTextMessage({
+          senderPhone,
+          clientId,
+          timestamp,
+          messageText: event.messages[0].text.body,
+          senderName,
+        });
+      }
+
+      if (messageType === "button") {
+        await storeButtonResponseMessage({
+          senderPhone,
+          clientId,
+          timestamp,
+          messageText: event.messages[0].button.payload,
+          senderName,
+        });
+      }
+    } catch (error) {
+      console.error("Message processing failed:", error);
     }
-
-    if (messageType === "button") {
-      await storeButtonResponseMessage({
-        senderPhone,
-        clientId,
-        timestamp,
-        messageText: event.messages[0].button.payload,
-        senderName,
-      });
-    }
-  } catch (error) {
-    console.error("Message processing failed:", error);
   }
 }
 
