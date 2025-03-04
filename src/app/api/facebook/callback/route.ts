@@ -52,9 +52,10 @@ export async function POST(request: NextRequest) {
 // Process message events
 async function processMessageEvent(event: any) {
   console.log("PROCESS messages", event.messages[0]);
+  const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
   const client = await prisma.client.findFirst({
     where: {
-      phone: event.contacts[0].wa_id,
+      phone: WAPhone,
     },
   });
   // const client = await prisma.client.findFirst({
