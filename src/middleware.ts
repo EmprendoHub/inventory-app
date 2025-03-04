@@ -12,9 +12,12 @@ export async function middleware(request: any) {
   // Redirect to login if not authenticated
   if (!token) {
     // console.log("User not authenticated, redirecting to login");
-    redirectUrl = new URL("/iniciar", request.url);
-    redirectUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(redirectUrl);
+
+    if (!pathname.includes("/legal")) {
+      redirectUrl = new URL("/iniciar", request.url);
+      redirectUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   // Check if the user's role has access to the requested route
