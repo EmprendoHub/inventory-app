@@ -26,14 +26,13 @@ export async function POST(request: NextRequest) {
       await Promise.all(
         payload.entry.map(async (entry: any) => {
           const webhookEvent = entry.messaging || entry.changes;
-          console.log("webhookEvent", webhookEvent);
 
           if (webhookEvent) {
             const eventPromises = webhookEvent.map(async (event: any) => {
               console.log("EVENT", event);
 
-              if (event.message) {
-                return processMessageEvent(event);
+              if (event.field === "messages") {
+                return processMessageEvent(event.value);
               }
             });
 
@@ -52,8 +51,11 @@ export async function POST(request: NextRequest) {
 
 // Process message events
 async function processMessageEvent(event: any) {
+  console.log("PROCESS contacts", event.contacts[0]);
+  console.log("PROCESS messages", event.messages[0]);
+
   try {
-    const senderPhone = event.sender.phone;
+    const senderPhone = event.metadata.display_phone_number;
     const senderName = event.sender.name;
     const clientId = event.recipient.id;
     const timestamp = event.timestamp;
