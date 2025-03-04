@@ -51,7 +51,14 @@ export async function POST(request: NextRequest) {
 
 // Process message events
 async function processMessageEvent(event: any) {
-  console.log("PROCESS messages", event.messages[0]);
+  if (event.statuses[0]) {
+    console.log("PROCESS statuses", event.statuses[0]);
+  }
+
+  if (event.messages[0]) {
+    console.log("PROCESS messages", event.messages[0]);
+  }
+
   const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
   const client = await prisma.client.findFirst({
     where: {
@@ -89,7 +96,7 @@ async function processMessageEvent(event: any) {
         senderPhone,
         clientId,
         timestamp,
-        messageText: event.messages[0].text.body,
+        messageText: event.messages[0].button.payload,
         senderName,
       });
     }
