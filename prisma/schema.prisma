@@ -58,6 +58,7 @@ model Client {
   image     String
   status        ClientStatus @default(ACTIVE)
   orders    Order[]
+  whatsAppMessages      WhatsAppMessage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -742,4 +743,33 @@ model Report {
 
   // Relations
   createdByUser String
+}
+
+
+// ******************* WHATSAPP MESSAGES ****************** //
+
+model WhatsAppMessage {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  client      Client    @relation(fields: [clientId], references: [id])
+  clientId    String    @db.ObjectId
+  phone       String    
+  message     String    // The content of the message
+  sender      SenderType // Whether the message was sent by the client or the system
+  status      MessageStatus @default(SENT) // Status of the message (e.g., sent, delivered, read)
+  timestamp   DateTime  @default(now()) // Timestamp of the message
+  mediaUrl    String?   // URL to any media (image, video, document) sent with the message
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum SenderType {
+  CLIENT
+  SYSTEM
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+  FAILED
 }
