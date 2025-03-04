@@ -203,7 +203,7 @@ async function storeImageResponseMessage(messageDetails: any) {
 }
 
 async function processAudioFile(audioId: string) {
-  const url = `https://graph.facebook.com/v22.0/${audioId}/`;
+  const url = `https://graph.facebook.com/v22.0/${audioId}`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -228,7 +228,7 @@ async function processAudioFile(audioId: string) {
 }
 
 async function processImageFile(imageId: string) {
-  const url = `https://graph.facebook.com/v22.0/${imageId}/`;
+  const url = `https://graph.facebook.com/v22.0/${imageId}`;
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -240,6 +240,8 @@ async function processImageFile(imageId: string) {
   }
 
   const data = await response.json();
+  console.log("DATA", data);
+
   const imageUrl = data.url; // URL to download the image file
   console.log("imageUrl", imageUrl);
 
