@@ -8,6 +8,7 @@ import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
 import { join } from "path";
 import { formatCurrency, getMexicoDate } from "@/lib/utils";
+import fs from "fs";
 
 // Optimize and upload image
 export const uploadOptimizedImage = async (rawData: any) => {
@@ -251,13 +252,13 @@ export async function uploadImageBlobAction(imageBlob: Blob) {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.webp`;
-    const buffer = Buffer.from(await imageBlob.arrayBuffer());
+    const buffer = await imageBlob.arrayBuffer();
 
-    const uint8Array = new Uint8Array(buffer);
-    const path = join("/", "tmp", newFilename);
-    await writeFile(path, uint8Array);
+    const filePath = join("/", "tmp", newFilename);
+    // Save the buffer to a file
+    fs.writeFileSync(filePath, Buffer.from(buffer));
 
-    await uploadToBucket("inventario", "images/" + newFilename, path);
+    await uploadToBucket("inventario", "images/" + newFilename, filePath);
     const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
 
     return { success: true, imageUrl };
