@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const payload = await request.json();
-
+  console.log("PAYLOAD", payload);
   try {
     if (payload.object === "page") {
       // Use Promise.all to handle all events concurrently
