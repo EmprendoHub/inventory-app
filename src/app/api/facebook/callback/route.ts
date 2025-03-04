@@ -1,7 +1,9 @@
-import { uploadAudioBlobAction, uploadImageBlobAction } from "@/app/_actions";
+import { uploadAudioBlobAction, uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { SenderType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { join } from "path";
+import fs from "fs";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
@@ -185,7 +187,7 @@ async function storeAudioResponseMessage(messageDetails: any) {
 async function storeImageResponseMessage(messageDetails: any) {
   const imageResult = await processImageFile(messageDetails.itemId);
   if (!imageResult.success) {
-    throw new Error(`Failed to process audio file: ${imageResult.error}`);
+    throw new Error(`Failed to process audio file: ${imageResult}`);
   }
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
@@ -242,14 +244,24 @@ async function processImageFile(imageId: string) {
   const data = await response.json();
   console.log("DATA", data);
 
-  const imageUrl = data.url; // URL to download the image file
-  console.log("imageUrl", imageUrl);
+  const WAImageUrl = data.url; // URL to download the image file
+  console.log("imageUrl", WAImageUrl);
 
   // Fetch the image file as a blob
-  const imageResponse = await fetch(imageUrl);
+  const imageResponse = await fetch(WAImageUrl);
   const imageBlob = await imageResponse.blob();
 
-  const uploadedAudioUrl = await uploadImageBlobAction(imageBlob);
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.jpeg`;
+  const buffer = await imageBlob.arrayBuffer();
 
-  return uploadedAudioUrl;
+  const filePath = join("/", "tmp", newFilename);
+  // Save the buffer to a file
+  fs.writeFileSync(filePath, Buffer.from(buffer));
+
+  await uploadToBucket("inventario", "images/" + newFilename, filePath);
+  const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
+
+  return { success: true, imageUrl };
 }
