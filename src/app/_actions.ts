@@ -8,8 +8,6 @@ import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
 import { join } from "path";
 import { formatCurrency, getMexicoDate } from "@/lib/utils";
-import fs from "fs";
-import path from "path";
 
 // Optimize and upload image
 export const uploadOptimizedImage = async (rawData: any) => {
@@ -232,12 +230,13 @@ export async function uploadAudioBlobAction(audioBlob: Blob) {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.ogg`;
-    const filePath = path.join("/", "public", "tmp", newFilename);
     const buffer = Buffer.from(await audioBlob.arrayBuffer());
 
-    fs.writeFileSync(filePath, buffer);
+    const uint8Array = new Uint8Array(buffer);
+    const path = join("/", "tmp", newFilename);
+    await writeFile(path, uint8Array);
 
-    await uploadToBucket("inventario", "audio/" + newFilename, filePath);
+    await uploadToBucket("inventario", "audio/" + newFilename, path);
     const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
 
     return { success: true, audioUrl };
@@ -252,12 +251,13 @@ export async function uploadImageBlobAction(imageBlob: Blob) {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.webp`;
-    const filePath = path.join("/", "public", "tmp", newFilename);
     const buffer = Buffer.from(await imageBlob.arrayBuffer());
 
-    fs.writeFileSync(filePath, buffer);
+    const uint8Array = new Uint8Array(buffer);
+    const path = join("/", "tmp", newFilename);
+    await writeFile(path, uint8Array);
 
-    await uploadToBucket("inventario", "images/" + newFilename, filePath);
+    await uploadToBucket("inventario", "images/" + newFilename, path);
     const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
 
     return { success: true, imageUrl };
