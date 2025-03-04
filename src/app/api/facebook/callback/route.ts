@@ -216,6 +216,7 @@ async function processAudioFile(audioId: string) {
 
   const data = await response.json();
   const audioUrl = data.url; // URL to download the audio file
+  console.log("audioUrl", audioUrl);
 
   // Fetch the audio file as a blob
   const audioResponse = await fetch(audioUrl);
@@ -235,11 +236,12 @@ async function processImageFile(imageId: string) {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to downloadimage: ${response.statusText}`);
+    throw new Error(`Failed to download image: ${response.statusText}`);
   }
 
   const data = await response.json();
-  const imageUrl = data.url; // URL to download the audio file
+  const imageUrl = data.url; // URL to download the image file
+  console.log("imageUrl", imageUrl);
 
   // Fetch the image file as a blob
   const imageResponse = await fetch(imageUrl);
