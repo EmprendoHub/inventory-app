@@ -281,7 +281,7 @@ async function processImageFile(imageId: string) {
       throw new Error(`Failed to download image: ${imageResponse.statusText}`);
     }
 
-    const imageBuffer = await imageResponse.data.buffer();
+    const imageBuffer = await imageResponse.data;
     console.log("Image Bufer:", imageBuffer);
 
     // Step 3: Generate a unique filename and save the image to a temporary file
