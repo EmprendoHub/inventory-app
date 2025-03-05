@@ -251,7 +251,7 @@ export async function uploadImageBlobAction(imageBlob: Blob) {
   try {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
-      .substring(2)}.webp`;
+      .substring(2)}.png`;
     const buffer = await imageBlob.arrayBuffer();
 
     const filePath = join("/", "tmp", newFilename);

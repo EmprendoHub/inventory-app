@@ -218,10 +218,10 @@ async function processAudioFile(audioId: string) {
 
   const data = await response.json();
   const WAAudioUrl = data.url; // URL to download the audio file
-  console.log("audioUrl", WAAudioUrl);
 
   // Fetch the audio file as a blob
   const audioResponse = await fetch(WAAudioUrl);
+  console.log("audioResponse", audioResponse);
   const audioBlob = await audioResponse.blob();
 
   const newFilename = `${Date.now()}-${Math.random()
@@ -258,11 +258,8 @@ async function processImageFile(imageId: string) {
     console.log("WAImageUrl", WAImageUrl);
 
     // Step 2: Fetch the image file as a blob
-    const imageResponse = await fetch(WAImageUrl, {
-      headers: {
-        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`, // Add authorization if required
-      },
-    });
+    const imageResponse = await fetch(WAImageUrl);
+    console.log("imageResponse", imageResponse);
 
     if (!imageResponse.ok) {
       throw new Error(`Failed to download image: ${imageResponse.statusText}`);
