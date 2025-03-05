@@ -66,6 +66,9 @@ export default function ContactClient({
       router.refresh();
     }, 5 * 60 * 1000); // 5 minutes in milliseconds
 
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
     return () => clearInterval(interval); // Cleanup interval on component unmount
   }, [router]);
 
