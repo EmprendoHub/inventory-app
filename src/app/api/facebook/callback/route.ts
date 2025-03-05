@@ -262,7 +262,11 @@ async function processImageFile(imageId: string) {
     console.log("WAImageUrl", WAImageUrl);
 
     // Step 2: Fetch the image file as a blob
-    const imageResponse = await fetch(WAImageUrl);
+    const imageResponse = await fetch(WAImageUrl, {
+      headers: {
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      },
+    });
     console.log("imageResponse", imageResponse);
 
     if (!imageResponse.ok) {
