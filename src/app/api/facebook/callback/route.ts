@@ -262,6 +262,12 @@ async function processImageFile(imageId: string) {
 
     // Step 2: Fetch the image file as a blob
     const imageResponse = await fetch(WAImageUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
+        Accept: "image/webp,image/apng,image/*,*/*;q=0.8",
+        Referer: "https://www.facebook.com/",
+      },
       redirect: "follow",
     });
 
