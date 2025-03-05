@@ -220,7 +220,11 @@ async function processAudioFile(audioId: string) {
   const WAAudioUrl = data.url; // URL to download the audio file
 
   // Fetch the audio file as a blob
-  const audioResponse = await fetch(WAAudioUrl);
+  const audioResponse = await fetch(WAAudioUrl, {
+    headers: {
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+  });
   console.log("audioResponse", audioResponse);
   const audioBlob = await audioResponse.blob();
 
