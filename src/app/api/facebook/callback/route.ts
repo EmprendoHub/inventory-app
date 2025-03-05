@@ -262,10 +262,11 @@ async function processImageFile(imageId: string) {
 
     // Step 2: Fetch the image file as a blob
     const imageResponse = await fetch(WAImageUrl, {
-      headers: {
-        "User-Agent": "inventory-app/0.1.0",
-      },
+      redirect: "follow",
     });
+
+    console.log("imageResponse", imageResponse);
+
     if (!imageResponse.ok) {
       const errorBody = await imageResponse.text(); // or .json() if the response is JSON
       console.error("Error Response Body:", errorBody);
