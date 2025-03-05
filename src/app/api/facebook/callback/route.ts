@@ -1,4 +1,4 @@
-import { uploadAudioBlobAction, uploadToBucket } from "@/app/_actions";
+import { uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { SenderType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -167,7 +167,7 @@ async function storeButtonResponseMessage(messageDetails: any) {
 async function storeAudioResponseMessage(messageDetails: any) {
   const audioResult = await processAudioFile(messageDetails.itemId);
   if (!audioResult.success) {
-    throw new Error(`Failed to process audio file: ${audioResult.error}`);
+    throw new Error(`Failed to process audio file: ${audioResult}`);
   }
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
@@ -217,51 +217,80 @@ async function processAudioFile(audioId: string) {
   }
 
   const data = await response.json();
-  const audioUrl = data.url; // URL to download the audio file
-  console.log("audioUrl", audioUrl);
+  const WAAudioUrl = data.url; // URL to download the audio file
+  console.log("audioUrl", WAAudioUrl);
 
   // Fetch the audio file as a blob
-  const audioResponse = await fetch(audioUrl);
+  const audioResponse = await fetch(WAAudioUrl);
   const audioBlob = await audioResponse.blob();
-
-  const uploadedAudioUrl = await uploadAudioBlobAction(audioBlob);
-
-  return uploadedAudioUrl;
-}
-
-async function processImageFile(imageId: string) {
-  const url = `https://graph.facebook.com/v22.0/${imageId}`;
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  console.log("DATA", data);
-
-  const WAImageUrl = data.url; // URL to download the image file
-  console.log("imageUrl", WAImageUrl);
-
-  // Fetch the image file as a blob
-  const imageResponse = await fetch(WAImageUrl);
-  const imageBlob = await imageResponse.blob();
 
   const newFilename = `${Date.now()}-${Math.random()
     .toString(36)
-    .substring(2)}.jpeg`;
-  const buffer = await imageBlob.arrayBuffer();
-
+    .substring(2)}.ogg`;
+  const buffer = await audioBlob.arrayBuffer();
   const filePath = join("/", "tmp", newFilename);
-  // Save the buffer to a file
   fs.writeFileSync(filePath, Buffer.from(buffer));
 
-  await uploadToBucket("inventario", "images/" + newFilename, filePath);
-  const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
+  await uploadToBucket("inventario", "audio/" + newFilename, filePath);
+  const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
 
-  return { success: true, imageUrl };
+  return { success: true, audioUrl };
+}
+
+async function processImageFile(imageId: string) {
+  try {
+    // Step 1: Fetch image metadata
+    const url = `https://graph.facebook.com/v22.0/${imageId}`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image metadata: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("DATA", data);
+
+    const WAImageUrl = data.url; // URL to download the image file
+    console.log("WAImageUrl", WAImageUrl);
+
+    // Step 2: Fetch the image file as a blob
+    const imageResponse = await fetch(WAImageUrl, {
+      headers: {
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`, // Add authorization if required
+      },
+    });
+
+    if (!imageResponse.ok) {
+      throw new Error(`Failed to download image: ${imageResponse.statusText}`);
+    }
+
+    const imageBlob = await imageResponse.blob();
+    console.log("Image Blob:", imageBlob);
+
+    // Step 3: Generate a unique filename and save the image to a temporary file
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.jpeg`;
+    const buffer = await imageBlob.arrayBuffer();
+    const filePath = join("/", "tmp", newFilename);
+
+    console.log("Saving file to:", filePath);
+    fs.writeFileSync(filePath, Buffer.from(buffer));
+    console.log("File saved successfully");
+
+    // Step 4: Upload the file to the bucket
+    await uploadToBucket("inventario", "images/" + newFilename, filePath);
+    console.log("File uploaded to bucket");
+
+    // Step 5: Return the public URL of the uploaded image
+    const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
+    return { success: true, imageUrl };
+  } catch (error) {
+    console.error("Error in processImageFile:", error);
+    throw error; // Re-throw the error for further handling
+  }
 }
