@@ -5,7 +5,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 import { isValidEmail, isValidPhone } from "@/lib/utils";
-import WhiteLogoComponent from "./WhiteLogoComponent";
+import LogoComponent from "./LogoComponent";
 
 const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
   const [notification, setNotification] = useState("");
@@ -124,9 +124,9 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
 
   return (
     <main className="flex min-h-screen maxsm:min-h-[70vh] flex-col items-center justify-center">
-      <div className="w-fit flex flex-col items-center bg-slate-200 maxsm:p-8 p-20 shadow-xl text-center mx-auto">
+      <div className="w-fit flex flex-col items-center bg-card maxsm:p-8 p-20 shadow-xl text-center mx-auto">
         {/* <LogoComponent /> */}
-        <WhiteLogoComponent className={"mt-4 w-[200px] maxsm:w-[120px]"} />
+        <LogoComponent className={"mt-4 w-[200px] maxsm:w-[120px]"} />
         <h2 className="my-4 text-foreground font-bold font-EB_Garamond text-xs">
           Registro Nuevo
         </h2>
@@ -179,7 +179,7 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
           />
           <button
             type="submit"
-            className={`bg-black text-white py-2 px-8 l hover:bg-slate-200 hover:text-foreground ease-in-out duration-700 rounded-md text-xs`}
+            className={`bg-black text-white py-2 px-8 l hover:bg-blue-800 hover:text-foreground ease-in-out duration-700 rounded-md text-xs`}
           >
             Registrarme
           </button>

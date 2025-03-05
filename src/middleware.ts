@@ -12,30 +12,30 @@ export async function middleware(request: any) {
   // Redirect to login if not authenticated
   if (!token) {
     // console.log("User not authenticated, redirecting to login");
-
-    if (!pathname.includes("/legal")) {
+    if (!["/legal", "/legal"].some((path) => pathname.includes(path))) {
       redirectUrl = new URL("/iniciar", request.url);
       redirectUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(redirectUrl);
     }
   }
 
-  // Check if the user's role has access to the requested route
+  // Check if the user's  role has access to the requested route
   const userRole = token?.user?.role;
 
   if (!isRouteAllowed(userRole, pathname)) {
     // console.log("User role:", userRole);
     // console.log("Requested path:", pathname);
-
-    // Redirect to a default route if the user is authenticated but not authorized
-    if (pathname !== "/sistema/home") {
-      // If the user is already on /no-autorizado, redirect them to a default route (e.g., /sistema/home)
-      redirectUrl = new URL("/sistema/home", request.url);
-      return NextResponse.redirect(redirectUrl);
-    } else {
-      // If the user is already on /no-autorizado, redirect them to a default route (e.g., /sistema/home)
-      redirectUrl = new URL("/sistema/home", request.url);
-      return NextResponse.redirect(redirectUrl);
+    if (!["/legal", "/legal"].some((path) => pathname.includes(path))) {
+      // Redirect to a default route if the user is authenticated but not authorized
+      if (pathname !== "/sistema/home") {
+        // If the user is already on /no-autorizado, redirect them to a default route (e.g., /sistema/home)
+        redirectUrl = new URL("/sistema/home", request.url);
+        return NextResponse.redirect(redirectUrl);
+      } else {
+        // If the user is already on /no-autorizado, redirect them to a default route (e.g., /sistema/home)
+        redirectUrl = new URL("/sistema/home", request.url);
+        return NextResponse.redirect(redirectUrl);
+      }
     }
   }
 

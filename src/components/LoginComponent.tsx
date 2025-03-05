@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+// import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 // import { IoLogoGoogle } from "react-icons/io";
@@ -84,8 +84,8 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
           />
         </div>
         <div className="w-full bg-background h-screen p-20 maxsm:p-8 shadow-xl text-center text-primary mx-auto flex flex-col items-center justify-center">
-          <h2 className="flex text-xs justify-center py-5 text-foreground">
-            Iniciar Session
+          <h2 className="flex tracking-wide text-xl justify-center py-5 text-foreground">
+            Acceso
           </h2>
 
           {/* <button
@@ -97,7 +97,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
             <IoLogoGoogle />
             Iniciar con Google
           </button> */}
-          <div className="text-center text-slate-900 mb-2 ">- o -</div>
+          {/* <div className="text-center text-slate-900 mb-2 ">- o -</div> */}
           <form
             className="flex flex-col justify-center items-center text-center gap-y-4"
             onSubmit={handleSubmit}
@@ -121,16 +121,18 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
               placeholder="contraseña..."
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button className="bg-accent text-xs text-white w-[150px] p-2 rounded-sm mt-5">
+            <button
+              className={`bg-black text-white py-2 px-8 l hover:bg-blue-800 hover:text-foreground ease-in-out duration-700 rounded-md text-base tracking-wider`}
+            >
               Iniciar
             </button>
           </form>
-          <Link
+          {/* <Link
             className="text-[12px] text-center mt-3 text-foreground"
             href={`/registro`}
           >
             ¿Aun no tienes cuenta? <br /> Registrar aquí.
-          </Link>
+          </Link> */}
         </div>
       </div>
     </main>
