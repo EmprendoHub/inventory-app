@@ -265,11 +265,13 @@ async function processImageFile(imageId: string) {
     const imageResponse = await fetch(WAImageUrl, {
       headers: {
         Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+        "User-Agent": "inventory-app/0.1.0",
+        Referer: "https://www.facebook.com/", // Add a Referer header
       },
     });
-    console.log("imageResponse", imageResponse);
-
     if (!imageResponse.ok) {
+      const errorBody = await imageResponse.text(); // or .json() if the response is JSON
+      console.error("Error Response Body:", errorBody);
       throw new Error(`Failed to download image: ${imageResponse.statusText}`);
     }
 
