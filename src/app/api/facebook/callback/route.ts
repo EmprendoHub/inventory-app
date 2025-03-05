@@ -221,19 +221,22 @@ async function processAudioFile(audioId: string) {
   const WAAudioUrl = data.url; // URL to download the audio file
 
   // Fetch the audio file as a blob
-  const audioResponse = await fetch(WAAudioUrl, {
+  const audioResponse = await axios.get(WAAudioUrl, {
     headers: {
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      "Content-Type": data.mime_type,
     },
+    responseType: "arraybuffer", // This is important for binary data
   });
+
   console.log("audioResponse", audioResponse);
-  const audioBlob = await audioResponse.blob();
+  const audioBuffer = await audioResponse.data.buffer();
 
   const newFilename = `${Date.now()}-${Math.random()
     .toString(36)
     .substring(2)}.ogg`;
   const filePath = join("/", "tmp", newFilename);
-  fs.writeFileSync(filePath, Buffer.from(await audioBlob.arrayBuffer()));
+  fs.writeFileSync(filePath, audioBuffer);
 
   await uploadToBucket("inventario", "audio/" + newFilename, filePath);
   const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
@@ -278,7 +281,7 @@ async function processImageFile(imageId: string) {
       throw new Error(`Failed to download image: ${imageResponse.statusText}`);
     }
 
-    const imageBuffer = await imageResponse.data;
+    const imageBuffer = await imageResponse.data.buffer();
     console.log("Image Bufer:", imageBuffer);
 
     // Step 3: Generate a unique filename and save the image to a temporary file
@@ -288,7 +291,7 @@ async function processImageFile(imageId: string) {
     const filePath = join("/", "tmp", newFilename);
 
     console.log("Saving file to:", filePath);
-    fs.writeFileSync(filePath, Buffer.from(await imageBuffer.arrayBuffer()));
+    fs.writeFileSync(filePath, imageBuffer);
     console.log("File saved successfully");
 
     // Step 4: Upload the file to the bucket
