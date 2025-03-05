@@ -230,7 +230,7 @@ async function processAudioFile(audioId: string) {
   });
 
   console.log("audioResponse", audioResponse);
-  const audioBuffer = await audioResponse.data.buffer();
+  const audioBuffer = await audioResponse.data;
 
   const newFilename = `${Date.now()}-${Math.random()
     .toString(36)
