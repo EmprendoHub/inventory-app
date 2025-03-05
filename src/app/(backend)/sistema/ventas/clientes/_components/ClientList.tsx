@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
+import { ArrowUpDown, Edit, MoreHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +46,7 @@ import {
 } from "../_actions/clientActions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import { BsWhatsapp } from "react-icons/bs";
 
 export function ClientList({ clients }: { clients: clientType[] }) {
   const router = useRouter();
@@ -280,7 +281,13 @@ export function ClientList({ clients }: { clients: clientType[] }) {
               // eslint-disable-next-line
             }, [showModal]);
 
-            const viewItem = React.useCallback(async () => {
+            const viewChat = React.useCallback(async () => {
+              router.push(
+                `/sistema/ventas/clientes/contacto/${row.original.id}`
+              );
+            }, []);
+
+            const editClient = React.useCallback(async () => {
               router.push(`/sistema/ventas/clientes/editar/${row.original.id}`);
             }, []);
 
@@ -294,12 +301,18 @@ export function ClientList({ clients }: { clients: clientType[] }) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-
                   <DropdownMenuItem
-                    onClick={viewItem}
+                    onClick={viewChat}
                     className="text-xs cursor-pointer"
                   >
-                    <Eye />
+                    <BsWhatsapp />
+                    Contacto
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={editClient}
+                    className="text-xs cursor-pointer"
+                  >
+                    <Edit />
                     Editar
                   </DropdownMenuItem>
                   <DropdownMenuItem

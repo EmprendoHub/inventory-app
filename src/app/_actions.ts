@@ -9,6 +9,7 @@ import nodemailer from "nodemailer";
 import { join } from "path";
 import { formatCurrency, getMexicoDate } from "@/lib/utils";
 import fs from "fs";
+import { SenderType } from "@prisma/client";
 
 // Optimize and upload image
 export const uploadOptimizedImage = async (rawData: any) => {
@@ -518,6 +519,36 @@ export async function sendWATemplatePaymentPendingMessage(
 
     // Check for success based on API response
     if (response && response.status === 200) {
+      const pago_pendiente_1 = `Hola ${order.client.name}, esto es un recordatorio de pago para: \n
+      PEDIDO: #${order.orderNo} \n
+      \n
+      Total: ${formattedTotal}\n
+      Pagado: ${formattedPayments}\n
+      Pendiente: ${formattedPending}\n
+      \n
+      Por favor realiza tu pago antes del ${dueDate} para evitar la cancelación de tu pedido.`;
+
+      await prisma.whatsAppMessage.create({
+        data: {
+          clientId: order.client.id,
+          phone: order.client.phone,
+          type: "text",
+          message: pago_pendiente_1,
+          template: "pago_pendiente_1",
+          header: "Recordatorio de Pago",
+          footer: "Si ya realizaste este pago ignora este mensaje.",
+          button: "Ver Pedido",
+          variables: [
+            order.client.name, // Variable 1
+            order.orderNo, // Variable 2
+            formattedTotal, // Variable 3
+            formattedPayments, // Variable 4
+            formattedPending, // Variable 5
+            dueDate, // Variable 6
+          ],
+          sender: "SYSTEM" as SenderType,
+        },
+      });
       console.error("API response indicates success");
       return true; // Message sent successfully
     } else {
