@@ -231,9 +231,8 @@ async function processAudioFile(audioId: string) {
   const newFilename = `${Date.now()}-${Math.random()
     .toString(36)
     .substring(2)}.ogg`;
-  const buffer = await audioBlob.arrayBuffer();
   const filePath = join("/", "tmp", newFilename);
-  fs.writeFileSync(filePath, Buffer.from(buffer));
+  fs.writeFileSync(filePath, Buffer.from(await audioBlob.arrayBuffer()));
 
   await uploadToBucket("inventario", "audio/" + newFilename, filePath);
   const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
@@ -266,7 +265,6 @@ async function processImageFile(imageId: string) {
       headers: {
         Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
         "User-Agent": "inventory-app/0.1.0",
-        Referer: "https://www.facebook.com/", // Add a Referer header
       },
     });
     if (!imageResponse.ok) {
@@ -282,11 +280,10 @@ async function processImageFile(imageId: string) {
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.jpeg`;
-    const buffer = await imageBlob.arrayBuffer();
     const filePath = join("/", "tmp", newFilename);
 
     console.log("Saving file to:", filePath);
-    fs.writeFileSync(filePath, Buffer.from(buffer));
+    fs.writeFileSync(filePath, Buffer.from(await imageBlob.arrayBuffer()));
     console.log("File saved successfully");
 
     // Step 4: Upload the file to the bucket
