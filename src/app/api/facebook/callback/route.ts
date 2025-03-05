@@ -4,6 +4,7 @@ import { SenderType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { join } from "path";
 import fs from "fs";
+import axios from "axios";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
@@ -261,25 +262,23 @@ async function processImageFile(imageId: string) {
     console.log("WAImageUrl", WAImageUrl);
 
     // Step 2: Fetch the image file as a blob
-    const imageResponse = await fetch(WAImageUrl, {
+    const imageResponse = await axios.get(WAImageUrl, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
-        Accept: "image/webp,image/apng,image/*,*/*;q=0.8",
-        Referer: "https://www.facebook.com/",
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+        "Content-Type": data.mime_type,
       },
-      redirect: "follow",
+      responseType: "arraybuffer", // This is important for binary data
     });
 
     console.log("imageResponse", imageResponse);
 
-    if (!imageResponse.ok) {
-      const errorBody = await imageResponse.text(); // or .json() if the response is JSON
+    if (!imageResponse.data) {
+      const errorBody = imageResponse.status; // or .json() if the response is JSON
       console.error("Error Response Body:", errorBody);
       throw new Error(`Failed to download image: ${imageResponse.statusText}`);
     }
 
-    const imageBlob = await imageResponse.blob();
+    const imageBlob = await imageResponse.data;
     console.log("Image Blob:", imageBlob);
 
     // Step 3: Generate a unique filename and save the image to a temporary file
