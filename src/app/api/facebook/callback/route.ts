@@ -278,8 +278,8 @@ async function processImageFile(imageId: string) {
       throw new Error(`Failed to download image: ${imageResponse.statusText}`);
     }
 
-    const imageBlob = await imageResponse.data;
-    console.log("Image Blob:", imageBlob);
+    const imageBuffer = await imageResponse.data;
+    console.log("Image Bufer:", imageBuffer);
 
     // Step 3: Generate a unique filename and save the image to a temporary file
     const newFilename = `${Date.now()}-${Math.random()
@@ -288,7 +288,7 @@ async function processImageFile(imageId: string) {
     const filePath = join("/", "tmp", newFilename);
 
     console.log("Saving file to:", filePath);
-    fs.writeFileSync(filePath, Buffer.from(await imageBlob.arrayBuffer()));
+    fs.writeFileSync(filePath, Buffer.from(await imageBuffer.arrayBuffer()));
     console.log("File saved successfully");
 
     // Step 4: Upload the file to the bucket
