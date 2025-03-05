@@ -263,7 +263,6 @@ async function processImageFile(imageId: string) {
     // Step 2: Fetch the image file as a blob
     const imageResponse = await fetch(WAImageUrl, {
       headers: {
-        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
         "User-Agent": "inventory-app/0.1.0",
       },
     });
