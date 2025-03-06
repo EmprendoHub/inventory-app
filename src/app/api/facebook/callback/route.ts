@@ -169,27 +169,26 @@ async function storeTextMessage(messageDetails: any) {
 }
 
 async function storeTextInteractiveMessage(messageDetails: any) {
-  const newWAMessage = await prisma.whatsAppMessage.create({
-    data: {
-      clientId: messageDetails.clientId,
-      phone: messageDetails.senderPhone,
-      type: "interactive",
-      header: messageDetails.messageTitle,
-      message: messageDetails.messageDescription,
-      sender: "CLIENT" as SenderType,
-      timestamp: messageDetails.timestamp,
-    },
-  });
-
   const response = await processPdfFile(messageDetails.orderId);
   if (response.success) {
+    const newWAMessage = await prisma.whatsAppMessage.create({
+      data: {
+        clientId: messageDetails.clientId,
+        phone: messageDetails.senderPhone,
+        type: "interactive",
+        header: messageDetails.messageTitle,
+        message: messageDetails.messageDescription,
+        mediaUrl: response.pdfUrl,
+        sender: "CLIENT" as SenderType,
+        timestamp: messageDetails.timestamp,
+      },
+    });
     await sendWATemplateOrderPdfMessage(
       messageDetails.orderId,
       response.pdfUrl
     );
+    console.log("PDF Message stored:", newWAMessage);
   }
-
-  console.log("PDF Message stored:", newWAMessage);
 }
 
 async function storeButtonResponseMessage(messageDetails: any) {
@@ -366,15 +365,12 @@ async function processPdfFile(orderId: string) {
 
     // Step 2: Get the PDF buffer from the response
     const pdfBuffer = await response.arrayBuffer();
-    console.log("PDF Buffer:", pdfBuffer);
 
     // Step 3: Generate a unique filename and save the PDF to a temporary file
     const newFilename = `${orderId}.pdf`;
     const filePath = join("/", "tmp", newFilename);
 
-    console.log("Saving file to:", filePath);
     fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
-    console.log("File saved successfully");
 
     // Step 4: Upload the file to the bucket
     await uploadToBucket("inventario", "pdf/" + newFilename, filePath);

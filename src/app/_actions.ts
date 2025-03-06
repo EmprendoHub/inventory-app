@@ -574,34 +574,45 @@ export async function sendWATemplateOrderPdfMessage(
 
   if (!order) return false;
 
+  // const data = JSON.stringify({
+  //   messaging_product: "whatsapp",
+  //   to: `52${order.client.phone}`,
+  //   type: "document",
+  //   document: {
+  //     name: "order_pdf",
+  //     language: {
+  //       code: "es_MX",
+  //     },
+  //     components: [
+  //       {
+  //         type: "header",
+  //         parameters: [
+  //           {
+  //             type: "document",
+  //             image: {
+  //               link: pdfUrl,
+  //             },
+  //           },
+  //         ],
+  //       },
+  //       {
+  //         type: "body",
+  //         parameters: [
+  //           { type: "text", text: order.orderNo }, // Variable 1
+  //         ],
+  //       },
+  //     ],
+  //   },
+  // });
+
   const data = JSON.stringify({
     messaging_product: "whatsapp",
     to: `52${order.client.phone}`,
     type: "document",
-    template: {
-      name: "order_pdf",
-      language: {
-        code: "es_MX",
-      },
-      components: [
-        {
-          type: "header",
-          parameters: [
-            {
-              type: "document",
-              image: {
-                link: pdfUrl,
-              },
-            },
-          ],
-        },
-        {
-          type: "body",
-          parameters: [
-            { type: "text", text: order.orderNo }, // Variable 1
-          ],
-        },
-      ],
+    document: {
+      link: pdfUrl,
+      caption: order.orderNo,
+      filename: `${order.id}.pdf`,
     },
   });
 
