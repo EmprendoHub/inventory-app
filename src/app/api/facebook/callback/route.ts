@@ -357,7 +357,7 @@ async function processImageFile(imageId: string) {
 async function processPdfFile(orderId: string) {
   try {
     // Step 1: Fetch pdf order receipt
-    const url = `/api/factura/${orderId}`;
+    const url = `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/factura/${orderId}`;
     const response = await fetch(url);
 
     if (!response.ok) {
