@@ -29,7 +29,6 @@ export default async function ContactClientPage({
     where: {
       id: id,
     },
-    include: {},
   });
 
   if (!client) {

@@ -560,3 +560,191 @@ export async function sendWATemplatePaymentPendingMessage(
     return false; // Request failed
   }
 }
+
+export async function sendWATemplateOrderPdfMessage(
+  orderId: string,
+  pdfUrl: string
+): Promise<boolean> {
+  const order = await prisma.order.findFirst({
+    where: { id: orderId },
+    include: {
+      client: true,
+    },
+  });
+
+  if (!order) return false;
+
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${order.client.phone}`,
+    type: "document",
+    template: {
+      name: "order_pdf",
+      language: {
+        code: "es_MX",
+      },
+      components: [
+        {
+          type: "header",
+          parameters: [
+            {
+              type: "document",
+              image: {
+                link: pdfUrl,
+              },
+            },
+          ],
+        },
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: order.orderNo }, // Variable 1
+          ],
+        },
+      ],
+    },
+  });
+
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  try {
+    const response: any = await axios(config);
+
+    // Check for success based on API response
+    if (response && response.status === 200) {
+      const order_pdf = `Gracias por usar tu compra. Adjunto encontrarás tu recibo para el pedido No: ${order.orderNo} en formato PDF.`;
+
+      await prisma.whatsAppMessage.create({
+        data: {
+          clientId: order.client.id,
+          phone: order.client.phone,
+          type: "text",
+          message: order_pdf,
+          template: "order_pdf",
+          variables: [
+            order.orderNo, // Variable 1
+          ],
+          sender: "SYSTEM" as SenderType,
+        },
+      });
+      console.error("API response indicates success");
+      return true; // Message sent successfully
+    } else {
+      console.error("API response indicates failure");
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("WA Template sending failed:", error);
+    return false; // Request failed
+  }
+}
+
+export async function sendRecentOrdersInteractiveMessage(
+  clientId: string
+): Promise<boolean> {
+  // Fetch the last 3 orders for the client
+  const recentOrders = await prisma.order.findMany({
+    where: {
+      clientId: clientId,
+      NOT: { status: "CANCELADO" },
+    },
+    include: { client: true },
+    orderBy: {
+      createdAt: "desc", // Sort by createdAt in descending order (most recent first)
+    },
+    take: 3, // Limit the results to 3 orders
+  });
+
+  // If no orders are found, return false
+  if (!recentOrders || recentOrders.length === 0) return false;
+
+  // Extract the client's phone number from the first order
+  const clientPhone = recentOrders[0].client.phone;
+
+  // Create the interactive message payload dynamically
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: `52${clientPhone}`, // Add the country code for Mexico
+    type: "interactive",
+    interactive: {
+      type: "list",
+      header: {
+        type: "text",
+        text: "Selecciona un pedido",
+      },
+      body: {
+        text: "Gracias por usar tu compra. Adjunto encontrarás tus últimas 3 compras.",
+      },
+      footer: {
+        text: "Selecciona un pedido para ver más detalles.",
+      },
+      action: {
+        sections: [
+          {
+            title: "Tus pedidos recientes",
+            rows: recentOrders.map((order) => ({
+              id: order.id,
+              title: `Pedido No ${order.orderNo}`,
+              description: `Total: ${formatCurrency({
+                amount: order.totalAmount,
+                currency: "MXN",
+              })}`,
+            })),
+          },
+        ],
+      },
+    },
+  });
+
+  // Configure the Axios request
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  try {
+    const response = await axios(config);
+
+    // Check for success based on API response
+    if (response && response.status === 200) {
+      // Save the WhatsApp message in the database
+      await prisma.whatsAppMessage.create({
+        data: {
+          clientId: recentOrders[0].client.id,
+          phone: clientPhone,
+          type: "interactive",
+          header: "Selecciona un pedido",
+          message:
+            "Gracias por usar tu compra. Adjunto encontrarás tus últimas 3 compras.",
+          footer: "Selecciona un pedido para ver más detalles.",
+          template: "recent_orders",
+          variables: recentOrders.map((order) => order.orderNo), // Store order numbers as variables
+          sender: "SYSTEM" as SenderType,
+        },
+      });
+
+      console.log("Interactive message sent successfully");
+      return true; // Message sent successfully
+    } else {
+      console.error("API response indicates failure");
+      return false; // API response indicates failure
+    }
+  } catch (error) {
+    console.error("WA Template sending failed:", error);
+    return false; // Request failed
+  }
+}

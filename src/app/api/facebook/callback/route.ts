@@ -1,4 +1,7 @@
-import { uploadToBucket } from "@/app/_actions";
+import {
+  sendRecentOrdersInteractiveMessage,
+  uploadToBucket,
+} from "@/app/_actions";
 import prisma from "@/lib/db";
 import { SenderType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
@@ -102,7 +105,8 @@ async function processMessageEvent(event: any) {
           senderPhone,
           clientId,
           timestamp,
-          messageText: event.messages[0].button.payload,
+          messagePayload: event.messages[0].button.payload,
+          messageText: event.messages[0].button.text,
           senderName,
         });
       }
@@ -123,7 +127,7 @@ async function processMessageEvent(event: any) {
           senderPhone,
           clientId,
           timestamp,
-          messageText: "no text",
+          messageText: event.messages[0].image.caption,
           senderName,
           itemId: event.messages[0].image.id,
         });
@@ -162,7 +166,12 @@ async function storeButtonResponseMessage(messageDetails: any) {
     },
   });
 
-  console.log("Text Message stored:", newWAMessage);
+  if (messageDetails.messageText === "Ver Pedido") {
+    // send last 3 orders as options
+    await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
+  }
+
+  console.log("Button Message stored:", newWAMessage);
 }
 
 async function storeAudioResponseMessage(messageDetails: any) {
@@ -196,7 +205,7 @@ async function storeImageResponseMessage(messageDetails: any) {
       phone: messageDetails.senderPhone,
       type: "image",
       mediaUrl: imageResult.imageUrl,
-      message: messageDetails.messageText,
+      message: messageDetails.caption,
       sender: "CLIENT" as SenderType,
       timestamp: messageDetails.timestamp,
     },
@@ -306,3 +315,47 @@ async function processImageFile(imageId: string) {
     throw error; // Re-throw the error for further handling
   }
 }
+
+// async function processPdfFile(orderId: string) {
+//   try {
+//     // Step 1: Fetch pdf order receipt
+//     const url = `/api/factura/${orderId}`;
+//     const response = await fetch(url);
+
+//     if (!response.ok) {
+//       throw new Error(`Failed to fetch image metadata: ${response.statusText}`);
+//     }
+
+//     const data = await response.json();
+//     console.log("DATA", data);
+
+//     if (!data) {
+//       console.log("Error PDF fetch");
+//       throw new Error(`Failed to fetch PDF`);
+//     }
+
+//     const pdfBuffer = await data.data;
+//     console.log("Image Buffer:", pdfBuffer);
+
+//     // Step 3: Generate a unique filename and save the image to a temporary file
+//     const newFilename = `${Date.now()}-${Math.random()
+//       .toString(36)
+//       .substring(2)}.jpeg`;
+//     const filePath = join("/", "tmp", newFilename);
+
+//     console.log("Saving file to:", filePath);
+//     fs.writeFileSync(filePath, pdfBuffer);
+//     console.log("File saved successfully");
+
+//     // Step 4: Upload the file to the bucket
+//     await uploadToBucket("inventario", "images/" + newFilename, filePath);
+//     console.log("File uploaded to bucket");
+
+//     // Step 5: Return the public URL of the uploaded image
+//     const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
+//     return { success: true, imageUrl };
+//   } catch (error) {
+//     console.error("Error in processImageFile:", error);
+//     throw error; // Re-throw the error for further handling
+//   }
+// }
