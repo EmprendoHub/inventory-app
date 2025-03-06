@@ -701,6 +701,8 @@ export async function sendRecentOrdersInteractiveMessage(
             })),
           },
         ],
+
+        button: "<BUTTON_TEXT>",
       },
     },
   });
