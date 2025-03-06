@@ -1,5 +1,6 @@
 import {
   sendRecentOrdersInteractiveMessage,
+  sendWATemplateOrderPdfMessage,
   uploadToBucket,
 } from "@/app/_actions";
 import prisma from "@/lib/db";
@@ -132,6 +133,19 @@ async function processMessageEvent(event: any) {
           itemId: event.messages[0].image.id,
         });
       }
+
+      if (messageType === "interactive") {
+        await storeTextInteractiveMessage({
+          senderPhone,
+          orderId: event.messages[0].interactive.list_reply.id,
+          clientId,
+          timestamp,
+          messageTitle: event.messages[0].interactive.list_reply.title,
+          messageDescription:
+            event.messages[0].interactive.list_reply.description,
+          senderName,
+        });
+      }
     } catch (error) {
       console.error("Message processing failed:", error);
     }
@@ -152,6 +166,30 @@ async function storeTextMessage(messageDetails: any) {
   });
 
   console.log("Text Message stored:", newWAMessage);
+}
+
+async function storeTextInteractiveMessage(messageDetails: any) {
+  const newWAMessage = await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "interactive",
+      header: messageDetails.messageTitle,
+      message: messageDetails.messageDescription,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  const response = await processPdfFile(messageDetails.orderId);
+  if (response.success) {
+    await sendWATemplateOrderPdfMessage(
+      messageDetails.orderId,
+      response.pdfUrl
+    );
+  }
+
+  console.log("PDF Message stored:", newWAMessage);
 }
 
 async function storeButtonResponseMessage(messageDetails: any) {
@@ -316,46 +354,37 @@ async function processImageFile(imageId: string) {
   }
 }
 
-// async function processPdfFile(orderId: string) {
-//   try {
-//     // Step 1: Fetch pdf order receipt
-//     const url = `/api/factura/${orderId}`;
-//     const response = await fetch(url);
+async function processPdfFile(orderId: string) {
+  try {
+    // Step 1: Fetch pdf order receipt
+    const url = `/api/factura/${orderId}`;
+    const response = await fetch(url);
 
-//     if (!response.ok) {
-//       throw new Error(`Failed to fetch image metadata: ${response.statusText}`);
-//     }
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    }
 
-//     const data = await response.json();
-//     console.log("DATA", data);
+    // Step 2: Get the PDF buffer from the response
+    const pdfBuffer = await response.arrayBuffer();
+    console.log("PDF Buffer:", pdfBuffer);
 
-//     if (!data) {
-//       console.log("Error PDF fetch");
-//       throw new Error(`Failed to fetch PDF`);
-//     }
+    // Step 3: Generate a unique filename and save the PDF to a temporary file
+    const newFilename = `${orderId}.pdf`;
+    const filePath = join("/", "tmp", newFilename);
 
-//     const pdfBuffer = await data.data;
-//     console.log("Image Buffer:", pdfBuffer);
+    console.log("Saving file to:", filePath);
+    fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
+    console.log("File saved successfully");
 
-//     // Step 3: Generate a unique filename and save the image to a temporary file
-//     const newFilename = `${Date.now()}-${Math.random()
-//       .toString(36)
-//       .substring(2)}.jpeg`;
-//     const filePath = join("/", "tmp", newFilename);
+    // Step 4: Upload the file to the bucket
+    await uploadToBucket("inventario", "pdf/" + newFilename, filePath);
+    console.log("File uploaded to bucket");
 
-//     console.log("Saving file to:", filePath);
-//     fs.writeFileSync(filePath, pdfBuffer);
-//     console.log("File saved successfully");
-
-//     // Step 4: Upload the file to the bucket
-//     await uploadToBucket("inventario", "images/" + newFilename, filePath);
-//     console.log("File uploaded to bucket");
-
-//     // Step 5: Return the public URL of the uploaded image
-//     const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
-//     return { success: true, imageUrl };
-//   } catch (error) {
-//     console.error("Error in processImageFile:", error);
-//     throw error; // Re-throw the error for further handling
-//   }
-// }
+    // Step 5: Return the public URL of the uploaded PDF
+    const pdfUrl = `${process.env.MINIO_URL}pdf/${newFilename}`;
+    return { success: true, pdfUrl };
+  } catch (error) {
+    console.error("Error in processPdfFile:", error);
+    throw error; // Re-throw the error for further handling
+  }
+}
