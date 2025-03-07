@@ -234,7 +234,7 @@ export default function MessageForm() {
             src={"/images/WAWallpaper.jpeg"}
             width={735}
             height={1593}
-            className="w-full h-full absolute object-cover z-1"
+            className="w-full h-full absolute object-cover z-1 "
           />
         </div>
       </div>
