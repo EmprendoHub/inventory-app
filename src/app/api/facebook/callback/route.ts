@@ -166,9 +166,6 @@ async function processAudioFile(audioId: string) {
   const data = await response.json();
   const WAAudioUrl = data.url;
 
-  // Transcribe audio using AI
-  const transcription = await transcribeAudioWithAI(WAAudioUrl);
-
   // Save to storage
   const audioResponse = await axios.get(WAAudioUrl, {
     headers: {
@@ -188,6 +185,8 @@ async function processAudioFile(audioId: string) {
   await uploadToBucket("inventario", "audio/" + newFilename, filePath);
   const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
 
+  // Transcribe audio using AI
+  const transcription = await transcribeAudioWithAI(audioUrl);
   return { success: true, audioUrl, transcription };
 }
 
@@ -207,9 +206,6 @@ async function processImageFile(imageId: string) {
     const data = await response.json();
     const WAImageUrl = data.url;
 
-    // Process image with AI
-    const imageDescription = await processImageWithAI(WAImageUrl);
-
     // Save to storage
     const imageResponse = await axios.get(WAImageUrl, {
       headers: {
@@ -228,6 +224,8 @@ async function processImageFile(imageId: string) {
 
     await uploadToBucket("inventario", "images/" + newFilename, filePath);
     const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
+    // Process image with AI
+    const imageDescription = await processImageWithAI(imageUrl);
 
     return { success: true, imageUrl, description: imageDescription };
   } catch (error) {
