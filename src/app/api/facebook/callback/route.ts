@@ -9,7 +9,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { join } from "path";
 import fs from "fs";
 import axios from "axios";
-import { processImageWithAI, transcribeAudioWithAI } from "@/lib/ai/actions";
+import {
+  generateCustomerServiceResponse,
+  processImageWithAI,
+  transcribeAudioWithAI,
+} from "@/lib/ai/actions";
+import { sendWhatsAppMessage } from "@/app/(backend)/sistema/ventas/clientes/_actions/chatgpt";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
@@ -238,6 +243,13 @@ async function processImageFile(imageId: string) {
 async function storeAudioResponseMessage(messageDetails: any) {
   const audioResult = await processAudioFile(messageDetails.itemId);
 
+  // Generate AI response based on transcription
+  const aiResponse = await generateCustomerServiceResponse(
+    audioResult.transcription,
+    messageDetails.clientId,
+    messageDetails.senderPhone
+  );
+
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
@@ -251,10 +263,34 @@ async function storeAudioResponseMessage(messageDetails: any) {
   });
 
   console.log("Audio Message stored:", newWAMessage);
+
+  if (aiResponse) {
+    // Send AI response
+    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
+
+    // Store AI response
+    await prisma.whatsAppMessage.create({
+      data: {
+        clientId: messageDetails.clientId,
+        phone: messageDetails.senderPhone,
+        type: "text",
+        message: aiResponse,
+        sender: "ASSISTANT" as SenderType,
+        timestamp: new Date(),
+      },
+    });
+  }
 }
 
 async function storeImageResponseMessage(messageDetails: any) {
   const imageResult = await processImageFile(messageDetails.itemId);
+
+  // Generate AI response based on image description
+  const aiResponse = await generateCustomerServiceResponse(
+    `El cliente envió una imagen con la descripción: ${imageResult.description}`,
+    messageDetails.clientId,
+    messageDetails.senderPhone
+  );
 
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
@@ -269,10 +305,28 @@ async function storeImageResponseMessage(messageDetails: any) {
   });
 
   console.log("Image Message stored:", newWAMessage);
+
+  if (aiResponse) {
+    // Send AI response
+    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
+
+    // Store AI response
+    await prisma.whatsAppMessage.create({
+      data: {
+        clientId: messageDetails.clientId,
+        phone: messageDetails.senderPhone,
+        type: "text",
+        message: aiResponse,
+        sender: "ASSISTANT" as SenderType,
+        timestamp: new Date(),
+      },
+    });
+  }
 }
 
 // Store message (stub implementation)
 async function storeTextMessage(messageDetails: any) {
+  // First store the incoming message
   const newWAMessage = await prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
@@ -285,6 +339,30 @@ async function storeTextMessage(messageDetails: any) {
   });
 
   console.log("Text Message stored:", newWAMessage);
+
+  // Generate AI response
+  const aiResponse = await generateCustomerServiceResponse(
+    messageDetails.messageText,
+    messageDetails.clientId,
+    messageDetails.senderPhone
+  );
+
+  if (aiResponse) {
+    // Send AI response
+    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
+
+    // Store AI response
+    await prisma.whatsAppMessage.create({
+      data: {
+        clientId: messageDetails.clientId,
+        phone: messageDetails.senderPhone,
+        type: "text",
+        message: aiResponse,
+        sender: "ASSISTANT" as SenderType,
+        timestamp: new Date(),
+      },
+    });
+  }
 }
 
 async function storeTextInteractiveMessage(messageDetails: any) {

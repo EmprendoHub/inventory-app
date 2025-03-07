@@ -1,6 +1,8 @@
 "use server";
 import { OpenAI } from "openai";
 import axios from "axios";
+import prisma from "../db";
+import { ChatCompletionMessageParam } from "openai/resources/chat";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -59,5 +61,60 @@ export async function transcribeAudioWithAI(audioUrl: string) {
   } catch (error) {
     console.error("Error transcribing audio:", error);
     return "No se pudo transcribir el audio";
+  }
+}
+
+export async function generateCustomerServiceResponse(
+  message: string,
+  clientId: string | undefined,
+  phone: string
+) {
+  try {
+    if (!phone) {
+      console.error("Phone number is missing");
+      return "Error: No phone number provided.";
+    }
+
+    // Get conversation history
+    const history = await prisma.whatsAppMessage.findMany({
+      where: { phone },
+      orderBy: { timestamp: "desc" },
+      take: 10,
+      select: { message: true, sender: true },
+    });
+
+    // System prompt (correctly typed)
+    const systemPrompt: ChatCompletionMessageParam = {
+      role: "system",
+      content: `Eres un asistente de servicio al cliente y ventas para una tienda en línea. 
+      Responde en español de manera amable y profesional. Si no tienes suficiente información,
+      pregunta amablemente para obtener más detalles.`,
+    };
+
+    // Format messages correctly
+    const messages: ChatCompletionMessageParam[] = [
+      systemPrompt,
+      ...history.reverse().map<ChatCompletionMessageParam>((msg) => ({
+        role: msg.sender === "CLIENT" ? "user" : "assistant",
+        content: msg.message,
+      })),
+      { role: "user", content: message },
+    ];
+
+    // Generate response
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages,
+      temperature: 0.7,
+      max_tokens: 256,
+    });
+
+    return (
+      response.choices[0]?.message?.content?.trim() ||
+      "No se pudo generar respuesta."
+    );
+  } catch (error) {
+    console.error("Error generating customer service response:", error);
+    return "Disculpa, estoy teniendo dificultades para responder. Por favor intenta de nuevo más tarde.";
   }
 }
