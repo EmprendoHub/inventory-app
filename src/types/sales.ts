@@ -188,4 +188,5 @@ export type OrderItemsType = {
   description: string;
   quantity: number;
   price: number;
+  categoryId: string | null;
 };

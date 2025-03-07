@@ -153,6 +153,7 @@ model OrderItem {
   description String
   quantity    Int
   price       Int
+  categoryId  String?     @db.ObjectId
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -760,6 +761,7 @@ model WhatsAppMessage {
   button      String?    
   variables   String[]
   type     String    
+  sentiment      String?
   sender      SenderType // Whether the message was sent by the client or the system
   status      MessageStatus @default(RECEIVED) // Status of the message (e.g., sent, delivered, read)
   timestamp   DateTime  @default(now()) // Timestamp of the message
@@ -779,4 +781,33 @@ enum MessageStatus {
   RECEIVED
   READ
   FAILED
+}
+
+
+model ConversationSummary {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  phone     String
+  summary   String
+  timestamp DateTime  @default(now()) // Timestamp of the message
+  createdAt DateTime @default(now())
+}
+
+model SentimentAnalysis {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  phone        String
+  sentiment    String
+  score        Int
+  topics       String
+  urgentIssues String
+  timestamp    DateTime  @default(now()) // Timestamp of the message
+  createdAt    DateTime @default(now())
+}
+
+model Escalation {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  clientId  String?
+  phone     String
+  reason    String
+  status    String
+  timestamp DateTime @default(now())
 }

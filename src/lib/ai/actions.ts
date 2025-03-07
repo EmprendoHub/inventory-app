@@ -67,7 +67,8 @@ export async function transcribeAudioWithAI(audioUrl: string) {
 export async function generateCustomerServiceResponse(
   message: string,
   clientId: string | undefined,
-  phone: string
+  phone: string,
+  prompt?: string | null
 ) {
   try {
     if (!phone) {
@@ -86,7 +87,9 @@ export async function generateCustomerServiceResponse(
     // System prompt (correctly typed)
     const systemPrompt: ChatCompletionMessageParam = {
       role: "system",
-      content: `Eres un asistente de servicio al cliente y ventas para una tienda en línea. 
+      content:
+        prompt ||
+        `Eres un asistente de servicio al cliente y ventas para una tienda en línea. 
       Responde en español de manera amable y profesional. Si no tienes suficiente información,
       pregunta amablemente para obtener más detalles.`,
     };
@@ -117,4 +120,20 @@ export async function generateCustomerServiceResponse(
     console.error("Error generating customer service response:", error);
     return "Disculpa, estoy teniendo dificultades para responder. Por favor intenta de nuevo más tarde.";
   }
+}
+
+export async function storeMessage(messageDetails: any) {
+  return prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.phone,
+      type: messageDetails.type,
+      message: messageDetails.message,
+      mediaUrl: messageDetails.mediaUrl,
+      sender: messageDetails.sender,
+      timestamp: messageDetails.timestamp,
+      sentiment: messageDetails.sentiment,
+      template: messageDetails.template,
+    },
+  });
 }
