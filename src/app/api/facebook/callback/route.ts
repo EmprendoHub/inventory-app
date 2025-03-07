@@ -275,7 +275,7 @@ async function storeAudioResponseMessage(messageDetails: any) {
         phone: messageDetails.senderPhone,
         type: "text",
         message: aiResponse,
-        sender: "ASSISTANT" as SenderType,
+        sender: "SYSTEM" as SenderType,
         timestamp: new Date(),
       },
     });
@@ -317,7 +317,7 @@ async function storeImageResponseMessage(messageDetails: any) {
         phone: messageDetails.senderPhone,
         type: "text",
         message: aiResponse,
-        sender: "ASSISTANT" as SenderType,
+        sender: "SYSTEM" as SenderType,
         timestamp: new Date(),
       },
     });
@@ -358,7 +358,7 @@ async function storeTextMessage(messageDetails: any) {
         phone: messageDetails.senderPhone,
         type: "text",
         message: aiResponse,
-        sender: "ASSISTANT" as SenderType,
+        sender: "SYSTEM" as SenderType,
         timestamp: new Date(),
       },
     });
