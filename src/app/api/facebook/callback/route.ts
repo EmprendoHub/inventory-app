@@ -1,5 +1,6 @@
 import {
   sendRecentOrdersInteractiveMessage,
+  sendWATemplateOrderPdfMessage,
   uploadToBucket,
 } from "@/app/_actions";
 import prisma from "@/lib/db";
@@ -384,51 +385,51 @@ async function processImageFile(imageId: string) {
 //   }
 // }
 
-// async function storeTextInteractiveMessage(messageDetails: any) {
-//   // typing on
-//   const data = JSON.stringify({
-//     messaging_product: "whatsapp",
-//     to: `52${messageDetails.senderPhone}`,
-//     type: "text",
-//     text: {
-//       body: "Estamos procesando tu solicitud...",
-//     },
-//   });
+async function storeTextInteractiveMessage(messageDetails: any) {
+  // typing on
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${messageDetails.senderPhone}`,
+    type: "text",
+    text: {
+      body: "Estamos procesando tu solicitud...",
+    },
+  });
 
-//   const config = {
-//     method: "post",
-//     url: "https://graph.facebook.com/v22.0/340943589100021/messages",
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-//     },
-//     data: data,
-//   };
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
 
-//   await axios(config);
+  await axios(config);
 
-//   const response = await processPdfFile(messageDetails.orderId);
-//   if (response.success) {
-//     const newWAMessage = await prisma.whatsAppMessage.create({
-//       data: {
-//         clientId: messageDetails.clientId,
-//         phone: messageDetails.senderPhone,
-//         type: "interactive",
-//         header: messageDetails.messageTitle,
-//         message: messageDetails.messageDescription,
-//         mediaUrl: response.pdfUrl,
-//         sender: "CLIENT" as SenderType,
-//         timestamp: messageDetails.timestamp,
-//       },
-//     });
+  const response = await processPdfFile(messageDetails.orderId);
+  if (response.success) {
+    const newWAMessage = await prisma.whatsAppMessage.create({
+      data: {
+        clientId: messageDetails.clientId,
+        phone: messageDetails.senderPhone,
+        type: "interactive",
+        header: messageDetails.messageTitle,
+        message: messageDetails.messageDescription,
+        mediaUrl: response.pdfUrl,
+        sender: "CLIENT" as SenderType,
+        timestamp: messageDetails.timestamp,
+      },
+    });
 
-//     await sendWATemplateOrderPdfMessage(
-//       messageDetails.orderId,
-//       response.pdfUrl
-//     );
-//     console.log("PDF Message stored:", newWAMessage);
-//   }
-// }
+    await sendWATemplateOrderPdfMessage(
+      messageDetails.orderId,
+      response.pdfUrl
+    );
+    console.log("PDF Message stored:", newWAMessage);
+  }
+}
 
 // async function storeButtonResponseMessage(messageDetails: any) {
 //   const newWAMessage = await prisma.whatsAppMessage.create({
@@ -450,37 +451,37 @@ async function processImageFile(imageId: string) {
 //   console.log("Button Message stored:", newWAMessage);
 // }
 
-// async function processPdfFile(orderId: string) {
-//   try {
-//     // Step 1: Fetch pdf order receipt
-//     const url = `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/factura/${orderId}`;
-//     const response = await fetch(url);
+async function processPdfFile(orderId: string) {
+  try {
+    // Step 1: Fetch pdf order receipt
+    const url = `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/factura/${orderId}`;
+    const response = await fetch(url);
 
-//     if (!response.ok) {
-//       throw new Error(`Failed to fetch PDF: ${response.statusText}`);
-//     }
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    }
 
-//     // Step 2: Get the PDF buffer from the response
-//     const pdfBuffer = await response.arrayBuffer();
+    // Step 2: Get the PDF buffer from the response
+    const pdfBuffer = await response.arrayBuffer();
 
-//     // Step 3: Generate a unique filename and save the PDF to a temporary file
-//     const newFilename = `${orderId}.pdf`;
-//     const filePath = join("/", "tmp", newFilename);
+    // Step 3: Generate a unique filename and save the PDF to a temporary file
+    const newFilename = `${orderId}.pdf`;
+    const filePath = join("/", "tmp", newFilename);
 
-//     fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
+    fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
 
-//     // Step 4: Upload the file to the bucket
-//     await uploadToBucket("inventario", "pdf/" + newFilename, filePath);
-//     console.log("File uploaded to bucket");
+    // Step 4: Upload the file to the bucket
+    await uploadToBucket("inventario", "pdf/" + newFilename, filePath);
+    console.log("File uploaded to bucket");
 
-//     // Step 5: Return the public URL of the uploaded PDF
-//     const pdfUrl = `${process.env.MINIO_URL}pdf/${newFilename}`;
-//     return { success: true, pdfUrl };
-//   } catch (error) {
-//     console.error("Error in processPdfFile:", error);
-//     throw error; // Re-throw the error for further handling
-//   }
-// }
+    // Step 5: Return the public URL of the uploaded PDF
+    const pdfUrl = `${process.env.MINIO_URL}pdf/${newFilename}`;
+    return { success: true, pdfUrl };
+  } catch (error) {
+    console.error("Error in processPdfFile:", error);
+    throw error; // Re-throw the error for further handling
+  }
+}
 
 async function handleTextMessage(messageDetails: any) {
   // Store the incoming message
@@ -596,6 +597,7 @@ async function handleImageMessage(messageDetails: any) {
 
 async function handleInteractiveMessage(messageDetails: any) {
   // ... existing interactive message handling
+  await storeTextInteractiveMessage(messageDetails);
   // Add satisfaction survey if appropriate
   if (messageDetails.messageTitle.includes("pedido")) {
     await sendSatisfactionSurvey(messageDetails.senderPhone);
