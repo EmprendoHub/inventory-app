@@ -505,7 +505,7 @@ async function handleTextMessage(messageDetails: any) {
       clientId: messageDetails.clientId,
       message: aiResponse,
       type: "text",
-      sender: "ASSISTANT" as SenderType,
+      sender: "SYSTEM" as SenderType,
       timestamp: new Date(),
     });
 
@@ -554,7 +554,7 @@ async function handleAudioMessage(messageDetails: any) {
       clientId: messageDetails.clientId,
       message: aiResponse,
       type: "text",
-      sender: "ASSISTANT" as SenderType,
+      sender: "SYSTEM" as SenderType,
       timestamp: new Date(),
     });
   }
@@ -588,7 +588,7 @@ async function handleImageMessage(messageDetails: any) {
       clientId: messageDetails.clientId,
       message: aiResponse,
       type: "text",
-      sender: "ASSISTANT" as SenderType,
+      sender: "SYSTEM" as SenderType,
       timestamp: new Date(),
     });
   }
@@ -677,7 +677,7 @@ async function handleButtonMessage(messageDetails: any) {
           clientId: messageDetails.clientId,
           message: aiResponse,
           type: "text",
-          sender: "ASSISTANT" as SenderType,
+          sender: "SYSTEM" as SenderType,
           timestamp: new Date(),
         });
       }
