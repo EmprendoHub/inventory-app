@@ -231,45 +231,55 @@ export default function ContactClient({
                   <span>{message.message}</span>
                 </div>
               )}
+              {message.template &&
+                message.template === "pago_pendiente_1" &&
+                message.sender === "SYSTEM" && (
+                  <div className="p-2">
+                    <p className="font-semibold text-sm">{message.header}</p>
+                    <hr className="my-1" />
+                    <div>
+                      Hola {message.variables ? message.variables[0] : ""}, esto
+                      es un recordatorio de pago para:{" "}
+                      <p className="my-2">
+                        PEDIDO:{" "}
+                        <span className=" font-semibold">
+                          #{message.variables ? message.variables[1] : ""}
+                        </span>
+                      </p>
+                      <p>
+                        Total: {message.variables ? message.variables[2] : ""}
+                      </p>
+                      <p>
+                        Pagado: {message.variables ? message.variables[3] : ""}
+                      </p>
+                      <p>
+                        Pendiente:{" "}
+                        {message.variables ? message.variables[4] : ""}
+                      </p>
+                      <p className="my-2">
+                        Por favor realiza tu pago antes del{" "}
+                        {message.variables ? message.variables[5] : ""} para
+                        evitar la cancelación de tu pedido.
+                      </p>
+                    </div>
+                    <hr className="my-1" />
+                    <p className="text-muted italic">{message.footer}</p>
+                    <hr className="my-1" />
+                    {message.button && (
+                      <button
+                        className="mt-2 bg-blue-800 px-3 py-1 rounded-md"
+                        disabled
+                      >
+                        {message.button}
+                      </button>
+                    )}
+                  </div>
+                )}
               {message.type === "text" && message.sender === "SYSTEM" && (
                 <div className="p-2">
                   <p className="font-semibold text-sm">{message.header}</p>
                   <hr className="my-1" />
-                  <div>
-                    Hola {message.variables ? message.variables[0] : ""}, esto
-                    es un recordatorio de pago para:{" "}
-                    <p className="my-2">
-                      PEDIDO:{" "}
-                      <span className=" font-semibold">
-                        #{message.variables ? message.variables[1] : ""}
-                      </span>
-                    </p>
-                    <p>
-                      Total: {message.variables ? message.variables[2] : ""}
-                    </p>
-                    <p>
-                      Pagado: {message.variables ? message.variables[3] : ""}
-                    </p>
-                    <p>
-                      Pendiente: {message.variables ? message.variables[4] : ""}
-                    </p>
-                    <p className="my-2">
-                      Por favor realiza tu pago antes del{" "}
-                      {message.variables ? message.variables[5] : ""} para
-                      evitar la cancelación de tu pedido.
-                    </p>
-                  </div>
-                  <hr className="my-1" />
-                  <p className="text-muted italic">{message.footer}</p>
-                  <hr className="my-1" />
-                  {message.button && (
-                    <button
-                      className="mt-2 bg-blue-800 px-3 py-1 rounded-md"
-                      disabled
-                    >
-                      {message.button}
-                    </button>
-                  )}
+                  <div>{message.message}</div>
                 </div>
               )}
             </div>

@@ -282,7 +282,7 @@ export async function shouldSendAiFollowUp(phone: string) {
     const recentBusinessMessage = await prisma.whatsAppMessage.findFirst({
       where: {
         phone,
-        sender: "BUSINESS" as SenderType,
+        sender: "SYSTEM" as SenderType,
         timestamp: {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
         },
