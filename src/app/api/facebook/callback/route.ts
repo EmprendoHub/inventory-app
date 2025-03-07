@@ -188,7 +188,7 @@ async function storeTextInteractiveMessage(messageDetails: any) {
     // typing on
     const data = JSON.stringify({
       messaging_product: "whatsapp",
-      to: `52${messageDetails.senderPhone}`,
+      to: `521${messageDetails.senderPhone}`,
       type: "typing_on",
     });
 
