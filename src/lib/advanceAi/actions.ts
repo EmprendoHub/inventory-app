@@ -497,7 +497,7 @@ export async function analyzeCustomerSentiment(phone: string) {
         phone,
         sentiment: sentimentAnalysis.sentiment || "Neutral",
         score: sentimentAnalysis.score || 5,
-        topics: sentimentAnalysis.topics || "",
+        topics: sentimentAnalysis.topics || [""],
         urgentIssues: sentimentAnalysis.urgentIssues || "",
         timestamp: new Date(),
       },

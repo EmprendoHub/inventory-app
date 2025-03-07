@@ -485,7 +485,16 @@ async function processPdfFile(orderId: string) {
 
 async function handleTextMessage(messageDetails: any) {
   // Store the incoming message
-  // await storeTextMessage(messageDetails);
+  await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "text",
+      message: messageDetails.messageText,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
 
   // Generate AI response based on sentiment
   const systemPrompt = selectSystemPrompt(
