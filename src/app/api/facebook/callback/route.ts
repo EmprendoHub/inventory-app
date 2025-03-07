@@ -170,6 +170,28 @@ async function storeTextMessage(messageDetails: any) {
 }
 
 async function storeTextInteractiveMessage(messageDetails: any) {
+  // typing on
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: `52${messageDetails.senderPhone}`,
+    type: "text",
+    text: {
+      body: "Estamos procesando tu solicitud...",
+    },
+  });
+
+  const config = {
+    method: "post",
+    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  await axios(config);
+
   const response = await processPdfFile(messageDetails.orderId);
   if (response.success) {
     const newWAMessage = await prisma.whatsAppMessage.create({
@@ -184,28 +206,6 @@ async function storeTextInteractiveMessage(messageDetails: any) {
         timestamp: messageDetails.timestamp,
       },
     });
-
-    // typing on
-    const data = JSON.stringify({
-      messaging_product: "whatsapp",
-      to: `52${messageDetails.senderPhone}`,
-      type: "text",
-      text: {
-        body: "Estamos procesando tu solicitud...",
-      },
-    });
-
-    const config = {
-      method: "post",
-      url: "https://graph.facebook.com/v22.0/340943589100021/messages",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-      },
-      data: data,
-    };
-
-    await axios(config);
 
     await sendWATemplateOrderPdfMessage(
       messageDetails.orderId,
