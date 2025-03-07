@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { join } from "path";
 import fs from "fs";
 import axios from "axios";
+import { processImageWithAI, transcribeAudioWithAI } from "@/lib/ai/actions";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
@@ -30,7 +31,6 @@ export async function POST(request: NextRequest) {
   const payload = await request.json();
   try {
     if (payload.object === "whatsapp_business_account") {
-      // Use Promise.all to handle all events concurrently
       await Promise.all(
         payload.entry.map(async (entry: any) => {
           const webhookEvent = entry.messaging || entry.changes;
@@ -57,16 +57,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Process message events
 async function processMessageEvent(event: any) {
   if (event.statuses) {
     console.log("PROCESS statuses", event.statuses[0]);
-
     const WAPhone = event.statuses[0].recipient_id.replace(/^521/, "");
     const client = await prisma.client.findFirst({
-      where: {
-        phone: WAPhone,
-      },
+      where: { phone: WAPhone },
     });
     console.log(client);
   }
@@ -77,80 +73,204 @@ async function processMessageEvent(event: any) {
 
     const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
     const client = await prisma.client.findFirst({
-      where: {
-        phone: WAPhone,
-      },
+      where: { phone: WAPhone },
     });
-    try {
-      // Convert the string to a number
-      const unixTimestamp = parseInt(event.messages[0].timestamp, 10);
 
-      // Convert to milliseconds and create a Date object
-      const timestamp = new Date(unixTimestamp * 1000);
+    try {
+      const timestamp = new Date(parseInt(event.messages[0].timestamp) * 1000);
       const senderPhone = WAPhone;
       const senderName = event.contacts[0].profile.name;
       const clientId = client?.id;
       const messageType = event.messages[0].type;
 
-      if (messageType === "text") {
-        await storeTextMessage({
-          senderPhone,
-          clientId,
-          timestamp,
-          messageText: event.messages[0].text.body,
-          senderName,
-        });
-      }
+      // Process different message types
+      switch (messageType) {
+        case "text":
+          await storeTextMessage({
+            senderPhone,
+            clientId,
+            timestamp,
+            messageText: event.messages[0].text.body,
+            senderName,
+          });
+          break;
 
-      if (messageType === "button") {
-        await storeButtonResponseMessage({
-          senderPhone,
-          clientId,
-          timestamp,
-          messagePayload: event.messages[0].button.payload,
-          messageText: event.messages[0].button.text,
-          senderName,
-        });
-      }
+        case "button":
+          await storeButtonResponseMessage({
+            senderPhone,
+            clientId,
+            timestamp,
+            messagePayload: event.messages[0].button.payload,
+            messageText: event.messages[0].button.text,
+            senderName,
+          });
+          break;
 
-      if (messageType === "audio") {
-        await storeAudioResponseMessage({
-          senderPhone,
-          clientId,
-          timestamp,
-          messageText: "no text",
-          senderName,
-          itemId: event.messages[0].audio.id,
-        });
-      }
+        case "audio":
+          await storeAudioResponseMessage({
+            senderPhone,
+            clientId,
+            timestamp,
+            messageText: "Audio recibido", // Will be updated with transcription
+            senderName,
+            itemId: event.messages[0].audio.id,
+          });
+          break;
 
-      if (messageType === "image") {
-        await storeImageResponseMessage({
-          senderPhone,
-          clientId,
-          timestamp,
-          messageText: event.messages[0].image.caption,
-          senderName,
-          itemId: event.messages[0].image.id,
-        });
-      }
+        case "image":
+          await storeImageResponseMessage({
+            senderPhone,
+            clientId,
+            timestamp,
+            messageText: event.messages[0].image.caption || "Imagen recibida",
+            senderName,
+            itemId: event.messages[0].image.id,
+          });
+          break;
 
-      if (messageType === "interactive") {
-        await storeTextInteractiveMessage({
-          senderPhone,
-          orderId: event.messages[0].interactive.list_reply.id,
-          clientId,
-          timestamp,
-          messageTitle: event.messages[0].interactive.list_reply.title,
-          messageDescription:
-            event.messages[0].interactive.list_reply.description,
-          senderName,
-        });
+        case "interactive":
+          await storeTextInteractiveMessage({
+            senderPhone,
+            orderId: event.messages[0].interactive.list_reply.id,
+            clientId,
+            timestamp,
+            messageTitle: event.messages[0].interactive.list_reply.title,
+            messageDescription:
+              event.messages[0].interactive.list_reply.description,
+            senderName,
+          });
+          break;
+
+        default:
+          console.warn("Unsupported message type:", messageType);
       }
     } catch (error) {
       console.error("Message processing failed:", error);
     }
   }
+}
+
+// Update the media processing functions
+async function processAudioFile(audioId: string) {
+  const url = `https://graph.facebook.com/v22.0/${audioId}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download audio file: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const WAAudioUrl = data.url;
+
+  // Transcribe audio using AI
+  const transcription = await transcribeAudioWithAI(WAAudioUrl);
+
+  // Save to storage
+  const audioResponse = await axios.get(WAAudioUrl, {
+    headers: {
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      "Content-Type": data.mime_type,
+    },
+    responseType: "arraybuffer",
+  });
+
+  const audioBuffer = await audioResponse.data;
+  const newFilename = `${Date.now()}-${Math.random()
+    .toString(36)
+    .substring(2)}.ogg`;
+  const filePath = join("/", "tmp", newFilename);
+  fs.writeFileSync(filePath, audioBuffer);
+
+  await uploadToBucket("inventario", "audio/" + newFilename, filePath);
+  const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
+
+  return { success: true, audioUrl, transcription };
+}
+
+async function processImageFile(imageId: string) {
+  try {
+    const url = `https://graph.facebook.com/v22.0/${imageId}`;
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image metadata: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const WAImageUrl = data.url;
+
+    // Process image with AI
+    const imageDescription = await processImageWithAI(WAImageUrl);
+
+    // Save to storage
+    const imageResponse = await axios.get(WAImageUrl, {
+      headers: {
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+        "Content-Type": data.mime_type,
+      },
+      responseType: "arraybuffer",
+    });
+
+    const imageBuffer = await imageResponse.data;
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.jpeg`;
+    const filePath = join("/", "tmp", newFilename);
+    fs.writeFileSync(filePath, imageBuffer);
+
+    await uploadToBucket("inventario", "images/" + newFilename, filePath);
+    const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
+
+    return { success: true, imageUrl, description: imageDescription };
+  } catch (error) {
+    console.error("Error in processImageFile:", error);
+    throw error;
+  }
+}
+
+// Update the store functions to handle AI-processed content
+async function storeAudioResponseMessage(messageDetails: any) {
+  const audioResult = await processAudioFile(messageDetails.itemId);
+
+  const newWAMessage = await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "audio",
+      mediaUrl: audioResult.audioUrl,
+      message: audioResult.transcription || "Audio recibido",
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  console.log("Audio Message stored:", newWAMessage);
+}
+
+async function storeImageResponseMessage(messageDetails: any) {
+  const imageResult = await processImageFile(messageDetails.itemId);
+
+  const newWAMessage = await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "image",
+      mediaUrl: imageResult.imageUrl,
+      message: imageResult.description || messageDetails.messageText,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  console.log("Image Message stored:", newWAMessage);
 }
 
 // Store message (stub implementation)
@@ -233,148 +353,6 @@ async function storeButtonResponseMessage(messageDetails: any) {
   }
 
   console.log("Button Message stored:", newWAMessage);
-}
-
-async function storeAudioResponseMessage(messageDetails: any) {
-  const audioResult = await processAudioFile(messageDetails.itemId);
-  if (!audioResult.success) {
-    throw new Error(`Failed to process audio file: ${audioResult}`);
-  }
-  const newWAMessage = await prisma.whatsAppMessage.create({
-    data: {
-      clientId: messageDetails.clientId,
-      phone: messageDetails.senderPhone,
-      type: "audio",
-      mediaUrl: audioResult.audioUrl,
-      message: messageDetails.messageText,
-      sender: "CLIENT" as SenderType,
-      timestamp: messageDetails.timestamp,
-    },
-  });
-
-  console.log("Audio Message stored:", newWAMessage);
-}
-
-async function storeImageResponseMessage(messageDetails: any) {
-  const imageResult = await processImageFile(messageDetails.itemId);
-  if (!imageResult.success) {
-    throw new Error(`Failed to process audio file: ${imageResult}`);
-  }
-  const newWAMessage = await prisma.whatsAppMessage.create({
-    data: {
-      clientId: messageDetails.clientId,
-      phone: messageDetails.senderPhone,
-      type: "image",
-      mediaUrl: imageResult.imageUrl,
-      message: messageDetails.caption,
-      sender: "CLIENT" as SenderType,
-      timestamp: messageDetails.timestamp,
-    },
-  });
-
-  console.log("Image Message stored:", newWAMessage);
-}
-
-async function processAudioFile(audioId: string) {
-  const url = `https://graph.facebook.com/v22.0/${audioId}`;
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to download audio file: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const WAAudioUrl = data.url; // URL to download the audio file
-
-  // Fetch the audio file as a blob
-  const audioResponse = await axios.get(WAAudioUrl, {
-    headers: {
-      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-      "Content-Type": data.mime_type,
-    },
-    responseType: "arraybuffer", // This is important for binary data
-  });
-
-  console.log("audioResponse", audioResponse);
-  const audioBuffer = await audioResponse.data;
-
-  const newFilename = `${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2)}.ogg`;
-  const filePath = join("/", "tmp", newFilename);
-  fs.writeFileSync(filePath, audioBuffer);
-
-  await uploadToBucket("inventario", "audio/" + newFilename, filePath);
-  const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
-
-  return { success: true, audioUrl };
-}
-
-async function processImageFile(imageId: string) {
-  try {
-    // Step 1: Fetch image metadata
-    const url = `https://graph.facebook.com/v22.0/${imageId}`;
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image metadata: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log("DATA", data);
-
-    const WAImageUrl = data.url; // URL to download the image file
-    console.log("WAImageUrl", WAImageUrl);
-
-    // Step 2: Fetch the image file as a blob
-    const imageResponse = await axios.get(WAImageUrl, {
-      headers: {
-        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-        "Content-Type": data.mime_type,
-      },
-      responseType: "arraybuffer", // This is important for binary data
-    });
-
-    console.log("imageResponse", imageResponse);
-
-    if (!imageResponse.data) {
-      const errorBody = imageResponse.status; // or .json() if the response is JSON
-      console.error("Error Response Body:", errorBody);
-      throw new Error(`Failed to download image: ${imageResponse.statusText}`);
-    }
-
-    const imageBuffer = await imageResponse.data;
-    console.log("Image Bufer:", imageBuffer);
-
-    // Step 3: Generate a unique filename and save the image to a temporary file
-    const newFilename = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2)}.jpeg`;
-    const filePath = join("/", "tmp", newFilename);
-
-    console.log("Saving file to:", filePath);
-    fs.writeFileSync(filePath, imageBuffer);
-    console.log("File saved successfully");
-
-    // Step 4: Upload the file to the bucket
-    await uploadToBucket("inventario", "images/" + newFilename, filePath);
-    console.log("File uploaded to bucket");
-
-    // Step 5: Return the public URL of the uploaded image
-    const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
-    return { success: true, imageUrl };
-  } catch (error) {
-    console.error("Error in processImageFile:", error);
-    throw error; // Re-throw the error for further handling
-  }
 }
 
 async function processPdfFile(orderId: string) {
