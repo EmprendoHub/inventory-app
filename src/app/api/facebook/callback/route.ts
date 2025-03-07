@@ -344,45 +344,45 @@ async function processImageFile(imageId: string) {
 // }
 
 // Store message (stub implementation)
-async function storeTextMessage(messageDetails: any) {
-  // First store the incoming message
-  const newWAMessage = await prisma.whatsAppMessage.create({
-    data: {
-      clientId: messageDetails.clientId,
-      phone: messageDetails.senderPhone,
-      type: "text",
-      message: messageDetails.messageText,
-      sender: "CLIENT" as SenderType,
-      timestamp: messageDetails.timestamp,
-    },
-  });
+// async function storeTextMessage(messageDetails: any) {
+//   // First store the incoming message
+//   const newWAMessage = await prisma.whatsAppMessage.create({
+//     data: {
+//       clientId: messageDetails.clientId,
+//       phone: messageDetails.senderPhone,
+//       type: "text",
+//       message: messageDetails.messageText,
+//       sender: "CLIENT" as SenderType,
+//       timestamp: messageDetails.timestamp,
+//     },
+//   });
 
-  console.log("Text Message stored:", newWAMessage);
+//   console.log("Text Message stored:", newWAMessage);
 
-  // Generate AI response
-  const aiResponse = await generateCustomerServiceResponse(
-    messageDetails.messageText,
-    messageDetails.clientId,
-    messageDetails.senderPhone
-  );
+//   // Generate AI response
+//   const aiResponse = await generateCustomerServiceResponse(
+//     messageDetails.messageText,
+//     messageDetails.clientId,
+//     messageDetails.senderPhone
+//   );
 
-  if (aiResponse) {
-    // Send AI response
-    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
+//   if (aiResponse) {
+//     // Send AI response
+//     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
 
-    // Store AI response
-    await prisma.whatsAppMessage.create({
-      data: {
-        clientId: messageDetails.clientId,
-        phone: messageDetails.senderPhone,
-        type: "text",
-        message: aiResponse,
-        sender: "SYSTEM" as SenderType,
-        timestamp: new Date(),
-      },
-    });
-  }
-}
+//     // Store AI response
+//     await prisma.whatsAppMessage.create({
+//       data: {
+//         clientId: messageDetails.clientId,
+//         phone: messageDetails.senderPhone,
+//         type: "text",
+//         message: aiResponse,
+//         sender: "SYSTEM" as SenderType,
+//         timestamp: new Date(),
+//       },
+//     });
+//   }
+// }
 
 // async function storeTextInteractiveMessage(messageDetails: any) {
 //   // typing on
@@ -484,7 +484,7 @@ async function storeTextMessage(messageDetails: any) {
 
 async function handleTextMessage(messageDetails: any) {
   // Store the incoming message
-  await storeTextMessage(messageDetails);
+  // await storeTextMessage(messageDetails);
 
   // Generate AI response based on sentiment
   const systemPrompt = selectSystemPrompt(
