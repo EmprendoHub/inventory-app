@@ -275,13 +275,15 @@ export default function ContactClient({
                     )}
                   </div>
                 )}
-              {message.type === "text" && message.sender === "SYSTEM" && (
-                <div className="p-2">
-                  <p className="font-semibold text-sm">{message.header}</p>
-                  <hr className="my-1" />
-                  <div>{message.message}</div>
-                </div>
-              )}
+              {!message.template &&
+                message.type === "text" &&
+                message.sender === "SYSTEM" && (
+                  <div className="p-2">
+                    <p className="font-semibold text-sm">{message.header}</p>
+                    <hr className="my-1" />
+                    <div>{message.message}</div>
+                  </div>
+                )}
             </div>
           ))}
           <div ref={messagesEndRef} />
