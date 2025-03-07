@@ -693,7 +693,7 @@ export async function sendRecentOrdersInteractiveMessage(
         text: "Selecciona un pedido",
       },
       body: {
-        text: "Gracias por usar tu compra. Adjunto encontrarás tus últimas 3 compras.",
+        text: "Gracias por tu compra. Adjunto encontrarás tus últimos 3 pedidos.",
       },
       footer: {
         text: "Selecciona un pedido para ver más detalles.",

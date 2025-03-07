@@ -72,6 +72,7 @@ async function processMessageEvent(event: any) {
   }
 
   if (event.messages) {
+    console.log("PROCESS contacts", event.contacts[0]);
     console.log("PROCESS messages", event.messages[0]);
 
     const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
@@ -183,6 +184,27 @@ async function storeTextInteractiveMessage(messageDetails: any) {
         timestamp: messageDetails.timestamp,
       },
     });
+
+    // typing on
+    const data = JSON.stringify({
+      recipient: {
+        id: `52${messageDetails.senderPhone}`,
+      },
+      sender_action: "typing_on",
+    });
+
+    const config = {
+      method: "post",
+      url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      },
+      data: data,
+    };
+
+    await axios(config);
+
     await sendWATemplateOrderPdfMessage(
       messageDetails.orderId,
       response.pdfUrl
