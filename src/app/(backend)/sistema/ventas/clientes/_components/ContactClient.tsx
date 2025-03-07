@@ -199,11 +199,13 @@ export default function ContactClient({
               }`}
             >
               {message.type === "audio" && message.mediaUrl && (
-                <div className="flex w-auto">
-                  <audio controls className="w-[90%]">
+                <div className="flex flex-col w-auto">
+                  <audio controls className="w-[90%] mb-2">
                     <source src={message.mediaUrl} type="audio/ogg" />
                     Your browser does not support the audio element.
                   </audio>
+                  <p className="text-muted text-[12px]">Transcripción:</p>
+                  <p> {message.message}</p>
                 </div>
               )}
               {message.type === "image" && message.mediaUrl && (
@@ -280,7 +282,7 @@ export default function ContactClient({
             <Sticker size={18} className="text-muted" />
           </button>
           <input
-            className="bg-input rounded-md w-40 text-sm px-2 py-1"
+            className="bg-input rounded-md w-full text-sm px-2 py-1"
             type="text"
             name="message"
             id="message"
