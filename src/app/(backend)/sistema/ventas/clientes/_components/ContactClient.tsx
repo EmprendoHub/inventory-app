@@ -232,7 +232,7 @@ export default function ContactClient({
                 </div>
               )}
               {message.template &&
-                message.template === "pago_pendiente_1" &&
+                message.template === "pago_pendiente_2" &&
                 message.sender === "SYSTEM" && (
                   <div className="p-2">
                     <p className="font-semibold text-sm">{message.header}</p>

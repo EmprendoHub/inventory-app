@@ -484,7 +484,7 @@ export async function sendWATemplatePaymentPendingMessage(
     to: `52${order.client.phone}`,
     type: "template",
     template: {
-      name: "pago_pendiente_1",
+      name: "pago_pendiente_2",
       language: {
         code: "es_MX",
       },
@@ -519,7 +519,7 @@ export async function sendWATemplatePaymentPendingMessage(
 
     // Check for success based on API response
     if (response && response.status === 200) {
-      const pago_pendiente_1 = `Hola ${order.client.name}, esto es un recordatorio de pago para: \n
+      const pago_pendiente_2 = `Hola ${order.client.name}, esto es un recordatorio de pago para: \n
       PEDIDO: #${order.orderNo} \n
       \n
       Total: ${formattedTotal}\n
@@ -533,11 +533,11 @@ export async function sendWATemplatePaymentPendingMessage(
           clientId: order.client.id,
           phone: order.client.phone,
           type: "text",
-          message: pago_pendiente_1,
-          template: "pago_pendiente_1",
+          message: pago_pendiente_2,
+          template: "pago_pendiente_2",
           header: "Recordatorio de Pago",
           footer: "Si ya realizaste este pago ignora este mensaje.",
-          button: "Ver Pedido",
+          button: "Ver pedido recientes",
           variables: [
             order.client.name, // Variable 1
             order.orderNo, // Variable 2

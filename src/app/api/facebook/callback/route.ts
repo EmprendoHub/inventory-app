@@ -443,7 +443,7 @@ async function storeTextInteractiveMessage(messageDetails: any) {
 //     },
 //   });
 
-//   if (messageDetails.messageText === "Ver Pedido") {
+//   if (messageDetails.messageText === "Ver pedido recientes") {
 //     // send last 3 orders as options
 //     await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
 //   }
@@ -638,7 +638,7 @@ async function handleButtonMessage(messageDetails: any) {
 
   // Handle different button responses
   switch (messageDetails.messageText) {
-    case "Ver Pedido":
+    case "Ver pedido recientes":
       // Send recent orders as interactive message
       await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
       break;
@@ -701,7 +701,11 @@ async function handleButtonMessage(messageDetails: any) {
 }
 
 function shouldTriggerSurvey(buttonText: string) {
-  const surveyTriggers = ["Ver Pedido", "Soporte Técnico", "Recomendaciones"];
+  const surveyTriggers = [
+    "Ver pedido recientes",
+    "Soporte Técnico",
+    "Recomendaciones",
+  ];
   return surveyTriggers.includes(buttonText);
 }
 
