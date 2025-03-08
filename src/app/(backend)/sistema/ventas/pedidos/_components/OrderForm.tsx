@@ -22,7 +22,6 @@ import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
 import { useFormState } from "react-dom";
 import Image from "next/image";
-import SelectInput from "@/components/SelectInput";
 import { useModal } from "@/app/context/ModalContext";
 
 export default function OrderForm({
@@ -36,6 +35,7 @@ export default function OrderForm({
 }) {
   const router = useRouter();
   const [sending, setSending] = useState(false);
+  const [selectedItemKey, setSelectedItemKey] = useState("");
   // eslint-disable-next-line
   const [state, formAction] = useFormState(createNewOrder, {
     errors: {},
@@ -87,6 +87,8 @@ export default function OrderForm({
     }
     setSelectedItemId("");
     setQuantity(1);
+    // Force internal state reset in SearchSelectInput
+    setSelectedItemKey(Math.random().toString(36).substring(7));
   };
 
   useEffect(() => {
@@ -134,6 +136,11 @@ export default function OrderForm({
       <form
         onSubmit={handleSubmit} // Use custom submit handler
         className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission
+          }
+        }}
       >
         {/* Customer Info */}
         <div className="flex maxsm:flex-col-reverse gap-4 mb-8">
@@ -153,29 +160,42 @@ export default function OrderForm({
               }}
             />
             {/* Delivery info */}
-            {/* <NumericInput
-            label="Costo de Envió"
-            name="price"
-            state={state}
-            onChange={(e) => setDeliveryCost(Number(e.target.value))}
-          /> */}
-            <SelectInput
+            <NumericInput
+              label="Costo de Envió"
+              name="price"
+              defaultValue={deliveryCost}
+              state={state}
+              onChange={setDeliveryCost}
+            />
+            {/* <SelectInput
               label="Costo de Envió"
               name="price"
               options={[
                 { value: "0", name: "Seleccionar..." },
-                { value: "500", name: "5km" },
-                { value: "600", name: "10km" },
-                { value: "800", name: "20Km" },
-                { value: "1000", name: "30Km" },
-                { value: "1200", name: "40km" },
-                { value: "1400", name: "50km" },
-                { value: "1600", name: "60km" },
-                { value: "1800", name: "70km" },
+                { value: "200", name: "200" },
+                { value: "300", name: "300" },
+                { value: "400", name: "400" },
+                { value: "500", name: "500" },
+                { value: "600", name: "600" },
+                { value: "700", name: "700" },
+                { value: "800", name: "800" },
+                { value: "900", name: "900" },
+                { value: "1000", name: "1000" },
+                { value: "1100", name: "1100" },
+                { value: "1200", name: "1100" },
+                { value: "1300", name: "1100" },
+                { value: "1400", name: "1100" },
+                { value: "1500", name: "1100" },
+                { value: "1600", name: "1100" },
+                { value: "1700", name: "1100" },
+                { value: "1100", name: "1100" },
+                { value: "1100", name: "1100" },
+                { value: "1100", name: "1100" },
+
               ]}
               onChange={(e) => setDeliveryCost(Number(e.target.value))}
               state={state}
-            />
+            /> */}
             <DateInput
               defaultValue={new Date()}
               name="deliveryDate"
@@ -206,6 +226,7 @@ export default function OrderForm({
         {/* Items Selection */}
         <div className="flex items-end gap-4 mb-4">
           <SearchSelectInput
+            key={selectedItemKey} // This will force re-render and reset internal state
             label="Seleccionar Producto:"
             name="productId"
             state={state}
@@ -214,11 +235,14 @@ export default function OrderForm({
               ...items.map((item) => ({
                 value: item.id,
                 name: item.name,
+                description: item.description,
+                price: item.price,
                 image: item.mainImage, // Assuming `item.image` contains the image URL
               })),
               ...itemGroups.map((group) => ({
                 value: group.id,
-                name: `${group.name} (Agrupado)`,
+                name: `${group.name} (G)`,
+                price: group.price,
                 image: group.mainImage, // Assuming `group.image` contains the image URL
               })),
             ]}
@@ -252,19 +276,21 @@ export default function OrderForm({
           <TableBody>
             {selectedItems.map((item, index) => (
               <TableRow key={index} className="bg-black bg-opacity-20">
-                <TableCell className="font-medium overflow-hidden relative w-20 h-20">
+                <TableCell className="font-medium overflow-hidden relative w-32 h-32 flex mb-1">
                   <Image
                     src={item.mainImage || "/images/item_placeholder.png"}
                     width={150}
                     height={150}
                     alt="img"
-                    className="object-cover absolute top-0 left-0 w-full h-auto"
+                    className="w-32 h-32 object-cover rounded-md"
                   />
                 </TableCell>
                 <TableCell className="font-medium">
                   <div className="flex flex-col">
-                    <span className="text-xs">{item.name}</span>
-                    <span className="text-[12px] leading-none">
+                    <span className="text-[13px] font-semibold">
+                      {item.name}
+                    </span>
+                    <span className="text-[12px] text-muted leading-none">
                       {item.description}
                     </span>
                   </div>

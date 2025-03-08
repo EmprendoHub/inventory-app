@@ -3,7 +3,13 @@ import React from "react";
 
 export const SearchInput = () => {
   return (
-    <form>
+    <form
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // Prevent form submission
+        }
+      }}
+    >
       <label htmlFor="simple-search" className="sr-only">
         Search
       </label>

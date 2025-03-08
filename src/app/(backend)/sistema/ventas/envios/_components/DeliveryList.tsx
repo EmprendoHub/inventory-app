@@ -570,8 +570,7 @@ export function DeliveryList({
 
                   <DropdownMenuSeparator />
                   {user?.role === "SUPER_ADMIN" ||
-                    user?.role === "ADMIN" ||
-                    (user?.role === "GERENTE" &&
+                    (user?.role === "ADMIN" &&
                       row.original.status !== "CANCELADO" && (
                         <DropdownMenuItem
                           onClick={deleteDelivery}

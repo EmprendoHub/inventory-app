@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -20,6 +20,7 @@ import Image from "next/image";
 type OptionType = {
   name: string;
   value: string;
+  price?: number | null;
   image?: string | null;
   description?: string;
 };
@@ -108,6 +109,14 @@ export function SearchSelectInput({
                 />
               )}
               <span>{selectedOption ? selectedOption.name : placeholder}</span>
+              {selectedOption && selectedOption.price && (
+                <div className="flex">
+                  {formatCurrency({
+                    amount: Number(selectedOption.price),
+                    currency: "USD",
+                  })}
+                </div>
+              )}
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -135,7 +144,7 @@ export function SearchSelectInput({
                         height={150}
                         src={option.image}
                         alt={option.name}
-                        className="w-8 h-8 object-cover rounded"
+                        className="w-32 h-32 object-cover rounded"
                       />
                     )}
                     <div className="flex flex-col">
@@ -146,6 +155,14 @@ export function SearchSelectInput({
                         </span>
                       )}
                     </div>
+                    {option.price && (
+                      <div className="flex">
+                        {formatCurrency({
+                          amount: Number(option.price),
+                          currency: "USD",
+                        })}
+                      </div>
+                    )}
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",

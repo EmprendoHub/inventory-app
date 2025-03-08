@@ -44,7 +44,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { ordersAndItem, paymentType } from "@/types/sales";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteOrderAction, payOrderAction } from "../_actions";
-import { MdCurrencyExchange, MdSms } from "react-icons/md";
+import { MdCurrencyExchange } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
@@ -69,40 +69,40 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const { showModal } = useModal();
+  // const { showModal } = useModal();
 
-  const sendEmailReminder = async (id: string) => {
-    try {
-      const res = await fetch(`/api/email`, {
-        headers: {
-          "Content-Type": "application/json",
-          Cookie: "ojñolasidfioasdfuñoasdikfh",
-        },
-        method: "POST",
-        body: JSON.stringify({
-          id,
-        }),
-      });
+  // const sendEmailReminder = async (id: string) => {
+  //   try {
+  //     const res = await fetch(`/api/email`, {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Cookie: "ojñolasidfioasdfuñoasdikfh",
+  //       },
+  //       method: "POST",
+  //       body: JSON.stringify({
+  //         id,
+  //       }),
+  //     });
 
-      if (res.ok) {
-        await showModal({
-          title: "Correo Enviado!",
-          type: "delete",
-          text: "El correo se envió exitosamente",
-          icon: "success",
-        });
-      } else {
-        await showModal({
-          title: "¡Correo No Enviado!",
-          type: "delete",
-          text: "El correo no se envió correctamente",
-          icon: "error",
-        });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  //     if (res.ok) {
+  //       await showModal({
+  //         title: "Correo Enviado!",
+  //         type: "delete",
+  //         text: "El correo se envió exitosamente",
+  //         icon: "success",
+  //       });
+  //     } else {
+  //       await showModal({
+  //         title: "¡Correo No Enviado!",
+  //         type: "delete",
+  //         text: "El correo no se envió correctamente",
+  //         icon: "error",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
 
   const columns = React.useMemo<ColumnDef<ordersAndItem>[]>(
     () => [
@@ -352,12 +352,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                         </DropdownMenuItem>
                       )}
 
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         onClick={() => sendEmailReminder(row.original.id)}
                         className="text-xs cursor-pointer"
                       >
                         <MdSms /> Enviar recordatorio
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       <DropdownMenuItem
                         onClick={() =>
                           router.push(`/api/recibo/${row.original.id}`)
@@ -366,9 +366,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                       >
                         <DownloadCloud /> Descargar PDF
                       </DropdownMenuItem>
-                      {["SUPER_ADMIN", "GERENTE"].includes(
-                        user?.role || ""
-                      ) && (
+                      {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
                         <>
                           {" "}
                           <DropdownMenuSeparator />

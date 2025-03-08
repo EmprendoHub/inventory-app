@@ -204,18 +204,19 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
                     <Eye />
                     Ver pedido
                   </DropdownMenuItem>
-                  {row.original.status !== "CANCELADO" && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={deletePayment}
-                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        Cancelar
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                    row.original.status !== "CANCELADO" && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={deletePayment}
+                          className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                        >
+                          <X />
+                          Cancelar
+                        </DropdownMenuItem>
+                      </>
+                    )}
                 </DropdownMenuContent>
               </DropdownMenu>
             );
