@@ -512,7 +512,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                   maximumFractionDigits: 2,
                 })}
               </TableCell>
-              {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
+              {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
                 item.id &&
                 order.status !== "CANCELADO" && (
                   <TableCell>
@@ -621,7 +621,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     {item.reference}
                   </TableCell>
                   <TableCell>{item.status}</TableCell>
-                  {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
                     item.id &&
                     order.status !== "CANCELADO" && (
                       <TableCell>

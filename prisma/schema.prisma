@@ -798,7 +798,7 @@ model SentimentAnalysis {
   sentiment    String
   score        Int
   topics       String[]
-  urgentIssues String
+  urgentIssues String[]
   timestamp    DateTime  @default(now()) // Timestamp of the message
   createdAt    DateTime @default(now())
 }

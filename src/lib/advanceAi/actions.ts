@@ -498,7 +498,7 @@ export async function analyzeCustomerSentiment(phone: string) {
         sentiment: sentimentAnalysis.sentiment || "Neutral",
         score: sentimentAnalysis.score || 5,
         topics: sentimentAnalysis.topics || [""],
-        urgentIssues: sentimentAnalysis.urgentIssues || "",
+        urgentIssues: sentimentAnalysis.urgentIssues || [""],
         timestamp: new Date(),
       },
     });
