@@ -74,7 +74,19 @@ export function ProductList({ items }: { items: ItemType[] }) {
           <div className="uppercase text-xs w-20">{row.getValue("name")}</div>
         ),
       },
+      {
+        accessorKey: "id",
+        header: () => <div className="text-left text-xs  w-full">id</div>,
+        cell: ({ row }) => {
+          // Format the amount as a dollar amount
 
+          return (
+            <div className="text-left text-xs font-medium ">
+              {row.getValue("id")}
+            </div>
+          );
+        },
+      },
       {
         accessorKey: "mainImage",
         header: "Img",

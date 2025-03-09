@@ -240,6 +240,7 @@ export async function receivePurchaseOrderAction(
   };
   const session = await getServerSession(options);
   const userId = session.user.id;
+
   if (!rawData.items) {
     return {
       errors: { general: ["Missing required fields"] },
@@ -249,42 +250,58 @@ export async function receivePurchaseOrderAction(
   }
 
   try {
-    await prisma.$transaction(async (prisma) => {
-      const updatedPurchaseOrder = await prisma.purchaseOrder.update({
-        where: {
-          id: rawData.id,
-        },
-        data: {
-          status: "RECIBIDO" as POStatus,
-          notes: rawData.notes,
-          updatedAt: new Date(),
-          userId,
-        },
-      });
+    await prisma.$transaction(
+      async (prisma) => {
+        console.log("Starting transaction...");
 
-      const warehouse = await prisma.warehouse.findFirst({});
-
-      for (const item of rawData.items) {
-        await prisma.purchaseOrderItem.update({
+        const updatedPurchaseOrder = await prisma.purchaseOrder.update({
           where: {
-            id: item.id,
+            id: rawData.id,
           },
           data: {
-            receivedQty: item.quantity,
+            status: "RECIBIDO" as POStatus,
+            notes: rawData.notes,
+            updatedAt: new Date(),
+            userId,
           },
         });
 
-        const adjustmentInfo = {
-          userId: userId,
-          itemId: item.itemId,
-          warehouseId: warehouse?.id || "",
-          transAmount: item.quantity,
-          pOrderNo: updatedPurchaseOrder.poNumber,
-        };
+        console.log("Purchase order updated:", updatedPurchaseOrder);
 
-        await createReceivedOrderStockAdjustment(adjustmentInfo);
+        const warehouse = await prisma.warehouse.findFirst({});
+        if (!warehouse) {
+          throw new Error("Warehouse not found");
+        }
+
+        for (const item of rawData.items) {
+          console.log("Updating purchase order item:", item.id);
+          await prisma.purchaseOrderItem.update({
+            where: {
+              id: item.id,
+            },
+            data: {
+              receivedQty: item.quantity,
+            },
+          });
+
+          const adjustmentInfo = {
+            userId: userId,
+            itemId: item.itemId,
+            warehouseId: warehouse.id,
+            transAmount: item.quantity,
+            pOrderNo: updatedPurchaseOrder.poNumber,
+          };
+
+          console.log("Creating stock adjustment for item:", item.itemId);
+          await createReceivedOrderStockAdjustment(adjustmentInfo);
+        }
+
+        console.log("Transaction completed successfully.");
+      },
+      {
+        timeout: 30000, // 30 seconds
       }
-    });
+    );
 
     revalidatePath("/sistema/compras");
     revalidatePath("/sistema/negocio/articulos");
@@ -298,6 +315,44 @@ export async function receivePurchaseOrderAction(
     return { success: false, message: "Error al recibir orden de compra." };
   }
 }
+
+export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
+  userId: string;
+  itemId: string;
+  warehouseId: string;
+  transAmount: number;
+  pOrderNo: string;
+}) => {
+  try {
+    await prisma.$transaction(async (prisma) => {
+      await prisma.stock.update({
+        where: {
+          itemId_warehouseId: {
+            itemId: adjustmentInfo.itemId,
+            warehouseId: adjustmentInfo.warehouseId,
+          },
+        },
+        data: { availableQty: { increment: adjustmentInfo.transAmount } },
+      });
+
+      // Create a stock movement record for the release
+      await prisma.stockMovement.create({
+        data: {
+          itemId: adjustmentInfo.itemId,
+          type: "PURCHASE", // Indicates stock is being returned to available
+          quantity: adjustmentInfo.transAmount,
+          reference: `Inventario recibo de orden de compra: ${adjustmentInfo.pOrderNo}`,
+          status: "COMPLETED",
+          createdBy: adjustmentInfo.itemId, // Or the user ID who cancelled the order
+        },
+      });
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
+  return { success: true, message: "Ajuste de inventario exitoso!" };
+};
 
 export async function deletePurchaseOrderAction(formData: FormData) {
   const rawData = {
@@ -362,41 +417,3 @@ export async function cancelPurchaseOrderAction(formData: FormData) {
     return { success: false, message: "Error al eliminar orden de compra." };
   }
 }
-
-export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
-  userId: string;
-  itemId: string;
-  warehouseId: string;
-  transAmount: number;
-  pOrderNo: string;
-}) => {
-  try {
-    await prisma.$transaction(async (prisma) => {
-      await prisma.stock.update({
-        where: {
-          itemId_warehouseId: {
-            itemId: adjustmentInfo.itemId,
-            warehouseId: adjustmentInfo.warehouseId,
-          },
-        },
-        data: { availableQty: { increment: adjustmentInfo.transAmount } },
-      });
-
-      // Create a stock movement record for the release
-      await prisma.stockMovement.create({
-        data: {
-          itemId: adjustmentInfo.itemId,
-          type: "PURCHASE", // Indicates stock is being returned to available
-          quantity: adjustmentInfo.transAmount,
-          reference: `Inventario recibo de orden de compra: ${adjustmentInfo.pOrderNo}`,
-          status: "COMPLETED",
-          createdBy: adjustmentInfo.itemId, // Or the user ID who cancelled the order
-        },
-      });
-    });
-  } catch (error) {
-    console.log(error);
-  }
-
-  return { success: true, message: "Ajuste de inventario exitoso!" };
-};
