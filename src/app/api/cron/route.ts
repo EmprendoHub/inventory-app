@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     if (dayOfWeek === 1) {
       // If today is Monday, go back 7 days to get last Monday
-      lastMonday.setDate(today.getDate() - 7);
+      lastMonday.setDate(today.getDate());
     } else {
       // Otherwise, calculate days to go back to reach the last Monday
       const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
