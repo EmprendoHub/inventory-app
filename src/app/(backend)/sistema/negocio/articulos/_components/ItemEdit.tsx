@@ -121,7 +121,7 @@ export default function ProductEdit({
           <span className="loader" />
         </div>
       )}
-      <form action={handleSubmit} className="space-y-4 flex flex-col gap-4 ">
+      <form action={handleSubmit} className="space-y-4 flex flex-col gap-4">
         <div className="flex maxmd:flex-col gap-3 w-full">
           {/* Image Upload Section */}
           <div className="flex flex-col ">
