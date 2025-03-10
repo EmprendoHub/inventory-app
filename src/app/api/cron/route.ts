@@ -17,14 +17,14 @@ export async function POST(request: Request) {
   try {
     // Get the current date
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set time to the start of the day (00:00:00)
+    today.setHours(23, 59, 59, 59); // Set time to the start of the day (23:59:59)
 
     // Calculate last Monday's date
     const lastMonday = new Date(today);
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
     if (dayOfWeek === 1) {
-      // If today is Monday, go back 7 days to get last Monday
+      // If today is Monday
       lastMonday.setDate(today.getDate());
     } else {
       // Otherwise, calculate days to go back to reach the last Monday
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
         },
       },
     });
+
     const payments = await prisma.payment.findMany({
       where: {
         createdAt: {
@@ -172,7 +173,7 @@ export async function POST(request: Request) {
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Método</th>
+                  <th>Referencia</th>
                   <th>Total</th>
                 </tr>
               </thead>
