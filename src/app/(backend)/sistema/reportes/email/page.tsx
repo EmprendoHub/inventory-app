@@ -35,8 +35,8 @@ export default function ManualEmail() {
 
   return (
     <div className="flex flex-col justify-center items-center w-full h-full gap-10">
-      <button onClick={runWeeklyCron}>Reporte Semanal</button>
-      <button onClick={runDailyCron}>Reporte Diario</button>
+      <button onClick={() => runWeeklyCron()}>Reporte Semanal</button>
+      <button onClick={() => runDailyCron()}>Reporte Diario</button>
     </div>
   );
 }
