@@ -2,11 +2,13 @@
 import React from "react";
 
 export default function ManualReport({ secret }: { secret: string }) {
+  console.log("secret", secret);
+
   const runWeeklyCron = async () => {
     const res = await fetch(`/api/cron`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `${secret}`,
+        Authorization: `Bearer ${secret}`,
       },
       method: "POST",
     });
@@ -22,7 +24,7 @@ export default function ManualReport({ secret }: { secret: string }) {
     const res = await fetch(`/api/daily-cron`, {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `${secret}`,
+        Authorization: `Bearer ${secret}`,
       },
       method: "POST",
     });

@@ -202,7 +202,7 @@ export async function POST(request: Request) {
 
     // Prepare WhatsApp message
     const whatsAppMessage = `
-     Resumen Semanal de Ventas, Pagos y Gastos:
+     Resumen Diario de Ventas, Pagos y Gastos:
      - Total Ventas: $${totalSales.toLocaleString(undefined, {
        minimumFractionDigits: 2,
        maximumFractionDigits: 2,
@@ -215,7 +215,6 @@ export async function POST(request: Request) {
        minimumFractionDigits: 2,
        maximumFractionDigits: 2,
      })}
-     ${bestRegards}
    `;
 
     // Send WhatsApp message
