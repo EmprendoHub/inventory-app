@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 import { getMexicoDate, getMexicoFullDate } from "@/lib/utils";
+import { sendWhatsAppMessage } from "@/app/(backend)/sistema/ventas/clientes/_actions/chatgpt";
 
 export async function POST(request: Request) {
   const cookie = request.headers.get("cookie");
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   try {
     // Get the current date
     const today = new Date();
-    today.setHours(23, 59, 59, 59); // Set time to the start of the day (23:59:59)
+    today.setHours(23, 59, 59, 999); // Set time to the start of the day (23:59:59)
 
     // Calculate last Monday's date
     const lastMonday = new Date(today);
@@ -61,6 +62,11 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    // Calculate totals
+    const totalSales = orders.reduce((acc, item) => acc + item.totalAmount, 0);
+    const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
+    const totalExpenses = expenses.reduce((acc, item) => acc + item.amount, 0);
 
     const subject = "Resumen Semanal de Ventas, Pagos y Gastos";
     const greeting = `Resumen Semanal de Ventas, Pagos y Gastos:`;
@@ -125,12 +131,10 @@ export async function POST(request: Request) {
               </tbody>
             </table>
       
-            <h3><strong>Total Ventas: ${orders
-              .reduce((acc, item) => acc + item.totalAmount, 0)
-              .toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}</strong></h3>
+            <h3><strong>Total Ventas: ${totalSales.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}</strong></h3>
 
             <div>${bodyTwoHeader}</div>
             <table border="1" cellpadding="8" cellspacing="0" width="100%"    style="border-collapse: collapse;">
@@ -160,12 +164,10 @@ export async function POST(request: Request) {
             </table>
     
 
-          <h3><strong>Total Pagos: ${payments
-            .reduce((acc, item) => acc + item.amount, 0)
-            .toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}</strong></h3>
+          <h3><strong>Total Pagos: ${totalPayments.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}</strong></h3>
 
 
              <div>${bodyThreeHeader}</div>
@@ -196,12 +198,10 @@ export async function POST(request: Request) {
             </table>
     
 
-          <h3><strong>Total Gastos: ${expenses
-            .reduce((acc, item) => acc + item.amount, 0)
-            .toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}</strong></h3>
+          <h3><strong>Total Gastos: ${totalExpenses.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}</strong></h3>
 
             
       
@@ -212,6 +212,34 @@ export async function POST(request: Request) {
     };
 
     await transporter.sendMail(mailOption);
+
+    // Prepare WhatsApp message
+    const whatsAppMessage = `
+     Resumen Semanal de Ventas, Pagos y Gastos:
+     - Total Ventas: $${totalSales.toLocaleString(undefined, {
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     })}
+     - Total Pagos: $${totalPayments.toLocaleString(undefined, {
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     })}
+     - Total Gastos: $${totalExpenses.toLocaleString(undefined, {
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     })}
+     ${bestRegards}
+   `;
+
+    // Send WhatsApp message
+    const whatsAppResponse = await sendWhatsAppMessage(
+      "523531847773", // Replace with the recipient's phone number
+      whatsAppMessage
+    );
+
+    if (!whatsAppResponse.success) {
+      throw new Error("Failed to send WhatsApp message");
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
