@@ -233,7 +233,7 @@ export async function POST(request: Request) {
 
     // Send WhatsApp message
     const whatsAppResponse = await sendWhatsAppMessage(
-      "523531847773", // Replace with the recipient's phone number
+      "3531847773", // Replace with the recipient's phone number
       whatsAppMessage
     );
 
