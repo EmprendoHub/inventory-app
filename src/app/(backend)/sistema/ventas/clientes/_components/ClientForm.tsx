@@ -101,7 +101,7 @@ export default function ClientForm() {
             {isClientDragActive ? (
               <p>Drop the image here...</p>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-3">
+              <div className="flex flex-col items-center justify-center gap-3 ">
                 <CloudUpload size={40} className="text-xs text-black" />
                 <p className="text-black">Arrastre y suelte una imagen aquí.</p>
               </div>
