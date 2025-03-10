@@ -1,0 +1,213 @@
+import prisma from "@/lib/db";
+// import { requireUser } from "@/app/utils/hooks";
+import nodemailer from "nodemailer";
+import { NextResponse } from "next/server";
+import { getMexicoDate } from "@/lib/utils";
+
+export async function POST(request: Request) {
+  const cookie = request.headers.get("cookie");
+  if (!cookie) {
+    // Not Signed in
+    const notAuthorized = "You are not authorized no no no";
+    return new Response(JSON.stringify(notAuthorized), {
+      status: 400,
+    });
+  }
+
+  try {
+    // Get the current date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to the start of the day (00:00:00)
+
+    // Calculate last Monday's date
+    const lastMonday = new Date(today);
+    lastMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // Adjust to get last Monday
+    lastMonday.setHours(0, 0, 0, 0); // Set time to the start of the day (00:00:00)
+
+    // Fetch orders from last Monday to today
+    const orders = await prisma.order.findMany({
+      where: {
+        createdAt: {
+          gte: lastMonday, // Orders created on or after last Monday
+          lte: today, // Orders created on or before today
+        },
+      },
+    });
+
+    const payments = await prisma.payment.findMany({
+      where: {
+        createdAt: {
+          gte: lastMonday, // Payments created on or after last Monday
+          lte: today, // Payments created on or before today
+        },
+      },
+    });
+
+    const expenses = await prisma.expense.findMany({
+      where: {
+        createdAt: {
+          gte: lastMonday, // Expenses created on or after last Monday
+          lte: today, // Expenses created on or before today
+        },
+      },
+    });
+
+    const subject = "Resumen Semanal de Ventas, Pagos y Gastos";
+    const greeting = `Resumen Semanal de Ventas, Pagos y Gastos:`;
+    const title =
+      "A continuación encontraras un resumen de ventas, pagos y gastos semanales de tu negocio.";
+    const bodyHeader = `Ventas:`;
+    const bodyTwoHeader = `Pagos:`;
+    const bodyThreeHeader = `Gastos:`;
+    const bestRegards =
+      "Ocupas un reporte mas detallado? solicítalo a tu administrador.";
+    const recipient_email = "emprendomex@gmail.com";
+    const sender_email = "invetamexapp@gmail.com";
+    const fromName = "Muebles Americanos - Yunuen Company";
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.GOOGLE_MAIL,
+        pass: process.env.GOOGLE_MAIL_PASS,
+      },
+    });
+
+    const mailOption = {
+      from: `"${fromName}" ${sender_email}`,
+      to: recipient_email,
+      subject,
+      html: `
+          <!DOCTYPE html>
+          <html lang="es">
+          <body>
+            <p>${greeting}</p>
+            <p>${title}</p>
+            <div>${bodyHeader}</div>
+            <p></p>
+      
+            <table border="1" cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orders
+                  .map(
+                    (item) => `
+                      <tr>
+                        <td>${item.orderNo}</td>
+                        <td>${getMexicoDate(item.createdAt)}</td>
+                        <td>$${item.totalAmount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}</td>
+                      </tr>
+                    `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+      
+            <h3><strong>Total Ventas: ${orders
+              .reduce((acc, item) => acc + item.totalAmount, 0)
+              .toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</strong></h3>
+
+            <div>${bodyTwoHeader}</div>
+            <table border="1" cellpadding="8" cellspacing="0" width="100%"    style="border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Método</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${payments
+                  .map(
+                    (item) => `
+                      <tr>
+                        <td>${item.createdAt.toLocaleDateString()}</td>
+                        <td>${item.method}</td>
+                        <td>$${item.amount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}</td>
+                      </tr>
+                    `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+    
+
+          <h3><strong>Total Pagos: ${payments
+            .reduce((acc, item) => acc + item.amount, 0)
+            .toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}</strong></h3>
+
+
+             <div>${bodyThreeHeader}</div>
+            <table border="1" cellpadding="8" cellspacing="0" width="100%"    style="border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Método</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${expenses
+                  .map(
+                    (item) => `
+                      <tr>
+                        <td>${item.createdAt.toLocaleDateString()}</td>
+                        <td>${item.description}</td>
+                        <td>$${item.amount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}</td>
+                      </tr>
+                    `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+    
+
+          <h3><strong>Total Gastos: ${expenses
+            .reduce((acc, item) => acc + item.amount, 0)
+            .toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}</strong></h3>
+
+            
+      
+            <p>${bestRegards}</p>
+          </body>
+          </html>
+        `,
+    };
+
+    await transporter.sendMail(mailOption);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { error: "Failed to send Email reminder" },
+      { status: 500 }
+    );
+  }
+}

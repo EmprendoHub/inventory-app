@@ -5,7 +5,6 @@ import TextInput from "@/components/TextInput";
 import SelectInput from "@/components/SelectInput";
 import { ExpenseFormState } from "@/types/expenses";
 import { createExpenseAction } from "../_actions";
-import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
 import { useModal } from "@/app/context/ModalContext";
@@ -33,6 +32,8 @@ export default function ExpenseForm({
     }
   );
 
+  const [description, setDescription] = React.useState<string>("");
+
   const [selectedDriver, setSelectedDriver] = React.useState<UserType | null>(
     null
   );
@@ -48,6 +49,13 @@ export default function ExpenseForm({
   const [sending, setSending] = useState(false);
   const { showModal } = useModal();
 
+  const handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = event.target.value;
+    setSelectedExpenseType(selectedValue);
+
+    setDescription(selectedValue);
+  };
+
   // Custom form submission handler
   const handleSubmit = async (formData: FormData) => {
     setSending(true);
@@ -55,6 +63,8 @@ export default function ExpenseForm({
     formData.set("driver", JSON.stringify(selectedDriver));
     formData.set("supplier", JSON.stringify(selectedSupplier));
     formData.set("truck", JSON.stringify(selectedTruck));
+    formData.set("status", "PAID");
+    formData.set("description", JSON.stringify(description));
     const result = await createExpenseAction(state, formData);
 
     if (result.success) {
@@ -70,6 +80,9 @@ export default function ExpenseForm({
       formElement.reset();
     }
     setSending(false);
+    setSelectedDriver(null);
+    setSelectedTruck(null);
+    setSelectedSupplier(null);
   };
 
   return (
@@ -96,19 +109,9 @@ export default function ExpenseForm({
             { value: "OTRO", name: "OTRO" },
           ]}
           state={state}
-          onChange={(e) => setSelectedExpenseType(e.target.value)}
+          onChange={handleTypeChange}
         />
-        <SelectInput
-          label="Estado"
-          name="status"
-          options={[
-            { value: "PENDING", name: "Pendiente" },
-            { value: "APPROVED", name: "Aprobado" },
-            { value: "PAID", name: "Pagado" },
-            { value: "REJECTED", name: "Rechazado" },
-          ]}
-          state={state}
-        />
+
         <TextInput
           name="reference"
           label="Referencia (opcional)"
@@ -139,6 +142,7 @@ export default function ExpenseForm({
             onChange={(value) => {
               const driver = drivers.find((d) => d.id === value);
               setSelectedDriver(driver || null);
+              setDescription((prev) => prev + "-" + driver?.name);
             }}
           />
         )}
@@ -155,6 +159,7 @@ export default function ExpenseForm({
             onChange={(value) => {
               const truck = trucks.find((t) => t.id === value);
               setSelectedTruck(truck || null);
+              setDescription((prev) => prev + "-" + truck?.name);
             }}
           />
         )}
@@ -171,48 +176,18 @@ export default function ExpenseForm({
             onChange={(value) => {
               const supplier = suppliers.find((s) => s.id === value);
               setSelectedSupplier(supplier || null);
+              setDescription((prev) => prev + "-" + supplier?.name);
             }}
           />
         )}
       </div>
 
-      <TextAreaInput name="description" label="Descripción" state={state} />
-      <div className="space-y-2 bg-card p-4 rounded-lg">
-        {selectedDriver && (
-          <>
-            <h3 className="font-semibold text-lg">{selectedDriver.name}</h3>
-            <p className="text-sm text-muted leading-none">
-              Tel: {selectedDriver.phone}
-            </p>
-            {selectedDriver.email && (
-              <p className="text-sm text-muted leading-none">
-                Email: {selectedDriver.email}
-              </p>
-            )}
-          </>
-        )}
-        {selectedTruck && (
-          <>
-            <h3 className="font-semibold text-lg">{selectedTruck.name}</h3>
-            <p className="text-sm text-muted leading-none">
-              Km: {selectedTruck.km}
-            </p>
-          </>
-        )}
-        {selectedSupplier && (
-          <>
-            <h3 className="font-semibold text-lg">{selectedSupplier.name}</h3>
-            <p className="text-sm text-muted leading-none">
-              Tel: {selectedSupplier.phone}
-            </p>
-            {selectedSupplier.email && (
-              <p className="text-sm text-muted leading-none">
-                Email: {selectedSupplier.email}
-              </p>
-            )}
-          </>
-        )}
-      </div>
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
+      />
+
       <button
         type="submit"
         disabled={sending}
