@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import { idSchema, ProductSchema } from "@/lib/schemas";
 import { generateUniqueBarcode, generateUniqueSKU } from "@/lib/utils";
 import { ItemFormState } from "@/types/items";
-import { ItemStatus } from "@prisma/client";
+type ItemStatus = "ACTIVE" | "INACTIVE";
 import { unlink, writeFile } from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { join } from "path";
@@ -92,7 +92,7 @@ export const createItemAction = async (
     const generatedBarcode = await generateUniqueBarcode();
     const generatedSku = await generateUniqueSKU();
     try {
-      await prisma.$transaction(async (prisma) => {
+      await prisma.$transaction(async (prisma:any) => {
         // Step 1: Create Product
         const newProduct = await prisma.item.create({
           data: {
