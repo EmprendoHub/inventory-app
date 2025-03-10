@@ -51,6 +51,7 @@ export default function ProductForm({
     formData.set("userId", user.id);
     // Call the form action
     const result = await createItemAction(state, formData);
+    setSending((prev) => !prev);
 
     // Check if the product was created successfully
     if (result.success) {
@@ -69,7 +70,6 @@ export default function ProductForm({
       // Reset the image
       setProductImage("/images/item_placeholder.png");
       setFileData(null);
-      setSending((prev) => !prev);
     }
   };
 
@@ -93,171 +93,191 @@ export default function ProductForm({
   });
 
   return (
-    <form
-      id="product-form"
-      action={handleSubmit}
-      className="space-y-4 flex flex-col gap-4"
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault(); // Prevent form submission
-        }
-      }}
-    >
-      <div className="flex maxmd:flex-col gap-3 w-full">
-        {/* Image Upload Section */}
-        <div className="flex flex-col ">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-base font-semibold">Agrega imagen</h3>
+    <section>
+      {sending && (
+        <div
+          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
+        >
+          <h3>Generado producto...</h3>
+          <span className="loader" />
+        </div>
+      )}
+      <form
+        id="product-form"
+        action={handleSubmit}
+        className="space-y-4 flex flex-col gap-4"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission
+          }
+        }}
+      >
+        <div className="flex maxmd:flex-col gap-3 w-full">
+          {/* Image Upload Section */}
+          <div className="flex flex-col ">
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="text-base font-semibold">Agrega imagen</h3>
+            </div>
+            <div
+              {...getProductRootProps()}
+              className={`relative overflow-hidden flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-96 mb-5 ${
+                isProductDragActive
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-300 bg-gray-50"
+              }`}
+            >
+              <input {...getProductInputProps()} />
+              {isProductDragActive ? (
+                <p>Drop the image here...</p>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <CloudUpload size={40} className="text-white" />
+                  <p>
+                    Drag & drop a product image here, or click to select one.
+                  </p>
+                </div>
+              )}
+              <Image
+                className="absolute inset-0 object-cover w-full h-full -z-10"
+                src={productImage}
+                alt="imagen"
+                width={500}
+                height={500}
+              />
+            </div>
+            {fileData && (
+              <p className="mt-2 text-xs text-muted">
+                Selected file: {fileData.name} (
+                {Math.round(fileData.size / 1024)} KB)
+              </p>
+            )}
+            {state.errors?.image && (
+              <p className="text-sm text-red-500">
+                {state.errors?.image.join(", ")}
+              </p>
+            )}
           </div>
-          <div
-            {...getProductRootProps()}
-            className={`relative overflow-hidden flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-96 mb-5 ${
-              isProductDragActive
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-gray-50"
+          <div className="w-full flex items-center flex-col gap-3">
+            <TextInput name="name" label="Nombre" state={state} />
+            <TextAreaInput
+              name="description"
+              label="Description"
+              state={state}
+            />
+            <div className="w-full flex maxsm:flex-col gap-3">
+              <SelectInput
+                label="Bodega"
+                name="warehouse"
+                options={warehouses.map(
+                  (warehouse: {
+                    id: string;
+                    title: string;
+                    description?: string;
+                  }) => ({
+                    value: warehouse.id,
+                    name: warehouse.title,
+                    description: warehouse.description || "",
+                  })
+                )}
+                state={state}
+              />
+              <SelectInput
+                label="Categoría"
+                name="category"
+                options={categories.map(
+                  (category: {
+                    id: string;
+                    title: string;
+                    description: string;
+                  }) => ({
+                    value: category.id,
+                    name: category.title,
+                    description: category.description,
+                  })
+                )}
+                state={state}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="w-full flex items-center maxmd:flex-col gap-3">
+          <div className="flex w-full gap-3 maxsm:flex-col">
+            <SelectInput
+              label="Marca"
+              name="brand"
+              options={brands.map(
+                (brand: { id: string; name: string; description: string }) => ({
+                  value: brand.id,
+                  name: brand.name,
+                  description: brand.description,
+                })
+              )}
+              state={state}
+            />
+            <SelectInput
+              label="Unidad de Medida"
+              name="unit"
+              options={units.map(
+                (unit: {
+                  id: string;
+                  title: string;
+                  abbreviation: string;
+                }) => ({
+                  value: unit.id,
+                  name: unit.title,
+                  abbreviation: unit.abbreviation,
+                })
+              )}
+              state={state}
+            />
+          </div>
+          <TextInput name="dimensions" label="peso" state={state} />
+        </div>
+
+        {/* Numeric inputs */}
+        <div className="flex maxsm:flex-col gap-3">
+          <NumericInput name="cost" label="Costo de Compra" state={state} />
+          <NumericInput name="price" label="Precio de Venta" state={state} />
+        </div>
+        <div className="flex maxsm:flex-col gap-3">
+          <NumericInput name="stock" label="Stock" state={state} />
+          <NumericInput name="minStock" label="Stock Minio" state={state} />
+        </div>
+        <div className="flex maxsm:flex-col gap-3">
+          <NumericInput name="tax" label="Impuesto" state={state} />
+          <SelectInput
+            label="Proveedor"
+            name="supplier"
+            options={suppliers.map(
+              (supplier: { id: string; name: string; notes: string }) => ({
+                value: supplier.id,
+                name: supplier.name,
+                description: supplier.notes,
+              })
+            )}
+            state={state}
+          />
+        </div>
+        <TextAreaInput name="notes" label="Notas" state={state} />
+        <button
+          type="submit"
+          disabled={sending}
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          {sending && <span className="loader"></span>}
+          Crear Articulo
+        </button>
+
+        {state.message && (
+          <p
+            className={`text-sm ${
+              state.success ? "text-green-700" : "text-red-500"
             }`}
           >
-            <input {...getProductInputProps()} />
-            {isProductDragActive ? (
-              <p>Drop the image here...</p>
-            ) : (
-              <div className="flex flex-col items-center justify-center gap-3">
-                <CloudUpload size={40} className="text-white" />
-                <p>Drag & drop a product image here, or click to select one.</p>
-              </div>
-            )}
-            <Image
-              className="absolute inset-0 object-cover w-full h-full -z-10"
-              src={productImage}
-              alt="imagen"
-              width={500}
-              height={500}
-            />
-          </div>
-          {fileData && (
-            <p className="mt-2 text-xs text-muted">
-              Selected file: {fileData.name} ({Math.round(fileData.size / 1024)}{" "}
-              KB)
-            </p>
-          )}
-          {state.errors?.image && (
-            <p className="text-sm text-red-500">
-              {state.errors?.image.join(", ")}
-            </p>
-          )}
-        </div>
-        <div className="w-full flex items-center flex-col gap-3">
-          <TextInput name="name" label="Nombre" state={state} />
-          <TextAreaInput name="description" label="Description" state={state} />
-          <div className="w-full flex maxsm:flex-col gap-3">
-            <SelectInput
-              label="Bodega"
-              name="warehouse"
-              options={warehouses.map(
-                (warehouse: {
-                  id: string;
-                  title: string;
-                  description?: string;
-                }) => ({
-                  value: warehouse.id,
-                  name: warehouse.title,
-                  description: warehouse.description || "",
-                })
-              )}
-              state={state}
-            />
-            <SelectInput
-              label="Categoría"
-              name="category"
-              options={categories.map(
-                (category: {
-                  id: string;
-                  title: string;
-                  description: string;
-                }) => ({
-                  value: category.id,
-                  name: category.title,
-                  description: category.description,
-                })
-              )}
-              state={state}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="w-full flex items-center maxmd:flex-col gap-3">
-        <div className="flex w-full gap-3 maxsm:flex-col">
-          <SelectInput
-            label="Marca"
-            name="brand"
-            options={brands.map(
-              (brand: { id: string; name: string; description: string }) => ({
-                value: brand.id,
-                name: brand.name,
-                description: brand.description,
-              })
-            )}
-            state={state}
-          />
-          <SelectInput
-            label="Unidad de Medida"
-            name="unit"
-            options={units.map(
-              (unit: { id: string; title: string; abbreviation: string }) => ({
-                value: unit.id,
-                name: unit.title,
-                abbreviation: unit.abbreviation,
-              })
-            )}
-            state={state}
-          />
-        </div>
-        <TextInput name="dimensions" label="peso" state={state} />
-      </div>
-
-      {/* Numeric inputs */}
-      <div className="flex maxsm:flex-col gap-3">
-        <NumericInput name="cost" label="Costo de Compra" state={state} />
-        <NumericInput name="price" label="Precio de Venta" state={state} />
-      </div>
-      <div className="flex maxsm:flex-col gap-3">
-        <NumericInput name="stock" label="Stock" state={state} />
-        <NumericInput name="minStock" label="Stock Minio" state={state} />
-      </div>
-      <div className="flex maxsm:flex-col gap-3">
-        <NumericInput name="tax" label="Impuesto" state={state} />
-        <SelectInput
-          label="Proveedor"
-          name="supplier"
-          options={suppliers.map(
-            (supplier: { id: string; name: string; notes: string }) => ({
-              value: supplier.id,
-              name: supplier.name,
-              description: supplier.notes,
-            })
-          )}
-          state={state}
-        />
-      </div>
-      <TextAreaInput name="notes" label="Notas" state={state} />
-      <button
-        type="submit"
-        disabled={sending}
-        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-      >
-        {sending && <span className="loader"></span>}
-        Crear Articulo
-      </button>
-
-      {state.message && (
-        <p
-          className={`text-sm ${
-            state.success ? "text-green-700" : "text-red-500"
-          }`}
-        >
-          {state.message}
-        </p>
-      )}
-    </form>
+            {state.message}
+          </p>
+        )}
+      </form>
+    </section>
   );
 }

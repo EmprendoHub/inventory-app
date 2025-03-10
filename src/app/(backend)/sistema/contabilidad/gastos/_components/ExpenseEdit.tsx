@@ -77,182 +77,192 @@ export default function ExpenseEdit({
   };
 
   return (
-    <form
-      id="expense-form"
-      action={handleSubmit}
-      className="space-y-4 flex flex-col gap-4"
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault(); // Prevent form submission
-        }
-      }}
-    >
-      <div className="flex items-center gap-4">
-        <SelectInput
-          label="Tipo"
-          name="type"
-          options={[
-            { value: "", name: "Seleccionar..." },
-            { value: "GASOLINA", name: "GASOLINA" },
-            { value: "PROVEEDOR", name: "PROVEEDOR" },
-            { value: "MANTENIMIENTO", name: "MANTENIMIENTO" },
-            { value: "OFICINA", name: "OFICINA" },
-            { value: "OTRO", name: "OTRO" },
-          ]}
-          state={state}
-          isSelected={expense.type}
-          onChange={(e) => setSelectedExpenseType(e.target.value)}
-        />
-        <SelectInput
-          label="Estado"
-          name="status"
-          options={[
-            { value: "PENDING", name: "Pendiente" },
-            { value: "APPROVED", name: "Aprobado" },
-            { value: "PAID", name: "Pagado" },
-            { value: "REJECTED", name: "Rechazado" },
-          ]}
-          state={state}
-          isSelected={expense.status}
-        />
-        <TextInput
-          name="reference"
-          label="Referencia (opcional)"
-          state={state}
-          value={expense.reference || undefined}
-        />
-      </div>
-
-      <div className="flex items-center gap-4">
-        <NumericInput
-          name="amount"
-          label="Monto"
-          state={state}
-          defaultValue={expense.amount}
-        />
-        <DateInput
-          name="paymentDate"
-          label="Fecha de Gasto"
-          state={state}
-          defaultValue={
-            expense.paymentDate ? new Date(expense.paymentDate) : new Date()
-          }
-        />
-      </div>
-      <div className="flex items-center gap-4">
-        {selectedExpenseType === "GASOLINA" && (
-          <SearchSelectInput
-            label="Seleccionar Chofer:"
-            name="driver"
-            state={state}
-            className="flex-1 mb-4"
-            options={drivers.map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
-            value={expense.driverId || undefined}
-            onChange={(value) => {
-              const driver = drivers.find((d) => d.id === value);
-              setSelectedDriver(driver || null);
-            }}
-          />
-        )}
-        {selectedExpenseType === "MANTENIMIENTO" && (
-          <SearchSelectInput
-            label="Seleccionar Camioneta:"
-            name="truck"
-            state={state}
-            className="flex-1 mb-4"
-            options={trucks.map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
-            value={expense.truckId || undefined}
-            onChange={(value) => {
-              const truck = trucks.find((t) => t.id === value);
-              setSelectedTruck(truck || null);
-            }}
-          />
-        )}
-        {selectedExpenseType === "PROVEEDOR" && (
-          <SearchSelectInput
-            label="Seleccionar Proveedor:"
-            name="supplier"
-            state={state}
-            className="flex-1 mb-4"
-            options={suppliers.map((item) => ({
-              value: item.id,
-              name: item.name,
-            }))}
-            value={expense.supplierId || undefined}
-            onChange={(value) => {
-              const supplier = suppliers.find((s) => s.id === value);
-              setSelectedSupplier(supplier || null);
-            }}
-          />
-        )}
-      </div>
-
-      <TextAreaInput
-        name="description"
-        label="Descripción"
-        state={state}
-        value={expense.description || undefined}
-      />
-      <div className="space-y-2 bg-card p-4 rounded-lg">
-        {selectedDriver && (
-          <>
-            <h3 className="font-semibold text-lg">{selectedDriver.name}</h3>
-            <p className="text-sm text-muted leading-none">
-              Tel: {selectedDriver.phone}
-            </p>
-            {selectedDriver.email && (
-              <p className="text-sm text-muted leading-none">
-                Email: {selectedDriver.email}
-              </p>
-            )}
-          </>
-        )}
-        {selectedTruck && (
-          <>
-            <h3 className="font-semibold text-lg">{selectedTruck.name}</h3>
-            <p className="text-sm text-muted leading-none">
-              Km: {selectedTruck.km}
-            </p>
-          </>
-        )}
-        {selectedSupplier && (
-          <>
-            <h3 className="font-semibold text-lg">{selectedSupplier.name}</h3>
-            <p className="text-sm text-muted leading-none">
-              Tel: {selectedSupplier.phone}
-            </p>
-            {selectedSupplier.email && (
-              <p className="text-sm text-muted leading-none">
-                Email: {selectedSupplier.email}
-              </p>
-            )}
-          </>
-        )}
-      </div>
-      <button
-        type="submit"
-        disabled={sending}
-        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-      >
-        {sending && <span className="loader"></span>}
-        Crear Gasto
-      </button>
-
-      {state.message && (
-        <p
-          className={`text-sm ${
-            state.success ? "text-green-700" : "text-red-500"
-          }`}
+    <section>
+      {sending && (
+        <div
+          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
         >
-          {state.message}
-        </p>
+          <h3>Actualizando gasto...</h3>
+          <span className="loader" />
+        </div>
       )}
-    </form>
+      <form
+        id="expense-form"
+        action={handleSubmit}
+        className="space-y-4 flex flex-col gap-4"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission
+          }
+        }}
+      >
+        <div className="flex items-center gap-4">
+          <SelectInput
+            label="Tipo"
+            name="type"
+            options={[
+              { value: "", name: "Seleccionar..." },
+              { value: "GASOLINA", name: "GASOLINA" },
+              { value: "PROVEEDOR", name: "PROVEEDOR" },
+              { value: "MANTENIMIENTO", name: "MANTENIMIENTO" },
+              { value: "OFICINA", name: "OFICINA" },
+              { value: "OTRO", name: "OTRO" },
+            ]}
+            state={state}
+            isSelected={expense.type}
+            onChange={(e) => setSelectedExpenseType(e.target.value)}
+          />
+          <SelectInput
+            label="Estado"
+            name="status"
+            options={[
+              { value: "PENDING", name: "Pendiente" },
+              { value: "APPROVED", name: "Aprobado" },
+              { value: "PAID", name: "Pagado" },
+              { value: "REJECTED", name: "Rechazado" },
+            ]}
+            state={state}
+            isSelected={expense.status}
+          />
+          <TextInput
+            name="reference"
+            label="Referencia (opcional)"
+            state={state}
+            value={expense.reference || undefined}
+          />
+        </div>
+
+        <div className="flex items-center gap-4">
+          <NumericInput
+            name="amount"
+            label="Monto"
+            state={state}
+            defaultValue={expense.amount}
+          />
+          <DateInput
+            name="paymentDate"
+            label="Fecha de Gasto"
+            state={state}
+            defaultValue={
+              expense.paymentDate ? new Date(expense.paymentDate) : new Date()
+            }
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          {selectedExpenseType === "GASOLINA" && (
+            <SearchSelectInput
+              label="Seleccionar Chofer:"
+              name="driver"
+              state={state}
+              className="flex-1 mb-4"
+              options={drivers.map((item) => ({
+                value: item.id,
+                name: item.name,
+              }))}
+              value={expense.driverId || undefined}
+              onChange={(value) => {
+                const driver = drivers.find((d) => d.id === value);
+                setSelectedDriver(driver || null);
+              }}
+            />
+          )}
+          {selectedExpenseType === "MANTENIMIENTO" && (
+            <SearchSelectInput
+              label="Seleccionar Camioneta:"
+              name="truck"
+              state={state}
+              className="flex-1 mb-4"
+              options={trucks.map((item) => ({
+                value: item.id,
+                name: item.name,
+              }))}
+              value={expense.truckId || undefined}
+              onChange={(value) => {
+                const truck = trucks.find((t) => t.id === value);
+                setSelectedTruck(truck || null);
+              }}
+            />
+          )}
+          {selectedExpenseType === "PROVEEDOR" && (
+            <SearchSelectInput
+              label="Seleccionar Proveedor:"
+              name="supplier"
+              state={state}
+              className="flex-1 mb-4"
+              options={suppliers.map((item) => ({
+                value: item.id,
+                name: item.name,
+              }))}
+              value={expense.supplierId || undefined}
+              onChange={(value) => {
+                const supplier = suppliers.find((s) => s.id === value);
+                setSelectedSupplier(supplier || null);
+              }}
+            />
+          )}
+        </div>
+
+        <TextAreaInput
+          name="description"
+          label="Descripción"
+          state={state}
+          value={expense.description || undefined}
+        />
+        <div className="space-y-2 bg-card p-4 rounded-lg">
+          {selectedDriver && (
+            <>
+              <h3 className="font-semibold text-lg">{selectedDriver.name}</h3>
+              <p className="text-sm text-muted leading-none">
+                Tel: {selectedDriver.phone}
+              </p>
+              {selectedDriver.email && (
+                <p className="text-sm text-muted leading-none">
+                  Email: {selectedDriver.email}
+                </p>
+              )}
+            </>
+          )}
+          {selectedTruck && (
+            <>
+              <h3 className="font-semibold text-lg">{selectedTruck.name}</h3>
+              <p className="text-sm text-muted leading-none">
+                Km: {selectedTruck.km}
+              </p>
+            </>
+          )}
+          {selectedSupplier && (
+            <>
+              <h3 className="font-semibold text-lg">{selectedSupplier.name}</h3>
+              <p className="text-sm text-muted leading-none">
+                Tel: {selectedSupplier.phone}
+              </p>
+              {selectedSupplier.email && (
+                <p className="text-sm text-muted leading-none">
+                  Email: {selectedSupplier.email}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+        <button
+          type="submit"
+          disabled={sending}
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          {sending && <span className="loader"></span>}
+          Crear Gasto
+        </button>
+
+        {state.message && (
+          <p
+            className={`text-sm ${
+              state.success ? "text-green-700" : "text-red-500"
+            }`}
+          >
+            {state.message}
+          </p>
+        )}
+      </form>
+    </section>
   );
 }

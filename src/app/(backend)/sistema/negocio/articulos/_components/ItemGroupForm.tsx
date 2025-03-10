@@ -22,6 +22,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
   });
 
   const { showModal } = useModal();
+  const [sending, setSending] = useState(false);
 
   const [selectedItems, setSelectedItems] = React.useState<
     { item: ItemType; quantity: number }[]
@@ -59,6 +60,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
   const [fileData, setFileData] = useState<File | null>(null);
 
   const handleSubmit = async (formData: FormData) => {
+    setSending((prev) => !prev);
     if (fileData) {
       formData.set("image", fileData);
     }
@@ -67,6 +69,8 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
       formData.set(`items[${index}].quantity`, si.quantity.toString());
     });
     const result = await createItemGroup(state, formData);
+    setSending((prev) => !prev);
+
     if (result.success) {
       await showModal({
         title: "Articulo Compuesto Creado!",
@@ -103,153 +107,163 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
   });
 
   return (
-    <form
-      id="compound-product-form"
-      action={handleSubmit}
-      className="space-y-4 flex flex-col gap-4"
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-        }
-      }}
-    >
-      <div className="flex flex-col ">
-        <div className="flex items-center gap-2 mb-2">
-          <h3 className="text-base font-semibold">Agrega imagen</h3>
-        </div>
+    <section>
+      {sending && (
         <div
-          {...getProductRootProps()}
-          className={`relative overflow-hidden flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-96 mb-5 ${
-            isProductDragActive
-              ? "border-blue-500 bg-blue-50"
-              : "border-gray-300 bg-gray-50"
-          }`}
+          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
         >
-          <input {...getProductInputProps()} />
-          {isProductDragActive ? (
-            <p>Drop the image here...</p>
-          ) : (
-            <div className="flex flex-col items-center justify-center gap-3">
-              <CloudUpload size={40} className="text-white" />
-              <p>Drag & drop a product image here, or click to select one.</p>
-            </div>
+          <h3>Creando producto en grupo...</h3>
+          <span className="loader" />
+        </div>
+      )}
+      <form
+        id="compound-product-form"
+        action={handleSubmit}
+        className="space-y-4 flex flex-col gap-4"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+          }
+        }}
+      >
+        <div className="flex flex-col ">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-base font-semibold">Agrega imagen</h3>
+          </div>
+          <div
+            {...getProductRootProps()}
+            className={`relative overflow-hidden flex items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab h-60 w-96 mb-5 ${
+              isProductDragActive
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 bg-gray-50"
+            }`}
+          >
+            <input {...getProductInputProps()} />
+            {isProductDragActive ? (
+              <p>Drop the image here...</p>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3">
+                <CloudUpload size={40} className="text-white" />
+                <p>Drag & drop a product image here, or click to select one.</p>
+              </div>
+            )}
+            <Image
+              className="absolute inset-0 object-cover w-full h-full -z-10"
+              src={productImage}
+              alt="imagen"
+              width={500}
+              height={500}
+            />
+          </div>
+          {fileData && (
+            <p className="mt-2 text-xs text-muted">
+              Selected file: {fileData.name} ({Math.round(fileData.size / 1024)}{" "}
+              KB)
+            </p>
           )}
-          <Image
-            className="absolute inset-0 object-cover w-full h-full -z-10"
-            src={productImage}
-            alt="imagen"
-            width={500}
-            height={500}
+        </div>
+        <div className="flex maxsm:flex-col items-center gap-4">
+          <TextInput label="Nombre" name="name" state={state} />
+          <NumericInput
+            label="Precio Sugerido"
+            name="price"
+            state={state}
+            defaultValue={calculateTotalPrice()}
           />
         </div>
-        {fileData && (
-          <p className="mt-2 text-xs text-muted">
-            Selected file: {fileData.name} ({Math.round(fileData.size / 1024)}{" "}
-            KB)
+
+        <div>
+          <SearchSelectInput
+            className="flex-col"
+            label="Artículos"
+            name="items"
+            state={state}
+            options={items.map((item) => ({
+              value: item.id,
+              name: item.name,
+            }))}
+            onChange={handleAddItem}
+          />
+
+          <input
+            name="items"
+            id="items"
+            type="text"
+            value={selectedItems
+              .map((si) => `${si.item.id}:${si.quantity}`)
+              .join(",")}
+            className="hidden"
+            readOnly
+          />
+
+          <div className="space-y-2 bg-card p-4 rounded-lg mt-10">
+            {selectedItems.map(({ item, quantity }) => (
+              <div key={item.id} className="flex items-center gap-4">
+                <div className="relative w-20 h-20 overflow-hidden">
+                  <Image
+                    src={item.mainImage || placeholderImage}
+                    alt="producto"
+                    width={50}
+                    height={50}
+                    className="absolute object-cover w-full h-auto"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">{item.name}</h3>
+                  <p className="text-sm text-muted leading-none">{item.name}</p>
+                  <p className="text-sm text-muted leading-none">
+                    Precio: {item.price.toLocaleString()}
+                  </p>
+                  {item.notes && (
+                    <p className="text-sm text-muted leading-none">
+                      Descripción: {item.notes}
+                    </p>
+                  )}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) =>
+                    handleQuantityChange(item.id, parseInt(e.target.value))
+                  }
+                  className="w-16 px-2 py-1 border rounded bg-input"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveItem(item.id)}
+                  className="ml-auto rounded-full bg-red-700 hover:bg-red-900"
+                >
+                  <X className="text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <p className="font-semibold text-lg">
+              Total: {calculateTotalPrice().toLocaleString()}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          Crear Articulo Compuesto
+        </button>
+
+        {state.message && (
+          <p
+            className={`text-sm ${
+              state.success ? "text-green-700" : "text-red-500"
+            }`}
+          >
+            {state.message}
           </p>
         )}
-      </div>
-      <div className="flex maxsm:flex-col items-center gap-4">
-        <TextInput label="Nombre" name="name" state={state} />
-        <NumericInput
-          label="Precio Sugerido"
-          name="price"
-          state={state}
-          defaultValue={calculateTotalPrice()}
-        />
-      </div>
-
-      <div>
-        <SearchSelectInput
-          className="flex-col"
-          label="Artículos"
-          name="items"
-          state={state}
-          options={items.map((item) => ({
-            value: item.id,
-            name: item.name,
-          }))}
-          onChange={handleAddItem}
-        />
-
-        <input
-          name="items"
-          id="items"
-          type="text"
-          value={selectedItems
-            .map((si) => `${si.item.id}:${si.quantity}`)
-            .join(",")}
-          className="hidden"
-          readOnly
-        />
-
-        <div className="space-y-2 bg-card p-4 rounded-lg mt-10">
-          {selectedItems.map(({ item, quantity }) => (
-            <div key={item.id} className="flex items-center gap-4">
-              <div className="relative w-20 h-20 overflow-hidden">
-                <Image
-                  src={item.mainImage || placeholderImage}
-                  alt="producto"
-                  width={50}
-                  height={50}
-                  className="absolute object-cover w-full h-auto"
-                />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">{item.name}</h3>
-                <p className="text-sm text-muted leading-none">{item.name}</p>
-                <p className="text-sm text-muted leading-none">
-                  Precio: {item.price.toLocaleString()}
-                </p>
-                {item.notes && (
-                  <p className="text-sm text-muted leading-none">
-                    Descripción: {item.notes}
-                  </p>
-                )}
-              </div>
-              <input
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) =>
-                  handleQuantityChange(item.id, parseInt(e.target.value))
-                }
-                className="w-16 px-2 py-1 border rounded bg-input"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveItem(item.id)}
-                className="ml-auto rounded-full bg-red-700 hover:bg-red-900"
-              >
-                <X className="text-white" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4">
-          <p className="font-semibold text-lg">
-            Total: {calculateTotalPrice().toLocaleString()}
-          </p>
-        </div>
-      </div>
-
-      <button
-        type="submit"
-        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-      >
-        Crear Articulo Compuesto
-      </button>
-
-      {state.message && (
-        <p
-          className={`text-sm ${
-            state.success ? "text-green-700" : "text-red-500"
-          }`}
-        >
-          {state.message}
-        </p>
-      )}
-    </form>
+      </form>
+    </section>
   );
 }

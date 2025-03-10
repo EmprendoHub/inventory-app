@@ -20,8 +20,10 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
   // eslint-disable-next-line
   const [error, setError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
   const handleGenerateReport = async (formData: FormData) => {
+    setSending((prev) => !prev);
     const result = await generateReportAction(formData);
 
     if (result.success && result.pdf) {
@@ -36,10 +38,19 @@ export default function ReportsPage() {
       // Handle error
       console.error(result.message);
     }
+    setSending((prev) => !prev);
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <section>
+      {sending && (
+        <div
+          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
+        >
+          <h3>Generado reporte...</h3>
+          <span className="loader" />
+        </div>
+      )}
       <h1 className="text-2xl font-bold mb-4">Generar Reportes</h1>
       <form
         action={handleGenerateReport}
@@ -93,6 +104,6 @@ export default function ReportsPage() {
           <p>{error}</p>
         </div>
       )}
-    </div>
+    </section>
   );
 }
