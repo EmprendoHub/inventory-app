@@ -65,6 +65,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const [sending, setSending] = React.useState(false);
 
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -277,6 +278,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                 confirmButtonText: "Sí, pagar",
                 cancelButtonText: "Cancelar",
               });
+              setSending((prev) => !prev);
 
               if (result.confirmed) {
                 try {
@@ -289,6 +291,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   const response = await payOrderAction(formData);
 
                   if (response.success) {
+                    setSending((prev) => !prev);
+
                     await showModal({
                       title: "¡Pago Aplicado!",
                       type: "delete",
@@ -296,6 +300,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                       icon: "success",
                     });
                   } else {
+                    setSending((prev) => !prev);
+
                     await showModal({
                       title: "¡Pago No Aplicado!",
                       type: "delete",
@@ -304,6 +310,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                     });
                   }
                 } catch (error) {
+                  setSending((prev) => !prev);
+
                   console.log("Error processing payment:", error);
                   await showModal({
                     title: "Error",
@@ -423,121 +431,131 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
   };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4">
-        <div className="flex items-center justify-between w-full">
-          <Input
-            placeholder="Filtrar..."
-            value={
-              (table.getColumn("orderNo")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              table.getColumn("orderNo")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          {/* Add the refresh button */}
-          <Button onClick={handleRefresh} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refrescar
-          </Button>
+    <section>
+      {sending && (
+        <div
+          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
+        >
+          <h3>Aplicando pago...</h3>
+          <span className="loader" />
         </div>
-        <DropdownMenu>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value: CheckedState) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+      )}
+      <div className="w-full">
+        <div className="flex items-center py-4">
+          <div className="flex items-center justify-between w-full">
+            <Input
+              placeholder="Filtrar..."
+              value={
+                (table.getColumn("orderNo")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                table.getColumn("orderNo")?.setFilterValue(event.target.value)
+              }
+              className="max-w-sm"
+            />
+            {/* Add the refresh button */}
+            <Button onClick={handleRefresh} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refrescar
+            </Button>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
                   return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value: CheckedState) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
                   );
                 })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Sin resultafos.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        {/* <div className="flex-1 text-sm text-muted-foreground">
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    Sin resultafos.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex items-center justify-end space-x-2 py-4">
+          {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} pedido(s) seleccionada(s).
         </div> */}
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Siguiente
-          </Button>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Siguiente
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
