@@ -19,6 +19,7 @@ export const RBAC_CONFIG = {
       "/sistema/contabilidad", // Allow contabilidad sistema routes
       "/sistema/contabilidad/gastos", // Allow all sistema routes
       "/sistema/compras", // Allow all sistema routes
+      "/sistema/reportes",
       "/sistema/cajas/auditoria",
     ],
   },
