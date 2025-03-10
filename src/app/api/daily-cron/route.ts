@@ -15,30 +15,19 @@ export async function POST(request: Request) {
   }
   try {
     // Get the current date
-    const today = new Date();
-    today.setHours(23, 59, 59, 999); // Set time to the start of the day (23:59:59)
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999); // Set time to the start of the day (23:59:59)
 
     // Calculate last Monday's date
-    const lastMonday = new Date(today);
-    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-
-    if (dayOfWeek === 1) {
-      // If today is Monday
-      lastMonday.setDate(today.getDate());
-    } else {
-      // Otherwise, calculate days to go back to reach the last Monday
-      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      lastMonday.setDate(today.getDate() - daysToSubtract);
-    }
-
-    lastMonday.setHours(0, 0, 0, 0); // Ensure time is set to the start of the day
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0); // Ensure time is set to the start of the day
 
     // Fetch orders from last Monday to today
     const orders = await prisma.order.findMany({
       where: {
         createdAt: {
-          gte: lastMonday, // Orders created on or after last Monday
-          lte: today, // Orders created on or before today
+          gte: startOfToday, // Orders created on or after last Monday
+          lte: endOfToday, // Orders created on or before today
         },
       },
     });
@@ -46,8 +35,8 @@ export async function POST(request: Request) {
     const payments = await prisma.payment.findMany({
       where: {
         createdAt: {
-          gte: lastMonday, // Payments created on or after last Monday
-          lte: today, // Payments created on or before today
+          gte: startOfToday, // Payments created on or after last Monday
+          lte: endOfToday, // Payments created on or before today
         },
       },
     });
@@ -55,8 +44,8 @@ export async function POST(request: Request) {
     const expenses = await prisma.expense.findMany({
       where: {
         createdAt: {
-          gte: lastMonday, // Expenses created on or after last Monday
-          lte: today, // Expenses created on or before today
+          gte: startOfToday, // Expenses created on or after last Monday
+          lte: endOfToday, // Expenses created on or before today
         },
       },
     });
@@ -66,9 +55,9 @@ export async function POST(request: Request) {
     const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
     const totalExpenses = expenses.reduce((acc, item) => acc + item.amount, 0);
 
-    const subject = "Resumen Semanal de Ventas, Pagos y Gastos";
-    const greeting = `Resumen Semanal de Ventas, Pagos y Gastos:`;
-    const title = `A continuación encontraras un resumen de ventas, pagos y gastos semanales de tu negocio.`;
+    const subject = "Resumen Diario de Ventas, Pagos y Gastos";
+    const greeting = `Resumen Diario de Ventas, Pagos y Gastos:`;
+    const title = `A continuación encontraras un resumen de ventas, pagos y gastos diarios de tu negocio.`;
     const todaysDate = `${getMexicoFullDate(new Date())}`;
     const bodyHeader = `Ventas:`;
     const bodyTwoHeader = `Pagos:`;
