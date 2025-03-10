@@ -2,8 +2,6 @@
 import React from "react";
 
 export default function ManualReport({ secret }: { secret: string }) {
-  console.log("secret", secret);
-
   const runWeeklyCron = async () => {
     const res = await fetch(`/api/cron`, {
       headers: {
