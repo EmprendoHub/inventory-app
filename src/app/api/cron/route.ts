@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 // import { requireUser } from "@/app/utils/hooks";
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
-import { getMexicoDate } from "@/lib/utils";
+import { getMexicoDate, getMexicoFullDate } from "@/lib/utils";
 
 export async function POST(request: Request) {
   const cookie = request.headers.get("cookie");
@@ -21,8 +21,18 @@ export async function POST(request: Request) {
 
     // Calculate last Monday's date
     const lastMonday = new Date(today);
-    lastMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7)); // Adjust to get last Monday
-    lastMonday.setHours(0, 0, 0, 0); // Set time to the start of the day (00:00:00)
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    if (dayOfWeek === 1) {
+      // If today is Monday, go back 7 days to get last Monday
+      lastMonday.setDate(today.getDate() - 7);
+    } else {
+      // Otherwise, calculate days to go back to reach the last Monday
+      const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      lastMonday.setDate(today.getDate() - daysToSubtract);
+    }
+
+    lastMonday.setHours(0, 0, 0, 0); // Ensure time is set to the start of the day
 
     // Fetch orders from last Monday to today
     const orders = await prisma.order.findMany({
@@ -33,7 +43,6 @@ export async function POST(request: Request) {
         },
       },
     });
-
     const payments = await prisma.payment.findMany({
       where: {
         createdAt: {
@@ -54,8 +63,8 @@ export async function POST(request: Request) {
 
     const subject = "Resumen Semanal de Ventas, Pagos y Gastos";
     const greeting = `Resumen Semanal de Ventas, Pagos y Gastos:`;
-    const title =
-      "A continuación encontraras un resumen de ventas, pagos y gastos semanales de tu negocio.";
+    const title = `A continuación encontraras un resumen de ventas, pagos y gastos semanales de tu negocio.`;
+    const todaysDate = `${getMexicoFullDate(new Date())}`;
     const bodyHeader = `Ventas:`;
     const bodyTwoHeader = `Pagos:`;
     const bodyThreeHeader = `Gastos:`;
@@ -85,6 +94,7 @@ export async function POST(request: Request) {
           <body>
             <p>${greeting}</p>
             <p>${title}</p>
+            <p><strong>${todaysDate}</strong></p>
             <div>${bodyHeader}</div>
             <p></p>
       
