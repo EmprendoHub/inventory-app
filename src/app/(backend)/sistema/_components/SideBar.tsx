@@ -672,7 +672,7 @@ export default function SideBar({
               Integraciones
             </span>
           </Link> */}
-          {["SUPER_ADMIN"].includes(user?.role || "") && (
+          {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Link
               className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
                 path === "/sistema/reportes" ? "bg-blue-600" : ""

@@ -12,7 +12,6 @@ export const RBAC_CONFIG = {
       "!/sistema/contabilidad/gastos/nuevo",
       "!/sistema/contabilidad/transacciones",
       "!/sistema/compras/recibos",
-      "!/sistema/reportes",
       "!/sistema/cajas/auditoria/nueva",
       "/sistema/home", // Allow all sistema routes
       "/sistema/negocio", // Allow all negocio routes
