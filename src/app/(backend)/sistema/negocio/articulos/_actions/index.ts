@@ -285,6 +285,9 @@ export async function updateItemAction(
       });
     }
     revalidatePath(`/sistemas/negocio/articulos/editar/${rawData.itemId}`);
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/articulos");
+
     return {
       errors: {},
       success: true,

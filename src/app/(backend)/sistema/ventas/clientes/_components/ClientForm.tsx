@@ -19,7 +19,7 @@ export default function ClientForm() {
     message: "",
   });
 
-  const [productImage, setProductImage] = useState<string>(
+  const [clientImage, setClientImage] = useState<string>(
     "/images/avatar_placeholder.jpg"
   );
   const [fileData, setFileData] = useState<File | null>(null);
@@ -37,9 +37,8 @@ export default function ClientForm() {
 
     // Call the form action
     const result = await createClient(state, formData);
-    setSending((prev) => !prev);
 
-    // Check if the product was created successfully
+    // Check if the client was created successfully
     if (result.success) {
       // Reset the form fields
       await showModal({
@@ -53,13 +52,14 @@ export default function ClientForm() {
       ) as HTMLFormElement;
       formElement.reset();
       router.push("/sistema/ventas/clientes");
+      setSending((prev) => !prev);
     }
   };
 
   const {
-    getRootProps: getProductRootProps,
-    getInputProps: getProductInputProps,
-    isDragActive: isProductDragActive,
+    getRootProps: getClientRootProps,
+    getInputProps: getClientInputProps,
+    isDragActive: isClientDragActive,
   } = useDropzone({
     accept: { "image/*": [] },
     onDrop: (acceptedFiles) => {
@@ -69,107 +69,91 @@ export default function ClientForm() {
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProductImage(reader.result as string);
+        setClientImage(reader.result as string);
       };
       reader.readAsDataURL(file);
     },
   });
 
   return (
-    <section>
-      {sending && (
-        <div
-          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
-        >
-          <h3>Generado cliente...</h3>
-          <span className="loader" />
-        </div>
-      )}
-      <form
-        id="client-form"
-        action={handleSubmit}
-        className="space-y-4 flex flex-col gap-4"
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault(); // Prevent form submission
-          }
-        }}
-      >
-        <div className="flex maxmd:flex-col gap-3 w-full">
-          {/* Image Upload Section */}
-          <div className="flex flex-col ">
-            <div
-              {...getProductRootProps()}
-              className={`relative flex justify-center w-[200px] h-auto items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab mb-5 ${
-                isProductDragActive
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-300 bg-gray-50"
-              }`}
-            >
-              <input {...getProductInputProps()} />
-              {isProductDragActive ? (
-                <p>Drop the image here...</p>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <CloudUpload size={40} className="text-xs text-black" />
-                  <p className="text-black">
-                    Arrastre y suelte una imagen aquí.
-                  </p>
-                </div>
-              )}
-              <Image
-                className="absolute object-cover -z-10 top-0 left- w-[200px] h-auto"
-                src={productImage}
-                alt="imagen"
-                width={500}
-                height={500}
-              />
-            </div>
-            {fileData && (
-              <p className="mt-2 text-xs text-muted">
-                Selected file: {fileData.name} (
-                {Math.round(fileData.size / 1024)} KB)
-              </p>
-            )}
-            {state.errors?.image && (
-              <p className="text-sm text-red-500">
-                {state.errors?.image.join(", ")}
-              </p>
-            )}
-          </div>
-          <div className="w-full flex items-center flex-col gap-3 mt-5">
-            <TextInput name="name" label="Nombre" state={state} />
-            <TextInput
-              name="phone"
-              label="Teléfono 333 444 8585"
-              state={state}
-            />
-            <div className="flex-col gap-3 w-full">
-              <TextInput name="email" label="Email" state={state} />
-              <TextAreaInput name="address" label="Dirección" state={state} />
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={sending}
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-        >
-          {sending && <span className="loader"></span>}
-          Crear Cliente
-        </button>
-
-        {state.message && (
-          <p
-            className={`text-sm ${
-              state.success ? "text-green-700" : "text-red-500"
+    <form
+      id="client-form"
+      action={handleSubmit}
+      className="space-y-4 flex flex-col gap-4"
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // Prevent form submission
+        }
+      }}
+    >
+      <div className="flex maxmd:flex-col gap-3 w-full">
+        {/* Image Upload Section */}
+        <div className="flex flex-col ">
+          <div
+            {...getClientRootProps()}
+            className={`relative flex justify-center w-[200px] h-auto items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab mb-5 ${
+              isClientDragActive
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 bg-gray-50"
             }`}
           >
-            {state.message}
-          </p>
-        )}
-      </form>
-    </section>
+            <input {...getClientInputProps()} />
+            {isClientDragActive ? (
+              <p>Drop the image here...</p>
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3">
+                <CloudUpload size={40} className="text-xs text-black" />
+                <p className="text-black">Arrastre y suelte una imagen aquí.</p>
+              </div>
+            )}
+            <Image
+              className="absolute object-cover -z-10 top-0 left- w-[200px] h-auto"
+              src={clientImage}
+              alt="imagen"
+              width={500}
+              height={500}
+            />
+          </div>
+          {fileData && (
+            <p className="mt-2 text-xs text-muted">
+              Selected file: {fileData.name} ({Math.round(fileData.size / 1024)}{" "}
+              KB)
+            </p>
+          )}
+          {state.errors?.image && (
+            <p className="text-sm text-red-500">
+              {state.errors?.image.join(", ")}
+            </p>
+          )}
+        </div>
+        <div className="w-full flex items-center flex-col gap-3 mt-5">
+          <TextInput name="name" label="Nombre" state={state} />
+          <TextInput name="phone" label="Teléfono 333 444 8585" state={state} />
+          <div className="flex-col gap-3 w-full">
+            <TextInput name="email" label="Email" state={state} />
+            <TextAreaInput name="address" label="Dirección" state={state} />
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={sending}
+        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+      >
+        {sending && <span className="loader"></span>}
+        Crear Cliente
+      </button>
+
+      {state.message && (
+        <p
+          className={`text-sm ${
+            state.success ? "text-green-700" : "text-red-500"
+          }`}
+        >
+          {state.message}
+        </p>
+      )}
+    </form>
   );
 }
