@@ -135,6 +135,9 @@ export type ordersAndItem = {
     quantity: number;
     price: number;
   }[];
+  client: clientType;
+  delivery: DeliveryType | null;
+  payments: paymentType[];
 };
 
 export type OrderType = {

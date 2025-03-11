@@ -23,6 +23,7 @@ export default async function SalesOrders() {
           status: "PAGADO",
         },
       },
+      client: true,
     },
   });
 

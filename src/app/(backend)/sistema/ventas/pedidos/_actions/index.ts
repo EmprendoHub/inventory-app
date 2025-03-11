@@ -26,6 +26,7 @@ export async function createNewOrder(
   const notes = formData.get("notes") as string;
   const deliveryPrice = formData.get("price") as string;
   const deliverDate = formData.get("deliveryDate") as string | null;
+  const discount = formData.get("discount") as number | null;
 
   const client = JSON.parse(clientData);
 
@@ -98,6 +99,7 @@ export async function createNewOrder(
             clientId: client.id,
             status: "PENDIENTE" as OrderStatus,
             totalAmount,
+            discount,
             notes,
             dueDate,
             orderItems: {

@@ -31,6 +31,7 @@ export async function GET(
       orderItems: true,
       payments: true,
       client: true,
+      delivery: true,
     },
   });
 
@@ -123,7 +124,15 @@ async function createReceiptCopy(
   }
 
   // Add totals at the bottom right, aligned with client section
-  addTotals(pdf, order.totalAmount, order.payments ?? [], bottomSectionY);
+
+  addTotals(
+    pdf,
+    order.totalAmount,
+    order.discount || 0,
+    order.delivery?.price || 0,
+    order.payments ?? [],
+    bottomSectionY
+  );
 
   // Add notes if present
   if (order.notes) {
@@ -260,6 +269,8 @@ async function addOrderItems(
 function addTotals(
   pdf: jsPDF,
   totalAmount: number,
+  discount: number,
+  delivery: number,
   payments: paymentType[],
   yPos: number
 ) {
@@ -273,31 +284,73 @@ function addTotals(
     COLORS.secondary[1],
     COLORS.secondary[2]
   );
-  pdf.rect(110, yPos + 18, 85, 22, "F");
+  pdf.rect(110, yPos + 10, 85, 32, "F");
 
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  pdf.setFont("helvetica", "bold");
 
-  const pendingAmount = totalAmount - totalPaymentAmount;
-  pdf.text("Pendiente:", 115, yPos + 24);
+  pdf.text("SubTotal:", 115, yPos + 16);
   pdf.text(
-    formatCurrency({ amount: pendingAmount, currency: "MXN" }),
+    formatCurrency({ amount: totalAmount, currency: "USD" }),
     190,
-    yPos + 24,
+    yPos + 16,
     { align: "right" }
   );
 
-  pdf.text("Envió:", 115, yPos + 29);
-  pdf.text(formatCurrency({ amount: 0, currency: "MXN" }), 190, yPos + 29, {
-    align: "right",
-  });
-
-  pdf.text("Total:", 115, yPos + 37);
-  pdf.setFontSize(16);
+  pdf.setFontSize(10);
+  pdf.text("Envió:", 115, yPos + 20);
   pdf.text(
-    formatCurrency({ amount: totalAmount, currency: "MXN" }),
+    formatCurrency({ amount: delivery, currency: "USD" }),
     190,
-    yPos + 37,
+    yPos + 20,
+    {
+      align: "right",
+    }
+  );
+
+  pdf.setFontSize(10);
+  pdf.text("Descuento:", 115, yPos + 24);
+  pdf.text(
+    `-${formatCurrency({ amount: discount, currency: "USD" })}`,
+    190,
+    yPos + 24,
+    {
+      align: "right",
+    }
+  );
+
+  const grandTotal = totalAmount + delivery - discount;
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(12);
+  pdf.text("Total:", 115, yPos + 29);
+  pdf.setFontSize(12);
+  pdf.text(
+    `${formatCurrency({ amount: grandTotal, currency: "USD" })}`,
+    190,
+    yPos + 29,
+    { align: "right" }
+  );
+
+  const orderPaymentsTotal = payments.reduce(
+    (sum, payment) => sum + payment.amount,
+    0
+  );
+
+  pdf.setFontSize(10);
+  pdf.text("Pagos:", 115, yPos + 33);
+  pdf.text(
+    formatCurrency({ amount: -orderPaymentsTotal, currency: "USD" }),
+    190,
+    yPos + 33,
+    { align: "right" }
+  );
+
+  const pendingAmount = grandTotal - totalPaymentAmount;
+  pdf.text("Pendiente:", 115, yPos + 38);
+  pdf.setFontSize(11);
+  pdf.text(
+    formatCurrency({ amount: pendingAmount, currency: "USD" }),
+    190,
+    yPos + 38,
     { align: "right" }
   );
 }

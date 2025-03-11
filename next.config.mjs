@@ -21,13 +21,15 @@ const nextConfig = {
   },
   // Disable source maps in development
   productionBrowserSourceMaps: false,
-  // Use SWC for minification (faster and less memory-intensive)
-  swcMinify: true,
+
   // Optional: Disable Webpack cache in development
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.cache = false;
+  webpack: (config, { dev }) => {
+    if (config.cache && !dev) {
+      config.cache = Object.freeze({
+        type: "memory",
+      });
     }
+    // Important: return the modified config
     return config;
   },
 };

@@ -2,16 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
+/* Define CSS variables in a single @layer base block */
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -41,6 +32,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 233, 21%, 16%;
     --background-muted: 223, 84%, 5%, 0.726;
@@ -68,21 +60,30 @@ body {
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
   }
-}
 
-@layer base {
+  /* Apply base styles */
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-family: Arial, Helvetica, sans-serif;
   }
 }
 
+/* Utilities */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Loader Animation */
 .loader {
   width: 24px;
   height: 24px;
-  border: 3px solid #bdbdbd;
+  border: 3px solid theme("colors.border");
   border-bottom-color: transparent;
   border-radius: 50%;
   margin-right: 10px;
@@ -100,23 +101,20 @@ body {
   }
 }
 
-/* width */
+/* Scrollbar Styles */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: theme("colors.background");
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #bea037ff;
+  background: theme("colors.accent.DEFAULT");
   border-radius: 5px;
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #bea037ff;
+  background: theme("colors.accent.DEFAULT");
 }

@@ -118,6 +118,7 @@ async function createReceiptCopy(
   addTotals(
     pdf,
     order.totalAmount,
+    order.discount || 0,
     order.delivery?.price || 0,
     order.payments ?? [],
     bottomSectionY
@@ -258,6 +259,7 @@ async function addOrderItems(
 function addTotals(
   pdf: jsPDF,
   totalAmount: number,
+  discount: number,
   delivery: number,
   payments: paymentType[],
   yPos: number
@@ -277,18 +279,29 @@ function addTotals(
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   pdf.setFont("helvetica", "bold");
 
-  pdf.text("SubTotal:", 115, yPos + 14);
+  pdf.text("SubTotal:", 115, yPos + 11);
   pdf.text(
     formatCurrency({ amount: totalAmount, currency: "USD" }),
     190,
-    yPos + 14,
+    yPos + 11,
     { align: "right" }
   );
 
   pdf.setFontSize(10);
-  pdf.text("Envió:", 115, yPos + 19);
+  pdf.text("Envió:", 115, yPos + 15);
   pdf.text(
     formatCurrency({ amount: delivery, currency: "USD" }),
+    190,
+    yPos + 15,
+    {
+      align: "right",
+    }
+  );
+
+  pdf.setFontSize(10);
+  pdf.text("Descuento:", 115, yPos + 19);
+  pdf.text(
+    `-${formatCurrency({ amount: discount, currency: "USD" })}`,
     190,
     yPos + 19,
     {
@@ -296,12 +309,12 @@ function addTotals(
     }
   );
 
-  const grandTotal = totalAmount + delivery;
+  const grandTotal = totalAmount + delivery - discount;
   pdf.setFontSize(14);
   pdf.text("Total:", 115, yPos + 25);
   pdf.setFontSize(14);
   pdf.text(
-    formatCurrency({ amount: grandTotal, currency: "USD" }),
+    `${formatCurrency({ amount: grandTotal, currency: "USD" })}`,
     190,
     yPos + 25,
     { align: "right" }
@@ -321,7 +334,7 @@ function addTotals(
     { align: "right" }
   );
 
-  const pendingAmount = totalAmount - totalPaymentAmount;
+  const pendingAmount = totalAmount - totalPaymentAmount - discount;
   pdf.text("Pendiente:", 115, yPos + 37);
   pdf.setFontSize(14);
   pdf.text(

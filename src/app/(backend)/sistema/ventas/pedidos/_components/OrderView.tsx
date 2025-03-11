@@ -34,6 +34,7 @@ import {
 export default function OrderView({ order }: { order: FullOderType }) {
   const { data: session } = useSession();
   const user = session?.user as UserType;
+  const discount = order.discount || 0;
   const subtotal = order.orderItems?.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -43,7 +44,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
     (sum, item) => sum + item.amount,
     0
   );
-  const grandTotal = (subtotal || 0) + (order.delivery?.price || 0);
+  const grandTotal = (subtotal || 0) + (order.delivery?.price || 0) - discount;
   const isOrderPaid = previousPayments === grandTotal;
 
   const { showModal } = useModal();
@@ -550,6 +551,18 @@ export default function OrderView({ order }: { order: FullOderType }) {
             })}
           </span>
         </div>
+        {order.discount && (
+          <div className="flex justify-between">
+            <span className="font-medium">Descuento:</span>
+            <span>
+              -$
+              {(order.discount || 0).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+        )}
         <div className="flex text-xl justify-between border-t pt-2 font-bold">
           <span>Gran Total:</span>
           <span>

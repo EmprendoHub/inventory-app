@@ -41,7 +41,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { ordersAndItem, paymentType } from "@/types/sales";
+import { clientType, ordersAndItem, paymentType } from "@/types/sales";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteOrderAction, payOrderAction } from "../_actions";
 import { MdCurrencyExchange } from "react-icons/md";
@@ -126,6 +126,22 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         ),
       },
       {
+        accessorKey: "client",
+        header: () => (
+          <div className="text-left text-xs maxsm:hidden w-20">Cliente</div>
+        ),
+        cell: ({ row }) => {
+          const client: clientType = row.getValue("client");
+          return (
+            <div
+              className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-24 px-2 bg-sky-900`}
+            >
+              {client.name.substring(0, 15)}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "status",
         header: () => (
           <div className="text-left text-xs maxsm:hidden w-20">Estado</div>
@@ -180,10 +196,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         header: () => <div className="text-left text-xs">Pedido</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalAmount"));
+          const discount = parseFloat(row.getValue("discount")) || 0;
+          const totalAmount = amount - discount;
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
-          }).format(amount);
+          }).format(totalAmount);
           return (
             <div className="text-left text-xs font-medium">{formatted}</div>
           );
@@ -402,6 +420,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
     []
   );
 
+  const [globalFilter, setGlobalFilter] = React.useState("");
+
   const table = useReactTable({
     data: orders,
     columns,
@@ -413,6 +433,16 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, columnId, filterValue) => {
+      // Custom global filter that checks both orderNo and client.name
+      const orderNo = String(row.getValue("orderNo")).toLowerCase();
+      const client = row.getValue("client") as clientType;
+      const clientName = client?.name?.toLowerCase() || "";
+      const searchValue = filterValue.toLowerCase();
+
+      return orderNo.includes(searchValue) || clientName.includes(searchValue);
+    },
     initialState: {
       pagination: {
         pageSize: 7, // Set the default page size to 5
@@ -423,6 +453,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       columnFilters,
       columnVisibility,
       rowSelection,
+      globalFilter,
     },
   });
   const handleRefresh = () => {
@@ -444,13 +475,13 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         <div className="flex items-center py-4">
           <div className="flex items-center justify-between w-full">
             <Input
-              placeholder="Filtrar..."
-              value={
-                (table.getColumn("orderNo")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                table.getColumn("orderNo")?.setFilterValue(event.target.value)
-              }
+              placeholder="Buscar por # pedido o cliente..."
+              value={globalFilter ?? ""}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const value = event.target.value;
+                // Set a global filter that will be handled in our custom filter function
+                table.setGlobalFilter(value);
+              }}
               className="max-w-sm"
             />
             {/* Add the refresh button */}
