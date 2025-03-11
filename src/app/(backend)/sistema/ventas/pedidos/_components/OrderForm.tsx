@@ -16,13 +16,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { CloudUpload, X } from "lucide-react";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import DateInput from "@/components/DateInput";
 import { useFormState } from "react-dom";
 import Image from "next/image";
 import { useModal } from "@/app/context/ModalContext";
+import TextInput from "@/components/TextInput";
+import { createClient } from "../../clientes/_actions/clientActions";
+import { useDropzone } from "react-dropzone";
 
 export default function OrderForm({
   clients,
@@ -42,17 +45,48 @@ export default function OrderForm({
     success: false,
     message: "",
   });
+  // eslint-disable-next-line
+  const [clientState, clientFormAction] = useFormState(createClient, {
+    errors: {},
+    success: false,
+    message: "",
+  });
+
+  const [productImage, setProductImage] = useState<string>(
+    "/images/avatar_placeholder.jpg"
+  );
+  const [fileData, setFileData] = useState<File | null>(null);
+
+  const { showModal } = useModal();
+
+  const {
+    getRootProps: getProductRootProps,
+    getInputProps: getProductInputProps,
+    isDragActive: isProductDragActive,
+  } = useDropzone({
+    accept: { "image/*": [] },
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      setFileData(file); // Store the file for later use
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProductImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    },
+  });
   const [selectedClient, setSelectedClient] = React.useState<clientType | null>(
     null
   );
-  const [selectedItems, setSelectedItems] = React.useState<SelectedItemType[]>(
-    []
-  );
-  const [selectedItemId, setSelectedItemId] = React.useState("");
-  const [quantity, setQuantity] = React.useState(1);
-  const [deliveryCost, setDeliveryCost] = React.useState(0);
-  const [discount, setDiscount] = React.useState(0);
-  const { showModal } = useModal();
+  const [selectedItems, setSelectedItems] = useState<SelectedItemType[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [discount, setDiscount] = useState(0);
+
+  const [showClientModal, setShowClientModal] = useState(false);
 
   const subtotal = selectedItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -91,6 +125,34 @@ export default function OrderForm({
     setSelectedItemKey(Math.random().toString(36).substring(7));
   };
 
+  // Custom submit handler to handle the file upload
+  const handleClientSubmit = async (formData: FormData) => {
+    setSending((prev) => !prev);
+    if (fileData) {
+      formData.set("image", fileData); // Replace the empty file input with our stored file
+    }
+
+    // Call the form action
+    const result = await createClient(state, formData);
+    setSending((prev) => !prev);
+
+    // Check if the product was created successfully
+    if (result.success) {
+      // Reset the form fields
+      await showModal({
+        title: "Cliente Creado!",
+        type: "delete",
+        text: "El Cliente ha sido creado exitosamente.",
+        icon: "success",
+      });
+      const formElement = document.getElementById(
+        "client-form"
+      ) as HTMLFormElement;
+      formElement.reset();
+      router.push("/sistema/ventas/clientes");
+    }
+  };
+
   useEffect(() => {
     if (state.success) {
       router.push("/sistema/ventas/pedidos");
@@ -123,7 +185,7 @@ export default function OrderForm({
   };
 
   return (
-    <section>
+    <section className="relative">
       {sending && (
         <div
           className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
@@ -145,20 +207,28 @@ export default function OrderForm({
         {/* Customer Info */}
         <div className="flex maxsm:flex-col-reverse gap-4 mb-8">
           <div className="flex flex-col gap-3 w-1/2 maxsm:w-full">
-            <SearchSelectInput
-              label="Seleccionar Cliente:"
-              name="client"
-              state={state}
-              className="flex-1 mb-4"
-              options={clients.map((item) => ({
-                value: item.id,
-                name: item.name,
-              }))}
-              onChange={(value) => {
-                const client = clients.find((c) => c.id === value);
-                setSelectedClient(client || null);
-              }}
-            />
+            <div className=" flex items-center justify-center gap-4">
+              <SearchSelectInput
+                label="Seleccionar Cliente:"
+                name="client"
+                state={state}
+                className="flex-1 mb-4"
+                options={clients.map((item) => ({
+                  value: item.id,
+                  name: item.name,
+                }))}
+                onChange={(value) => {
+                  const client = clients.find((c) => c.id === value);
+                  setSelectedClient(client || null);
+                }}
+              />
+              <div
+                onClick={() => setShowClientModal(true)}
+                className="p-4 bg-blue-500 text-white h-auto w-10 rounded-md cursor-pointer"
+              >
+                +
+              </div>
+            </div>
             {/* Delivery info */}
             <NumericInput
               label="Costo de Envió"
@@ -426,6 +496,109 @@ export default function OrderForm({
           )}
         </div>
       </form>
+
+      {/*  client modal */}
+      {showClientModal && (
+        <section className="absolute top-0 w-full z-40 bg-black">
+          {sending && (
+            <div
+              className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
+            >
+              <h3>Generado cliente...</h3>
+              <span className="loader" />
+            </div>
+          )}
+          <form
+            id="client-form"
+            action={handleClientSubmit}
+            className="space-y-4 flex flex-col gap-4 w-[80%] items-center justify-center"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission
+              }
+            }}
+          >
+            <div className="flex maxmd:flex-col gap-3 w-full">
+              {/* Image Upload Section */}
+              <div className="flex flex-col ">
+                <div
+                  {...getProductRootProps()}
+                  className={`relative flex justify-center w-[200px] h-auto items-center text-white text-sm z-10 border-2 border-dashed rounded-lg p-6 text-center cursor-grab mb-5 ${
+                    isProductDragActive
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-300 bg-gray-50"
+                  }`}
+                >
+                  <input {...getProductInputProps()} />
+                  {isProductDragActive ? (
+                    <p>Drop the image here...</p>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <CloudUpload size={40} className="text-xs text-black" />
+                      <p className="text-black">
+                        Arrastre y suelte una imagen aquí.
+                      </p>
+                    </div>
+                  )}
+                  <Image
+                    className="absolute object-cover -z-10 top-0 left- w-[200px] h-auto"
+                    src={productImage}
+                    alt="imagen"
+                    width={500}
+                    height={500}
+                  />
+                </div>
+                {fileData && (
+                  <p className="mt-2 text-xs text-muted">
+                    Selected file: {fileData.name} (
+                    {Math.round(fileData.size / 1024)} KB)
+                  </p>
+                )}
+                {clientState.errors?.image && (
+                  <p className="text-sm text-red-500">
+                    {clientState.errors?.image.join(", ")}
+                  </p>
+                )}
+              </div>
+              <div className="w-full flex items-center flex-col gap-3 mt-5">
+                <TextInput name="name" label="Nombre" state={state} />
+                <TextInput
+                  name="phone"
+                  label="Teléfono 333 444 8585"
+                  state={state}
+                />
+                <div className="flex-col gap-3 w-full">
+                  <TextInput name="email" label="Email" state={state} />
+                  <TextAreaInput
+                    name="address"
+                    label="Dirección"
+                    state={state}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={sending}
+              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              {sending && <span className="loader"></span>}
+              Crear Cliente
+            </button>
+
+            {clientState.message && (
+              <p
+                className={`text-sm ${
+                  clientState.success ? "text-green-700" : "text-red-500"
+                }`}
+              >
+                {clientState.message}
+              </p>
+            )}
+          </form>
+        </section>
+      )}
     </section>
   );
 }
