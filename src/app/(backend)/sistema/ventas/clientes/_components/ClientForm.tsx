@@ -115,7 +115,7 @@ export default function ClientForm() {
             />
           </div>
           {fileData && (
-            <p className="mt-2 text-xs text-muted">
+            <p className="mt-2 text-xs text-muted ">
               Selected file: {fileData.name} ({Math.round(fileData.size / 1024)}{" "}
               KB)
             </p>
