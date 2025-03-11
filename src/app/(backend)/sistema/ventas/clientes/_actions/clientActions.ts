@@ -41,27 +41,26 @@ export async function createClient(
   }
 
   // Convert the image file to Base64
-  let base64Image = "";
+  let savedImageUrl = `${process.env.MINIO_URL}avatars/avatar_placeholder.jpg`;
   if (image && image instanceof File && image.size > 0) {
     const arrayBuffer = await image.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    base64Image = buffer.toString("base64");
+    const base64Image = buffer.toString("base64");
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    const newFilename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.png`;
+    const path = join("/", "tmp", newFilename);
+
+    // Save to temporary file
+    const uint8Array = new Uint8Array(imageBuffer);
+    await writeFile(path, uint8Array);
+
+    await uploadToBucket("inventario", "avatars/" + newFilename, path);
+    savedImageUrl = `${process.env.MINIO_URL}avatars/${newFilename}`;
   }
-
-  const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
-  const imageBuffer = Buffer.from(base64Data, "base64");
-
-  const newFilename = `${Date.now()}-${Math.random()
-    .toString(36)
-    .substring(2)}.png`;
-  const path = join("/", "tmp", newFilename);
-
-  // Save to temporary file
-  const uint8Array = new Uint8Array(imageBuffer);
-  await writeFile(path, uint8Array);
-
-  await uploadToBucket("inventario", "products/" + newFilename, path);
-  const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
 
   if (Object.keys(errors).length > 0) {
     return {
@@ -97,7 +96,7 @@ export async function createClient(
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       return {
         errors: {
-          email: ["Email or phone number already exists"],
+          email: ["El correo electrónico o número de teléfono ya existe"],
         },
         success: false,
         message: "Client creation failed",
@@ -222,7 +221,7 @@ export async function updateClient(
     if (error instanceof Error && error.message.includes("Unique constraint")) {
       return {
         errors: {
-          email: ["Email or phone number already exists"],
+          email: ["El correo electrónico o número de teléfono ya existe"],
         },
         success: false,
         message: "Client creation failed",

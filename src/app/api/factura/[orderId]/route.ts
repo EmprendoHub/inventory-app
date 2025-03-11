@@ -214,7 +214,7 @@ async function addOrderItems(
 ) {
   // Header for products
   pdf.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-  pdf.rect(15, yPos - 8, 180, 10, "F");
+  pdf.rect(15, yPos - 10, 180, 10, "F");
 
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   pdf.setFontSize(10);
