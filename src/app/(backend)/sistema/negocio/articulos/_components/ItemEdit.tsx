@@ -269,7 +269,7 @@ export default function ProductEdit({
       </div> */}
 
         {/* Numeric inputs */}
-        <div className="flex maxsm:flex-col gap-3">
+        <div className="flex maxsm:flex-col gap-3 ">
           <NumericInput
             onChange={(value) => handleInputChange("cost", value)}
             name="cost"
