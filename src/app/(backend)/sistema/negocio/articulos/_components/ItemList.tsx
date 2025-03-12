@@ -64,29 +64,17 @@ export function ProductList({ items }: { items: ItemType[] }) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-20"
+            className="text-xs w-40"
           >
             ID
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs w-20">{row.getValue("name")}</div>
+          <div className="uppercase text-xs w-40">{row.getValue("name")}</div>
         ),
       },
-      {
-        accessorKey: "id",
-        header: () => <div className="text-left text-xs  w-full">id</div>,
-        cell: ({ row }) => {
-          // Format the amount as a dollar amount
 
-          return (
-            <div className="text-left text-xs font-medium ">
-              {row.getValue("id")}
-            </div>
-          );
-        },
-      },
       {
         accessorKey: "mainImage",
         header: "Img",
@@ -275,7 +263,9 @@ export function ProductList({ items }: { items: ItemType[] }) {
                     Acciones
                   </DropdownMenuLabel>
 
-                  {user && user.role === "SUPER_ADMIN" ? (
+                  {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
+                    user?.role || ""
+                  ) && (
                     <div>
                       <DropdownMenuItem
                         onClick={viewItem}
@@ -286,34 +276,24 @@ export function ProductList({ items }: { items: ItemType[] }) {
                       </DropdownMenuItem>
 
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={deleteItem}
-                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        Eliminar
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-
-                      <DropdownMenuItem
-                        onClick={toggleItemStatus}
-                        className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        {row.original.status === "ACTIVE"
-                          ? "Desactivar"
-                          : "Activar"}
-                      </DropdownMenuItem>
                     </div>
-                  ) : (
+                  )}
+                  <DropdownMenuItem
+                    onClick={toggleItemStatus}
+                    className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                  >
+                    <X />
+                    {row.original.status === "ACTIVE"
+                      ? "Desactivar"
+                      : "Activar"}
+                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
                     <DropdownMenuItem
-                      onClick={toggleItemStatus}
-                      className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                      onClick={deleteItem}
+                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                     >
                       <X />
-                      {row.original.status === "ACTIVE"
-                        ? "Desactivar"
-                        : "Activar"}
+                      Eliminar
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>

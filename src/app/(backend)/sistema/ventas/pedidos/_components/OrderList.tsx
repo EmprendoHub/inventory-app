@@ -13,14 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  DownloadCloud,
-  Eye,
-  MoreHorizontal,
-  RefreshCw,
-  X,
-} from "lucide-react";
+import { ArrowUpDown, Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -384,14 +377,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                       >
                         <MdSms /> Enviar recordatorio
                       </DropdownMenuItem> */}
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         onClick={() =>
                           router.push(`/api/recibo/${row.original.id}`)
                         }
                         className="text-xs cursor-pointer"
                       >
                         <DownloadCloud /> Descargar PDF
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
                         <>
                           {" "}

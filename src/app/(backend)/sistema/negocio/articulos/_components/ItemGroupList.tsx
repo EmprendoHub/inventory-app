@@ -45,6 +45,7 @@ import {
   deleteItemGroupAction,
   toggleItemGroupStatusAction,
 } from "../_actions";
+import Image from "next/image";
 
 export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
   const { data: session } = useSession();
@@ -67,33 +68,45 @@ export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-20"
+            className="text-xs w-40"
           >
             ID
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs w-20">{row.getValue("name")}</div>
+          <div className="uppercase text-xs w-40">{row.getValue("name")}</div>
         ),
       },
 
-      // {
-      //   accessorKey: "mainImage",
-      //   header: "Img",
-      //   cell: ({ row }) => (
-      //     <div className="relative w-12 h-12 overflow-hidden rounded-lg">
-      //       <Image
-      //         src={row.getValue("mainImage")}
-      //         alt="img"
-      //         width={100}
-      //         height={100}
-      //         className="capitalize text-xs min-w-10 h-auto object-cover"
-      //       />
-      //     </div>
-      //   ),
-      // },
+      {
+        accessorKey: "mainImage",
+        header: "Img",
+        cell: ({ row }) => (
+          <div className="relative w-12 h-12 overflow-hidden rounded-lg">
+            <Image
+              src={row.getValue("mainImage")}
+              alt="img"
+              width={100}
+              height={100}
+              className="capitalize text-xs min-w-10 h-auto object-cover"
+            />
+          </div>
+        ),
+      },
+      {
+        accessorKey: "description",
+        header: () => <div className="text-left text-xs  w-full">Descrp.</div>,
+        cell: ({ row }) => {
+          // Format the amount as a dollar amount
 
+          return (
+            <div className="text-left text-xs font-medium ">
+              {row.getValue("description")}
+            </div>
+          );
+        },
+      },
       {
         accessorKey: "price",
         header: () => <div className="text-left text-xs">Precio</div>,
@@ -266,7 +279,9 @@ export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
                     Acciones
                   </DropdownMenuLabel>
 
-                  {user && user.role === "SUPER_ADMIN" ? (
+                  {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
+                    user?.role || ""
+                  ) && (
                     <div>
                       <DropdownMenuItem
                         onClick={viewItem}
@@ -275,36 +290,25 @@ export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
                         <Eye />
                         Editar
                       </DropdownMenuItem>
-
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={deleteItem}
-                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        Eliminar
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-
-                      <DropdownMenuItem
-                        onClick={toggleItemStatus}
-                        className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
-                      >
-                        <X />
-                        {row.original.status === "ACTIVE"
-                          ? "Desactivar"
-                          : "Activar"}
-                      </DropdownMenuItem>
                     </div>
-                  ) : (
+                  )}
+                  <DropdownMenuItem
+                    onClick={toggleItemStatus}
+                    className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                  >
+                    <X />
+                    {row.original.status === "ACTIVE"
+                      ? "Desactivar"
+                      : "Activar"}
+                  </DropdownMenuItem>
+                  {["SUPER_ADMIN"].includes(user?.role || "") && (
                     <DropdownMenuItem
-                      onClick={toggleItemStatus}
-                      className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
+                      onClick={deleteItem}
+                      className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                     >
                       <X />
-                      {row.original.status === "ACTIVE"
-                        ? "Desactivar"
-                        : "Activar"}
+                      Eliminar
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
