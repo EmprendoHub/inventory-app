@@ -99,7 +99,7 @@ export async function createNewOrder(
             clientId: client.id,
             status: "PENDIENTE" as OrderStatus,
             totalAmount,
-            discount,
+            discount: Number(discount) || 0,
             notes,
             dueDate,
             orderItems: {
@@ -275,7 +275,7 @@ export async function createNewOrder(
       message: "Order created successfully!",
     };
   } catch (error) {
-    // console.error("Error creating order:", error);
+    console.error("Error creating order:", error);
 
     // Check if the error is related to insufficient stock
     if (
