@@ -232,50 +232,6 @@ export default function OrderForm({
               </div>
             </div>
             {/* Delivery info */}
-            <NumericInput
-              label="Costo de Envió"
-              name="price"
-              defaultValue={deliveryCost}
-              state={state}
-              onChange={setDeliveryCost}
-            />
-            {/* <SelectInput
-              label="Costo de Envió"
-              name="price"
-              options={[
-                { value: "0", name: "Seleccionar..." },
-                { value: "200", name: "200" },
-                { value: "300", name: "300" },
-                { value: "400", name: "400" },
-                { value: "500", name: "500" },
-                { value: "600", name: "600" },
-                { value: "700", name: "700" },
-                { value: "800", name: "800" },
-                { value: "900", name: "900" },
-                { value: "1000", name: "1000" },
-                { value: "1100", name: "1100" },
-                { value: "1200", name: "1100" },
-                { value: "1300", name: "1100" },
-                { value: "1400", name: "1100" },
-                { value: "1500", name: "1100" },
-                { value: "1600", name: "1100" },
-                { value: "1700", name: "1100" },
-                { value: "1100", name: "1100" },
-                { value: "1100", name: "1100" },
-                { value: "1100", name: "1100" },
-
-              ]}
-              onChange={(e) => setDeliveryCost(Number(e.target.value))}
-              state={state}
-            /> */}
-            <DateInput
-              defaultValue={new Date()}
-              name="deliveryDate"
-              label="Fecha Entrega"
-              state={state}
-            />
-          </div>
-          <div className="space-y-2 bg-card p-4 rounded-lg">
             {selectedClient && (
               <>
                 <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
@@ -292,6 +248,22 @@ export default function OrderForm({
                 )}
               </>
             )}
+          </div>
+          <div className="flex maxsm:flex-col items-center gap-4 space-y-2 bg-card p-4 rounded-lg">
+            <NumericInput
+              label="Costo de Envió"
+              name="price"
+              defaultValue={deliveryCost}
+              state={state}
+              onChange={setDeliveryCost}
+            />
+
+            <DateInput
+              defaultValue={new Date()}
+              name="deliveryDate"
+              label="Fecha Entrega"
+              state={state}
+            />
           </div>
         </div>
 

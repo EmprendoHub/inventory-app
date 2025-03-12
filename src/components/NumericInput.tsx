@@ -1,7 +1,7 @@
 import React from "react";
 
 type NumericInputType = {
-  label: string;
+  label?: string | null;
   name: string;
   defaultValue?: number;
   className?: string;
