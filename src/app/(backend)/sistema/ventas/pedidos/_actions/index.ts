@@ -106,7 +106,7 @@ export async function createNewOrder(
               create: items.map((item) => ({
                 itemId: item.id,
                 name: item.name,
-                description: "",
+                description: item.description,
                 quantity: item.quantity,
                 price: item.price,
                 image: item.mainImage,
@@ -167,7 +167,7 @@ export async function createNewOrder(
                     data: {
                       quantity: newAvailableQty,
                       availableQty: newAvailableQty,
-                      reservedQty: stock.reservedQty + groupOrderItem.quantity,
+                      reservedQty: stock.reservedQty,
                     },
                   })
                 );
@@ -210,7 +210,7 @@ export async function createNewOrder(
                 data: {
                   quantity: newAvailableQty,
                   availableQty: newAvailableQty,
-                  reservedQty: stock.reservedQty + orderItem.quantity,
+                  reservedQty: stock.reservedQty,
                 },
               })
             );
@@ -265,6 +265,7 @@ export async function createNewOrder(
       }
     );
 
+    revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/envios");
 
@@ -807,8 +808,9 @@ export async function deleteOrderAction(formData: FormData) {
             await prisma.stock.update({
               where: { id: stock.id },
               data: {
-                reservedQty: stock.reservedQty - quantityToRelease,
+                reservedQty: stock.reservedQty,
                 availableQty: stock.availableQty + quantityToRelease,
+                quantity: stock.quantity + quantityToRelease,
               },
             });
 
@@ -977,8 +979,9 @@ export async function deleteOrderItemsAction(formData: FormData) {
             await prisma.stock.update({
               where: { id: stock.id },
               data: {
-                reservedQty: stock.reservedQty - quantityToRelease,
+                reservedQty: stock.reservedQty,
                 availableQty: stock.availableQty + quantityToRelease,
+                quantity: stock.quantity + quantityToRelease,
               },
             });
 

@@ -92,7 +92,7 @@ export const createItemAction = async (
     const generatedBarcode = await generateUniqueBarcode();
     const generatedSku = await generateUniqueSKU();
     try {
-      await prisma.$transaction(async (prisma:any) => {
+      await prisma.$transaction(async (prisma: any) => {
         // Step 1: Create Product
         const newProduct = await prisma.item.create({
           data: {

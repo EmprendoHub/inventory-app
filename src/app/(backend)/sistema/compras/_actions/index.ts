@@ -332,7 +332,10 @@ export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
             warehouseId: adjustmentInfo.warehouseId,
           },
         },
-        data: { availableQty: { increment: adjustmentInfo.transAmount } },
+        data: {
+          availableQty: { increment: adjustmentInfo.transAmount },
+          quantity: { increment: adjustmentInfo.transAmount },
+        },
       });
 
       // Create a stock movement record for the release

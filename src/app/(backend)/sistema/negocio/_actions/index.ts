@@ -43,7 +43,10 @@ export const createAdjustment = async (
               warehouseId: validatedData.data.sendingWarehouse,
             },
           },
-          data: { availableQty: { increment: validatedData.data.transAmount } },
+          data: {
+            availableQty: { increment: validatedData.data.transAmount },
+            quantity: { increment: validatedData.data.transAmount },
+          },
         });
 
         // Create a stock movement record for the release
