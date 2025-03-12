@@ -73,6 +73,19 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
         ),
       },
       {
+        accessorKey: "description",
+        header: () => <div className="text-left text-xs  w-full">Descrp.</div>,
+        cell: ({ row }) => {
+          // Format the amount as a dollar amount
+
+          return (
+            <div className="text-left text-xs font-medium ">
+              {row.getValue("description")}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "amount",
         header: () => <div className="text-left text-xs">Monto</div>,
         cell: ({ row }) => (
