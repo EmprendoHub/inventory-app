@@ -83,6 +83,7 @@ export async function createClient(
     });
     revalidatePath("/sistema/ventas/clientes");
     revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
 
     return {
       errors: {},
