@@ -21,19 +21,22 @@ export const createUserAction = async (
     password: formData.get("password") as string,
     active: formData.get("active") === "true" ? true : false,
     phone: formData.get("phone"),
+    authCode: formData.get("authCode"),
     role: formData.get("role"),
     avatar: formData.get("avatar") as File,
   };
-
   const validatedData = UserSchema.safeParse(rawData);
+
   if (!validatedData.success) {
     const errors = validatedData.error.flatten().fieldErrors;
+
     return {
       errors,
       success: false,
       message: "Validation failed. Please check the fields.",
     };
   }
+  console.log(validatedData.success);
 
   if (!validatedData.data)
     return {
@@ -78,6 +81,7 @@ export const createUserAction = async (
         phone: validatedData.data.phone,
         active: validatedData.data.active,
         password: hashedPassword,
+        authCode: validatedData.data.authCode,
         role: validatedData.data.role as Role,
         verificationToken,
         avatar: savedImageUrl,

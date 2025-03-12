@@ -140,4 +140,9 @@ export const roles = [
     value: "GERENTE",
     label: "GERENTE",
   },
+  {
+    name: "EMPLEADO",
+    value: "EMPLEADO",
+    label: "EMPLEADO",
+  },
 ];
