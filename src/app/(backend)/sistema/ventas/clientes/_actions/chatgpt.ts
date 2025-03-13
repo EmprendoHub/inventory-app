@@ -74,6 +74,7 @@ export async function sendWhatsAppMessage(phone: string, message: string) {
         body: data,
       }
     );
+    console.log("response", response);
 
     if (!response.ok) {
       throw new Error(`WhatsApp API error: ${await response.text()}`);
@@ -83,5 +84,67 @@ export async function sendWhatsAppMessage(phone: string, message: string) {
   } catch (error) {
     console.error("Message sending failed:", error);
     return { success: false };
+  }
+}
+
+// Register New Business Phone
+export async function registerWhatsApp() {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    pin: "579537", // This is indeed required according to the error message
+  });
+
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/register`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+        },
+        body: data,
+      }
+    );
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`WhatsApp API error: ${JSON.stringify(responseData)}`);
+    }
+
+    console.log("Registration response:", responseData);
+    return { success: true, data: responseData };
+  } catch (error: any) {
+    console.error("Registration failed:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Set up Two-Step Verification for WhatsApp
+export async function setTwoAuthWhatsApp() {
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/${process.env.WA_BUSINESS_APP_ID}/subscribed_apps`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+        },
+      }
+    );
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(`WhatsApp API error: ${JSON.stringify(responseData)}`);
+    }
+
+    console.log("2FA setup response:", responseData);
+    return { success: true, data: responseData };
+  } catch (error: any) {
+    console.error("2FA setup failed:", error);
+    return { success: false, error: error.message };
   }
 }

@@ -1,5 +1,9 @@
 "use client";
 import React from "react";
+import {
+  registerWhatsApp,
+  setTwoAuthWhatsApp,
+} from "../../ventas/clientes/_actions/chatgpt";
 
 export default function ManualReport({ secret }: { secret: string }) {
   const runWeeklyCron = async () => {
@@ -34,10 +38,22 @@ export default function ManualReport({ secret }: { secret: string }) {
     }
   };
 
+  const runTwoAuthAction = async () => {
+    await setTwoAuthWhatsApp();
+  };
+
+  const registerWhatsAppAction = async () => {
+    await registerWhatsApp();
+  };
+
   return (
     <div className="flex flex-col justify-center items-center w-full h-full gap-10">
       <button onClick={() => runWeeklyCron()}>Reporte Semanal</button>
       <button onClick={() => runDailyCron()}>Reporte Diario</button>
+      <button onClick={() => runTwoAuthAction()}>Subscribe App</button>
+      <button onClick={() => registerWhatsAppAction()}>
+        Register WhatsApp
+      </button>
     </div>
   );
 }

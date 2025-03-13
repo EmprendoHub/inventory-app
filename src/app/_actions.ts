@@ -346,7 +346,7 @@ export async function sendWATemplateMessage(phone: string): Promise<boolean> {
 
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -384,7 +384,7 @@ export async function sendWATextMessage(
 
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -424,7 +424,7 @@ export async function sendWAMediaMessage(
 
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -506,7 +506,7 @@ export async function sendWATemplatePaymentPendingMessage(
 
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -537,7 +537,7 @@ export async function sendWATemplatePaymentPendingMessage(
           template: "pago_pendiente_2",
           header: "Recordatorio de Pago",
           footer: "Si ya realizaste este pago ignora este mensaje.",
-          button: "Ver pedido recientes",
+          button: "Ver pedidos recientes",
           variables: [
             order.client.name, // Variable 1
             order.orderNo, // Variable 2
@@ -618,7 +618,7 @@ export async function sendWATemplateOrderPdfMessage(
 
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -721,7 +721,7 @@ export async function sendRecentOrdersInteractiveMessage(
   // Configure the Axios request
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,

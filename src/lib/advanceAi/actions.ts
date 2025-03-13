@@ -125,7 +125,7 @@ export async function sendProductRecommendations(
 
     const config = {
       method: "post",
-      url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+      url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -183,7 +183,7 @@ export async function sendSatisfactionSurvey(phone: string) {
 
     const config = {
       method: "post",
-      url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+      url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -407,7 +407,7 @@ export async function generateAiFollowUp(phone: string) {
 
     const config = {
       method: "post",
-      url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+      url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,

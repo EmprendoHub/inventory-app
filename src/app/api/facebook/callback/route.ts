@@ -259,132 +259,6 @@ async function processImageFile(imageId: string) {
   }
 }
 
-// Update the store functions to handle AI-processed content
-// async function storeAudioResponseMessage(messageDetails: any) {
-//   const audioResult = await processAudioFile(messageDetails.itemId);
-
-//   // Generate AI response based on transcription
-//   const aiResponse = await generateCustomerServiceResponse(
-//     audioResult.transcription,
-//     messageDetails.clientId,
-//     messageDetails.senderPhone
-//   );
-
-//   const newWAMessage = await prisma.whatsAppMessage.create({
-//     data: {
-//       clientId: messageDetails.clientId,
-//       phone: messageDetails.senderPhone,
-//       type: "audio",
-//       mediaUrl: audioResult.audioUrl,
-//       message: audioResult.transcription || "Audio recibido",
-//       sender: "CLIENT" as SenderType,
-//       timestamp: messageDetails.timestamp,
-//     },
-//   });
-
-//   console.log("Audio Message stored:", newWAMessage);
-
-//   if (aiResponse) {
-//     // Send AI response
-//     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-
-//     // Store AI response
-//     await prisma.whatsAppMessage.create({
-//       data: {
-//         clientId: messageDetails.clientId,
-//         phone: messageDetails.senderPhone,
-//         type: "text",
-//         message: aiResponse,
-//         sender: "SYSTEM" as SenderType,
-//         timestamp: new Date(),
-//       },
-//     });
-//   }
-// }
-
-// async function storeImageResponseMessage(messageDetails: any) {
-//   const imageResult = await processImageFile(messageDetails.itemId);
-
-//   // Generate AI response based on image description
-//   const aiResponse = await generateCustomerServiceResponse(
-//     `El cliente envió una imagen con la descripción: ${imageResult.description}`,
-//     messageDetails.clientId,
-//     messageDetails.senderPhone
-//   );
-
-//   const newWAMessage = await prisma.whatsAppMessage.create({
-//     data: {
-//       clientId: messageDetails.clientId,
-//       phone: messageDetails.senderPhone,
-//       type: "image",
-//       mediaUrl: imageResult.imageUrl,
-//       message: imageResult.description || messageDetails.messageText,
-//       sender: "CLIENT" as SenderType,
-//       timestamp: messageDetails.timestamp,
-//     },
-//   });
-
-//   console.log("Image Message stored:", newWAMessage);
-
-//   if (aiResponse) {
-//     // Send AI response
-//     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-
-//     // Store AI response
-//     await prisma.whatsAppMessage.create({
-//       data: {
-//         clientId: messageDetails.clientId,
-//         phone: messageDetails.senderPhone,
-//         type: "text",
-//         message: aiResponse,
-//         sender: "SYSTEM" as SenderType,
-//         timestamp: new Date(),
-//       },
-//     });
-//   }
-// }
-
-// Store message (stub implementation)
-// async function storeTextMessage(messageDetails: any) {
-//   // First store the incoming message
-//   const newWAMessage = await prisma.whatsAppMessage.create({
-//     data: {
-//       clientId: messageDetails.clientId,
-//       phone: messageDetails.senderPhone,
-//       type: "text",
-//       message: messageDetails.messageText,
-//       sender: "CLIENT" as SenderType,
-//       timestamp: messageDetails.timestamp,
-//     },
-//   });
-
-//   console.log("Text Message stored:", newWAMessage);
-
-//   // Generate AI response
-//   const aiResponse = await generateCustomerServiceResponse(
-//     messageDetails.messageText,
-//     messageDetails.clientId,
-//     messageDetails.senderPhone
-//   );
-
-//   if (aiResponse) {
-//     // Send AI response
-//     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-
-//     // Store AI response
-//     await prisma.whatsAppMessage.create({
-//       data: {
-//         clientId: messageDetails.clientId,
-//         phone: messageDetails.senderPhone,
-//         type: "text",
-//         message: aiResponse,
-//         sender: "SYSTEM" as SenderType,
-//         timestamp: new Date(),
-//       },
-//     });
-//   }
-// }
-
 async function storeTextInteractiveMessage(messageDetails: any) {
   // typing on
   const data = JSON.stringify({
@@ -398,7 +272,7 @@ async function storeTextInteractiveMessage(messageDetails: any) {
 
   const config = {
     method: "post",
-    url: "https://graph.facebook.com/v22.0/340943589100021/messages",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -430,26 +304,6 @@ async function storeTextInteractiveMessage(messageDetails: any) {
     console.log("PDF Message stored:", newWAMessage);
   }
 }
-
-// async function storeButtonResponseMessage(messageDetails: any) {
-//   const newWAMessage = await prisma.whatsAppMessage.create({
-//     data: {
-//       clientId: messageDetails.clientId,
-//       phone: messageDetails.senderPhone,
-//       type: "button",
-//       message: messageDetails.messageText,
-//       sender: "CLIENT" as SenderType,
-//       timestamp: messageDetails.timestamp,
-//     },
-//   });
-
-//   if (messageDetails.messageText === "Ver pedido recientes") {
-//     // send last 3 orders as options
-//     await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
-//   }
-
-//   console.log("Button Message stored:", newWAMessage);
-// }
 
 async function processPdfFile(orderId: string) {
   try {
@@ -638,7 +492,7 @@ async function handleButtonMessage(messageDetails: any) {
 
   // Handle different button responses
   switch (messageDetails.messageText) {
-    case "Ver pedido recientes":
+    case "Ver pedidos recientes":
       // Send recent orders as interactive message
       await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
       break;
@@ -702,7 +556,7 @@ async function handleButtonMessage(messageDetails: any) {
 
 function shouldTriggerSurvey(buttonText: string) {
   const surveyTriggers = [
-    "Ver pedido recientes",
+    "Ver pedidos recientes",
     "Soporte Técnico",
     "Recomendaciones",
   ];
