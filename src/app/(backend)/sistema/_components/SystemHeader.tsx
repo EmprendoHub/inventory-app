@@ -59,33 +59,29 @@ const SystemHeader = () => {
           <PlusCircleIcon size={20} />
         </Link>
         {/*  User Info  */}
-        <div className="w-full flex justify-end">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <div
-                  ref={buttonRef}
-                  className="flex items-center gap-2 cursor-pointer"
-                  onClick={toggleMenu}
-                >
-                  <Image
-                    src={
-                      session?.user?.image || "/images/avatar_placeholder.jpg"
-                    }
-                    width={30}
-                    height={30}
-                    className="rounded-full"
-                    alt="avatar"
-                  />
-                  <span className="text-xs">{session?.user?.name}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Cuenta</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <div
+                ref={buttonRef}
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={toggleMenu}
+              >
+                <Image
+                  src={session?.user?.image || "/images/avatar_placeholder.jpg"}
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                  alt="avatar"
+                />
+                <span className="text-xs">{session?.user?.name}</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Cuenta</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       {/* Overlay Menu */}
