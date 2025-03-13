@@ -448,7 +448,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                           </DropdownMenuItem>
                         )}
                       {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
-                        !isOrderPaid && (
+                        isOrderPaid && (
                           <DropdownMenuItem
                             onClick={markCompleted}
                             className="text-xs cursor-pointer"

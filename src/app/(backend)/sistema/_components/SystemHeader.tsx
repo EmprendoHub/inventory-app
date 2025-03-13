@@ -51,26 +51,16 @@ const SystemHeader = () => {
 
   return (
     <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxsm:px-4  z-30">
-      <TooltipProvider>
-        <div className="flex items-center justify-between w-full">
-          {/* <!-- Notification --> */}
-          <div className="w-full flex">
-            <Tooltip>
-              <TooltipTrigger>
-                <Link
-                  href={"/sistema/ventas/pedidos/nuevo"}
-                  className="bg-muted text-white hover:text-accent p-1 rounded-lg"
-                >
-                  <PlusCircleIcon size={20} />
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Notificaciones</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          {/*  User Info  */}
-          <div className="w-full flex justify-end">
+      <div className="flex items-center justify-between w-full">
+        <Link
+          href={"/sistema/ventas/pedidos/nuevo"}
+          className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+        >
+          <PlusCircleIcon size={20} />
+        </Link>
+        {/*  User Info  */}
+        <div className="w-full flex justify-end">
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
                 <div
@@ -94,9 +84,9 @@ const SystemHeader = () => {
                 <p>Cuenta</p>
               </TooltipContent>
             </Tooltip>
-          </div>
+          </TooltipProvider>
         </div>
-      </TooltipProvider>
+      </div>
 
       {/* Overlay Menu */}
       <AnimatePresence>
