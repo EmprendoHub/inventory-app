@@ -67,7 +67,7 @@ export function CashAuditList({ audits }: { audits: CashAuditResponse[] }) {
           </Button>
         ),
         cell: ({ row }) => {
-          const date = new Date(row.getValue("auditDate")).toLocaleDateString();
+          const date = new Date(row.getValue("auditDate")).getUTCDate();
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },

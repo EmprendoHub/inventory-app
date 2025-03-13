@@ -90,84 +90,95 @@ async function processMessageEvent(event: any) {
     const client = await prisma.client.findFirst({
       where: { phone: WAPhone },
     });
+    const timestamp = new Date(parseInt(event.messages[0].timestamp) * 1000);
+    const senderPhone = WAPhone;
+    const senderName = event.contacts[0].profile.name;
+    const clientId = client?.id;
+    const messageType = event.messages[0].type;
 
     try {
-      // ... existing message processing setup
-      const timestamp = new Date(parseInt(event.messages[0].timestamp) * 1000);
-      const senderPhone = WAPhone;
-      const senderName = event.contacts[0].profile.name;
-      const clientId = client?.id;
-      const messageType = event.messages[0].type;
+      if (WAPhone === "3532464146") {
+        console.log("Ignoring messages from the business phone");
+        await handleOwnerTextMessage({
+          senderPhone,
+          clientId,
+          timestamp,
+          messageText: event.messages[0].text.body,
+          senderName,
+        });
+      } else {
+        // ... existing message processing setup
 
-      // Add sentiment analysis
-      const sentimentAnalysis = await analyzeCustomerSentiment(senderPhone);
+        // Add sentiment analysis
+        const sentimentAnalysis = await analyzeCustomerSentiment(senderPhone);
 
-      // Process different message types
-      switch (messageType) {
-        case "text":
-          await handleTextMessage({
-            senderPhone,
-            clientId,
-            timestamp,
-            messageText: event.messages[0].text.body,
-            senderName,
-            sentiment: sentimentAnalysis.analysis?.sentiment || "Neutral",
-          });
-          break;
+        // Process different message types
+        switch (messageType) {
+          case "text":
+            await handleTextMessage({
+              senderPhone,
+              clientId,
+              timestamp,
+              messageText: event.messages[0].text.body,
+              senderName,
+              sentiment: sentimentAnalysis.analysis?.sentiment || "Neutral",
+            });
+            break;
 
-        case "button":
-          await handleButtonMessage({
-            senderPhone,
-            clientId,
-            timestamp,
-            messagePayload: event.messages[0].button.payload,
-            messageText: event.messages[0].button.text,
-            senderName,
-          });
-          break;
+          case "button":
+            await handleButtonMessage({
+              senderPhone,
+              clientId,
+              timestamp,
+              messagePayload: event.messages[0].button.payload,
+              messageText: event.messages[0].button.text,
+              senderName,
+            });
+            break;
 
-        case "audio":
-          await handleAudioMessage({
-            senderPhone,
-            clientId,
-            timestamp,
-            senderName,
-            itemId: event.messages[0].audio.id,
-          });
-          break;
+          case "audio":
+            await handleAudioMessage({
+              senderPhone,
+              clientId,
+              timestamp,
+              senderName,
+              itemId: event.messages[0].audio.id,
+            });
+            break;
 
-        case "image":
-          await handleImageMessage({
-            senderPhone,
-            clientId,
-            timestamp,
-            messageText: event.messages[0].image.caption || "Imagen recibida",
-            senderName,
-            itemId: event.messages[0].image.id,
-          });
-          break;
+          case "image":
+            await handleImageMessage({
+              senderPhone,
+              clientId,
+              timestamp,
+              messageText: event.messages[0].image.caption || "Imagen recibida",
+              senderName,
+              itemId: event.messages[0].image.id,
+            });
+            break;
 
-        case "interactive":
-          await handleInteractiveMessage({
-            senderPhone,
-            orderId: event.messages[0].interactive.list_reply.id,
-            clientId,
-            timestamp,
-            messageTitle: event.messages[0].interactive.list_reply.title,
-            messageDescription:
-              event.messages[0].interactive.list_reply.description,
-            senderName,
-          });
-          break;
+          case "interactive":
+            await handleInteractiveMessage({
+              senderPhone,
+              orderId: event.messages[0].interactive.list_reply.id,
+              clientId,
+              timestamp,
+              messageTitle: event.messages[0].interactive.list_reply.title,
+              messageDescription:
+                event.messages[0].interactive.list_reply.description,
+              senderName,
+            });
+            break;
 
-        default:
-          console.warn("Unsupported message type:", messageType);
-      }
+          default:
+            console.warn("Unsupported message type:", messageType);
+        }
 
-      // Check if we should send a follow-up
-      const followUpCheck = await shouldSendAiFollowUp(senderPhone);
-      if (followUpCheck.shouldFollow) {
-        await generateAiFollowUp(senderPhone);
+        // Check if we should send a follow-up
+        const followUpCheck = await shouldSendAiFollowUp(senderPhone);
+        if (followUpCheck.shouldFollow) {
+          await generateAiFollowUp(senderPhone);
+        }
       }
     } catch (error) {
       console.error("Message processing failed:", error);
@@ -355,6 +366,62 @@ async function handleTextMessage(messageDetails: any) {
     messageDetails.messageText,
     messageDetails.sentiment
   );
+  const aiResponse = await generateCustomerServiceResponse(
+    messageDetails.messageText,
+    messageDetails.clientId,
+    messageDetails.senderPhone,
+    systemPrompt
+  );
+
+  if (aiResponse) {
+    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
+    await storeMessage({
+      phone: messageDetails.senderPhone,
+      clientId: messageDetails.clientId,
+      message: aiResponse,
+      type: "text",
+      sender: "SYSTEM" as SenderType,
+      timestamp: new Date(),
+    });
+
+    // Send product recommendations if appropriate
+    if (shouldOfferRecommendations(messageDetails.messageText)) {
+      const recommendations = await generateProductRecommendations(
+        messageDetails.clientId
+      );
+      if (recommendations.success) {
+        if (recommendations.recommendedProducts) {
+          await sendProductRecommendations(
+            messageDetails.senderPhone,
+            recommendations.recommendedProducts
+          );
+        }
+      }
+    }
+  }
+}
+
+async function handleOwnerTextMessage(messageDetails: any) {
+  // Store the incoming message
+  await prisma.whatsAppMessage.create({
+    data: {
+      clientId: messageDetails.clientId,
+      phone: messageDetails.senderPhone,
+      type: "text",
+      message: messageDetails.messageText,
+      sender: "CLIENT" as SenderType,
+      timestamp: messageDetails.timestamp,
+    },
+  });
+
+  // Generate AI response based on sentiment
+  const systemPrompt = `"Eres Salvador, un profesional con más de 10 años de experiencia en tu campo, recientemente promovido a entrenador en una compañía de interpretación. Te comunicas de manera informal pero respetuosa, utilizando expresiones coloquiales como 'jajaja', 'hijoles', y emojis como 😅 o 😱 para expresar emociones. Eres directo pero amable, especialmente al tratar con tu jefa Yuny, con quien mantienes una relación laboral cercana pero profesional.
+
+Cuando te enfrentas a situaciones urgentes, sueles usar frases como 'me super urgue' o 'porfa', y manejas los recordatorios y seguimientos de manera organizada. Prefieres resolver problemas rápidamente y mantener una comunicación clara y concisa.
+
+Tu tono es colaborativo y agradecido, especialmente cuando recibes apoyo o ayuda, y sueles expresar gratitud con frases como 'muchas gracias' o 'te quiero agradecer por todo'.
+
+Ahora, actúa como Salvador y responde a las siguientes situaciones laborales de manera coherente con este estilo de comunicación."`;
   const aiResponse = await generateCustomerServiceResponse(
     messageDetails.messageText,
     messageDetails.clientId,

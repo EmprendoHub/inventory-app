@@ -18,15 +18,19 @@ export async function POST(request: Request) {
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999); // Set time to the start of the day (23:59:59)
 
-    // Calculate last Monday's date
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0); // Ensure time is set to the start of the day
+    // start from start of day from yesterday's date
+    // const startOfToday = new Date();
+    // startOfToday.setHours(0, 0, 0, 0);
+
+    const startOfYesterday = new Date();
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1); // Go back one day
+    startOfYesterday.setHours(0, 0, 0, 0);
 
     // Fetch orders from last Monday to today
     const orders = await prisma.order.findMany({
       where: {
         createdAt: {
-          gte: startOfToday, // Orders created on or after last Monday
+          gte: startOfYesterday, // Orders created on or after last Monday
           lte: endOfToday, // Orders created on or before today
         },
       },
@@ -35,7 +39,7 @@ export async function POST(request: Request) {
     const payments = await prisma.payment.findMany({
       where: {
         createdAt: {
-          gte: startOfToday, // Payments created on or after last Monday
+          gte: startOfYesterday, // Payments created on or after last Monday
           lte: endOfToday, // Payments created on or before today
         },
       },
@@ -44,7 +48,7 @@ export async function POST(request: Request) {
     const expenses = await prisma.expense.findMany({
       where: {
         createdAt: {
-          gte: startOfToday, // Expenses created on or after last Monday
+          gte: startOfYesterday, // Expenses created on or after last Monday
           lte: endOfToday, // Expenses created on or before today
         },
       },
@@ -53,6 +57,15 @@ export async function POST(request: Request) {
     // Calculate totals
     const totalSales = orders.reduce((acc, item) => acc + item.totalAmount, 0);
     const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
+    const totalTransferPayments = payments.reduce(
+      (acc, item) =>
+        item.method === "TRANSFERENCIA" ? acc + item.amount : acc,
+      0
+    );
+    const totalCashPayments = payments.reduce(
+      (acc, item) => (item.method === "EFECTIVO" ? acc + item.amount : acc),
+      0
+    );
     const totalExpenses = expenses.reduce((acc, item) => acc + item.amount, 0);
 
     const subject = "Resumen Diario de Ventas, Pagos y Gastos";
@@ -118,7 +131,7 @@ export async function POST(request: Request) {
               </tbody>
             </table>
       
-            <h3><strong>Total Ventas: ${totalSales.toLocaleString(undefined, {
+            <h3><strong>Total Pedidos: ${totalSales.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}</strong></h3>
@@ -137,7 +150,7 @@ export async function POST(request: Request) {
                   .map(
                     (item) => `
                       <tr>
-                        <td>${item.createdAt.toLocaleDateString()}</td>
+                        <td>${item.orderNo}</td>
                         <td>${item.method}</td>
                         <td>$${item.amount.toLocaleString(undefined, {
                           minimumFractionDigits: 2,
@@ -151,6 +164,17 @@ export async function POST(request: Request) {
             </table>
     
 
+             <h3><strong>Transferencias: ${totalTransferPayments.toLocaleString(
+               undefined,
+               {
+                 minimumFractionDigits: 2,
+                 maximumFractionDigits: 2,
+               }
+             )}</strong></h3>
+           <h3><strong>Efectivo: ${totalCashPayments.toLocaleString(undefined, {
+             minimumFractionDigits: 2,
+             maximumFractionDigits: 2,
+           })}</strong></h3>
           <h3><strong>Total Pagos: ${totalPayments.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -203,7 +227,15 @@ export async function POST(request: Request) {
     // Prepare WhatsApp message
     const whatsAppMessage = `
      Resumen Diario de Ventas, Pagos y Gastos:
-     - Total Ventas: $${totalSales.toLocaleString(undefined, {
+     - Total Pedidos: $${totalSales.toLocaleString(undefined, {
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     })}
+     - Transferencias: $${totalTransferPayments.toLocaleString(undefined, {
+       minimumFractionDigits: 2,
+       maximumFractionDigits: 2,
+     })}
+     - Efectivo: $${totalCashPayments.toLocaleString(undefined, {
        minimumFractionDigits: 2,
        maximumFractionDigits: 2,
      })}
@@ -219,7 +251,7 @@ export async function POST(request: Request) {
 
     // Send WhatsApp message
     const whatsAppResponse = await sendWhatsAppMessage(
-      "3531847773", // Replace with the recipient's phone number
+      "3532464146", // Replace with the recipient's phone number
       whatsAppMessage
     );
 
