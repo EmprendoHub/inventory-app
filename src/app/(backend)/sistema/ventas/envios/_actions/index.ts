@@ -19,9 +19,7 @@ export const createDeliveryAction = async (
     driverId: formData.get("driverId") as string | null,
     truckId: formData.get("truckId") as string | null,
     carrier: "YUNUEN CO",
-    otp: formData.get("otp") as string,
-    price: formData.get("price") as string,
-    trackingNumber: formData.get("trackingNumber") as string,
+    price: Number(formData.get("price")),
     deliveryDate: formData.get("deliveryDate") as string | null,
     status: formData.get("status") as
       | "Pendiente para entrega"
@@ -35,6 +33,7 @@ export const createDeliveryAction = async (
 
   // Validate the data using Zod
   const validatedData = DeliverySchema.safeParse(rawData);
+  console.log("deliveryData", validatedData.error);
 
   if (!validatedData.success) {
     const errors = validatedData.error.flatten().fieldErrors;
@@ -46,6 +45,10 @@ export const createDeliveryAction = async (
   }
 
   const deliveryData = validatedData.data;
+  const order = await prisma.order.findUnique({
+    where: { id: deliveryData.orderId },
+    select: { orderNo: true },
+  });
 
   // Convert deliveryDate to Date object if provided
   let deliveryDate: Date | undefined = undefined;
@@ -61,12 +64,14 @@ export const createDeliveryAction = async (
   }
   const otp = generateDeliveryOTP();
   const trackingNumber = generateTrackingNumber();
+  console.log("deliveryData", deliveryData);
+
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.delivery.create({
         data: {
           orderId: deliveryData.orderId,
-          orderNo: deliveryData.orderNo,
+          orderNo: order?.orderNo || "",
           method: deliveryData.method,
           driverId: deliveryData.driverId || undefined,
           truckId: deliveryData.truckId || undefined,

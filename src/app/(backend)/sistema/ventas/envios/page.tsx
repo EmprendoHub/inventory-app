@@ -87,7 +87,7 @@ export default async function ListUsers() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <SuperHeader title={"Envíos"} link={`envios/nuevo`} />
+      <SuperHeader title={"Envíos"} link={`ventas/envios/nuevo`} />
       <DeliveryList deliveries={deliveries} />
     </div>
   );

@@ -166,7 +166,7 @@ export const TruckSchema = z.object({
 export const DeliverySchema = z.object({
   id: z.string().optional(),
   orderId: z.string(),
-  orderNo: z.string(),
+  orderNo: z.string().nullable().optional(),
   method: z.enum(["INTERNO", "EXTERNO"]),
   driverId: z.string().optional(),
   truckId: z.string().optional(),
