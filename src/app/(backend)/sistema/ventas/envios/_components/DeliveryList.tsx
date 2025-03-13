@@ -93,14 +93,28 @@ export function DeliveryList({
         ),
       },
       {
+        accessorKey: "orders",
+        header: () => (
+          <div className="text-xs maxsm:hidden  maxsm:absolute">Cliente</div>
+        ),
+        cell: ({ row }) => {
+          const clientName = row.original?.orders[0].client.name;
+          return (
+            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxsm:hidden maxsm:absolute">
+              {clientName}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "driver",
         header: () => (
-          <div className="text-xs maxsm:hidden  maxsm:absolute">Chofer</div>
+          <div className="text-xs maxsm:hidden  maxsm:absolute">Ubicación</div>
         ),
         cell: ({ row }) => {
           const driver = row.original?.driver?.name || "BODEGA";
           return (
-            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxsm:hidden maxsm:absolute">
+            <div className="text-[12px] uppercase px-2 rounded-md maxsm:hidden maxsm:absolute">
               {driver}
             </div>
           );

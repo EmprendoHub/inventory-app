@@ -19,6 +19,11 @@ export default async function ListUsers() {
       },
       include: {
         driver: true,
+        orders: {
+          include: {
+            client: true,
+          },
+        },
       },
       where: {
         status: {
@@ -33,6 +38,11 @@ export default async function ListUsers() {
       },
       include: {
         driver: true,
+        orders: {
+          include: {
+            client: true,
+          },
+        },
       },
       where: {
         status: {
@@ -47,6 +57,11 @@ export default async function ListUsers() {
       },
       include: {
         driver: true,
+        orders: {
+          include: {
+            client: true,
+          },
+        },
       },
       where: {
         status: {
@@ -61,6 +76,11 @@ export default async function ListUsers() {
       },
       include: {
         driver: true,
+        orders: {
+          include: {
+            client: true,
+          },
+        },
       },
     });
   }

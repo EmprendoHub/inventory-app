@@ -151,6 +151,24 @@ export type OrderType = {
   orderId: string;
 };
 
+export type OrderWithClientType = {
+  id: string;
+  orderNo: string;
+  clientId: string;
+  status: string;
+  totalAmount: number;
+  discount: number | null;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  dueDate: Date;
+  signature?: string | null;
+  invoiceId: string | null;
+  orderItems?: OrderItemsType[];
+  payments?: PaymentType[];
+  client: clientType;
+};
+
 export type FullOderType = {
   id: string;
   orderNo: string;

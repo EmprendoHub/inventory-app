@@ -1,3 +1,5 @@
+import { OrderWithClientType } from "./sales";
+
 export type DeliveryType = {
   id: string;
   orderId: string;
@@ -36,6 +38,7 @@ export type DeliveryAndDriverType = {
   updatedAt: Date;
   userId: string | null;
   driver: DriverType | null;
+  orders: OrderWithClientType[];
 };
 
 export type DeliveryFormState = {

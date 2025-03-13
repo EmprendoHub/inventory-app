@@ -120,16 +120,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "client",
-        header: () => (
-          <div className="text-left text-xs maxsm:hidden w-20">Cliente</div>
-        ),
+        header: () => <div className="text-left text-xs w-40">Cliente</div>,
         cell: ({ row }) => {
           const client: clientType = row.getValue("client");
           return (
             <div
-              className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-24 px-2 bg-sky-900`}
+              className={`uppercase text-[12px] text-center text-white rounded-md w-40 px-2 bg-sky-900`}
             >
-              {client.name.substring(0, 15)}
+              {client.name}
             </div>
           );
         },
@@ -202,10 +200,16 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "createdAt",
-        header: () => <div className="text-left text-xs">Fecha</div>,
+        header: () => (
+          <div className="text-left maxsm:hidden  text-xs">Fecha</div>
+        ),
         cell: ({ row }) => {
           const date = new Date(row.getValue("createdAt")).toLocaleDateString();
-          return <div className="text-left text-xs font-medium">{date}</div>;
+          return (
+            <div className="text-left text-xs maxsm:hidden  font-medium">
+              {date}
+            </div>
+          );
         },
       },
       {
