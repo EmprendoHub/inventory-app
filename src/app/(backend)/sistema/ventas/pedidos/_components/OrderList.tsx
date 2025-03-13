@@ -357,58 +357,44 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             }, [showModal, row.original.id, row.original.totalAmount]);
 
             const markCompleted = React.useCallback(async () => {
-              const result = await showModal({
-                title: "¿Marcar como entregado?",
-                type: "payment",
-                text: "Puedes realizar un pago parcial o completo.",
-                icon: "success",
-                showCancelButton: true,
-                confirmButtonText: "Sí, pagar",
-                cancelButtonText: "Cancelar",
-              });
               setSending((prev) => !prev);
 
-              if (result.confirmed) {
-                try {
-                  const formData = new FormData();
-                  formData.set("id", row.original.id);
-                  formData.set("amount", result.data?.amount || "0"); // Handle empty input
-                  formData.set("reference", result.data?.reference || "");
-                  formData.set("method", result.data?.method || "");
-                  formData.set("status", "ENTREGADO");
+              try {
+                const formData = new FormData();
+                formData.set("id", row.original.id);
+                formData.set("status", "ENTREGADO");
 
-                  const response = await markCompletedOrderAction(formData);
+                const response = await markCompletedOrderAction(formData);
 
-                  if (response.success) {
-                    setSending((prev) => !prev);
-
-                    await showModal({
-                      title: "¡Pago Aplicado!",
-                      type: "delete",
-                      text: response.message,
-                      icon: "success",
-                    });
-                  } else {
-                    setSending((prev) => !prev);
-
-                    await showModal({
-                      title: "¡Pago No Aplicado!",
-                      type: "delete",
-                      text: response.message,
-                      icon: "error",
-                    });
-                  }
-                } catch (error) {
+                if (response.success) {
                   setSending((prev) => !prev);
 
-                  console.log("Error processing payment:", error);
                   await showModal({
-                    title: "Error",
+                    title: "¡Entregado!",
                     type: "delete",
-                    text: "No se pudo aplicar el pago",
+                    text: response.message,
+                    icon: "success",
+                  });
+                } else {
+                  setSending((prev) => !prev);
+
+                  await showModal({
+                    title: "¡No ¡Entregado!",
+                    type: "delete",
+                    text: response.message,
                     icon: "error",
                   });
                 }
+              } catch (error) {
+                setSending((prev) => !prev);
+
+                console.log("Error processing payment:", error);
+                await showModal({
+                  title: "Error",
+                  type: "delete",
+                  text: "No se pudo aplicar el pago",
+                  icon: "error",
+                });
               }
 
               // eslint-disable-next-line

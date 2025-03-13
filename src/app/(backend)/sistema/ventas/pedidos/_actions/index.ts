@@ -465,13 +465,8 @@ export async function markCompletedOrderAction(formData: FormData) {
   // Extract and validate form data
   const rawData = {
     id: formData.get("id"),
-    amount: formData.get("amount"),
-    reference: formData.get("reference"),
-    method: formData.get("method"),
     status: formData.get("status"),
   };
-
-  const paymentAmount = Number(rawData.amount);
 
   try {
     const order = await prisma.order.update({
@@ -499,7 +494,7 @@ export async function markCompletedOrderAction(formData: FormData) {
     return {
       errors: {},
       success: true,
-      message: `Pago de $${paymentAmount} aceptado.`,
+      message: `Pedido entregado.`,
     };
   } catch (error) {
     return {
