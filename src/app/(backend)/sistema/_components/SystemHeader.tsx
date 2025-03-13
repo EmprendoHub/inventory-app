@@ -1,4 +1,12 @@
-import { Bell, LogOut, Moon, Settings, Sun, X } from "lucide-react";
+import {
+  Bell,
+  LogOut,
+  Moon,
+  PlusCircleIcon,
+  Settings,
+  Sun,
+  X,
+} from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import {
   Tooltip,
@@ -10,6 +18,7 @@ import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 
 const SystemHeader = () => {
   const { data: session } = useSession();
@@ -43,14 +52,17 @@ const SystemHeader = () => {
   return (
     <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxsm:px-4  z-30">
       <TooltipProvider>
-        <div className="flex items-center">
+        <div className="flex items-center justify-between w-full">
           {/* <!-- Notification --> */}
           <div className="w-full flex">
             <Tooltip>
               <TooltipTrigger>
-                <div className="bg-muted text-white hover:text-accent p-1 rounded-lg">
-                  <Bell size={18} />
-                </div>
+                <Link
+                  href={"/sistema/ventas/pedidos/nuevo"}
+                  className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+                >
+                  <PlusCircleIcon size={20} />
+                </Link>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Notificaciones</p>
