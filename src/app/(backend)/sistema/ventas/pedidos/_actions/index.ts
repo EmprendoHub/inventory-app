@@ -461,6 +461,55 @@ export async function payOrderAction(formData: FormData) {
   }
 }
 
+export async function markCompletedOrderAction(formData: FormData) {
+  // Extract and validate form data
+  const rawData = {
+    id: formData.get("id"),
+    amount: formData.get("amount"),
+    reference: formData.get("reference"),
+    method: formData.get("method"),
+    status: formData.get("status"),
+  };
+
+  const paymentAmount = Number(rawData.amount);
+
+  try {
+    const order = await prisma.order.update({
+      where: { id: rawData.id as string },
+      data: {
+        status: rawData.status as OrderStatus,
+      },
+    });
+
+    if (!order) {
+      return {
+        errors: {},
+        success: false,
+        message: "Order not found",
+      };
+    }
+
+    revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
+    revalidatePath(`/sistema/ventas/pedidos/ver/${order.id}`);
+    revalidatePath("/sistema/ventas/pedidos");
+    revalidatePath("/sistema/ventas/envios");
+    revalidatePath("/sistema/ventas/pagos");
+
+    return {
+      errors: {},
+      success: true,
+      message: `Pago de $${paymentAmount} aceptado.`,
+    };
+  } catch (error) {
+    return {
+      errors: {},
+      success: false,
+      message: `Failed to process payment ${error}`,
+    };
+  }
+}
+
 export async function payOrderActionOnDelivery(formData: FormData) {
   // Extract and validate form data
   const rawData = {

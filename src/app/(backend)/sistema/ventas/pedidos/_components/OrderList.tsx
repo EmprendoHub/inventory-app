@@ -36,13 +36,18 @@ import {
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { clientType, ordersAndItem, paymentType } from "@/types/sales";
 import { useModal } from "@/app/context/ModalContext";
-import { deleteOrderAction, payOrderAction } from "../_actions";
+import {
+  deleteOrderAction,
+  markCompletedOrderAction,
+  payOrderAction,
+} from "../_actions";
 import { MdCurrencyExchange } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { DeliveryType } from "@/types/delivery";
+import { GiCheckMark } from "react-icons/gi";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -120,12 +125,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "client",
-        header: () => <div className="text-left text-xs w-40">Cliente</div>,
+        header: () => <div className="text-left text-xs w-48">Cliente</div>,
         cell: ({ row }) => {
           const client: clientType = row.getValue("client");
           return (
             <div
-              className={`uppercase text-[12px] text-center text-white rounded-md w-40 px-2 bg-sky-900`}
+              className={`uppercase text-[12px] text-center text-white rounded-md w-48 px-2 bg-sky-900`}
             >
               {client.name}
             </div>
@@ -218,7 +223,18 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         cell: ({ row }) => {
           const ActionCell = () => {
             const { showModal } = useModal();
-
+            const discount = row.original.discount || 0;
+            const subtotal = row.original.orderItems?.reduce(
+              (sum, item) => sum + item.price * item.quantity,
+              0
+            );
+            const previousPayments = (row.original.payments ?? []).reduce(
+              (sum, item) => sum + item.amount,
+              0
+            );
+            const grandTotal =
+              (subtotal || 0) + (row.original.delivery?.price || 0) - discount;
+            const isOrderPaid = previousPayments === grandTotal;
             const deleteOrder = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
@@ -340,6 +356,64 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
               // eslint-disable-next-line
             }, [showModal, row.original.id, row.original.totalAmount]);
 
+            const markCompleted = React.useCallback(async () => {
+              const result = await showModal({
+                title: "¿Marcar como entregado?",
+                type: "payment",
+                text: "Puedes realizar un pago parcial o completo.",
+                icon: "success",
+                showCancelButton: true,
+                confirmButtonText: "Sí, pagar",
+                cancelButtonText: "Cancelar",
+              });
+              setSending((prev) => !prev);
+
+              if (result.confirmed) {
+                try {
+                  const formData = new FormData();
+                  formData.set("id", row.original.id);
+                  formData.set("amount", result.data?.amount || "0"); // Handle empty input
+                  formData.set("reference", result.data?.reference || "");
+                  formData.set("method", result.data?.method || "");
+                  formData.set("status", "ENTREGADO");
+
+                  const response = await markCompletedOrderAction(formData);
+
+                  if (response.success) {
+                    setSending((prev) => !prev);
+
+                    await showModal({
+                      title: "¡Pago Aplicado!",
+                      type: "delete",
+                      text: response.message,
+                      icon: "success",
+                    });
+                  } else {
+                    setSending((prev) => !prev);
+
+                    await showModal({
+                      title: "¡Pago No Aplicado!",
+                      type: "delete",
+                      text: response.message,
+                      icon: "error",
+                    });
+                  }
+                } catch (error) {
+                  setSending((prev) => !prev);
+
+                  console.log("Error processing payment:", error);
+                  await showModal({
+                    title: "Error",
+                    type: "delete",
+                    text: "No se pudo aplicar el pago",
+                    icon: "error",
+                  });
+                }
+              }
+
+              // eslint-disable-next-line
+            }, [showModal, row.original.id, row.original.totalAmount]);
+
             const viewOrder = React.useCallback(async () => {
               router.push(`/sistema/ventas/pedidos/ver/${row.original.id}`);
             }, []);
@@ -364,17 +438,24 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   </DropdownMenuItem>
                   {row.original.status !== "CANCELADO" && (
                     <>
-                      {["SUPER_ADMIN", "GERENTE", "CHOFER"].includes(
-                        user?.role || ""
-                      ) && (
-                        <DropdownMenuItem
-                          onClick={receivePayment}
-                          className="text-xs cursor-pointer"
-                        >
-                          <MdCurrencyExchange /> Recibir pago
-                        </DropdownMenuItem>
-                      )}
-
+                      {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
+                        !isOrderPaid && (
+                          <DropdownMenuItem
+                            onClick={receivePayment}
+                            className="text-xs cursor-pointer"
+                          >
+                            <MdCurrencyExchange /> Recibir pago
+                          </DropdownMenuItem>
+                        )}
+                      {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
+                        !isOrderPaid && (
+                          <DropdownMenuItem
+                            onClick={markCompleted}
+                            className="text-xs cursor-pointer"
+                          >
+                            <GiCheckMark /> Entregar
+                          </DropdownMenuItem>
+                        )}
                       {/* <DropdownMenuItem
                         onClick={() => sendEmailReminder(row.original.id)}
                         className="text-xs cursor-pointer"
