@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     endOfToday.setHours(23, 59, 59, 999); // Set time to the start of the day (23:59:59)
 
     // start from start of day from yesterday's date
-    // const startOfToday = new Date();
-    // startOfToday.setHours(0, 0, 0, 0);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
     const startOfYesterday = new Date();
     startOfYesterday.setDate(startOfYesterday.getDate() - 1); // Go back one day
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const orders = await prisma.order.findMany({
       where: {
         createdAt: {
-          gte: startOfYesterday, // Orders created on or after last Monday
+          gte: startOfToday, // Orders created on or after last Monday
           lte: endOfToday, // Orders created on or before today
         },
       },
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const payments = await prisma.payment.findMany({
       where: {
         createdAt: {
-          gte: startOfYesterday, // Payments created on or after last Monday
+          gte: startOfToday, // Payments created on or after last Monday
           lte: endOfToday, // Payments created on or before today
         },
       },
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const expenses = await prisma.expense.findMany({
       where: {
         createdAt: {
-          gte: startOfYesterday, // Expenses created on or after last Monday
+          gte: startOfToday, // Expenses created on or after last Monday
           lte: endOfToday, // Expenses created on or before today
         },
       },

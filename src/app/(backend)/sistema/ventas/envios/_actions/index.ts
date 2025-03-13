@@ -68,7 +68,7 @@ export const createDeliveryAction = async (
 
   try {
     await prisma.$transaction(async (prisma) => {
-      await prisma.delivery.create({
+      const newDelivery = await prisma.delivery.create({
         data: {
           orderId: deliveryData.orderId,
           orderNo: order?.orderNo || "",
@@ -82,6 +82,13 @@ export const createDeliveryAction = async (
           deliveryDate: deliveryDate,
           status: deliveryData.status,
           userId: user.id,
+        },
+      });
+
+      await prisma.order.update({
+        where: { id: deliveryData.orderId },
+        data: {
+          deliveryId: newDelivery.id,
         },
       });
     });
