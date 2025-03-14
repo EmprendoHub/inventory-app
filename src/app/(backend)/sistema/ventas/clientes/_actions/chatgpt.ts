@@ -74,7 +74,6 @@ export async function sendWhatsAppMessage(phone: string, message: string) {
         body: data,
       }
     );
-    console.log("response", response);
 
     if (!response.ok) {
       throw new Error(`WhatsApp API error: ${await response.text()}`);

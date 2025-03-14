@@ -14,6 +14,7 @@ import { PiInvoice } from "react-icons/pi";
 import { RiSofaFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import { RBAC_CONFIG } from "./rbac-config";
+import { toZonedTime } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -101,6 +102,17 @@ export function getMexicoDate(date: Date | string) {
     timeZone: "America/Mexico_City",
     dateStyle: "medium",
   });
+}
+
+export function getMexicoGlobalUtcDate() {
+  // Define your desired time zone (e.g., 'America/Mexico_City')
+  const timeZone = "America/Mexico_City";
+
+  // Get the current date in the specified time zone
+  const now = new Date();
+  const zonedDate = toZonedTime(now, timeZone);
+
+  return zonedDate;
 }
 
 export function getMexicoFullDate(date: Date | string) {

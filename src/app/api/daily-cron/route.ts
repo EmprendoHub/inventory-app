@@ -29,10 +29,6 @@ export async function POST(request: Request) {
     const endOfToday = new Date(zonedDate);
     endOfToday.setHours(23, 59, 59, 999);
 
-    const startOfYesterday = new Date();
-    startOfYesterday.setDate(startOfYesterday.getDate() - 1); // Go back one day
-    startOfYesterday.setHours(0, 0, 0, 0);
-
     // Fetch orders from last Monday to today
     const orders = await prisma.order.findMany({
       where: {
