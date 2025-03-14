@@ -91,7 +91,8 @@ async function processMessageEvent(event: any) {
     const client = await prisma.client.findFirst({
       where: { phone: WAPhone },
     });
-    const timestamp = new Date(parseInt(event.messages[0].timestamp) * 1000);
+    const currentDateTime = getMexicoGlobalUtcDate();
+    const timestamp = currentDateTime;
     const senderPhone = WAPhone;
     const senderName = event.contacts[0].profile.name;
     const clientId = client?.id;
@@ -306,7 +307,7 @@ async function storeTextInteractiveMessage(messageDetails: any) {
         message: messageDetails.messageDescription,
         mediaUrl: response.pdfUrl,
         sender: "CLIENT" as SenderType,
-        timestamp: messageDetails.timestamp,
+        timestamp: currentDateTime,
         createdAt: currentDateTime,
         updatedAt: currentDateTime,
       },
@@ -362,7 +363,7 @@ async function handleTextMessage(messageDetails: any) {
       type: "text",
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
-      timestamp: messageDetails.timestamp,
+      timestamp: currentDateTime,
       createdAt: currentDateTime,
       updatedAt: currentDateTime,
     },
@@ -418,7 +419,7 @@ async function handleOwnerTextMessage(messageDetails: any) {
       type: "text",
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
-      timestamp: messageDetails.timestamp,
+      timestamp: currentDateTime,
       createdAt: currentDateTime,
       updatedAt: currentDateTime,
     },

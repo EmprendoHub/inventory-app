@@ -756,6 +756,7 @@ export async function sendRecentOrdersInteractiveMessage(
           template: "recent_orders",
           variables: recentOrders.map((order) => order.orderNo), // Store order numbers as variables
           sender: "SYSTEM" as SenderType,
+          timestamp: currentDateTime,
           createdAt: currentDateTime,
           updatedAt: currentDateTime,
         },
