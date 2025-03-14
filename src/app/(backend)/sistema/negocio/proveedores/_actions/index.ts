@@ -7,6 +7,7 @@ import { unlink, writeFile } from "fs/promises";
 import { join } from "path";
 import { uploadToBucket } from "@/app/_actions";
 import sharp from "sharp";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 export const createSupplier = async (
   state: {
@@ -81,6 +82,7 @@ export const createSupplier = async (
     const savedImageUrl = `${process.env.MINIO_URL}suppliers/${newFilename}`;
 
     try {
+      const createdAt = getMexicoGlobalUtcDate();
       const result = await prisma.$transaction(async (prisma) => {
         // Step 1: Create Supplier
         const newSupplier = await prisma.supplier.create({
@@ -95,6 +97,8 @@ export const createSupplier = async (
             taxId: validatedData.data.taxId,
             notes: validatedData.data.notes,
             image: savedImageUrl,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
 
@@ -199,7 +203,7 @@ export async function updateSupplierAction(
     // Upload the optimized image to Minio
     await uploadToBucket("inventario", "avatars/" + newFilename, path);
     const savedImageUrl = `${process.env.MINIO_URL}avatars/${newFilename}`;
-
+    const createdAt = getMexicoGlobalUtcDate();
     try {
       if (rawData.image) {
         await prisma.supplier.update({
@@ -217,6 +221,7 @@ export async function updateSupplierAction(
             taxId: validatedData.data.taxId,
             notes: validatedData.data.notes,
             image: savedImageUrl,
+            updatedAt: createdAt,
           },
         });
       } else {
@@ -234,6 +239,7 @@ export async function updateSupplierAction(
             paymentTerms: validatedData.data.paymentTerms,
             taxId: validatedData.data.taxId,
             notes: validatedData.data.notes,
+            updatedAt: createdAt,
           },
         });
       }

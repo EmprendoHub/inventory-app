@@ -2,6 +2,7 @@
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
 import { AddInventorySchema, AdjustmentSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 
 export const createAdjustment = async (
@@ -35,6 +36,7 @@ export const createAdjustment = async (
       };
     }
     try {
+      const createdAt = getMexicoGlobalUtcDate();
       await prisma.$transaction(async (prisma) => {
         await prisma.stock.update({
           where: {
@@ -46,6 +48,7 @@ export const createAdjustment = async (
           data: {
             availableQty: { increment: validatedData.data.transAmount },
             quantity: { increment: validatedData.data.transAmount },
+            updatedAt: createdAt,
           },
         });
 
@@ -58,6 +61,8 @@ export const createAdjustment = async (
             reference: `Ajuste de inventario`,
             status: "COMPLETED",
             createdBy: user.id as string, // Or the user ID who cancelled the order
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       });
@@ -76,7 +81,7 @@ export const createAdjustment = async (
         message: "Validation failed. Please check the fields.",
       };
     }
-
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.stock.update({
       where: {
         itemId_warehouseId: {
@@ -84,7 +89,10 @@ export const createAdjustment = async (
           warehouseId: validatedAdjustData.data.sendingWarehouse,
         },
       },
-      data: { quantity: { decrement: validatedAdjustData.data.transAmount } },
+      data: {
+        quantity: { decrement: validatedAdjustData.data.transAmount },
+        updatedAt: createdAt,
+      },
     });
     // Check if stock exists in the receiving warehouse
     const existingStock = await prisma.stock.findUnique({
@@ -105,7 +113,10 @@ export const createAdjustment = async (
             warehouseId: validatedAdjustData.data.receivingWarehouse,
           },
         },
-        data: { quantity: { increment: validatedAdjustData.data.transAmount } },
+        data: {
+          quantity: { increment: validatedAdjustData.data.transAmount },
+          updatedAt: createdAt,
+        },
       });
     } else {
       await prisma.stock.create({
@@ -113,6 +124,8 @@ export const createAdjustment = async (
           itemId: validatedAdjustData.data.articulo,
           warehouseId: validatedAdjustData.data.receivingWarehouse,
           quantity: validatedAdjustData.data.transAmount, // Set initial stock amount
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     }

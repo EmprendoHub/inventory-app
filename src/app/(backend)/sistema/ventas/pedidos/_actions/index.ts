@@ -7,6 +7,7 @@ import {
   generateDeliveryOTP,
   generateOrderId,
   generateTrackingNumber,
+  getMexicoGlobalUtcDate,
 } from "@/lib/utils";
 import { OrderItemsType } from "@/types/sales";
 import { OrderStatus } from "@prisma/client";
@@ -89,7 +90,7 @@ export async function createNewOrder(
     const orderNo = await generateOrderId(prisma);
     const session = await getServerSession(options);
     const user = session?.user;
-
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(
       async (prisma) => {
         // Create the order
@@ -113,6 +114,8 @@ export async function createNewOrder(
                 isGroup: item.isGroup,
               })),
             },
+            createdAt,
+            updatedAt: createdAt,
           },
           include: {
             orderItems: true,
@@ -168,6 +171,7 @@ export async function createNewOrder(
                       quantity: newAvailableQty,
                       availableQty: newAvailableQty,
                       reservedQty: stock.reservedQty,
+                      updatedAt: createdAt,
                     },
                   })
                 );
@@ -181,6 +185,8 @@ export async function createNewOrder(
                       reference: `Order ${newOrder.orderNo}`,
                       status: "COMPLETED",
                       createdBy: newOrder.clientId,
+                      createdAt,
+                      updatedAt: createdAt,
                     },
                   })
                 );
@@ -211,6 +217,7 @@ export async function createNewOrder(
                   quantity: newAvailableQty,
                   availableQty: newAvailableQty,
                   reservedQty: stock.reservedQty,
+                  updatedAt: createdAt,
                 },
               })
             );
@@ -224,6 +231,8 @@ export async function createNewOrder(
                   reference: `Order ${newOrder.orderNo}`,
                   status: "COMPLETED",
                   createdBy: newOrder.clientId,
+                  createdAt,
+                  updatedAt: createdAt,
                 },
               })
             );
@@ -247,6 +256,8 @@ export async function createNewOrder(
               deliveryDate: deliveryDate,
               status: deliveryStatus,
               userId: user.id,
+              createdAt,
+              updatedAt: createdAt,
             },
           });
 
@@ -256,6 +267,7 @@ export async function createNewOrder(
             },
             data: {
               deliveryId: newDelivery.id,
+              updatedAt: createdAt,
             },
           });
         }
@@ -379,6 +391,7 @@ export async function payOrderAction(formData: FormData) {
         message: `El monto del pago de $${paymentAmount} excedería el total del pedido!.`,
       };
     }
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       // Create new payment
       const payment = await prisma.payment.create({
@@ -390,6 +403,8 @@ export async function payOrderAction(formData: FormData) {
           reference,
           status: "PAGADO",
           invoiceId: "",
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -400,6 +415,7 @@ export async function payOrderAction(formData: FormData) {
             balance: {
               increment: Math.round(paymentAmount), // deducts cash withdraw to the current balance
             },
+            updatedAt: createdAt,
           },
         });
         await prisma.cashTransaction.create({
@@ -409,6 +425,8 @@ export async function payOrderAction(formData: FormData) {
             description: `PAGO DE PEDIDO: ${order.orderNo}`,
             cashRegisterId: updatedRegister.id,
             userId: user.id,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }
@@ -425,6 +443,7 @@ export async function payOrderAction(formData: FormData) {
             },
             data: {
               status: orderStatus,
+              updatedAt: createdAt,
             },
           });
         }
@@ -436,6 +455,7 @@ export async function payOrderAction(formData: FormData) {
         },
         data: {
           status: orderStatus as OrderStatus,
+          updatedAt: createdAt,
         },
       });
     });
@@ -467,12 +487,13 @@ export async function markCompletedOrderAction(formData: FormData) {
     id: formData.get("id"),
     status: formData.get("status"),
   };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     const order = await prisma.order.update({
       where: { id: rawData.id as string },
       data: {
         status: rawData.status as OrderStatus,
+        updatedAt: createdAt,
       },
     });
 
@@ -589,7 +610,7 @@ export async function payOrderActionOnDelivery(formData: FormData) {
         message: `Debe pagar total remanente: $${balance} del pedido para entregar!.`,
       };
     }
-
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       // Create new payment
       await prisma.payment.create({
@@ -601,6 +622,8 @@ export async function payOrderActionOnDelivery(formData: FormData) {
           reference,
           status: "PAGADO",
           invoiceId: "",
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -610,6 +633,7 @@ export async function payOrderActionOnDelivery(formData: FormData) {
           balance: {
             increment: paymentAmount, // Adds paymentAmount to the current balance
           },
+          updatedAt: createdAt,
         },
       });
 
@@ -620,6 +644,8 @@ export async function payOrderActionOnDelivery(formData: FormData) {
           description: `PAGO A LA ENTREGA PEDIDO: ${order.orderNo}`,
           cashRegisterId: updatedRegister.id,
           userId: user.id,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -636,6 +662,7 @@ export async function payOrderActionOnDelivery(formData: FormData) {
             },
             data: {
               status: deliveryStatus,
+              updatedAt: createdAt,
             },
           });
         }
@@ -671,7 +698,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
     signature: formData.get("signature"),
     // imageUrl: formData.get("imageUrl"),
   };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     const order = await prisma.order.update({
       where: { id: rawData.id as string },
@@ -679,6 +706,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
         signature: rawData.signature as string,
         // imageUrl: rawData.imageUrl as string,
         status: "ENTREGADO",
+        updatedAt: createdAt,
       },
     });
 
@@ -696,6 +724,7 @@ export async function updateOrderOnDelivery(formData: FormData) {
         signature: rawData.signature as string,
         // imageUrl: rawData.imageUrl as string,
         status: "ENTREGADO",
+        updatedAt: createdAt,
       },
     });
 
@@ -746,7 +775,7 @@ export async function deletePaymentAction(formData: FormData) {
 
   if (!validatedData.data)
     return { success: false, message: "Error al borrar pago" };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     const canceledPayment = await prisma.payment.update({
       where: {
@@ -754,6 +783,7 @@ export async function deletePaymentAction(formData: FormData) {
       },
       data: {
         status: "CANCELADO",
+        updatedAt: createdAt,
       },
       include: {
         order: true,
@@ -766,6 +796,7 @@ export async function deletePaymentAction(formData: FormData) {
         balance: {
           decrement: canceledPayment.amount, // Adds paymentAmount to the current balance
         },
+        updatedAt: createdAt,
       },
     });
 
@@ -776,6 +807,8 @@ export async function deletePaymentAction(formData: FormData) {
         description: `CANCELACIÓN DE PAGO - PEDIDO: ${canceledPayment.orderNo}`,
         cashRegisterId: updatedRegister.id,
         userId: validatedData.data.userId,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -832,6 +865,7 @@ export async function deleteOrderAction(formData: FormData) {
         message: "Order not found",
       };
     }
+    const createdAt = getMexicoGlobalUtcDate();
 
     // Start a transaction to ensure atomicity
     await prisma.$transaction(async (prisma) => {
@@ -855,6 +889,7 @@ export async function deleteOrderAction(formData: FormData) {
                 reservedQty: stock.reservedQty,
                 availableQty: stock.availableQty + quantityToRelease,
                 quantity: stock.quantity + quantityToRelease,
+                updatedAt: createdAt,
               },
             });
 
@@ -867,6 +902,8 @@ export async function deleteOrderAction(formData: FormData) {
                 reference: `Order ${order.orderNo} deleted`,
                 status: "COMPLETED",
                 createdBy: rawData.userId as string, // Or the user ID who deleted the order
+                createdAt,
+                updatedAt: createdAt,
               },
             });
 
@@ -889,6 +926,7 @@ export async function deleteOrderAction(formData: FormData) {
         },
         data: {
           status: "CANCELADO",
+          updatedAt: createdAt,
         },
         include: {
           payments: {
@@ -910,6 +948,7 @@ export async function deleteOrderAction(formData: FormData) {
           balance: {
             decrement: previousPayments, // Adds paymentAmount to the current balance
           },
+          updatedAt: createdAt,
         },
       });
 
@@ -920,6 +959,8 @@ export async function deleteOrderAction(formData: FormData) {
           description: `CANCELACIÓN DE PEDIDO: ${order.orderNo}`,
           cashRegisterId: updatedRegister.id,
           userId: validatedData.data.userId,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -940,6 +981,7 @@ export async function deleteOrderAction(formData: FormData) {
           },
           data: {
             status: "CANCELADO",
+            updatedAt: createdAt,
           },
         });
       }
@@ -989,7 +1031,7 @@ export async function deleteOrderItemsAction(formData: FormData) {
   try {
     const orderId = validatedData.data.orderId;
     const itemId = validatedData.data.id;
-
+    const createdAt = getMexicoGlobalUtcDate();
     // Fetch the order with its items
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -1026,6 +1068,7 @@ export async function deleteOrderItemsAction(formData: FormData) {
                 reservedQty: stock.reservedQty,
                 availableQty: stock.availableQty + quantityToRelease,
                 quantity: stock.quantity + quantityToRelease,
+                updatedAt: createdAt,
               },
             });
 
@@ -1038,6 +1081,8 @@ export async function deleteOrderItemsAction(formData: FormData) {
                 reference: `Order ${order.orderNo} cancelled`,
                 status: "COMPLETED",
                 createdBy: rawData.userId as string, // Or the user ID who cancelled the order
+                createdAt,
+                updatedAt: createdAt,
               },
             });
 
@@ -1059,13 +1104,14 @@ export async function deleteOrderItemsAction(formData: FormData) {
           },
           data: {
             status: "CANCELADO",
+            updatedAt: createdAt,
           },
         });
 
         // Update the order status to CANCELADO
         await prisma.order.update({
           where: { id: orderId },
-          data: { status: "CANCELADO" },
+          data: { status: "CANCELADO", updatedAt: createdAt },
         });
       } else {
         // Delete the specified order item

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { TruckFormState } from "@/types/truck";
 import { TruckSchema } from "@/lib/schemas";
 import { TruckStatus } from "@prisma/client";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 export const createTruckAction = async (
   state: TruckFormState,
@@ -30,7 +31,7 @@ export const createTruckAction = async (
   }
 
   const truckData = validatedData.data;
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.truck.create({
@@ -39,6 +40,8 @@ export const createTruckAction = async (
           km: truckData.km,
           licensePlate: truckData.licensePlate,
           status: truckData.status as TruckStatus,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     });
@@ -79,7 +82,7 @@ export const updateTruckAction = async (
   }
 
   const truckData = validatedData.data;
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.truck.update({
@@ -89,6 +92,7 @@ export const updateTruckAction = async (
           km: truckData.km,
           licensePlate: truckData.licensePlate,
           status: truckData.status,
+          updatedAt: createdAt,
         },
       });
     });

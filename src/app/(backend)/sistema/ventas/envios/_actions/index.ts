@@ -4,7 +4,11 @@ import prisma from "@/lib/db";
 import { DeliveryFormState } from "@/types/delivery";
 import { revalidatePath } from "next/cache";
 import { DeliverySchema } from "@/lib/schemas";
-import { generateDeliveryOTP, generateTrackingNumber } from "@/lib/utils";
+import {
+  generateDeliveryOTP,
+  generateTrackingNumber,
+  getMexicoGlobalUtcDate,
+} from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 
@@ -64,8 +68,7 @@ export const createDeliveryAction = async (
   }
   const otp = generateDeliveryOTP();
   const trackingNumber = generateTrackingNumber();
-  console.log("deliveryData", deliveryData);
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.$transaction(async (prisma) => {
       const newDelivery = await prisma.delivery.create({
@@ -82,6 +85,8 @@ export const createDeliveryAction = async (
           deliveryDate: deliveryDate,
           status: deliveryData.status,
           userId: user.id,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -89,6 +94,7 @@ export const createDeliveryAction = async (
         where: { id: deliveryData.orderId },
         data: {
           deliveryId: newDelivery.id,
+          updatedAt: createdAt,
         },
       });
     });
@@ -155,6 +161,7 @@ export const updateDeliveryAction = async (
   }
   const otp = generateDeliveryOTP();
   const trackingNumber = generateTrackingNumber();
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.delivery.update({
@@ -170,6 +177,7 @@ export const updateDeliveryAction = async (
           trackingNumber,
           deliveryDate: deliveryDate,
           status: deliveryData.status,
+          updatedAt: createdAt,
         },
       });
     });
@@ -209,7 +217,7 @@ export const deleteDeliveryAction = async (formData: FormData) => {
         },
       },
     });
-
+    const createdAt = getMexicoGlobalUtcDate();
     if (order && delivery) {
       // Try to find an exact match first
       let matchingPayment = order.payments.find(
@@ -220,7 +228,7 @@ export const deleteDeliveryAction = async (formData: FormData) => {
         // If exact match is found, update the payment status to "CANCELADO"
         await prisma.payment.update({
           where: { id: matchingPayment.id },
-          data: { status: "CANCELADO" },
+          data: { status: "CANCELADO", updatedAt: createdAt },
         });
         // console.log("Exact match found. Payment status updated to CANCELADO.");
       } else {
@@ -235,7 +243,7 @@ export const deleteDeliveryAction = async (formData: FormData) => {
 
           await prisma.payment.update({
             where: { id: matchingPayment.id },
-            data: { amount: updatedAmount },
+            data: { amount: updatedAmount, updatedAt: createdAt },
           });
           console.log(
             "No exact match. Subtracted delivery price from the matching payment. Updated amount:",
@@ -253,6 +261,7 @@ export const deleteDeliveryAction = async (formData: FormData) => {
       where: { id },
       data: {
         status: "CANCELADO",
+        updatedAt: createdAt,
       },
     });
 
@@ -273,7 +282,7 @@ export const deleteDeliveryAction = async (formData: FormData) => {
 
 export const acceptDeliveryAction = async (formData: FormData) => {
   const id = formData.get("id") as string;
-
+  const createdAt = getMexicoGlobalUtcDate();
   if (!id) {
     return { success: false, message: "Delivery ID is required." };
   }
@@ -291,6 +300,7 @@ export const acceptDeliveryAction = async (formData: FormData) => {
           userId: session?.user.id,
           driverId: driver?.id,
           status: "EN CAMINO",
+          updatedAt: createdAt,
         },
       });
     }
@@ -312,7 +322,7 @@ export const acceptDeliveryAction = async (formData: FormData) => {
 
 export const deliverDeliveryAction = async (formData: FormData) => {
   const id = formData.get("id") as string;
-
+  const createdAt = getMexicoGlobalUtcDate();
   if (!id) {
     return { success: false, message: "Delivery ID is required." };
   }
@@ -330,6 +340,7 @@ export const deliverDeliveryAction = async (formData: FormData) => {
           userId: session?.user.id,
           driverId: driver?.id,
           status: "ENTREGADO",
+          updatedAt: createdAt,
         },
       });
     }

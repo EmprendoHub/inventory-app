@@ -3,6 +3,7 @@
 import { uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { idSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { writeFile } from "fs/promises";
 import { revalidatePath } from "next/cache";
 import { join } from "path";
@@ -69,7 +70,7 @@ export async function createClient(
       message: "Please fix the errors before submitting.",
     };
   }
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.client.create({
       data: {
@@ -79,6 +80,8 @@ export async function createClient(
         phone,
         address,
         image: savedImageUrl,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
     revalidatePath("/sistema/ventas/clientes");
@@ -180,7 +183,7 @@ export async function updateClient(
       message: "Please fix the errors before submitting.",
     };
   }
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     if (image) {
       await prisma.client.update({
@@ -193,6 +196,7 @@ export async function updateClient(
           phone,
           address,
           image: savedImageUrl,
+          updatedAt: createdAt,
         },
       });
     } else {
@@ -205,6 +209,7 @@ export async function updateClient(
           email,
           phone,
           address,
+          updatedAt: createdAt,
         },
       });
     }
@@ -345,6 +350,7 @@ export async function toggleClientStatusAction(formData: FormData) {
     }
     // Toggle the status
     const newStatus = client.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction([
       prisma.client.update({
         where: {
@@ -352,6 +358,7 @@ export async function toggleClientStatusAction(formData: FormData) {
         },
         data: {
           status: newStatus,
+          updatedAt: createdAt,
         },
       }),
     ]);

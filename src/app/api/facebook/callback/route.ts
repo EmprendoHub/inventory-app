@@ -670,6 +670,7 @@ async function escalateToHumanAgent(details: {
   clientId: string | undefined;
   reason: string;
 }) {
+  const createdAt = getMexicoGlobalUtcDate();
   // Create escalation record
   await prisma.escalation.create({
     data: {
@@ -677,7 +678,7 @@ async function escalateToHumanAgent(details: {
       phone: details.phone,
       reason: details.reason,
       status: "PENDING",
-      timestamp: new Date(),
+      timestamp: createdAt,
     },
   });
 

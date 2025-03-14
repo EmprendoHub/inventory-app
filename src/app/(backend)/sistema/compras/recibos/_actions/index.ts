@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { GoodsReceiptFormState } from "@/types/goodsReceipts";
 import { revalidatePath } from "next/cache";
 
@@ -29,6 +30,7 @@ export const createGoodsReceiptAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       const newGoodsReceipt = await prisma.goodsReceipt.create({
         data: {
@@ -36,6 +38,8 @@ export const createGoodsReceiptAction = async (
           purchaseOrderId: rawData.purchaseOrderId as string,
           receivedDate: new Date(rawData.receivedDate as string),
           notes: rawData.notes as string,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -46,6 +50,8 @@ export const createGoodsReceiptAction = async (
             itemId: item.itemId,
             quantity: item.quantity,
             notes: item.notes,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }
@@ -91,6 +97,7 @@ export async function updateGoodsReceiptAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       await prisma.goodsReceipt.update({
         where: {
@@ -101,6 +108,7 @@ export async function updateGoodsReceiptAction(
           purchaseOrderId: rawData.purchaseOrderId,
           receivedDate: new Date(rawData.receivedDate),
           notes: rawData.notes,
+          updatedAt: createdAt,
         },
       });
 
@@ -117,6 +125,8 @@ export async function updateGoodsReceiptAction(
             itemId: item.itemId,
             quantity: item.quantity,
             notes: item.notes,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }

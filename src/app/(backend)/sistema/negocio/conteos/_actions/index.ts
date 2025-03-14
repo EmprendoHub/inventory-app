@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { InventoryCountFormState } from "@/types/inventoryCounts";
 import { revalidatePath } from "next/cache";
 
@@ -25,6 +26,7 @@ export const createInventoryCountAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       const newInventoryCount = await prisma.inventoryCount.create({
         data: {
@@ -32,6 +34,8 @@ export const createInventoryCountAction = async (
           countDate: new Date(rawData.countDate as string),
           notes: rawData.notes as string,
           createdBy: rawData.createdBy as string,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -44,6 +48,8 @@ export const createInventoryCountAction = async (
             actualQty: item.actualQty,
             difference: item.expectedQty - item.actualQty,
             notes: item.notes,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }
@@ -82,6 +88,7 @@ export async function updateInventoryCountAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       await prisma.inventoryCount.update({
         where: {
@@ -92,6 +99,7 @@ export async function updateInventoryCountAction(
           countDate: new Date(rawData.countDate),
           notes: rawData.notes,
           approvedBy: rawData.approvedBy,
+          updatedAt: createdAt,
         },
       });
 
@@ -110,6 +118,8 @@ export async function updateInventoryCountAction(
             actualQty: item.actualQty,
             difference: item.expectedQty - item.actualQty,
             notes: item.notes,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }

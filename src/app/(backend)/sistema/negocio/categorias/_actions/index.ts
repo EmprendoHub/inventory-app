@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/db";
 import { CategorySchema, idSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
 export const createCategory = async (
@@ -35,7 +36,6 @@ export const createCategory = async (
     title: validatedData.data.title,
     description: validatedData.data.description,
   };
-
   await prisma.category.create({ data: newCatData });
   revalidatePath("/sistema/negocio/categorias");
   return { success: true, message: "Categoría creada exitosamente!" };
@@ -74,7 +74,7 @@ export async function updateCategoryAction(
 
       message: "Error al validar campos del producto",
     };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.category.update({
       where: {
@@ -83,6 +83,7 @@ export async function updateCategoryAction(
       data: {
         title: rawData.title,
         description: rawData.description,
+        updatedAt: createdAt,
       },
     });
     revalidatePath(`/sistemas/negocio/categorias/editar/${rawData.categoryId}`);

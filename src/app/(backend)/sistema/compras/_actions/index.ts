@@ -2,7 +2,7 @@
 
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
-import { generatePurchaseOrderId } from "@/lib/utils";
+import { generatePurchaseOrderId, getMexicoGlobalUtcDate } from "@/lib/utils";
 import { supplierType } from "@/types/categories";
 import { PurchaseOrderFormState } from "@/types/purchaseOrders";
 import { POStatus } from "@prisma/client";
@@ -33,6 +33,7 @@ export const createPurchaseOrderAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     const poNumber = await generatePurchaseOrderId(prisma);
     await prisma.$transaction(async (prisma) => {
       const newPurchaseOrder = await prisma.purchaseOrder.create({
@@ -44,6 +45,8 @@ export const createPurchaseOrderAction = async (
           taxAmount: rawData.taxAmount,
           notes: rawData.notes as string,
           expectedDate: new Date(rawData.expectedDate as string),
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -58,6 +61,8 @@ export const createPurchaseOrderAction = async (
             unitPrice: item.unitPrice,
             tax: itemTax,
             receivedQty: item.receivedQty,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }
@@ -108,6 +113,7 @@ export async function updatePurchaseOrderAction(
       ? "RECIBIDO"
       : "PENDIENTE";
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       await prisma.purchaseOrder.update({
         where: {
@@ -119,6 +125,7 @@ export async function updatePurchaseOrderAction(
           taxAmount: rawData.taxAmount,
           notes: rawData.notes,
           expectedDate: new Date(rawData.expectedDate),
+          updatedAt: createdAt,
         },
       });
 
@@ -139,6 +146,8 @@ export async function updatePurchaseOrderAction(
             unitPrice: item.unitPrice,
             tax: itemTax,
             receivedQty: item.receivedQty,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }
@@ -182,6 +191,7 @@ export async function authorizePurchaseOrderAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       await prisma.purchaseOrder.update({
         where: {
@@ -193,6 +203,7 @@ export async function authorizePurchaseOrderAction(
           taxAmount: rawData.taxAmount,
           notes: rawData.notes,
           expectedDate: new Date(rawData.expectedDate),
+          updatedAt: createdAt,
         },
       });
 
@@ -213,6 +224,8 @@ export async function authorizePurchaseOrderAction(
             unitPrice: item.unitPrice,
             tax: itemTax,
             receivedQty: item.receivedQty,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }
@@ -250,6 +263,7 @@ export async function receivePurchaseOrderAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(
       async (prisma) => {
         console.log("Starting transaction...");
@@ -261,12 +275,10 @@ export async function receivePurchaseOrderAction(
           data: {
             status: "RECIBIDO" as POStatus,
             notes: rawData.notes,
-            updatedAt: new Date(),
             userId,
+            updatedAt: createdAt,
           },
         });
-
-        console.log("Purchase order updated:", updatedPurchaseOrder);
 
         const warehouse = await prisma.warehouse.findFirst({});
         if (!warehouse) {
@@ -274,13 +286,13 @@ export async function receivePurchaseOrderAction(
         }
 
         for (const item of rawData.items) {
-          console.log("Updating purchase order item:", item.id);
           await prisma.purchaseOrderItem.update({
             where: {
               id: item.id,
             },
             data: {
               receivedQty: item.quantity,
+              updatedAt: createdAt,
             },
           });
 
@@ -324,6 +336,7 @@ export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
   pOrderNo: string;
 }) => {
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       await prisma.stock.update({
         where: {
@@ -335,6 +348,7 @@ export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
         data: {
           availableQty: { increment: adjustmentInfo.transAmount },
           quantity: { increment: adjustmentInfo.transAmount },
+          updatedAt: createdAt,
         },
       });
 
@@ -346,7 +360,9 @@ export const createReceivedOrderStockAdjustment = async (adjustmentInfo: {
           quantity: adjustmentInfo.transAmount,
           reference: `Inventario recibo de orden de compra: ${adjustmentInfo.pOrderNo}`,
           status: "COMPLETED",
-          createdBy: adjustmentInfo.itemId, // Or the user ID who cancelled the order
+          createdBy: adjustmentInfo.itemId, // Or the user ID who cancelled the order,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     });
@@ -390,7 +406,7 @@ export async function cancelPurchaseOrderAction(formData: FormData) {
   const rawData = {
     id: formData.get("id") as string,
   };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.purchaseOrderItem.updateMany({
       where: {
@@ -398,6 +414,7 @@ export async function cancelPurchaseOrderAction(formData: FormData) {
       },
       data: {
         receivedQty: 0,
+        updatedAt: createdAt,
       },
     });
 
@@ -407,6 +424,7 @@ export async function cancelPurchaseOrderAction(formData: FormData) {
       },
       data: {
         status: "CANCELADO",
+        updatedAt: createdAt,
       },
     });
 

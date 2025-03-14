@@ -1,6 +1,7 @@
 "use server";
 import prisma from "@/lib/db";
 import { idSchema, UnitSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
 export const createUnit = async (
@@ -72,7 +73,7 @@ export async function updateUnitAction(
 
       message: "Error al validar campos del producto",
     };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.unit.update({
       where: {
@@ -81,6 +82,7 @@ export async function updateUnitAction(
       data: {
         title: rawData.title,
         abbreviation: rawData.abbreviation,
+        updatedAt: createdAt,
       },
     });
     revalidatePath(`/sistemas/negocio/unidades/editar/${rawData.unitId}`);

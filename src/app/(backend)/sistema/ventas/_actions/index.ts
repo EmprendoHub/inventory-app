@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/db";
 import { AddInventorySchema, AdjustmentSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 export const createAdjustment = async (
   state: {
@@ -19,7 +20,7 @@ export const createAdjustment = async (
     formType: formData.get("formType"),
     notes: formData.get("notes"),
   };
-
+  const createdAt = getMexicoGlobalUtcDate();
   if (rawData.formType === "add") {
     const validatedData = AddInventorySchema.safeParse(rawData);
     if (!validatedData.success) {
@@ -38,7 +39,10 @@ export const createAdjustment = async (
           warehouseId: validatedData.data.sendingWarehouse,
         },
       },
-      data: { quantity: { increment: validatedData.data.transAmount } },
+      data: {
+        quantity: { increment: validatedData.data.transAmount },
+        updatedAt: createdAt,
+      },
     });
   } else {
     // Validate the data using Zod
@@ -60,7 +64,10 @@ export const createAdjustment = async (
           warehouseId: validatedAdjustData.data.sendingWarehouse,
         },
       },
-      data: { quantity: { decrement: validatedAdjustData.data.transAmount } },
+      data: {
+        quantity: { decrement: validatedAdjustData.data.transAmount },
+        updatedAt: createdAt,
+      },
     });
     // Check if stock exists in the receiving warehouse
     const existingStock = await prisma.stock.findUnique({
@@ -81,7 +88,10 @@ export const createAdjustment = async (
             warehouseId: validatedAdjustData.data.receivingWarehouse,
           },
         },
-        data: { quantity: { increment: validatedAdjustData.data.transAmount } },
+        data: {
+          quantity: { increment: validatedAdjustData.data.transAmount },
+          updatedAt: createdAt,
+        },
       });
     } else {
       await prisma.stock.create({
@@ -89,6 +99,8 @@ export const createAdjustment = async (
           itemId: validatedAdjustData.data.articulo,
           warehouseId: validatedAdjustData.data.receivingWarehouse,
           quantity: validatedAdjustData.data.transAmount, // Set initial stock amount
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     }
@@ -106,7 +118,7 @@ export async function processPayment(
   formData: FormData
 ) {
   "use server";
-
+  const createdAt = getMexicoGlobalUtcDate();
   const amount = Number(formData.get("amount"));
   const method = formData.get("method") as string;
   const reference = formData.get("reference") as string;
@@ -142,6 +154,8 @@ export async function processPayment(
         order: {
           connect: { id: formData.get("orderId") as string },
         },
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 

@@ -10,6 +10,7 @@ import { revalidatePath } from "next/cache";
 import { join } from "path";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 export const createUserAction = async (
   state: UserFormState,
@@ -74,6 +75,7 @@ export const createUserAction = async (
   const verificationToken = crypto.randomBytes(64).toString("hex");
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     const newUser = await prisma.user.create({
       data: {
         name: validatedData.data.name,
@@ -85,6 +87,8 @@ export const createUserAction = async (
         role: validatedData.data.role as Role,
         verificationToken,
         avatar: savedImageUrl,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -95,6 +99,8 @@ export const createUserAction = async (
           userId: newUser.id,
           status: "DISPONIBLE" as DriverStatus,
           licenseNumber: "",
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     }
@@ -172,6 +178,7 @@ export async function updateUserAction(
   const savedImageUrl = `${process.env.MINIO_URL}avatars/${newFilename}`;
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     if (rawData.avatar) {
       await prisma.user.update({
         where: {
@@ -186,6 +193,7 @@ export async function updateUserAction(
           password: hashedPassword,
           role: validatedData.data.role as Role,
           avatar: savedImageUrl,
+          updatedAt: createdAt,
         },
       });
     } else {
@@ -201,6 +209,7 @@ export async function updateUserAction(
           active: validatedData.data.active,
           password: hashedPassword,
           role: validatedData.data.role as Role,
+          updatedAt: createdAt,
         },
       });
     }

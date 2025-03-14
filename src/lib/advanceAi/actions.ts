@@ -2,6 +2,7 @@ import { OpenAI } from "openai";
 import prisma from "@/lib/db";
 import { SenderType } from "@prisma/client";
 import axios from "axios";
+import { getMexicoGlobalUtcDate } from "../utils";
 
 // Create OpenAI client
 const openai = new OpenAI({
@@ -255,13 +256,14 @@ export async function summarizeConversation(phone: string) {
 
     const summary =
       response.choices[0].message.content || "No se pudo generar un resumen.";
-
+    const createdAt = getMexicoGlobalUtcDate();
     // Store the summary
     await prisma.conversationSummary.create({
       data: {
         phone,
         summary,
-        timestamp: new Date(),
+        timestamp: createdAt,
+        createdAt,
       },
     });
 
@@ -416,7 +418,7 @@ export async function generateAiFollowUp(phone: string) {
     };
 
     await axios(config);
-
+    const createdAt = getMexicoGlobalUtcDate();
     // Store the message in our database
     await prisma.whatsAppMessage.create({
       data: {
@@ -425,7 +427,8 @@ export async function generateAiFollowUp(phone: string) {
         message: followUpMessage,
         sender: "SYSTEM" as SenderType,
         template: "ai_generated",
-        timestamp: new Date(),
+        timestamp: createdAt,
+        updatedAt: createdAt,
         clientId: client.id,
       },
     });
@@ -464,7 +467,7 @@ export async function analyzeCustomerSentiment(phone: string) {
 
     // Combine messages for analysis
     const messageText = clientMessages.map((msg) => msg.message).join("\n");
-
+    const createdAt = getMexicoGlobalUtcDate();
     // Use OpenAI to analyze sentiment
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -499,7 +502,7 @@ export async function analyzeCustomerSentiment(phone: string) {
         score: sentimentAnalysis.score || 5,
         topics: sentimentAnalysis.topics || [""],
         urgentIssues: sentimentAnalysis.urgentIssues || [""],
-        timestamp: new Date(),
+        timestamp: createdAt,
       },
     });
 

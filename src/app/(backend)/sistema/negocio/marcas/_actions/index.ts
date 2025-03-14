@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/db";
 import { BrandSchema, idSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
 export const createBrand = async (
@@ -73,7 +74,7 @@ export async function updateBrandAction(
 
       message: "Error al validar campos del producto",
     };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.brand.update({
       where: {
@@ -82,6 +83,7 @@ export async function updateBrandAction(
       data: {
         name: rawData.name,
         description: rawData.description,
+        updatedAt: createdAt,
       },
     });
     revalidatePath(`/sistemas/negocio/marcas/editar/${rawData.brandId}`);

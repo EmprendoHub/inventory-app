@@ -3,7 +3,11 @@
 import { uploadToBucket } from "@/app/_actions";
 import prisma from "@/lib/db";
 import { idSchema, ProductSchema } from "@/lib/schemas";
-import { generateUniqueBarcode, generateUniqueSKU } from "@/lib/utils";
+import {
+  generateUniqueBarcode,
+  generateUniqueSKU,
+  getMexicoGlobalUtcDate,
+} from "@/lib/utils";
 import { ItemFormState } from "@/types/items";
 type ItemStatus = "ACTIVE" | "INACTIVE";
 import { unlink, writeFile } from "fs/promises";
@@ -92,6 +96,7 @@ export const createItemAction = async (
     const generatedBarcode = await generateUniqueBarcode();
     const generatedSku = await generateUniqueSKU();
     try {
+      const createdAt = getMexicoGlobalUtcDate();
       await prisma.$transaction(async (prisma: any) => {
         // Step 1: Create Product
         const newProduct = await prisma.item.create({
@@ -111,6 +116,8 @@ export const createItemAction = async (
             supplierId: validatedData.data.supplier,
             notes: validatedData.data.notes,
             mainImage: savedImageUrl,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
 
@@ -122,6 +129,8 @@ export const createItemAction = async (
             quantity: validatedData.data.stock || 0, // Store stock in the Stock table
             availableQty: validatedData.data.stock || 0, // Set available quantity
             reservedQty: 0, // Initially, no reserved quantity
+            createdAt,
+            updatedAt: createdAt,
           },
         });
 
@@ -135,6 +144,8 @@ export const createItemAction = async (
             reference: `Initial stock for product ${newProduct.id}`,
             status: "COMPLETED",
             createdBy: validatedData.data.userId ?? "", // Or the user ID who created the product
+            createdAt,
+            updatedAt: createdAt,
           },
         });
 
@@ -208,6 +219,7 @@ export async function updateItemAction(
     };
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     if (
       rawData.image &&
       rawData.image instanceof File &&
@@ -261,6 +273,7 @@ export async function updateItemAction(
           supplierId: rawData.supplier,
           notes: rawData.notes,
           mainImage: savedImageUrl,
+          updatedAt: createdAt,
         },
       });
     } else {
@@ -281,6 +294,7 @@ export async function updateItemAction(
           tax: rawData.tax,
           supplierId: rawData.supplier,
           notes: rawData.notes,
+          updatedAt: createdAt,
         },
       });
     }
@@ -399,7 +413,7 @@ export async function toggleItemStatusAction(formData: FormData) {
 
     // Toggle the status
     const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
+    const createdAt = getMexicoGlobalUtcDate();
     // Update the item with the new status
     await prisma.item.update({
       where: {
@@ -407,6 +421,7 @@ export async function toggleItemStatusAction(formData: FormData) {
       },
       data: {
         status: newStatus as ItemStatus,
+        updatedAt: createdAt,
       },
     });
 
@@ -489,7 +504,7 @@ export async function createItemGroup(
 
   await uploadToBucket("inventario", "products/" + newFilename, path);
   const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     // Create the ItemGroup
     await prisma.itemGroup.create({
@@ -503,6 +518,8 @@ export async function createItemGroup(
             quantity,
           })),
         },
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -585,7 +602,7 @@ export async function updateItemGroupAction(
 
   await uploadToBucket("inventario", "products/" + newFilename, path);
   const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     // Update the ItemGroup
     await prisma.itemGroup.update({
@@ -603,6 +620,7 @@ export async function updateItemGroupAction(
             quantity,
           })),
         },
+        updatedAt: createdAt,
       },
     });
 
@@ -707,7 +725,7 @@ export async function toggleItemGroupStatusAction(formData: FormData) {
 
     // Toggle the status
     const newStatus = item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
+    const createdAt = getMexicoGlobalUtcDate();
     // Update the item with the new status
     await prisma.itemGroup.update({
       where: {
@@ -715,6 +733,7 @@ export async function toggleItemGroupStatusAction(formData: FormData) {
       },
       data: {
         status: newStatus as ItemStatus,
+        updatedAt: createdAt,
       },
     });
 

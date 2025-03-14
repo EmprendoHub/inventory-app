@@ -3,6 +3,7 @@
 
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { ExpenseFormState } from "@/types/expenses";
 import { ExpenseStatus, ExpenseType } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -36,6 +37,7 @@ export const createExpenseAction = async (
   const driver = JSON.parse(rawData.driver);
   const truck = JSON.parse(rawData.truck);
   const supplier = JSON.parse(rawData.supplier);
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.$transaction(async (prisma) => {
       await prisma.expense.create({
@@ -51,6 +53,8 @@ export const createExpenseAction = async (
           driverId: driver && (driver.id as string),
           truckId: truck && (truck.id as string),
           supplierId: supplier && (supplier.id as string),
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -60,6 +64,7 @@ export const createExpenseAction = async (
           balance: {
             decrement: rawData.amount, // deducts cash withdraw to the current balance
           },
+          updatedAt: createdAt,
         },
       });
 
@@ -70,6 +75,8 @@ export const createExpenseAction = async (
           description: `GASTO ${rawData.type}: ${rawData.description}`,
           cashRegisterId: updatedRegister.id,
           userId: user.id,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     });
@@ -114,6 +121,7 @@ export async function updateExpenseAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.expense.update({
       where: {
         id: rawData.id,
@@ -132,6 +140,7 @@ export async function updateExpenseAction(
         truckId: rawData.truckId,
         externalShipId: rawData.externalShipId,
         supplierId: rawData.supplierId,
+        updatedAt: createdAt,
       },
     });
 

@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/db";
 import { idSchema, WarehouseSchema } from "@/lib/schemas";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { WarehouseType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
@@ -36,7 +37,7 @@ export const createWarehouse = async (
       message: "Validation failed. Please check the fields.",
     };
   }
-
+  const createdAt = getMexicoGlobalUtcDate();
   const newWarehouseData = {
     title: validatedData.data.title,
     code: validatedData.data.code,
@@ -48,6 +49,8 @@ export const createWarehouse = async (
       postalCode: validatedData.data.postalCode,
     },
     type: validatedData.data.type as WarehouseType,
+    createdAt,
+    updatedAt: createdAt,
   };
 
   await prisma.warehouse.create({
@@ -95,7 +98,7 @@ export async function updateWarehouseAction(
       success: false,
       message: "Error al validar campos del producto",
     };
-
+  const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.warehouse.update({
       where: {
@@ -114,6 +117,7 @@ export async function updateWarehouseAction(
             postalCode: rawData.postalCode,
           },
         },
+        updatedAt: createdAt,
       },
     });
     revalidatePath(`/sistemas/negocio/bodegas/editar/${rawData.warehouseId}`);

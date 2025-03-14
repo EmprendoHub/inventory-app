@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { NextResponse } from "next/server";
 import axios from "axios";
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 export async function POST(request: any) {
   const cookie = await request.headers.get("cookie");
@@ -58,7 +59,7 @@ export async function POST(request: any) {
       const name = username;
       // Generate a random 64-byte token
       const verificationToken = crypto.randomBytes(64).toString("hex");
-
+      const createdAt = getMexicoGlobalUtcDate();
       const hashedPassword = await bcrypt.hash(pass, 10);
       const newUser = await prisma.user.create({
         data: {
@@ -66,6 +67,8 @@ export async function POST(request: any) {
           email,
           verificationToken,
           password: hashedPassword,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 

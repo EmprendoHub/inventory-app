@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import axios from "axios";
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 type userType = {
   id: string;
@@ -99,13 +100,13 @@ export const options = {
           }
 
           const comparePass = await bcrypt.compare(password, user.password);
-
+          const createdAt = getMexicoGlobalUtcDate();
           if (!comparePass) {
             console.error("Password does not match");
             user.loginAttempts += 1;
             await prisma.user.update({
               where: { id: user.id },
-              data: { loginAttempts: user.loginAttempts },
+              data: { loginAttempts: user.loginAttempts, updatedAt: createdAt },
             });
 
             if (user.loginAttempts >= 3) {
@@ -121,7 +122,7 @@ export const options = {
 
           const updatedUser = await prisma.user.update({
             where: { id: user.id },
-            data: { loginAttempts: 0 },
+            data: { loginAttempts: 0, updatedAt: createdAt },
           });
 
           return updatedUser;
@@ -157,13 +158,15 @@ export const options = {
           if (!existinguser) {
             // Generate a random 64-byte token
             const verificationToken = crypto.randomBytes(64).toString("hex");
-
+            const createdAt = getMexicoGlobalUtcDate();
             await prisma.user.create({
               data: {
                 email: user.email,
                 name: user.name,
                 verificationToken: verificationToken,
                 active: true,
+                createdAt,
+                updatedAt: createdAt,
               },
             });
 

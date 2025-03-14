@@ -1,4 +1,5 @@
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { NextResponse } from "next/server";
 
 export async function POST(request: any) {
@@ -17,12 +18,13 @@ export async function POST(request: any) {
         verificationToken: token,
       },
     });
-
+    const createdAt = getMexicoGlobalUtcDate();
     if (verifiedUser) {
       await prisma.user.update({
         where: { id: verifiedUser.id },
         data: {
           active: true,
+          updatedAt: createdAt,
         },
       });
 

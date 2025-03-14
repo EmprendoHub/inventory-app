@@ -2,6 +2,7 @@
 "use server";
 
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { AccountingFormState } from "@/types/accounting";
 import {
   AccountType,
@@ -33,6 +34,7 @@ export const createAccountAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.account.create({
       data: {
         code: rawData.code as string,
@@ -40,6 +42,8 @@ export const createAccountAction = async (
         type: rawData.type as AccountType,
         description: rawData.description as string,
         parentAccount: rawData.parentAccount as string,
+        updatedAt: createdAt,
+        createdAt,
       },
     });
 
@@ -76,6 +80,7 @@ export async function updateAccountAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.account.update({
       where: {
         id: rawData.id,
@@ -86,6 +91,7 @@ export async function updateAccountAction(
         type: rawData.type as AccountType,
         description: rawData.description,
         parentAccount: rawData.parentAccount,
+        updatedAt: createdAt,
       },
     });
 
@@ -155,6 +161,7 @@ export const createTransactionAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.transaction.create({
       data: {
         date: new Date(rawData.date as string),
@@ -166,6 +173,8 @@ export const createTransactionAction = async (
         orderId: rawData.orderId as string,
         purchaseOrderId: rawData.purchaseOrderId as string,
         expenseId: rawData.expenseId as string,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -212,6 +221,7 @@ export async function updateTransactionAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.transaction.update({
       where: {
         id: rawData.id,
@@ -226,6 +236,7 @@ export async function updateTransactionAction(
         orderId: rawData.orderId,
         purchaseOrderId: rawData.purchaseOrderId,
         expenseId: rawData.expenseId,
+        updatedAt: createdAt,
       },
     });
 
@@ -291,6 +302,7 @@ export const createExpenseAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.expense.create({
       data: {
         type: rawData.type as ExpenseType,
@@ -306,6 +318,8 @@ export const createExpenseAction = async (
         truckId: rawData.truckId as string,
         externalShipId: rawData.externalShipId as string,
         supplierId: rawData.supplierId as string,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -348,6 +362,7 @@ export async function updateExpenseAction(
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.expense.update({
       where: {
         id: rawData.id,
@@ -366,6 +381,7 @@ export async function updateExpenseAction(
         truckId: rawData.truckId,
         externalShipId: rawData.externalShipId,
         supplierId: rawData.supplierId,
+        updatedAt: createdAt,
       },
     });
 
