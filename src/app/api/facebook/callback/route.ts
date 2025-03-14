@@ -30,6 +30,62 @@ import { createWhatsAppMessagesType } from "@/types/whatsapp";
 import { OrderType } from "@/types/sales";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
+
+// Helper function to process search queries in a general way
+function processSearchQuery(query: string): string[] {
+  // Convert to lowercase
+  const normalizedQuery = query.toLowerCase();
+
+  // Split into words
+  const words = normalizedQuery.split(/\s+/);
+
+  // Filter out common question words, articles, and short words in multiple languages
+  const stopWords = [
+    // Spanish
+    "el",
+    "la",
+    "los",
+    "las",
+    "un",
+    "una",
+    "unos",
+    "unas",
+    "cuanto",
+    "cuanta",
+    "como",
+    "donde",
+    "que",
+    "cual",
+    "cuando",
+    "por",
+    "para",
+    "cuesta",
+    // English
+    "the",
+    "a",
+    "an",
+    "how",
+    "what",
+    "where",
+    "when",
+    "much",
+    "many",
+    "does",
+    "cost",
+    "price",
+    "buy",
+  ];
+
+  // Filter out short words and stop words
+  return (
+    words
+      .filter((word) => word.length > 2)
+      .filter((word) => !stopWords.includes(word))
+      // Remove punctuation
+      .map((word) => word.replace(/[.,?!;:]/g, ""))
+  );
+}
+
 // Enhanced database service object
 const dbService = {
   findClientByPhone: async (phone: string) => {
@@ -101,13 +157,44 @@ const dbService = {
   },
 
   getProductDetails: async (productInquiry: string) => {
+    // Process the inquiry for better searching
+    const processedTerms = processSearchQuery(productInquiry);
+
+    // Build search conditions with the processed terms
+    const searchConditions: Prisma.ItemWhereInput[] = [];
+
+    // If we have processed terms, create contains queries for each
+    if (processedTerms.length > 0) {
+      for (const term of processedTerms) {
+        searchConditions.push(
+          { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+          {
+            description: { contains: term, mode: Prisma.QueryMode.insensitive },
+          }
+        );
+      }
+    } else {
+      // Fallback to original inquiry if no processed terms
+      searchConditions.push(
+        {
+          name: {
+            contains: productInquiry,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        },
+        {
+          description: {
+            contains: productInquiry,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        }
+      );
+    }
+
     // First query to get the item with its categoryId
     const item = await prisma.item.findFirst({
       where: {
-        OR: [
-          { name: { contains: productInquiry, mode: "insensitive" } },
-          { description: { contains: productInquiry, mode: "insensitive" } },
-        ],
+        OR: searchConditions,
       },
       select: {
         id: true,
@@ -130,10 +217,12 @@ const dbService = {
           },
         })
       : null;
+
     const result = {
       ...item,
       category: category?.title,
     };
+
     return result;
   },
 };
