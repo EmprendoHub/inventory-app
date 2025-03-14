@@ -638,12 +638,12 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     item.id &&
                     order.status !== "CANCELADO" && (
                       <TableCell>
-                        <button
+                        <div
                           onClick={() => deletePayment(item.id)}
-                          className="bg-red-600 text-white rounded-md"
+                          className="bg-red-600 text-white rounded-md p-2 cursor-pointer"
                         >
                           <X />
-                        </button>
+                        </div>
                       </TableCell>
                     )}
                 </TableRow>

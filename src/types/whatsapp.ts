@@ -18,3 +18,22 @@ export type whatsAppMessagesType = {
   timestamp: Date;
   mediaUrl: string | null;
 };
+
+export type createWhatsAppMessagesType = {
+  clientId: string;
+  senderPhone: string;
+  messageDescription: string;
+  template?: string | null;
+  messageTitle?: string | null;
+  header?: string | null;
+  footer?: string | null;
+  button?: string | null;
+  variables?: string[] | null;
+  type: string;
+  status?: MessageStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+  sender: SenderType;
+  timestamp: Date;
+  mediaUrl?: string | null;
+};

@@ -4,7 +4,7 @@ import {
   uploadToBucket,
 } from "@/app/_actions";
 import prisma from "@/lib/db";
-import { SenderType } from "@prisma/client";
+import { Prisma, SenderType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { join } from "path";
 import fs from "fs";
@@ -26,8 +26,80 @@ import {
   SYSTEM_PROMPTS,
 } from "@/lib/advanceAi/actions";
 import { getMexicoGlobalUtcDate } from "@/lib/utils";
+import { createWhatsAppMessagesType } from "@/types/whatsapp";
+import { OrderType } from "@/types/sales";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
+// Enhanced database service object
+const dbService = {
+  findClientByPhone: async (phone: string) => {
+    return prisma.client.findUnique({
+      where: { phone },
+      include: {
+        orders: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          include: { orderItems: true, payments: true },
+        },
+      },
+    });
+  },
+
+  createMessage: async (messageDetails: createWhatsAppMessagesType) => {
+    const currentDateTime = getMexicoGlobalUtcDate();
+    return prisma.$transaction(async (prisma) => {
+      const message = await prisma.whatsAppMessage.create({
+        data: {
+          clientId: messageDetails.clientId,
+          phone: messageDetails.senderPhone,
+          type: "interactive",
+          header: messageDetails.messageTitle,
+          message: messageDetails.messageDescription,
+          sender: "CLIENT" as SenderType,
+          timestamp: currentDateTime,
+          createdAt: currentDateTime,
+          updatedAt: currentDateTime,
+        },
+      });
+      await prisma.client.update({
+        where: { id: messageDetails.clientId },
+        data: { updatedAt: currentDateTime },
+      });
+      return message;
+    });
+  },
+
+  getRealtimeOrderData: async (clientId: string) => {
+    return prisma.order.findMany({
+      where: { clientId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: {
+        orderItems: true,
+      },
+    });
+  },
+
+  createEscalation: async (data: Prisma.EscalationCreateInput) => {
+    return prisma.escalation.create({ data });
+  },
+
+  updateClientLastInteraction: async (clientId: string) => {
+    return prisma.client.update({
+      where: { id: clientId },
+      data: { updatedAt: new Date() },
+    });
+  },
+
+  getRecentOrders: async (clientId: string) => {
+    return prisma.order.findMany({
+      where: { clientId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: { orderItems: true },
+    });
+  },
+};
 
 // Facebook webhook verification (GET)
 export async function GET(request: NextRequest) {
@@ -88,14 +160,12 @@ async function processMessageEvent(event: any) {
     console.log("PROCESS messages", event.messages[0]);
 
     const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
-    const client = await prisma.client.findFirst({
-      where: { phone: WAPhone },
-    });
+    const client = await dbService.findClientByPhone(WAPhone);
     const currentDateTime = getMexicoGlobalUtcDate();
     const timestamp = currentDateTime;
     const senderPhone = WAPhone;
     const senderName = event.contacts[0].profile.name;
-    const clientId = client?.id;
+    const clientId = client?.id || "";
     const messageType = event.messages[0].type;
 
     try {
@@ -109,12 +179,13 @@ async function processMessageEvent(event: any) {
           senderName,
         });
       } else {
-        // ... existing message processing setup
+        // Use realtime data in sentiment analysis
+        const [sentimentAnalysis, realtimeOrders] = await Promise.all([
+          analyzeCustomerSentiment(senderPhone),
+          dbService.getRealtimeOrderData(clientId),
+        ]);
 
-        // Add sentiment analysis
-        const sentimentAnalysis = await analyzeCustomerSentiment(senderPhone);
-
-        // Process different message types
+        // Process message types with realtime data context
         switch (messageType) {
           case "text":
             await handleTextMessage({
@@ -123,6 +194,7 @@ async function processMessageEvent(event: any) {
               timestamp,
               messageText: event.messages[0].text.body,
               senderName,
+              realtimeOrders, // Pass realtime data to handler
               sentiment: sentimentAnalysis.analysis?.sentiment || "Neutral",
             });
             break;
@@ -176,11 +248,13 @@ async function processMessageEvent(event: any) {
             console.warn("Unsupported message type:", messageType);
         }
 
-        // Check if we should send a follow-up
-        const followUpCheck = await shouldSendAiFollowUp(senderPhone);
-        if (followUpCheck.shouldFollow) {
-          await generateAiFollowUp(senderPhone);
-        }
+        // Delayed follow-up check
+        setTimeout(async () => {
+          const followUpCheck = await shouldSendAiFollowUp(senderPhone);
+          if (followUpCheck.shouldFollow) {
+            await generateAiFollowUp(senderPhone);
+          }
+        }, 300000); // 300-second delay for follow-up
       }
     } catch (error) {
       console.error("Message processing failed:", error);
@@ -353,27 +427,83 @@ async function processPdfFile(orderId: string) {
   }
 }
 
+// async function handleTextMessage(messageDetails: any) {
+//   // Store the incoming message
+//   const currentDateTime = getMexicoGlobalUtcDate();
+//   await prisma.whatsAppMessage.create({
+//     data: {
+//       clientId: messageDetails.clientId,
+//       phone: messageDetails.senderPhone,
+//       type: "text",
+//       message: messageDetails.messageText,
+//       sender: "CLIENT" as SenderType,
+//       timestamp: currentDateTime,
+//       createdAt: currentDateTime,
+//       updatedAt: currentDateTime,
+//     },
+//   });
+
+//   // Generate AI response based on sentiment
+//   const systemPrompt = selectSystemPrompt(
+//     messageDetails.messageText,
+//     messageDetails.sentiment
+//   );
+//   const aiResponse = await generateCustomerServiceResponse(
+//     messageDetails.messageText,
+//     messageDetails.clientId,
+//     messageDetails.senderPhone,
+//     systemPrompt
+//   );
+
+//   if (aiResponse) {
+//     const createdAt = getMexicoGlobalUtcDate();
+
+//     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
+//     await storeMessage({
+//       phone: messageDetails.senderPhone,
+//       clientId: messageDetails.clientId,
+//       message: aiResponse,
+//       type: "text",
+//       sender: "SYSTEM" as SenderType,
+//       timestamp: createdAt,
+//     });
+
+//     // Send product recommendations if appropriate
+//     if (shouldOfferRecommendations(messageDetails.messageText)) {
+//       const recommendations = await generateProductRecommendations(
+//         messageDetails.clientId
+//       );
+//       if (recommendations.success) {
+//         if (recommendations.recommendedProducts) {
+//           await sendProductRecommendations(
+//             messageDetails.senderPhone,
+//             recommendations.recommendedProducts
+//           );
+//         }
+//       }
+//     }
+//   }
+// }
+
+// Enhanced handleTextMessage with realtime data integration
 async function handleTextMessage(messageDetails: any) {
-  // Store the incoming message
-  const currentDateTime = getMexicoGlobalUtcDate();
-  await prisma.whatsAppMessage.create({
-    data: {
-      clientId: messageDetails.clientId,
-      phone: messageDetails.senderPhone,
-      type: "text",
-      message: messageDetails.messageText,
-      sender: "CLIENT" as SenderType,
-      timestamp: currentDateTime,
-      createdAt: currentDateTime,
-      updatedAt: currentDateTime,
-    },
+  // Store message using transaction
+  await dbService.createMessage({
+    clientId: messageDetails.clientId,
+    senderPhone: messageDetails.senderPhone,
+    type: "text",
+    messageDescription: messageDetails.messageText,
+    sender: "CLIENT",
+    timestamp: messageDetails.timestamp,
   });
 
-  // Generate AI response based on sentiment
-  const systemPrompt = selectSystemPrompt(
+  // Generate response with realtime context
+  const systemPrompt = createDynamicPrompt(
     messageDetails.messageText,
-    messageDetails.sentiment
+    messageDetails.sentiment,
+    messageDetails.realtimeOrders
   );
+
   const aiResponse = await generateCustomerServiceResponse(
     messageDetails.messageText,
     messageDetails.clientId,
@@ -382,49 +512,82 @@ async function handleTextMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
-    const createdAt = getMexicoGlobalUtcDate();
+    // eslint-disable-next-line
+    const [messageSent] = await Promise.all([
+      sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
+      dbService.createMessage({
+        senderPhone: messageDetails.senderPhone,
+        clientId: messageDetails.clientId,
+        messageDescription: aiResponse,
+        type: "text",
+        sender: "SYSTEM",
+        timestamp: new Date(),
+      }),
+    ]);
 
-    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-    await storeMessage({
-      phone: messageDetails.senderPhone,
-      clientId: messageDetails.clientId,
-      message: aiResponse,
-      type: "text",
-      sender: "SYSTEM" as SenderType,
-      timestamp: createdAt,
-    });
-
-    // Send product recommendations if appropriate
-    if (shouldOfferRecommendations(messageDetails.messageText)) {
-      const recommendations = await generateProductRecommendations(
-        messageDetails.clientId
-      );
-      if (recommendations.success) {
-        if (recommendations.recommendedProducts) {
-          await sendProductRecommendations(
-            messageDetails.senderPhone,
-            recommendations.recommendedProducts
-          );
-        }
-      }
+    // Check for conversation end before sending feedback
+    if (isConversationEnding(aiResponse)) {
+      await sendPostConversationActions(messageDetails.senderPhone);
     }
   }
 }
 
+// New helper functions
+function createDynamicPrompt(
+  message: string,
+  sentiment: string,
+  orders: OrderType[]
+) {
+  let prompt = SYSTEM_PROMPTS.CUSTOMER_SERVICE;
+
+  if (orders.length > 0) {
+    prompt += `\nCustomer's recent orders: ${JSON.stringify(
+      orders.slice(0, 2)
+    )}`;
+  }
+
+  if (sentiment === "Negative") {
+    prompt +=
+      "\nAdditional instructions: Handle with escalated care and empathy";
+  }
+
+  return prompt;
+}
+
+async function sendPostConversationActions(phone: string) {
+  await Promise.allSettled([
+    sendSatisfactionSurvey(phone),
+    generateProductRecommendations(phone).then((recommendations) => {
+      if (recommendations.success) {
+        if (recommendations.recommendedProducts) {
+          sendProductRecommendations(
+            phone,
+            recommendations.recommendedProducts
+          );
+        }
+      }
+    }),
+  ]);
+}
+
+function isConversationEnding(response: string) {
+  const closingPhrases = [
+    "¿Hay algo más en lo que pueda ayudarte?",
+    "¡Que tengas un buen día!",
+    "¿Necesitas ayuda con algo más?",
+  ];
+  return closingPhrases.some((phrase) => response.includes(phrase));
+}
+
 async function handleOwnerTextMessage(messageDetails: any) {
-  // Store the incoming message
-  const currentDateTime = getMexicoGlobalUtcDate();
-  await prisma.whatsAppMessage.create({
-    data: {
-      clientId: messageDetails.clientId,
-      phone: messageDetails.senderPhone,
-      type: "text",
-      message: messageDetails.messageText,
-      sender: "CLIENT" as SenderType,
-      timestamp: currentDateTime,
-      createdAt: currentDateTime,
-      updatedAt: currentDateTime,
-    },
+  // Store the incoming message using dbService
+  await dbService.createMessage({
+    clientId: messageDetails.clientId,
+    senderPhone: messageDetails.senderPhone,
+    type: "text",
+    messageDescription: messageDetails.messageText,
+    sender: "CLIENT",
+    timestamp: messageDetails.timestamp,
   });
 
   // Generate AI response based on sentiment
@@ -465,44 +628,31 @@ async function handleOwnerTextMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
-    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-    await storeMessage({
-      phone: messageDetails.senderPhone,
-      clientId: messageDetails.clientId,
-      message: aiResponse,
-      type: "text",
-      sender: "SYSTEM" as SenderType,
-      timestamp: new Date(),
-    });
-
-    // Send product recommendations if appropriate
-    if (shouldOfferRecommendations(messageDetails.messageText)) {
-      const recommendations = await generateProductRecommendations(
-        messageDetails.clientId
-      );
-      if (recommendations.success) {
-        if (recommendations.recommendedProducts) {
-          await sendProductRecommendations(
-            messageDetails.senderPhone,
-            recommendations.recommendedProducts
-          );
-        }
-      }
-    }
+    await Promise.all([
+      sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
+      dbService.createMessage({
+        senderPhone: messageDetails.senderPhone,
+        clientId: messageDetails.clientId,
+        messageDescription: aiResponse,
+        type: "text",
+        sender: "SYSTEM",
+        timestamp: new Date(),
+      }),
+    ]);
   }
 }
 
 async function handleAudioMessage(messageDetails: any) {
   const audioResult = await processAudioFile(messageDetails.itemId);
 
-  // Store the audio message
-  await storeMessage({
-    phone: messageDetails.senderPhone,
+  // Store the audio message using dbService
+  await dbService.createMessage({
+    senderPhone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
-    message: audioResult.transcription,
+    messageDescription: audioResult.transcription,
     type: "audio",
     mediaUrl: audioResult.audioUrl,
-    sender: "CLIENT" as SenderType,
+    sender: "CLIENT",
     timestamp: messageDetails.timestamp,
   });
 
@@ -514,29 +664,30 @@ async function handleAudioMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
-    await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-    await storeMessage({
-      phone: messageDetails.senderPhone,
-      clientId: messageDetails.clientId,
-      message: aiResponse,
-      type: "text",
-      sender: "SYSTEM" as SenderType,
-      timestamp: new Date(),
-    });
+    await Promise.all([
+      sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
+      dbService.createMessage({
+        senderPhone: messageDetails.senderPhone,
+        clientId: messageDetails.clientId,
+        messageDescription: aiResponse,
+        type: "text",
+        sender: "SYSTEM",
+        timestamp: new Date(),
+      }),
+    ]);
   }
 }
 
 async function handleImageMessage(messageDetails: any) {
   const imageResult = await processImageFile(messageDetails.itemId);
-
-  // Store the image message
-  await storeMessage({
-    phone: messageDetails.senderPhone,
+  // Store the image message using dbService
+  await dbService.createMessage({
+    senderPhone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
-    message: imageResult.description,
+    messageDescription: imageResult.description || "Imagen recibida",
     type: "image",
     mediaUrl: imageResult.imageUrl,
-    sender: "CLIENT" as SenderType,
+    sender: "CLIENT",
     timestamp: messageDetails.timestamp,
   });
 
@@ -561,46 +712,45 @@ async function handleImageMessage(messageDetails: any) {
 }
 
 async function handleInteractiveMessage(messageDetails: any) {
-  // ... existing interactive message handling
+  // Store the interactive message using dbService
+  await dbService.createMessage({
+    senderPhone: messageDetails.senderPhone,
+    clientId: messageDetails.clientId,
+    type: "interactive",
+    messageDescription: messageDetails.messageDescription,
+    header: messageDetails.messageTitle,
+    sender: "CLIENT",
+    timestamp: messageDetails.timestamp,
+  });
+
   await storeTextInteractiveMessage(messageDetails);
+
   // Add satisfaction survey if appropriate
   if (messageDetails.messageTitle.includes("pedido")) {
-    await sendSatisfactionSurvey(messageDetails.senderPhone);
+    setTimeout(async () => {
+      await sendSatisfactionSurvey(messageDetails.senderPhone);
+    }, 10000); // Delay survey by 10 seconds
   }
 }
 
-function selectSystemPrompt(message: string, sentiment: string) {
-  if (sentiment === "Negative") return SYSTEM_PROMPTS.COMPLAINT_HANDLING;
-  if (message.includes("devolución")) return SYSTEM_PROMPTS.RETURNS_REFUNDS;
-  if (message.includes("comprar")) return SYSTEM_PROMPTS.SALES_AGENT;
-  return SYSTEM_PROMPTS.CUSTOMER_SERVICE;
-}
-
-function shouldOfferRecommendations(message: string) {
-  const keywords = ["recomendar", "sugerir", "nuevo", "comprar"];
-  return keywords.some((keyword) => message.toLowerCase().includes(keyword));
-}
-
 async function handleButtonMessage(messageDetails: any) {
-  // Store the button response
-  await storeMessage({
-    phone: messageDetails.senderPhone,
+  // Store the button response using dbService
+  await dbService.createMessage({
+    senderPhone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
-    message: messageDetails.messageText,
+    messageDescription: messageDetails.messageText,
     type: "button",
-    sender: "CLIENT" as SenderType,
+    sender: "CLIENT",
     timestamp: messageDetails.timestamp,
   });
 
   // Handle different button responses
   switch (messageDetails.messageText) {
     case "Ver pedidos recientes":
-      // Send recent orders as interactive message
       await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
       break;
 
     case "Recomendaciones":
-      // Generate and send product recommendations
       const recommendations = await generateProductRecommendations(
         messageDetails.clientId
       );
@@ -613,7 +763,6 @@ async function handleButtonMessage(messageDetails: any) {
       break;
 
     case "Hablar con Agente":
-      // Escalate to human agent
       await escalateToHumanAgent({
         phone: messageDetails.senderPhone,
         clientId: messageDetails.clientId,
@@ -622,7 +771,6 @@ async function handleButtonMessage(messageDetails: any) {
       break;
 
     case "Soporte Técnico":
-      // Initiate technical support flow
       await sendWhatsAppMessage(
         messageDetails.senderPhone,
         "Por favor describe tu problema técnico y un especialista te ayudará."
@@ -630,29 +778,33 @@ async function handleButtonMessage(messageDetails: any) {
       break;
 
     default:
-      // Handle generic button responses with AI
       const aiResponse = await generateCustomerServiceResponse(
         `El cliente seleccionó: ${messageDetails.messageText}`,
         messageDetails.clientId,
         messageDetails.senderPhone
       );
+      const createdAt = getMexicoGlobalUtcDate();
 
       if (aiResponse) {
-        await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-        await storeMessage({
-          phone: messageDetails.senderPhone,
-          clientId: messageDetails.clientId,
-          message: aiResponse,
-          type: "text",
-          sender: "SYSTEM" as SenderType,
-          timestamp: new Date(),
-        });
+        await Promise.all([
+          sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
+          dbService.createMessage({
+            senderPhone: messageDetails.senderPhone,
+            clientId: messageDetails.clientId,
+            messageDescription: aiResponse,
+            type: "text",
+            sender: "SYSTEM",
+            timestamp: createdAt,
+          }),
+        ]);
       }
   }
 
   // Check if we should send a satisfaction survey
   if (shouldTriggerSurvey(messageDetails.messageText)) {
-    await sendSatisfactionSurvey(messageDetails.senderPhone);
+    setTimeout(async () => {
+      await sendSatisfactionSurvey(messageDetails.senderPhone);
+    }, 10000); // Delay survey by 10 seconds
   }
 }
 
@@ -671,16 +823,22 @@ async function escalateToHumanAgent(details: {
   reason: string;
 }) {
   const createdAt = getMexicoGlobalUtcDate();
-  // Create escalation record
-  await prisma.escalation.create({
-    data: {
-      clientId: details.clientId,
-      phone: details.phone,
-      reason: details.reason,
-      status: "PENDING",
-      timestamp: createdAt,
-    },
-  });
+  // Create escalation record using Prisma transaction
+  await prisma.$transaction([
+    prisma.escalation.create({
+      data: {
+        clientId: details.clientId,
+        phone: details.phone,
+        reason: details.reason,
+        status: "PENDING",
+        timestamp: createdAt,
+      },
+    }),
+    prisma.client.update({
+      where: { id: details.clientId },
+      data: { updatedAt: createdAt },
+    }),
+  ]);
 
   // Notify customer
   await sendWhatsAppMessage(
@@ -688,7 +846,7 @@ async function escalateToHumanAgent(details: {
     "Un agente humano se pondrá en contacto contigo pronto. Gracias por tu paciencia."
   );
 
-  // Notify support team (implementation depends on your notification system)
+  // Notify support team
   await notifySupportTeam(details);
 }
 
