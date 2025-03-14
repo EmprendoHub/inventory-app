@@ -86,6 +86,13 @@ function processSearchQuery(query: string): string[] {
   );
 }
 
+// Helper function to remove accents from text
+const removeAccents = (text: string): string => {
+  return text
+    .normalize("NFD") // Decomposes accents
+    .replace(/[\u0300-\u036f]/g, ""); // Removes accent marks
+};
+
 const dbService = {
   findClientByPhone: async (phone: string) => {
     return prisma.client.findUnique({
@@ -154,8 +161,10 @@ const dbService = {
   },
 
   getProductDetails: async (productInquiry: string) => {
+    // Normalize and remove accents from user query
+    const normalizedQuery = removeAccents(productInquiry.toLowerCase());
     // Process the inquiry for better searching
-    const processedTerms = processSearchQuery(productInquiry);
+    const processedTerms = processSearchQuery(normalizedQuery);
 
     // Build search conditions with the processed terms
     const searchConditions: Prisma.ItemWhereInput[] = processedTerms.length
