@@ -603,12 +603,43 @@ async function handleTextMessage(messageDetails: any) {
 
 function detectProductInquiry(message: string): string | null {
   const productKeywords = [
+    // Palabras clave originales
     "precio",
     "costo",
+    "cuanto cuesta",
     "cuánto cuesta",
+    "cuanto vale",
+    "cuánto vale",
+    "cuanto sale",
+    "cuánto sale",
+    "a cuanto",
+    "a cuánto",
+    "precio de",
+    "costo de",
+    "valor de",
+    "cuanto está",
+    "cuánto está",
     "valor",
-    "información de",
-    "detalles de",
+    "información de producto",
+    "detalles de producto",
+
+    // Nuevas palabras clave para información
+    "características de producto",
+    "caracteristicas de producto",
+    "especificaciones de producto",
+    "ficha técnica de producto",
+    "ficha tecnica de producto",
+    "datos de productos",
+    "info de productos",
+    "información sobre productos",
+    "informacion sobre productos",
+    "detalles sobre producto",
+    "tienes",
+    "vendes",
+    "muestrame",
+    "muéstrame",
+    "hay stock de",
+    "tienen",
   ];
   const productRegex = new RegExp(
     `(${productKeywords.join("|")})\\s+(.*)`,
