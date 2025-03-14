@@ -3,6 +3,7 @@ import { OpenAI } from "openai";
 import axios from "axios";
 import prisma from "../db";
 import { ChatCompletionMessageParam } from "openai/resources/chat";
+import { getMexicoGlobalUtcDate } from "../utils";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -123,6 +124,8 @@ export async function generateCustomerServiceResponse(
 }
 
 export async function storeMessage(messageDetails: any) {
+  const createdAt = getMexicoGlobalUtcDate();
+
   return prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
@@ -131,9 +134,11 @@ export async function storeMessage(messageDetails: any) {
       message: messageDetails.message,
       mediaUrl: messageDetails.mediaUrl,
       sender: messageDetails.sender,
-      timestamp: messageDetails.timestamp,
+      timestamp: createdAt,
       sentiment: messageDetails.sentiment,
       template: messageDetails.template,
+      createdAt,
+      updatedAt: createdAt,
     },
   });
 }

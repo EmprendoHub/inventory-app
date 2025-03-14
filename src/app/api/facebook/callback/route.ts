@@ -382,6 +382,8 @@ async function handleTextMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
+    const createdAt = getMexicoGlobalUtcDate();
+
     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
     await storeMessage({
       phone: messageDetails.senderPhone,
@@ -389,7 +391,7 @@ async function handleTextMessage(messageDetails: any) {
       message: aiResponse,
       type: "text",
       sender: "SYSTEM" as SenderType,
-      timestamp: new Date(),
+      timestamp: createdAt,
     });
 
     // Send product recommendations if appropriate

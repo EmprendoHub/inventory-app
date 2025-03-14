@@ -2,6 +2,7 @@
 
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
@@ -33,6 +34,7 @@ export const createCashRegisterAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       const newRegister = await prisma.cashRegister.create({
         data: {
@@ -40,6 +42,8 @@ export const createCashRegisterAction = async (
           balance: Number(rawData.fund),
           managerId: rawData.managerId,
           userId: rawData.ownerId,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -50,6 +54,8 @@ export const createCashRegisterAction = async (
           description: "FONDO DE CAJA",
           cashRegisterId: newRegister.id,
           userId: rawData.ownerId,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     });
@@ -86,12 +92,15 @@ export const createCashTransactionAction = async (
   }
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.cashTransaction.create({
       data: {
         type: rawData.type as "DEPOSITO" | "RETIRO",
         amount: rawData.amount,
         description: rawData.description,
         cashRegisterId: rawData.cashRegisterId,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -143,6 +152,7 @@ export const createCashAuditAction = async (
   const session = await getServerSession(options);
   const user = session?.user;
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       await prisma.cashAudit.create({
         data: {
@@ -152,6 +162,8 @@ export const createCashAuditAction = async (
           auditDate: new Date(rawData.auditDate),
           userId: user.id,
           managerId: rawData.managerId,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -161,6 +173,7 @@ export const createCashAuditAction = async (
           balance: {
             decrement: rawData.endBalance, // deducts cash withdraw to the current balance
           },
+          updatedAt: createdAt,
         },
       });
 
@@ -177,6 +190,8 @@ export const createCashAuditAction = async (
           description: `CORTE DE CAJA (${updatedRegister.name}) RETIRADO POR: (${managerUser?.name})`,
           cashRegisterId: updatedRegister.id,
           userId: rawData.managerId,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -194,6 +209,8 @@ export const createCashAuditAction = async (
           description: `CORTE DE CAJA (${updatedRegister.name}) DEPOSITADO POR: (${managerUser?.name})`,
           registerId: updatedRegister.id,
           accountId: account?.id || "",
+          createdAt,
+          updatedAt: createdAt,
         },
       });
 
@@ -203,6 +220,7 @@ export const createCashAuditAction = async (
         },
         data: {
           balance: { increment: Math.round(rawData.endBalance) },
+          updatedAt: createdAt,
         },
       });
     });
@@ -267,6 +285,7 @@ export const createCashHandoffAction = async (
     },
   });
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       const driverRegister = await prisma.cashRegister.update({
         where: { userId: user?.id || "" },
@@ -274,6 +293,7 @@ export const createCashHandoffAction = async (
           balance: {
             decrement: rawData.endBalance, // deducts cash withdraw to the current balance
           },
+          updatedAt: createdAt,
         },
       });
 
@@ -283,6 +303,7 @@ export const createCashHandoffAction = async (
           balance: {
             increment: rawData.endBalance, // adds cash withdraw to the current balance
           },
+          updatedAt: createdAt,
         },
       });
 
@@ -299,6 +320,8 @@ export const createCashHandoffAction = async (
           description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager?.name})`,
           cashRegisterId: driverRegister.id,
           userId: user?.id,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
       await prisma.cashTransaction.create({
@@ -308,6 +331,8 @@ export const createCashHandoffAction = async (
           description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager?.name})`,
           cashRegisterId: branchRegister.id,
           userId: manager?.id,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     });
@@ -362,6 +387,7 @@ export async function deleteCashRegisterAction(formData: FormData) {
   };
 
   try {
+    const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
       const updatedRegister = await prisma.cashRegister.update({
         where: {
@@ -369,6 +395,7 @@ export async function deleteCashRegisterAction(formData: FormData) {
         },
         data: {
           status: "INACTIVA",
+          updatedAt: createdAt,
         },
       });
 
@@ -379,6 +406,8 @@ export async function deleteCashRegisterAction(formData: FormData) {
           description: `ELIMINACIÓN DE CAJA: ${updatedRegister.name}`,
           cashRegisterId: updatedRegister.id,
           userId: rawData.managerId,
+          createdAt,
+          updatedAt: createdAt,
         },
       });
     });
