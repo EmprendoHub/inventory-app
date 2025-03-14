@@ -437,7 +437,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                         isOrderPaid && (
                           <DropdownMenuItem
                             onClick={markCompleted}
-                            className="text-xs cursor-pointer"
+                            className="text-xs  cursor-pointer"
                           >
                             <GiCheckMark /> Entregar
                           </DropdownMenuItem>

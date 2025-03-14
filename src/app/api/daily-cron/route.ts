@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       where: {
         createdAt: {
           gte: startOfToday, // Orders created on or after last Monday
-          lte: endOfToday, // Orders created on or before today
+          lte: endOfToday, // Orders create d on or before today
         },
       },
     });
