@@ -21,8 +21,8 @@ export type whatsAppMessagesType = {
 
 export type createWhatsAppMessagesType = {
   clientId: string;
-  senderPhone: string;
-  messageDescription: string;
+  phone: string;
+  message: string;
   template?: string | null;
   messageTitle?: string | null;
   header?: string | null;

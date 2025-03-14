@@ -51,10 +51,10 @@ const dbService = {
       const message = await prisma.whatsAppMessage.create({
         data: {
           clientId: messageDetails.clientId,
-          phone: messageDetails.senderPhone,
+          phone: messageDetails.phone,
           type: "interactive",
           header: messageDetails.messageTitle,
-          message: messageDetails.messageDescription,
+          message: messageDetails.message,
           sender: "CLIENT" as SenderType,
           timestamp: currentDateTime,
           createdAt: currentDateTime,
@@ -98,6 +98,43 @@ const dbService = {
       take: 5,
       include: { orderItems: true },
     });
+  },
+
+  getProductDetails: async (productNameOrId: string) => {
+    // First query to get the item with its categoryId
+    const item = await prisma.item.findFirst({
+      where: {
+        OR: [
+          { name: { contains: productNameOrId, mode: "insensitive" } },
+          { id: productNameOrId },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        categoryId: true,
+        mainImage: true,
+      },
+    });
+
+    // Then use the categoryId to fetch the category name
+    const category = item
+      ? await prisma.category.findUnique({
+          where: {
+            id: item.categoryId,
+          },
+          select: {
+            title: true,
+          },
+        })
+      : null;
+    const result = {
+      ...item,
+      category: category?.title,
+    };
+    return result;
   },
 };
 
@@ -486,16 +523,48 @@ async function processPdfFile(orderId: string) {
 // }
 
 // Enhanced handleTextMessage with realtime data integration
+
 async function handleTextMessage(messageDetails: any) {
   // Store message using transaction
   await dbService.createMessage({
     clientId: messageDetails.clientId,
-    senderPhone: messageDetails.senderPhone,
+    phone: messageDetails.senderPhone,
     type: "text",
-    messageDescription: messageDetails.messageText,
+    message: messageDetails.messageText,
     sender: "CLIENT",
     timestamp: messageDetails.timestamp,
   });
+
+  // Check if the message is asking for product prices
+  const productInquiry = detectProductInquiry(messageDetails.messageText);
+  if (productInquiry) {
+    const product = await dbService.getProductDetails(productInquiry);
+    if (product) {
+      const response = `El producto "${product.name}" tiene un precio de $${product.price}. ¿Necesitas más información?`;
+      await sendWhatsAppMessage(messageDetails.senderPhone, response);
+      await dbService.createMessage({
+        phone: messageDetails.senderPhone,
+        clientId: messageDetails.clientId,
+        message: response,
+        type: "text",
+        sender: "SYSTEM",
+        timestamp: new Date(),
+      });
+      return; // Exit early after handling the product inquiry
+    } else {
+      const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
+      await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
+      await dbService.createMessage({
+        phone: messageDetails.senderPhone,
+        clientId: messageDetails.clientId,
+        message: notFoundResponse,
+        type: "text",
+        sender: "SYSTEM",
+        timestamp: new Date(),
+      });
+      return; // Exit early after handling the not-found case
+    }
+  }
 
   // Generate response with realtime context
   const systemPrompt = createDynamicPrompt(
@@ -516,9 +585,9 @@ async function handleTextMessage(messageDetails: any) {
     const [messageSent] = await Promise.all([
       sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
       dbService.createMessage({
-        senderPhone: messageDetails.senderPhone,
+        phone: messageDetails.senderPhone,
         clientId: messageDetails.clientId,
-        messageDescription: aiResponse,
+        message: aiResponse,
         type: "text",
         sender: "SYSTEM",
         timestamp: new Date(),
@@ -530,6 +599,23 @@ async function handleTextMessage(messageDetails: any) {
       await sendPostConversationActions(messageDetails.senderPhone);
     }
   }
+}
+
+function detectProductInquiry(message: string): string | null {
+  const productKeywords = [
+    "precio",
+    "costo",
+    "cuánto cuesta",
+    "valor",
+    "información de",
+    "detalles de",
+  ];
+  const productRegex = new RegExp(
+    `(${productKeywords.join("|")})\\s+(.*)`,
+    "i"
+  );
+  const match = message.match(productRegex);
+  return match ? match[2].trim() : null; // Return the product name or ID
 }
 
 // New helper functions
@@ -583,9 +669,9 @@ async function handleOwnerTextMessage(messageDetails: any) {
   // Store the incoming message using dbService
   await dbService.createMessage({
     clientId: messageDetails.clientId,
-    senderPhone: messageDetails.senderPhone,
+    phone: messageDetails.senderPhone,
     type: "text",
-    messageDescription: messageDetails.messageText,
+    message: messageDetails.messageText,
     sender: "CLIENT",
     timestamp: messageDetails.timestamp,
   });
@@ -631,9 +717,9 @@ async function handleOwnerTextMessage(messageDetails: any) {
     await Promise.all([
       sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
       dbService.createMessage({
-        senderPhone: messageDetails.senderPhone,
+        phone: messageDetails.senderPhone,
         clientId: messageDetails.clientId,
-        messageDescription: aiResponse,
+        message: aiResponse,
         type: "text",
         sender: "SYSTEM",
         timestamp: new Date(),
@@ -647,9 +733,9 @@ async function handleAudioMessage(messageDetails: any) {
 
   // Store the audio message using dbService
   await dbService.createMessage({
-    senderPhone: messageDetails.senderPhone,
+    phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
-    messageDescription: audioResult.transcription,
+    message: audioResult.transcription,
     type: "audio",
     mediaUrl: audioResult.audioUrl,
     sender: "CLIENT",
@@ -667,9 +753,9 @@ async function handleAudioMessage(messageDetails: any) {
     await Promise.all([
       sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
       dbService.createMessage({
-        senderPhone: messageDetails.senderPhone,
+        phone: messageDetails.senderPhone,
         clientId: messageDetails.clientId,
-        messageDescription: aiResponse,
+        message: aiResponse,
         type: "text",
         sender: "SYSTEM",
         timestamp: new Date(),
@@ -682,9 +768,9 @@ async function handleImageMessage(messageDetails: any) {
   const imageResult = await processImageFile(messageDetails.itemId);
   // Store the image message using dbService
   await dbService.createMessage({
-    senderPhone: messageDetails.senderPhone,
+    phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
-    messageDescription: imageResult.description || "Imagen recibida",
+    message: imageResult.description || "Imagen recibida",
     type: "image",
     mediaUrl: imageResult.imageUrl,
     sender: "CLIENT",
@@ -714,10 +800,10 @@ async function handleImageMessage(messageDetails: any) {
 async function handleInteractiveMessage(messageDetails: any) {
   // Store the interactive message using dbService
   await dbService.createMessage({
-    senderPhone: messageDetails.senderPhone,
+    phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
     type: "interactive",
-    messageDescription: messageDetails.messageDescription,
+    message: messageDetails.messageDescription,
     header: messageDetails.messageTitle,
     sender: "CLIENT",
     timestamp: messageDetails.timestamp,
@@ -736,9 +822,9 @@ async function handleInteractiveMessage(messageDetails: any) {
 async function handleButtonMessage(messageDetails: any) {
   // Store the button response using dbService
   await dbService.createMessage({
-    senderPhone: messageDetails.senderPhone,
+    phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
-    messageDescription: messageDetails.messageText,
+    message: messageDetails.messageText,
     type: "button",
     sender: "CLIENT",
     timestamp: messageDetails.timestamp,
@@ -789,9 +875,9 @@ async function handleButtonMessage(messageDetails: any) {
         await Promise.all([
           sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
           dbService.createMessage({
-            senderPhone: messageDetails.senderPhone,
+            phone: messageDetails.senderPhone,
             clientId: messageDetails.clientId,
-            messageDescription: aiResponse,
+            message: aiResponse,
             type: "text",
             sender: "SYSTEM",
             timestamp: createdAt,
