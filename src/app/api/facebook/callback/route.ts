@@ -25,6 +25,7 @@ import {
   shouldSendAiFollowUp,
   SYSTEM_PROMPTS,
 } from "@/lib/advanceAi/actions";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
@@ -295,6 +296,7 @@ async function storeTextInteractiveMessage(messageDetails: any) {
 
   const response = await processPdfFile(messageDetails.orderId);
   if (response.success) {
+    const currentDateTime = getMexicoGlobalUtcDate();
     const newWAMessage = await prisma.whatsAppMessage.create({
       data: {
         clientId: messageDetails.clientId,
@@ -305,6 +307,8 @@ async function storeTextInteractiveMessage(messageDetails: any) {
         mediaUrl: response.pdfUrl,
         sender: "CLIENT" as SenderType,
         timestamp: messageDetails.timestamp,
+        createdAt: currentDateTime,
+        updatedAt: currentDateTime,
       },
     });
 
@@ -350,6 +354,7 @@ async function processPdfFile(orderId: string) {
 
 async function handleTextMessage(messageDetails: any) {
   // Store the incoming message
+  const currentDateTime = getMexicoGlobalUtcDate();
   await prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
@@ -358,6 +363,8 @@ async function handleTextMessage(messageDetails: any) {
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
       timestamp: messageDetails.timestamp,
+      createdAt: currentDateTime,
+      updatedAt: currentDateTime,
     },
   });
 
@@ -403,6 +410,7 @@ async function handleTextMessage(messageDetails: any) {
 
 async function handleOwnerTextMessage(messageDetails: any) {
   // Store the incoming message
+  const currentDateTime = getMexicoGlobalUtcDate();
   await prisma.whatsAppMessage.create({
     data: {
       clientId: messageDetails.clientId,
@@ -411,6 +419,8 @@ async function handleOwnerTextMessage(messageDetails: any) {
       message: messageDetails.messageText,
       sender: "CLIENT" as SenderType,
       timestamp: messageDetails.timestamp,
+      createdAt: currentDateTime,
+      updatedAt: currentDateTime,
     },
   });
 

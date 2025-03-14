@@ -7,7 +7,11 @@ import axios from "axios";
 import { writeFile } from "fs/promises";
 import nodemailer from "nodemailer";
 import { join } from "path";
-import { formatCurrency, getMexicoDate } from "@/lib/utils";
+import {
+  formatCurrency,
+  getMexicoDate,
+  getMexicoGlobalUtcDate,
+} from "@/lib/utils";
 import fs from "fs";
 import { SenderType } from "@prisma/client";
 
@@ -527,7 +531,7 @@ export async function sendWATemplatePaymentPendingMessage(
       Pendiente: ${formattedPending}\n
       \n
       Por favor realiza tu pago antes del ${dueDate} para evitar la cancelación de tu pedido.`;
-
+      const currentDateTime = getMexicoGlobalUtcDate();
       await prisma.whatsAppMessage.create({
         data: {
           clientId: order.client.id,
@@ -547,6 +551,8 @@ export async function sendWATemplatePaymentPendingMessage(
             dueDate, // Variable 6
           ],
           sender: "SYSTEM" as SenderType,
+          createdAt: currentDateTime,
+          updatedAt: currentDateTime,
         },
       });
       console.error("API response indicates success");
@@ -632,7 +638,7 @@ export async function sendWATemplateOrderPdfMessage(
     // Check for success based on API response
     if (response && response.status === 200) {
       const order_pdf = `Gracias por usar tu compra. Adjunto encontrarás tu recibo para el pedido No: ${order.orderNo} en formato PDF.`;
-
+      const currentDateTime = getMexicoGlobalUtcDate();
       await prisma.whatsAppMessage.create({
         data: {
           clientId: order.client.id,
@@ -644,6 +650,8 @@ export async function sendWATemplateOrderPdfMessage(
             order.orderNo, // Variable 1
           ],
           sender: "SYSTEM" as SenderType,
+          createdAt: currentDateTime,
+          updatedAt: currentDateTime,
         },
       });
       console.error("API response indicates success");
@@ -734,6 +742,7 @@ export async function sendRecentOrdersInteractiveMessage(
 
     // Check for success based on API response
     if (response && response.status === 200) {
+      const currentDateTime = getMexicoGlobalUtcDate();
       // Save the WhatsApp message in the database
       await prisma.whatsAppMessage.create({
         data: {
@@ -747,6 +756,8 @@ export async function sendRecentOrdersInteractiveMessage(
           template: "recent_orders",
           variables: recentOrders.map((order) => order.orderNo), // Store order numbers as variables
           sender: "SYSTEM" as SenderType,
+          createdAt: currentDateTime,
+          updatedAt: currentDateTime,
         },
       });
 
