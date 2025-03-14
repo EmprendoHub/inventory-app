@@ -100,13 +100,13 @@ const dbService = {
     });
   },
 
-  getProductDetails: async (productNameOrId: string) => {
+  getProductDetails: async (productInquiry: string) => {
     // First query to get the item with its categoryId
     const item = await prisma.item.findFirst({
       where: {
         OR: [
-          { name: { contains: productNameOrId, mode: "insensitive" } },
-          { id: productNameOrId },
+          { name: { contains: productInquiry, mode: "insensitive" } },
+          { description: { contains: productInquiry, mode: "insensitive" } },
         ],
       },
       select: {
