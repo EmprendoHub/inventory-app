@@ -86,7 +86,6 @@ function processSearchQuery(query: string): string[] {
   );
 }
 
-// Enhanced database service object
 const dbService = {
   findClientByPhone: async (phone: string) => {
     return prisma.client.findUnique({
@@ -130,9 +129,7 @@ const dbService = {
       where: { clientId },
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: {
-        orderItems: true,
-      },
+      include: { orderItems: true },
     });
   },
 
@@ -161,41 +158,36 @@ const dbService = {
     const processedTerms = processSearchQuery(productInquiry);
 
     // Build search conditions with the processed terms
-    const searchConditions: Prisma.ItemWhereInput[] = [];
-
-    // If we have processed terms, create contains queries for each
-    if (processedTerms.length > 0) {
-      for (const term of processedTerms) {
-        searchConditions.push(
-          { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+    const searchConditions: Prisma.ItemWhereInput[] = processedTerms.length
+      ? processedTerms.map((term) => ({
+          OR: [
+            { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+            {
+              description: {
+                contains: term,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
+        }))
+      : [
           {
-            description: { contains: term, mode: Prisma.QueryMode.insensitive },
-          }
-        );
-      }
-    } else {
-      // Fallback to original inquiry if no processed terms
-      searchConditions.push(
-        {
-          name: {
-            contains: productInquiry,
-            mode: Prisma.QueryMode.insensitive,
+            name: {
+              contains: productInquiry,
+              mode: Prisma.QueryMode.insensitive,
+            },
           },
-        },
-        {
-          description: {
-            contains: productInquiry,
-            mode: Prisma.QueryMode.insensitive,
+          {
+            description: {
+              contains: productInquiry,
+              mode: Prisma.QueryMode.insensitive,
+            },
           },
-        }
-      );
-    }
+        ];
 
-    // First query to get the item with its categoryId
+    // Fetch exact product
     const item = await prisma.item.findFirst({
-      where: {
-        OR: searchConditions,
-      },
+      where: { OR: searchConditions },
       select: {
         id: true,
         name: true,
@@ -206,24 +198,63 @@ const dbService = {
       },
     });
 
-    // Then use the categoryId to fetch the category name
-    const category = item
-      ? await prisma.category.findUnique({
-          where: {
-            id: item.categoryId,
-          },
-          select: {
-            title: true,
-          },
-        })
-      : null;
+    if (!item) return null; // Return null if no product is found
 
-    const result = {
+    // Get the category name
+    const category = await prisma.category.findUnique({
+      where: { id: item.categoryId },
+      select: { title: true },
+    });
+
+    return {
       ...item,
       category: category?.title,
     };
+  },
 
-    return result;
+  getSimilarProducts: async (productInquiry: string) => {
+    // Process the search query to find related items
+    const processedTerms = processSearchQuery(productInquiry);
+
+    const searchConditions: Prisma.ItemWhereInput[] = processedTerms.length
+      ? processedTerms.map((term) => ({
+          OR: [
+            { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+            {
+              description: {
+                contains: term,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
+        }))
+      : [
+          {
+            name: {
+              contains: productInquiry,
+              mode: Prisma.QueryMode.insensitive,
+            },
+          },
+          {
+            description: {
+              contains: productInquiry,
+              mode: Prisma.QueryMode.insensitive,
+            },
+          },
+        ];
+
+    // Fetch similar products within the same category
+    const similarProducts = await prisma.item.findMany({
+      where: { OR: searchConditions },
+      select: {
+        name: true,
+        price: true,
+        mainImage: true,
+      },
+      take: 5, // Limit the number of results
+    });
+
+    return similarProducts;
   },
 };
 
@@ -628,7 +659,8 @@ async function handleTextMessage(messageDetails: any) {
   const productInquiry = detectProductInquiry(messageDetails.messageText);
   if (productInquiry) {
     const product = await dbService.getProductDetails(productInquiry);
-    if (product) {
+
+    if (product && product.name) {
       const response = `El producto "${product.name}" tiene un precio de $${product.price}. ¿Necesitas más información?`;
       await sendWhatsAppMessage(messageDetails.senderPhone, response);
       await dbService.createMessage({
@@ -639,20 +671,43 @@ async function handleTextMessage(messageDetails: any) {
         sender: "SYSTEM",
         timestamp: new Date(),
       });
-      return; // Exit early after handling the product inquiry
-    } else {
-      const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
-      await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
+      return;
+    }
+
+    // If no exact match, find related products
+    const similarProducts = await dbService.getSimilarProducts(productInquiry);
+
+    if (similarProducts.length > 0) {
+      const suggestions = similarProducts
+        .map(
+          (p: { name: string; price: number }) => `"${p.name}" por $${p.price}`
+        )
+        .join(", ");
+      const similarResponse = `No encontré "${productInquiry}", pero quizás te interesen estos productos: ${suggestions}. ¿Quieres más información sobre alguno?`;
+
+      await sendWhatsAppMessage(messageDetails.senderPhone, similarResponse);
       await dbService.createMessage({
         phone: messageDetails.senderPhone,
         clientId: messageDetails.clientId,
-        message: notFoundResponse,
+        message: similarResponse,
         type: "text",
         sender: "SYSTEM",
         timestamp: new Date(),
       });
-      return; // Exit early after handling the not-found case
+      return;
     }
+
+    // If no similar products found
+    const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
+    await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
+    await dbService.createMessage({
+      phone: messageDetails.senderPhone,
+      clientId: messageDetails.clientId,
+      message: notFoundResponse,
+      type: "text",
+      sender: "SYSTEM",
+      timestamp: new Date(),
+    });
   }
 
   // Generate response with realtime context
