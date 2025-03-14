@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
 import { getMexicoDate, getMexicoFullDate } from "@/lib/utils";
 import { sendWhatsAppMessage } from "@/app/(backend)/sistema/ventas/clientes/_actions/chatgpt";
+import { toZonedTime } from "date-fns-tz";
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get("authorization");
@@ -14,13 +15,19 @@ export async function POST(request: Request) {
     });
   }
   try {
-    // Get the current date
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999); // Set time to the start of the day (23:59:59)
+    // Define your desired time zone (e.g., 'America/Mexico_City')
+    const timeZone = "America/Mexico_City";
 
-    // start from start of day from yesterday's date
-    const startOfToday = new Date();
+    // Get the current date in the specified time zone
+    const now = new Date();
+    const zonedDate = toZonedTime(now, timeZone);
+
+    // Set the start and end of the day in the specified time zone
+    const startOfToday = new Date(zonedDate);
     startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date(zonedDate);
+    endOfToday.setHours(23, 59, 59, 999);
 
     const startOfYesterday = new Date();
     startOfYesterday.setDate(startOfYesterday.getDate() - 1); // Go back one day
@@ -56,7 +63,7 @@ export async function POST(request: Request) {
 
     // Calculate totals
     const totalSales = orders.reduce((acc, item) => acc + item.totalAmount, 0);
-    const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
+    // const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
     const totalTransferPayments = payments.reduce(
       (acc, item) =>
         item.method === "TRANSFERENCIA" ? acc + item.amount : acc,
@@ -134,7 +141,7 @@ export async function POST(request: Request) {
               </tbody>
             </table>
       
-            <h3><strong>Total Pedidos: ${totalSales.toLocaleString(undefined, {
+            <h3><strong>Pedidos: ${totalSales.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}</strong></h3>
@@ -178,11 +185,6 @@ export async function POST(request: Request) {
              minimumFractionDigits: 2,
              maximumFractionDigits: 2,
            })}</strong></h3>
-          <h3><strong>Total Pagos: ${totalPayments.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}</strong></h3>
-
 
              <div>${bodyThreeHeader}</div>
             <table border="1" cellpadding="8" cellspacing="0" width="100%"    style="border-collapse: collapse;">
@@ -229,8 +231,8 @@ export async function POST(request: Request) {
 
     // Prepare WhatsApp message
     const whatsAppMessage = `
-     Resumen Diario de Ventas, Pagos y Gastos:
-     - Total Pedidos: $${totalSales.toLocaleString(undefined, {
+     Resumen ${todaysDate} Ventas, Pagos y Gastos:
+     - Pedidos: $${totalSales.toLocaleString(undefined, {
        minimumFractionDigits: 2,
        maximumFractionDigits: 2,
      })}
@@ -242,11 +244,7 @@ export async function POST(request: Request) {
        minimumFractionDigits: 2,
        maximumFractionDigits: 2,
      })}
-     - Total Pagos: $${totalPayments.toLocaleString(undefined, {
-       minimumFractionDigits: 2,
-       maximumFractionDigits: 2,
-     })}
-     - Total Gastos: $${totalExpenses.toLocaleString(undefined, {
+     - Total Gastos: -$${totalExpenses.toLocaleString(undefined, {
        minimumFractionDigits: 2,
        maximumFractionDigits: 2,
      })}
