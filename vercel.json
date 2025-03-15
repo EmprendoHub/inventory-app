@@ -1,11 +1,11 @@
 {
   "crons": [
     {
-      "path": "https://www.mueblesyuny.com/api/cron",
+      "path": "https://*.mueblesyuny.com/api/cron",
       "schedule": "0 16 * * 0"
     },
     {
-      "path": "https://www.mueblesyuny.com/api/daily-cron",
+      "path": "https://*.mueblesyuny.com/api/daily-cron",
       "schedule": "0 24 * * *"
     }
   ]
