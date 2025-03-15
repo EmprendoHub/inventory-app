@@ -15,7 +15,6 @@ export async function GET(request: Request) {
     });
   }
 
-  console.log("cron log success");
   try {
     // Define your desired time zone (e.g., 'America/Mexico_City')
     const timeZone = "America/Mexico_City";
