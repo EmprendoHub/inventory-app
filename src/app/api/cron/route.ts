@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { getMexicoDate, getMexicoFullDate } from "@/lib/utils";
 import { sendWhatsAppMessage } from "@/app/(backend)/sistema/ventas/clientes/_actions/chatgpt";
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     console.log("cron log error");
