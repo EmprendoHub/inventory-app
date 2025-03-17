@@ -28,6 +28,7 @@ import {
 import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { createWhatsAppMessagesType } from "@/types/whatsapp";
 import { OrderType } from "@/types/sales";
+import { sendRichMediaMessage } from "@/lib/whatsapp";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
@@ -315,6 +316,7 @@ async function processMessageEvent(event: any) {
     const senderName = event.contacts[0].profile.name;
     const clientId = client?.id || "";
     const messageType = event.messages[0].type;
+    const messageText = event.messages[0].text?.body || "";
 
     try {
       if (WAPhone === "3532464146") {
@@ -323,7 +325,7 @@ async function processMessageEvent(event: any) {
           senderPhone,
           clientId,
           timestamp,
-          messageText: event.messages[0].text.body,
+          messageText,
           senderName,
         });
       } else {
@@ -332,66 +334,80 @@ async function processMessageEvent(event: any) {
           dbService.getRealtimeOrderData(clientId),
         ]);
 
-        switch (messageType) {
-          case "text":
-            await handleTextMessage({
-              senderPhone,
-              clientId,
-              timestamp,
-              messageText: event.messages[0].text.body,
-              senderName,
-              realtimeOrders,
-              sentiment: sentimentAnalysis.analysis?.sentiment || "Neutral",
-            });
-            break;
+        // Check for specific keywords to handle location and contact card inquiries
+        if (
+          messageText.includes("ubicación") ||
+          messageText.includes("dónde están")
+        ) {
+          await handleLocationInquiry(senderPhone);
+        } else if (
+          messageText.includes("contacto") ||
+          messageText.includes("agente")
+        ) {
+          await handleContactCardInquiry(senderPhone);
+        } else {
+          switch (messageType) {
+            case "text":
+              await handleTextMessage({
+                senderPhone,
+                clientId,
+                timestamp,
+                messageText,
+                senderName,
+                realtimeOrders,
+                sentiment: sentimentAnalysis.analysis?.sentiment || "Neutral",
+              });
+              break;
 
-          case "button":
-            await handleButtonMessage({
-              senderPhone,
-              clientId,
-              timestamp,
-              messagePayload: event.messages[0].button.payload,
-              messageText: event.messages[0].button.text,
-              senderName,
-            });
-            break;
+            case "button":
+              await handleButtonMessage({
+                senderPhone,
+                clientId,
+                timestamp,
+                messagePayload: event.messages[0].button.payload,
+                messageText: event.messages[0].button.text,
+                senderName,
+              });
+              break;
 
-          case "audio":
-            await handleAudioMessage({
-              senderPhone,
-              clientId,
-              timestamp,
-              senderName,
-              itemId: event.messages[0].audio.id,
-            });
-            break;
+            case "audio":
+              await handleAudioMessage({
+                senderPhone,
+                clientId,
+                timestamp,
+                senderName,
+                itemId: event.messages[0].audio.id,
+              });
+              break;
 
-          case "image":
-            await handleImageMessage({
-              senderPhone,
-              clientId,
-              timestamp,
-              messageText: event.messages[0].image.caption || "Imagen recibida",
-              senderName,
-              itemId: event.messages[0].image.id,
-            });
-            break;
+            case "image":
+              await handleImageMessage({
+                senderPhone,
+                clientId,
+                timestamp,
+                messageText:
+                  event.messages[0].image.caption || "Imagen recibida",
+                senderName,
+                itemId: event.messages[0].image.id,
+              });
+              break;
 
-          case "interactive":
-            await handleInteractiveMessage({
-              senderPhone,
-              orderId: event.messages[0].interactive.list_reply.id,
-              clientId,
-              timestamp,
-              messageTitle: event.messages[0].interactive.list_reply.title,
-              messageDescription:
-                event.messages[0].interactive.list_reply.description,
-              senderName,
-            });
-            break;
+            case "interactive":
+              await handleInteractiveMessage({
+                senderPhone,
+                orderId: event.messages[0].interactive.list_reply.id,
+                clientId,
+                timestamp,
+                messageTitle: event.messages[0].interactive.list_reply.title,
+                messageDescription:
+                  event.messages[0].interactive.list_reply.description,
+                senderName,
+              });
+              break;
 
-          default:
-            console.warn("Unsupported message type:", messageType);
+            default:
+              console.warn("Unsupported message type:", messageType);
+          }
         }
 
         setTimeout(async () => {
@@ -576,18 +592,23 @@ async function handleTextMessage(messageDetails: any) {
 
     if (product && product.name) {
       const response = `El producto "${product.name}" tiene un precio de $${product.price}. ¿Necesitas más información?`;
-      await sendWhatsAppMessage(messageDetails.senderPhone, response);
+      await sendRichMediaMessage(
+        messageDetails.senderPhone,
+        product.mainImage,
+        response
+      );
       await dbService.createMessage({
         phone: messageDetails.senderPhone,
         clientId: messageDetails.clientId,
         message: response,
-        type: "text",
+        mediaUrl: product.mainImage,
+        type: "image",
         sender: "SYSTEM",
         timestamp: createdAt,
       });
       return;
     } else {
-      const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
+      const notFoundResponse = `Lo siento, no pude encontrar información sobre este producto. ¿Podrías darme más detalles?`;
       await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
       await dbService.createMessage({
         phone: messageDetails.senderPhone,
@@ -1002,4 +1023,114 @@ async function escalateToHumanAgent(details: {
   console.log(
     `Escalation needed for client ${details.clientId} (${details.phone})`
   );
+}
+
+// New function to handle location inquiries
+async function sendLocationToCustomer(phone: string, location: any) {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "location",
+    location: {
+      longitude: location.longitude,
+      latitude: location.latitude,
+      name: location.name,
+      address: location.address,
+    },
+  });
+
+  const config = {
+    method: "post",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  await axios(config);
+}
+
+// New function to handle contact card inquiries
+async function sendContactCardToCustomer(phone: string, contact: any) {
+  const data = JSON.stringify({
+    messaging_product: "whatsapp",
+    to: phone,
+    type: "contacts",
+    contacts: [contact],
+  });
+
+  const config = {
+    method: "post",
+    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+    },
+    data: data,
+  };
+
+  await axios(config);
+}
+
+// Example usage of the new functions
+async function handleLocationInquiry(phone: string) {
+  const location = {
+    longitude: 20.0274926053188,
+    latitude: -102.71694780903867,
+    name: "Muebles Americanos Yunuen Co.",
+    address:
+      "Guadalajara-Morelia, La Yerbabuena, Sahuayo, Michoacan, 59000, Mexico",
+  };
+
+  await sendLocationToCustomer(phone, location);
+}
+
+async function handleContactCardInquiry(phone: string) {
+  const contact = {
+    addresses: [
+      {
+        street: "Guadalajara-Morelia, La Yerbabuena",
+        city: "Sahuayo",
+        state: "Michoacan",
+        zip: "59000",
+        country: "Mexico",
+        country_code: "MX",
+        type: "WORK",
+      },
+    ],
+    birthday: "1980-04-07",
+    emails: [
+      {
+        email: "emprendomex@gmail.com",
+        type: "WORK",
+      },
+    ],
+    name: {
+      formatted_name: "John Doe",
+      first_name: "John",
+      last_name: "Doe",
+    },
+    org: {
+      company: "Muebles Americanos Yunuen Co.",
+      department: "Servicio al cliente",
+      title: "Servicio al cliente",
+    },
+    phones: [
+      {
+        phone: "+523534530042",
+        type: "WORK",
+        wa_id: "+523534530042",
+      },
+    ],
+    urls: [
+      {
+        url: "https://www.mueblesyuny.com",
+        type: "WORK",
+      },
+    ],
+  };
+
+  await sendContactCardToCustomer(phone, contact);
 }
