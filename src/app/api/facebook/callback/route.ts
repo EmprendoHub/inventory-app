@@ -31,46 +31,73 @@ import { OrderType } from "@/types/sales";
 import { sendRichMediaMessage } from "@/lib/whatsapp";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
+const locationKeywords = [
+  "ubicación",
+  "ubicacion",
+  "dónde están",
+  "donde estan",
+  "dirección",
+  "direccion",
+  "mapa",
+  "localización",
+  "localizacion",
+  "sucursal",
+  "tienda",
+  "store",
+  "location",
+  "map",
+  "address",
+];
+
+const contactKeywords = [
+  "contacto",
+  "agente",
+  "soporte",
+  "ayuda",
+  "help",
+  "contact",
+  "support",
+];
+const stopWords = [
+  // Spanish
+  "el",
+  "la",
+  "los",
+  "las",
+  "un",
+  "una",
+  "unos",
+  "unas",
+  "cuanto",
+  "cuanta",
+  "como",
+  "donde",
+  "que",
+  "cual",
+  "cuando",
+  "por",
+  "para",
+  "cuesta",
+  // English
+  "the",
+  "a",
+  "an",
+  "how",
+  "what",
+  "where",
+  "when",
+  "much",
+  "many",
+  "does",
+  "cost",
+  "price",
+  "buy",
+];
 
 // Helper function to process search queries
 function processSearchQuery(query: string): string[] {
   const normalizedQuery = query.toLowerCase();
   const words = normalizedQuery.split(/\s+/);
-  const stopWords = [
-    // Spanish
-    "el",
-    "la",
-    "los",
-    "las",
-    "un",
-    "una",
-    "unos",
-    "unas",
-    "cuanto",
-    "cuanta",
-    "como",
-    "donde",
-    "que",
-    "cual",
-    "cuando",
-    "por",
-    "para",
-    "cuesta",
-    // English
-    "the",
-    "a",
-    "an",
-    "how",
-    "what",
-    "where",
-    "when",
-    "much",
-    "many",
-    "does",
-    "cost",
-    "price",
-    "buy",
-  ];
 
   return words
     .filter((word) => word.length > 2 && !stopWords.includes(word))
@@ -335,36 +362,10 @@ async function processMessageEvent(event: any) {
         ]);
 
         // Check for specific keywords to handle location and contact card inquiries
-        if (
-          messageText.includes([
-            "ubicación",
-            "ubicacion",
-            "dónde están",
-            "donde estan",
-            "dirección",
-            "direccion",
-            "mapa",
-            "localización",
-            "localizacion",
-            "sucursal",
-            "tienda",
-            "store",
-            "location",
-            "map",
-            "address",
-          ])
-        ) {
+        if (locationKeywords.some((keyword) => messageText.includes(keyword))) {
           await handleLocationInquiry(senderPhone);
         } else if (
-          messageText.includes([
-            "contacto",
-            "agente",
-            "soporte",
-            "ayuda",
-            "help",
-            "contact",
-            "support",
-          ])
+          contactKeywords.some((keyword) => messageText.includes(keyword))
         ) {
           await handleContactCardInquiry(senderPhone);
         } else {
@@ -613,6 +614,8 @@ async function handleTextMessage(messageDetails: any) {
     const product = await dbService.getProductDetails(productInquiry);
 
     if (product && product.name) {
+      console.log("Product found:", product);
+
       const response = `El producto "${product.name}" tiene un precio de $${product.price}. ¿Necesitas más información?`;
       await sendRichMediaMessage(
         messageDetails.senderPhone,
