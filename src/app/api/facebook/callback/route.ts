@@ -1054,7 +1054,7 @@ async function escalateToHumanAgent(details: {
 async function sendLocationToCustomer(phone: string, location: any) {
   const data = JSON.stringify({
     messaging_product: "whatsapp",
-    to: phone,
+    to: `52${phone}`,
     type: "location",
     location: {
       longitude: location.longitude,
@@ -1081,7 +1081,7 @@ async function sendLocationToCustomer(phone: string, location: any) {
 async function sendContactCardToCustomer(phone: string, contact: any) {
   const data = JSON.stringify({
     messaging_product: "whatsapp",
-    to: phone,
+    to: `52${phone}`,
     type: "contacts",
     contacts: [contact],
   });
