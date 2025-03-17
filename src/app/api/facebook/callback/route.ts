@@ -1061,7 +1061,7 @@ async function sendLocationToCustomer(phone: string, location: any) {
       longitude: location.longitude,
       latitude: location.latitude,
       name: location.name,
-      address: location.address,
+      // address: location.address,
     },
   });
 
