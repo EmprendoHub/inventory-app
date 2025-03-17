@@ -336,13 +336,35 @@ async function processMessageEvent(event: any) {
 
         // Check for specific keywords to handle location and contact card inquiries
         if (
-          messageText.includes("ubicación") ||
-          messageText.includes("dónde están")
+          messageText.includes([
+            "ubicación",
+            "ubicacion",
+            "dónde están",
+            "donde estan",
+            "dirección",
+            "direccion",
+            "mapa",
+            "localización",
+            "localizacion",
+            "sucursal",
+            "tienda",
+            "store",
+            "location",
+            "map",
+            "address",
+          ])
         ) {
           await handleLocationInquiry(senderPhone);
         } else if (
-          messageText.includes("contacto") ||
-          messageText.includes("agente")
+          messageText.includes([
+            "contacto",
+            "agente",
+            "soporte",
+            "ayuda",
+            "help",
+            "contact",
+            "support",
+          ])
         ) {
           await handleContactCardInquiry(senderPhone);
         } else {
