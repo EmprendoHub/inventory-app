@@ -1104,8 +1104,8 @@ async function sendContactCardToCustomer(phone: string, contact: any) {
 // Example usage of the new functions
 async function handleLocationInquiry(phone: string) {
   const location = {
-    longitude: "20.0274926053188",
-    latitude: "-102.71694780903867",
+    longitude: "-102.71694780903867",
+    latitude: "20.0274926053188",
     name: "Muebles Americanos Yunuen Co.",
     address:
       "Guadalajara-Morelia, La Yerbabuena, Sahuayo, Michoacan, 59000, Mexico",
