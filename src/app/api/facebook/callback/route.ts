@@ -31,15 +31,10 @@ import { OrderType } from "@/types/sales";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 
-// Helper function to process search queries in a general way
+// Helper function to process search queries
 function processSearchQuery(query: string): string[] {
-  // Convert to lowercase
   const normalizedQuery = query.toLowerCase();
-
-  // Split into words
   const words = normalizedQuery.split(/\s+/);
-
-  // Filter out common question words, articles, and short words in multiple languages
   const stopWords = [
     // Spanish
     "el",
@@ -76,21 +71,14 @@ function processSearchQuery(query: string): string[] {
     "buy",
   ];
 
-  // Filter out short words and stop words
-  return (
-    words
-      .filter((word) => word.length > 2)
-      .filter((word) => !stopWords.includes(word))
-      // Remove punctuation
-      .map((word) => word.replace(/[.,?!;:]/g, ""))
-  );
+  return words
+    .filter((word) => word.length > 2 && !stopWords.includes(word))
+    .map((word) => word.replace(/[.,?!;:]/g, ""));
 }
 
 // Helper function to remove accents from text
 const removeAccents = (text: string): string => {
-  return text
-    .normalize("NFD") // Decomposes accents
-    .replace(/[\u0300-\u036f]/g, ""); // Removes accent marks
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 };
 
 const dbService = {
@@ -145,9 +133,10 @@ const dbService = {
   },
 
   updateClientLastInteraction: async (clientId: string) => {
+    const currentDateTime = getMexicoGlobalUtcDate();
     return prisma.client.update({
       where: { id: clientId },
-      data: { updatedAt: new Date() },
+      data: { updatedAt: currentDateTime },
     });
   },
 
@@ -161,12 +150,9 @@ const dbService = {
   },
 
   getProductDetails: async (productInquiry: string) => {
-    // Normalize and remove accents from user query
     const normalizedQuery = removeAccents(productInquiry.toLowerCase());
-    // Process the inquiry for better searching
     const processedTerms = processSearchQuery(normalizedQuery);
 
-    // Build search conditions with the processed terms
     const searchConditions: Prisma.ItemWhereInput[] = processedTerms.length
       ? processedTerms.map((term) => ({
           OR: [
@@ -194,7 +180,6 @@ const dbService = {
           },
         ];
 
-    // Fetch exact product
     const item = await prisma.item.findFirst({
       where: { OR: searchConditions },
       select: {
@@ -207,9 +192,8 @@ const dbService = {
       },
     });
 
-    if (!item) return null; // Return null if no product is found
+    if (!item) return null;
 
-    // Get the category name
     const category = await prisma.category.findUnique({
       where: { id: item.categoryId },
       select: { title: true },
@@ -222,7 +206,6 @@ const dbService = {
   },
 
   getSimilarProducts: async (productInquiry: string) => {
-    // Process the search query to find related items
     const processedTerms = processSearchQuery(productInquiry);
 
     const searchConditions: Prisma.ItemWhereInput[] = processedTerms.length
@@ -252,7 +235,6 @@ const dbService = {
           },
         ];
 
-    // Fetch similar products within the same category
     const similarProducts = await prisma.item.findMany({
       where: { OR: searchConditions },
       select: {
@@ -260,7 +242,7 @@ const dbService = {
         price: true,
         mainImage: true,
       },
-      take: 5, // Limit the number of results
+      take: 5,
     });
 
     return similarProducts;
@@ -345,13 +327,11 @@ async function processMessageEvent(event: any) {
           senderName,
         });
       } else {
-        // Use realtime data in sentiment analysis
         const [sentimentAnalysis, realtimeOrders] = await Promise.all([
           analyzeCustomerSentiment(senderPhone),
           dbService.getRealtimeOrderData(clientId),
         ]);
 
-        // Process message types with realtime data context
         switch (messageType) {
           case "text":
             await handleTextMessage({
@@ -360,7 +340,7 @@ async function processMessageEvent(event: any) {
               timestamp,
               messageText: event.messages[0].text.body,
               senderName,
-              realtimeOrders, // Pass realtime data to handler
+              realtimeOrders,
               sentiment: sentimentAnalysis.analysis?.sentiment || "Neutral",
             });
             break;
@@ -414,13 +394,12 @@ async function processMessageEvent(event: any) {
             console.warn("Unsupported message type:", messageType);
         }
 
-        // Delayed follow-up check
         setTimeout(async () => {
           const followUpCheck = await shouldSendAiFollowUp(senderPhone);
           if (followUpCheck.shouldFollow) {
             await generateAiFollowUp(senderPhone);
           }
-        }, 300000); // 300-second delay for follow-up
+        }, 300000);
       }
     } catch (error) {
       console.error("Message processing failed:", error);
@@ -444,7 +423,6 @@ async function processAudioFile(audioId: string) {
   const data = await response.json();
   const WAAudioUrl = data.url;
 
-  // Save to storage
   const audioResponse = await axios.get(WAAudioUrl, {
     headers: {
       Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -463,7 +441,6 @@ async function processAudioFile(audioId: string) {
   await uploadToBucket("inventario", "audio/" + newFilename, filePath);
   const audioUrl = `${process.env.MINIO_URL}audio/${newFilename}`;
 
-  // Transcribe audio using AI
   const transcription = await transcribeAudioWithAI(audioUrl);
   return { success: true, audioUrl, transcription };
 }
@@ -484,7 +461,6 @@ async function processImageFile(imageId: string) {
     const data = await response.json();
     const WAImageUrl = data.url;
 
-    // Save to storage
     const imageResponse = await axios.get(WAImageUrl, {
       headers: {
         Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
@@ -502,7 +478,6 @@ async function processImageFile(imageId: string) {
 
     await uploadToBucket("inventario", "images/" + newFilename, filePath);
     const imageUrl = `${process.env.MINIO_URL}images/${newFilename}`;
-    // Process image with AI
     const imageDescription = await processImageWithAI(imageUrl);
 
     return { success: true, imageUrl, description: imageDescription };
@@ -513,7 +488,6 @@ async function processImageFile(imageId: string) {
 }
 
 async function storeTextInteractiveMessage(messageDetails: any) {
-  // typing on
   const data = JSON.stringify({
     messaging_product: "whatsapp",
     to: `52${messageDetails.senderPhone}`,
@@ -563,7 +537,6 @@ async function storeTextInteractiveMessage(messageDetails: any) {
 
 async function processPdfFile(orderId: string) {
   try {
-    // Step 1: Fetch pdf order receipt
     const url = `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/api/factura/${orderId}`;
     const response = await fetch(url);
 
@@ -571,100 +544,32 @@ async function processPdfFile(orderId: string) {
       throw new Error(`Failed to fetch PDF: ${response.statusText}`);
     }
 
-    // Step 2: Get the PDF buffer from the response
     const pdfBuffer = await response.arrayBuffer();
-
-    // Step 3: Generate a unique filename and save the PDF to a temporary file
     const newFilename = `${orderId}.pdf`;
     const filePath = join("/", "tmp", newFilename);
 
     fs.writeFileSync(filePath, Buffer.from(pdfBuffer));
 
-    // Step 4: Upload the file to the bucket
     await uploadToBucket("inventario", "pdf/" + newFilename, filePath);
-    console.log("File uploaded to bucket");
-
-    // Step 5: Return the public URL of the uploaded PDF
     const pdfUrl = `${process.env.MINIO_URL}pdf/${newFilename}`;
     return { success: true, pdfUrl };
   } catch (error) {
     console.error("Error in processPdfFile:", error);
-    throw error; // Re-throw the error for further handling
+    throw error;
   }
 }
 
-// async function handleTextMessage(messageDetails: any) {
-//   // Store the incoming message
-//   const currentDateTime = getMexicoGlobalUtcDate();
-//   await prisma.whatsAppMessage.create({
-//     data: {
-//       clientId: messageDetails.clientId,
-//       phone: messageDetails.senderPhone,
-//       type: "text",
-//       message: messageDetails.messageText,
-//       sender: "CLIENT" as SenderType,
-//       timestamp: currentDateTime,
-//       createdAt: currentDateTime,
-//       updatedAt: currentDateTime,
-//     },
-//   });
-
-//   // Generate AI response based on sentiment
-//   const systemPrompt = selectSystemPrompt(
-//     messageDetails.messageText,
-//     messageDetails.sentiment
-//   );
-//   const aiResponse = await generateCustomerServiceResponse(
-//     messageDetails.messageText,
-//     messageDetails.clientId,
-//     messageDetails.senderPhone,
-//     systemPrompt
-//   );
-
-//   if (aiResponse) {
-//     const createdAt = getMexicoGlobalUtcDate();
-
-//     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
-//     await storeMessage({
-//       phone: messageDetails.senderPhone,
-//       clientId: messageDetails.clientId,
-//       message: aiResponse,
-//       type: "text",
-//       sender: "SYSTEM" as SenderType,
-//       timestamp: createdAt,
-//     });
-
-//     // Send product recommendations if appropriate
-//     if (shouldOfferRecommendations(messageDetails.messageText)) {
-//       const recommendations = await generateProductRecommendations(
-//         messageDetails.clientId
-//       );
-//       if (recommendations.success) {
-//         if (recommendations.recommendedProducts) {
-//           await sendProductRecommendations(
-//             messageDetails.senderPhone,
-//             recommendations.recommendedProducts
-//           );
-//         }
-//       }
-//     }
-//   }
-// }
-
-// Enhanced handleTextMessage with realtime data integration
-
 async function handleTextMessage(messageDetails: any) {
-  // Store message using transaction
+  const createdAt = getMexicoGlobalUtcDate();
   await dbService.createMessage({
     clientId: messageDetails.clientId,
     phone: messageDetails.senderPhone,
     type: "text",
     message: messageDetails.messageText,
     sender: "CLIENT",
-    timestamp: messageDetails.timestamp,
+    timestamp: createdAt,
   });
 
-  // Check if the message is asking for product prices
   const productInquiry = detectProductInquiry(messageDetails.messageText);
   if (productInquiry) {
     const product = await dbService.getProductDetails(productInquiry);
@@ -678,14 +583,12 @@ async function handleTextMessage(messageDetails: any) {
         message: response,
         type: "text",
         sender: "SYSTEM",
-        timestamp: new Date(),
+        timestamp: createdAt,
       });
       return;
     }
 
-    // If no exact match, find related products
     const similarProducts = await dbService.getSimilarProducts(productInquiry);
-
     if (similarProducts.length > 0) {
       const suggestions = similarProducts
         .map(
@@ -701,12 +604,11 @@ async function handleTextMessage(messageDetails: any) {
         message: similarResponse,
         type: "text",
         sender: "SYSTEM",
-        timestamp: new Date(),
+        timestamp: createdAt,
       });
       return;
     }
 
-    // If no similar products found
     const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
     await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
     await dbService.createMessage({
@@ -715,11 +617,10 @@ async function handleTextMessage(messageDetails: any) {
       message: notFoundResponse,
       type: "text",
       sender: "SYSTEM",
-      timestamp: new Date(),
+      timestamp: createdAt,
     });
   }
 
-  // Generate response with realtime context
   const systemPrompt = createDynamicPrompt(
     messageDetails.messageText,
     messageDetails.sentiment,
@@ -734,8 +635,8 @@ async function handleTextMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
-    // eslint-disable-next-line
-    const [messageSent] = await Promise.all([
+    const createdAt = getMexicoGlobalUtcDate();
+    await Promise.all([
       sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
       dbService.createMessage({
         phone: messageDetails.senderPhone,
@@ -743,11 +644,10 @@ async function handleTextMessage(messageDetails: any) {
         message: aiResponse,
         type: "text",
         sender: "SYSTEM",
-        timestamp: new Date(),
+        timestamp: createdAt,
       }),
     ]);
 
-    // Check for conversation end before sending feedback
     if (isConversationEnding(aiResponse)) {
       await sendPostConversationActions(messageDetails.senderPhone);
     }
@@ -756,7 +656,6 @@ async function handleTextMessage(messageDetails: any) {
 
 function detectProductInquiry(message: string): string | null {
   const productKeywords = [
-    // Palabras clave originales
     "precio",
     "costo",
     "cuanto cuesta",
@@ -775,17 +674,12 @@ function detectProductInquiry(message: string): string | null {
     "valor",
     "información de producto",
     "detalles de producto",
-
-    // Nuevas palabras clave para información
     "características de producto",
-    "caracteristicas de producto",
     "especificaciones de producto",
     "ficha técnica de producto",
-    "ficha tecnica de producto",
     "datos de productos",
     "info de productos",
     "información sobre productos",
-    "informacion sobre productos",
     "detalles sobre producto",
     "tienes",
     "vendes",
@@ -799,10 +693,9 @@ function detectProductInquiry(message: string): string | null {
     "i"
   );
   const match = message.match(productRegex);
-  return match ? match[2].trim() : null; // Return the product name or ID
+  return match ? match[2].trim() : null;
 }
 
-// New helper functions
 function createDynamicPrompt(
   message: string,
   sentiment: string,
@@ -850,45 +743,44 @@ function isConversationEnding(response: string) {
 }
 
 async function handleOwnerTextMessage(messageDetails: any) {
-  // Store the incoming message using dbService
+  const createdAt = getMexicoGlobalUtcDate();
   await dbService.createMessage({
     clientId: messageDetails.clientId,
     phone: messageDetails.senderPhone,
     type: "text",
     message: messageDetails.messageText,
     sender: "CLIENT",
-    timestamp: messageDetails.timestamp,
+    timestamp: createdAt,
   });
 
-  // Generate AI response based on sentiment
-  const systemPrompt = `Eres Salvador, un profesional con más de 20 años de experiencia en desarrollo web,    administración, y contabilidad para una compañía de venta de menudeo y mayoreo de muebles y electrodomésticos   seminuevos provenientes de hoteles americanos en remate.
+  const systemPrompt = `Eres Salvador, un profesional con más de 20 años de experiencia en desarrollo web, administración, y contabilidad para una compañía de venta de menudeo y mayoreo de muebles y electrodomésticos seminuevos provenientes de hoteles americanos en remate.
 
-      PERSONALIDAD Y RESPONSABILIDADES:
-      - Manejas redes sociales, sistema de ventas, marketing y ventas
-      - Eres organizado pero trabajas bajo presión constante
-      - Prefieres soluciones rápidas y comunicación directa
-      - Mantienes una relación cercana pero profesional con tu jefa Yuny
+  PERSONALIDAD Y RESPONSABILIDADES:
+  - Manejas redes sociales, sistema de ventas, marketing y ventas
+  - Eres organizado pero trabajas bajo presión constante
+  - Prefieres soluciones rápidas y comunicación directa
+  - Mantienes una relación cercana pero profesional con tu jefa Yuny
 
-      ESTILO DE COMUNICACIÓN:
-      - Informal pero respetuoso
-      - Usas expresiones como "jajaja", "hello", "¡qué padre!", "nel", "va que va"
-      - Frecuentemente usas emojis: 😅 😱 👍 🙏 🤔
-      - En situaciones urgentes: "me super urge", "porfa", "échame la mano", "para ayer"
-      - Agradecido: "mil gracias", "te debo una", "qué tengas bonito día"
-      - Acortas algunas palabras: "porfa" (por favor), "info" (información)
+  ESTILO DE COMUNICACIÓN:
+  - Informal pero respetuoso
+  - Usas expresiones como "jajaja", "hello", "¡qué padre!", "nel", "va que va"
+  - Frecuentemente usas emojis: 😅 😱 👍 🙏 🤔
+  - En situaciones urgentes: "me super urge", "porfa", "¡ayuda! jejeje"
+  - Agradecido: "mil gracias", "te debo una", "qué tengas bonito día"
+  - Acortas algunas palabras: "porfa" (por favor), "info" (información)
 
-      CONOCIMIENTOS:
-      - Terminología de ventas y administración de inventario
-      - Conocimiento de muebles y electrodomésticos de hoteles
-      - Familiaridad con software de gestión de ventas y contabilidad
-      - Estrategias de marketing para productos seminuevos
+  CONOCIMIENTOS:
+  - Terminología de ventas y administración de inventario
+  - Conocimiento de muebles y electrodomésticos de hoteles
+  - Familiaridad con software de gestión de ventas y contabilidad
+  - Estrategias de marketing para productos seminuevos
 
-      RESPUESTA A SITUACIONES:
-      - Ante problemas: primero ofreces soluciones, luego pides ayuda si es necesario
-      - Con fechas límite: priorizas y reorganizas tareas rápidamente
-      - Con Yuny: respetuoso pero con confianza para sugerir ideas
+  RESPUESTA A SITUACIONES:
+  - Ante problemas: primero ofreces soluciones, luego pides ayuda si es necesario
+  - Con fechas límite: priorizas y reorganizas tareas rápidamente
+  - Con Yuny: respetuoso pero con confianza para sugerir ideas
 
-      Ahora, actúa como Salvador respondiendo a Yuny (tu jefa) en diferentes situaciones laborales, manteniendo este estilo de comunicación en todo momento.`;
+  Ahora, actúa como Salvador respondiendo a Yuny (tu jefa) en diferentes situaciones laborales, manteniendo este estilo de comunicación en todo momento.`;
 
   const aiResponse = await generateCustomerServiceResponse(
     messageDetails.messageText,
@@ -906,7 +798,7 @@ async function handleOwnerTextMessage(messageDetails: any) {
         message: aiResponse,
         type: "text",
         sender: "SYSTEM",
-        timestamp: new Date(),
+        timestamp: createdAt,
       }),
     ]);
   }
@@ -914,8 +806,7 @@ async function handleOwnerTextMessage(messageDetails: any) {
 
 async function handleAudioMessage(messageDetails: any) {
   const audioResult = await processAudioFile(messageDetails.itemId);
-
-  // Store the audio message using dbService
+  const createdAt = getMexicoGlobalUtcDate();
   await dbService.createMessage({
     phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
@@ -923,10 +814,9 @@ async function handleAudioMessage(messageDetails: any) {
     type: "audio",
     mediaUrl: audioResult.audioUrl,
     sender: "CLIENT",
-    timestamp: messageDetails.timestamp,
+    timestamp: createdAt,
   });
 
-  // Process transcription with AI
   const aiResponse = await generateCustomerServiceResponse(
     audioResult.transcription,
     messageDetails.clientId,
@@ -934,6 +824,7 @@ async function handleAudioMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
+    const createdAt = getMexicoGlobalUtcDate();
     await Promise.all([
       sendWhatsAppMessage(messageDetails.senderPhone, aiResponse),
       dbService.createMessage({
@@ -942,7 +833,7 @@ async function handleAudioMessage(messageDetails: any) {
         message: aiResponse,
         type: "text",
         sender: "SYSTEM",
-        timestamp: new Date(),
+        timestamp: createdAt,
       }),
     ]);
   }
@@ -950,7 +841,6 @@ async function handleAudioMessage(messageDetails: any) {
 
 async function handleImageMessage(messageDetails: any) {
   const imageResult = await processImageFile(messageDetails.itemId);
-  // Store the image message using dbService
   await dbService.createMessage({
     phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
@@ -961,7 +851,6 @@ async function handleImageMessage(messageDetails: any) {
     timestamp: messageDetails.timestamp,
   });
 
-  // Process description with AI
   const aiResponse = await generateCustomerServiceResponse(
     `El cliente envió una imagen con la descripción: ${imageResult.description}`,
     messageDetails.clientId,
@@ -969,6 +858,7 @@ async function handleImageMessage(messageDetails: any) {
   );
 
   if (aiResponse) {
+    const createdAt = getMexicoGlobalUtcDate();
     await sendWhatsAppMessage(messageDetails.senderPhone, aiResponse);
     await storeMessage({
       phone: messageDetails.senderPhone,
@@ -976,13 +866,12 @@ async function handleImageMessage(messageDetails: any) {
       message: aiResponse,
       type: "text",
       sender: "SYSTEM" as SenderType,
-      timestamp: new Date(),
+      timestamp: createdAt,
     });
   }
 }
 
 async function handleInteractiveMessage(messageDetails: any) {
-  // Store the interactive message using dbService
   await dbService.createMessage({
     phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
@@ -995,16 +884,14 @@ async function handleInteractiveMessage(messageDetails: any) {
 
   await storeTextInteractiveMessage(messageDetails);
 
-  // Add satisfaction survey if appropriate
   if (messageDetails.messageTitle.includes("pedido")) {
     setTimeout(async () => {
       await sendSatisfactionSurvey(messageDetails.senderPhone);
-    }, 10000); // Delay survey by 10 seconds
+    }, 10000);
   }
 }
 
 async function handleButtonMessage(messageDetails: any) {
-  // Store the button response using dbService
   await dbService.createMessage({
     phone: messageDetails.senderPhone,
     clientId: messageDetails.clientId,
@@ -1014,7 +901,6 @@ async function handleButtonMessage(messageDetails: any) {
     timestamp: messageDetails.timestamp,
   });
 
-  // Handle different button responses
   switch (messageDetails.messageText) {
     case "Ver pedidos recientes":
       await sendRecentOrdersInteractiveMessage(messageDetails.clientId);
@@ -1070,11 +956,10 @@ async function handleButtonMessage(messageDetails: any) {
       }
   }
 
-  // Check if we should send a satisfaction survey
   if (shouldTriggerSurvey(messageDetails.messageText)) {
     setTimeout(async () => {
       await sendSatisfactionSurvey(messageDetails.senderPhone);
-    }, 10000); // Delay survey by 10 seconds
+    }, 10000);
   }
 }
 
@@ -1093,7 +978,6 @@ async function escalateToHumanAgent(details: {
   reason: string;
 }) {
   const createdAt = getMexicoGlobalUtcDate();
-  // Create escalation record using Prisma transaction
   await prisma.$transaction([
     prisma.escalation.create({
       data: {
@@ -1110,22 +994,11 @@ async function escalateToHumanAgent(details: {
     }),
   ]);
 
-  // Notify customer
   await sendWhatsAppMessage(
     details.phone,
     "Un agente humano se pondrá en contacto contigo pronto. Gracias por tu paciencia."
   );
 
-  // Notify support team
-  await notifySupportTeam(details);
-}
-
-async function notifySupportTeam(details: {
-  phone: string;
-  clientId: string | undefined;
-}) {
-  // Implement your notification system here
-  // This could be an email, Slack message, or other notification
   console.log(
     `Escalation needed for client ${details.clientId} (${details.phone})`
   );

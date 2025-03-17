@@ -61,6 +61,7 @@ model Client {
   whatsAppMessages      WhatsAppMessage[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  @@index([phone, email]) // Index on phone and email
 }
 
 enum ClientStatus {
@@ -810,4 +811,12 @@ model Escalation {
   reason    String
   status    String
   timestamp DateTime @default(now())
+}
+
+model Feedback {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  phone     String    @db.ObjectId
+  feedback  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

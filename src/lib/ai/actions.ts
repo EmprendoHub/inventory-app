@@ -7,6 +7,21 @@ import { getMexicoGlobalUtcDate } from "../utils";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+export async function generatePersonalizedResponse(
+  message: string,
+  clientId: string,
+  phone: string,
+  systemPrompt: string
+) {
+  const aiResponse = await generateCustomerServiceResponse(
+    message,
+    clientId,
+    phone,
+    systemPrompt
+  );
+  return aiResponse;
+}
+
 // Updated function for processing images
 export async function processImageWithAI(imageUrl: string) {
   try {

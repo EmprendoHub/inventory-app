@@ -256,3 +256,15 @@ export function isRouteAllowed(role: string, pathname: string): boolean {
 
   return false; // Route not allowed
 }
+
+export function isGDPRCompliant(user: any): boolean {
+  // Implement GDPR compliance checks
+  return !!(
+    (
+      user.consent && // Check if the user has given consent
+      user.dataProtectionAgreed && // Check if the user has agreed to data protection
+      user.consent.date && // Ensure the consent has a valid date
+      new Date(user.consent.date) <= new Date()
+    ) // Ensure the consent date is not in the future
+  );
+}
