@@ -1065,17 +1065,23 @@ async function sendLocationToCustomer(phone: string, location: any) {
     },
   });
 
-  const config = {
-    method: "post",
-    url: `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
-    },
-    data: data,
-  };
+  const response = await fetch(
+    `https://graph.facebook.com/v22.0/${process.env.WA_PHONE_ID}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.WA_BUSINESS_TOKEN}`,
+      },
+      body: data,
+    }
+  );
 
-  await axios(config);
+  if (!response.ok) {
+    throw new Error(`WhatsApp API error: ${await response.text()}`);
+  }
+
+  return { success: true };
 }
 
 // New function to handle contact card inquiries
