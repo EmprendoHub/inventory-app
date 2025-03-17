@@ -34,17 +34,18 @@ export const uploadOptimizedImage = async (rawData: any) => {
           fit: "inside", // Maintain aspect ratio
           withoutEnlargement: true, // Don't enlarge images smaller than 800x800
         })
-        .webp({
+        .png({
           // Convert to WebP format
           quality: 80, // Adjust quality (0-100)
-          lossless: false, // Use lossy compression for smaller file size
+          compressionLevel: 9, // Compression level (0-9, 9 being the highest compression)
+          adaptiveFiltering: true, // Use adaptive filtering for better compression
         })
         .toBuffer();
 
       // Generate a unique filename
       const newFilename = `${Date.now()}-${Math.random()
         .toString(36)
-        .substring(2)}.webp`;
+        .substring(2)}.png`;
       const path = join("/", "tmp", newFilename);
 
       // Save the optimized image to a temporary file
