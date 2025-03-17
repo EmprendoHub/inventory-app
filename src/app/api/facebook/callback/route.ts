@@ -586,6 +586,17 @@ async function handleTextMessage(messageDetails: any) {
         timestamp: createdAt,
       });
       return;
+    } else {
+      const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
+      await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
+      await dbService.createMessage({
+        phone: messageDetails.senderPhone,
+        clientId: messageDetails.clientId,
+        message: notFoundResponse,
+        type: "text",
+        sender: "SYSTEM",
+        timestamp: createdAt,
+      });
     }
 
     const similarProducts = await dbService.getSimilarProducts(productInquiry);
@@ -608,17 +619,6 @@ async function handleTextMessage(messageDetails: any) {
       });
       return;
     }
-
-    const notFoundResponse = `Lo siento, no pude encontrar información sobre "${productInquiry}". ¿Podrías darme más detalles?`;
-    await sendWhatsAppMessage(messageDetails.senderPhone, notFoundResponse);
-    await dbService.createMessage({
-      phone: messageDetails.senderPhone,
-      clientId: messageDetails.clientId,
-      message: notFoundResponse,
-      type: "text",
-      sender: "SYSTEM",
-      timestamp: createdAt,
-    });
   }
 
   const systemPrompt = createDynamicPrompt(
