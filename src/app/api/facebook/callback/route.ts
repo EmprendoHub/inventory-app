@@ -360,12 +360,15 @@ async function processMessageEvent(event: any) {
           analyzeCustomerSentiment(senderPhone),
           dbService.getRealtimeOrderData(clientId),
         ]);
+        const messageLowercase = messageText.toLowerCase();
 
         // Check for specific keywords to handle location and contact card inquiries
-        if (locationKeywords.some((keyword) => messageText.includes(keyword))) {
+        if (
+          locationKeywords.some((keyword) => messageLowercase.includes(keyword))
+        ) {
           await handleLocationInquiry(senderPhone);
         } else if (
-          contactKeywords.some((keyword) => messageText.includes(keyword))
+          contactKeywords.some((keyword) => messageLowercase.includes(keyword))
         ) {
           await handleContactCardInquiry(senderPhone);
         } else {
@@ -614,8 +617,6 @@ async function handleTextMessage(messageDetails: any) {
     const product = await dbService.getProductDetails(productInquiry);
 
     if (product && product.name) {
-      console.log("Product found:", product);
-
       const response = `El producto "${product.name}" tiene un precio de $${product.price}. ¿Necesitas más información?`;
       await sendRichMediaMessage(
         messageDetails.senderPhone,
