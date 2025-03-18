@@ -628,6 +628,7 @@ async function handleTextMessage(messageDetails: any) {
   });
 
   const productInquiry = await detectProductInquiry(messageDetails.messageText);
+  console.log("Product Inquiry:", productInquiry);
   if (productInquiry !== null) {
     const product = await dbService.getProductDetails(productInquiry);
 
