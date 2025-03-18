@@ -27,7 +27,7 @@ export default function TextAreaInput({
         id={name}
         value={value}
         onChange={(e) => onChange && onChange(name, e.target.value)}
-        rows={4}
+        rows={2}
         className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
       />
       {state.errors?.[`${name}`] && (
