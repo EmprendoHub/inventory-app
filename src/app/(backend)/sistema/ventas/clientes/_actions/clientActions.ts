@@ -76,10 +76,10 @@ export async function createClient(
       data: {
         name,
         email,
-        status: "ACTIVE",
         phone,
         address,
         image: savedImageUrl,
+        status: "ACTIVE",
         createdAt,
         updatedAt: createdAt,
       },

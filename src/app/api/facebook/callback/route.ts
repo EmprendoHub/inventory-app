@@ -96,8 +96,8 @@ const removeAccents = (text: string): string => {
 };
 
 const dbService = {
-  findClientByPhone: async (phone: string) => {
-    return prisma.client.findUnique({
+  findClientByPhone: async (phone: string, name: string) => {
+    const currentClient = await prisma.client.findUnique({
       where: { phone },
       include: {
         orders: {
@@ -107,6 +107,27 @@ const dbService = {
         },
       },
     });
+
+    if (currentClient) {
+      return currentClient;
+    } else {
+      const createdAt = getMexicoGlobalUtcDate();
+      const newClient = await prisma.client.create({
+        data: {
+          name,
+          email: `${phone}@mueblesyuny.com`,
+          phone,
+          address: "Actualizar Dirección no proporcionada",
+          image:
+            "https://minio.salvawebpro.com:9000/inventario/avatars/avatar_placeholder.jpg",
+          status: "ACTIVE",
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      return newClient;
+    }
   },
 
   createMessage: async (messageDetails: createWhatsAppMessagesType) => {
@@ -323,7 +344,8 @@ async function processMessageEvent(event: any) {
     console.log("PROCESS messages", event.messages[0]);
 
     const WAPhone = event.contacts[0].wa_id.replace(/^521/, "");
-    const client = await dbService.findClientByPhone(WAPhone);
+    const WAUserName = event.contacts[0].profile.name;
+    const client = await dbService.findClientByPhone(WAPhone, WAUserName);
     const currentDateTime = getMexicoGlobalUtcDate();
     const timestamp = currentDateTime;
     const senderPhone = WAPhone;
@@ -605,7 +627,7 @@ async function handleTextMessage(messageDetails: any) {
     const product = await dbService.getProductDetails(productInquiry);
 
     if (product && product.name) {
-      const response = `El producto "${product.name}" tiene un precio de $${product.price}. ¿Necesitas más información?`;
+      const response = `El producto "${product.name}" tiene un precio de $${product.price}.`;
       await sendRichMediaMessage(
         messageDetails.senderPhone,
         product.mainImage,
