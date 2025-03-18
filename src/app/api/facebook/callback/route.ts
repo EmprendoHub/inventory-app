@@ -171,69 +171,25 @@ const dbService = {
 
       // Normalize and process the query
       const normalizedQuery = removeAccents(productInquiry.toLowerCase());
-      const processedTerms = processSearchQuery(normalizedQuery);
-
-      console.log("processedTerms", processedTerms);
+      console.log("normalizedQuery", normalizedQuery);
 
       // If no valid terms after processing, use the original query
-      if (!processedTerms.length) {
-        const item = await prisma.item.findFirst({
-          where: {
-            OR: [
-              {
-                name: {
-                  contains: normalizedQuery,
-                  mode: Prisma.QueryMode.insensitive,
-                },
-              },
-              {
-                description: {
-                  contains: normalizedQuery,
-                  mode: Prisma.QueryMode.insensitive,
-                },
-              },
-            ],
-          },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            price: true,
-            categoryId: true,
-            mainImage: true,
-          },
-        });
-
-        console.log("item", item);
-
-        if (!item) return null;
-
-        const category = await prisma.category.findUnique({
-          where: { id: item.categoryId },
-          select: { title: true },
-        });
-
-        return {
-          ...item,
-          category: category?.title,
-        };
-      }
-
-      // Build search conditions using the processed terms
-      // We'll use a weighted search approach to prioritize matches
-      const items = await prisma.item.findMany({
+      const item = await prisma.item.findFirst({
         where: {
-          OR: processedTerms.map((term) => ({
-            OR: [
-              { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
-              {
-                description: {
-                  contains: term,
-                  mode: Prisma.QueryMode.insensitive,
-                },
+          OR: [
+            {
+              name: {
+                contains: normalizedQuery,
+                mode: Prisma.QueryMode.insensitive,
               },
-            ],
-          })),
+            },
+            {
+              description: {
+                contains: normalizedQuery,
+                mode: Prisma.QueryMode.insensitive,
+              },
+            },
+          ],
         },
         select: {
           id: true,
@@ -245,43 +201,17 @@ const dbService = {
         },
       });
 
-      if (!items.length) return null;
+      console.log("item", item);
 
-      // Calculate relevance score for each item
-      const scoredItems = items.map((item) => {
-        let score = 0;
+      if (!item) return null;
 
-        // Check how many terms match in the name (higher weight)
-        processedTerms.forEach((term) => {
-          if (removeAccents(item.name.toLowerCase()).includes(term)) {
-            score += 3;
-          }
-
-          // Check description with lower weight
-          if (
-            item.description &&
-            removeAccents(item.description.toLowerCase()).includes(term)
-          ) {
-            score += 1;
-          }
-        });
-
-        return { item, score };
-      });
-
-      // Sort by score and get the highest scoring item
-      const bestMatch = _.maxBy(scoredItems, "score");
-
-      if (!bestMatch) return null;
-
-      // Get category information
       const category = await prisma.category.findUnique({
-        where: { id: bestMatch.item.categoryId },
+        where: { id: item.categoryId },
         select: { title: true },
       });
 
       return {
-        ...bestMatch.item,
+        ...item,
         category: category?.title,
       };
     } catch (error) {
