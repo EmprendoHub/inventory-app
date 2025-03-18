@@ -195,6 +195,7 @@ export default function ProductEdit({
               <SelectInput
                 label="Categoría"
                 name="category"
+                isSelected={formData.categoryId}
                 options={categories.map(
                   (category: {
                     id: string;
@@ -228,6 +229,7 @@ export default function ProductEdit({
             <SelectInput
               label="Unidad de Medida"
               name="unit"
+              isSelected={formData.unitId}
               options={units.map(
                 (unit: {
                   id: string;
@@ -305,6 +307,7 @@ export default function ProductEdit({
           <SelectInput
             label="Proveedor"
             name="supplier"
+            isSelected={formData.supplierId}
             options={suppliers.map(
               (supplier: { id: string; name: string; notes: string }) => ({
                 value: supplier.id,
