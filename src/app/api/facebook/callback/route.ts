@@ -173,6 +173,8 @@ const dbService = {
       const normalizedQuery = removeAccents(productInquiry.toLowerCase());
       const processedTerms = processSearchQuery(normalizedQuery);
 
+      console.log("processedTerms", processedTerms);
+
       // If no valid terms after processing, use the original query
       if (!processedTerms.length) {
         const item = await prisma.item.findFirst({
@@ -201,6 +203,8 @@ const dbService = {
             mainImage: true,
           },
         });
+
+        console.log("item", item);
 
         if (!item) return null;
 
