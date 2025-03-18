@@ -32,6 +32,7 @@ import { sendRichMediaMessage } from "@/lib/whatsapp";
 import natural from "natural";
 const { WordTokenizer, PorterStemmer } = natural;
 import fuzzy from "fuzzy";
+import _ from "lodash";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 const locationKeywords = [
@@ -62,42 +63,6 @@ const contactKeywords = [
   "support",
 ];
 
-const stopWords = [
-  // Spanish
-  "el",
-  "la",
-  "los",
-  "las",
-  "un",
-  "una",
-  "unos",
-  "unas",
-  "cuanto",
-  "cuanta",
-  "como",
-  "donde",
-  "que",
-  "cual",
-  "cuando",
-  "por",
-  "para",
-  "cuesta",
-  // English
-  "the",
-  "a",
-  "an",
-  "how",
-  "what",
-  "where",
-  "when",
-  "much",
-  "many",
-  "does",
-  "cost",
-  "price",
-  "buy",
-];
-
 // Function to fetch all product names from the database
 async function fetchProductNames(): Promise<string[]> {
   const products = await prisma.item.findMany({
@@ -109,14 +74,20 @@ async function fetchProductNames(): Promise<string[]> {
   return products.map((product) => product.name.toLowerCase());
 }
 
-// Helper function to process search queries
+// Enhanced search query processing function that uses stemming
 function processSearchQuery(query: string): string[] {
-  const normalizedQuery = query.toLowerCase();
-  const words = normalizedQuery.split(/\s+/);
+  // Remove special characters and split by spaces
+  const cleanedQuery = query.replace(/[^\w\s]/gi, " ").trim();
 
-  return words
-    .filter((word) => word.length > 2 && !stopWords.includes(word))
-    .map((word) => word.replace(/[.,?!;:]/g, ""));
+  // Tokenize and stem the words
+  const tokenizer = new WordTokenizer();
+  const tokens = tokenizer.tokenize(cleanedQuery) || [];
+
+  // Apply stemming to each token
+  const stems = tokens.map((token) => PorterStemmer.stem(token));
+
+  // Remove duplicates and filter out short tokens (likely to be noise)
+  return _.uniq(stems.filter((term) => term.length > 2));
 }
 
 // Helper function to remove accents from text
@@ -193,59 +164,126 @@ const dbService = {
   },
 
   getProductDetails: async (productInquiry: string) => {
-    const normalizedQuery = removeAccents(productInquiry.toLowerCase());
-    const processedTerms = processSearchQuery(normalizedQuery);
+    try {
+      if (!productInquiry || productInquiry.trim() === "") {
+        return null;
+      }
 
-    const searchConditions: Prisma.ItemWhereInput[] = processedTerms.length
-      ? processedTerms.map((term) => ({
-          OR: [
-            { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
-            {
-              description: {
-                contains: term,
-                mode: Prisma.QueryMode.insensitive,
+      // Normalize and process the query
+      const normalizedQuery = removeAccents(productInquiry.toLowerCase());
+      const processedTerms = processSearchQuery(normalizedQuery);
+
+      // If no valid terms after processing, use the original query
+      if (!processedTerms.length) {
+        const item = await prisma.item.findFirst({
+          where: {
+            OR: [
+              {
+                name: {
+                  contains: normalizedQuery,
+                  mode: Prisma.QueryMode.insensitive,
+                },
               },
-            },
-          ],
-        }))
-      : [
-          {
-            name: {
-              contains: productInquiry,
-              mode: Prisma.QueryMode.insensitive,
-            },
+              {
+                description: {
+                  contains: normalizedQuery,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+            ],
           },
-          {
-            description: {
-              contains: productInquiry,
-              mode: Prisma.QueryMode.insensitive,
-            },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            price: true,
+            categoryId: true,
+            mainImage: true,
           },
-        ];
+        });
 
-    const item = await prisma.item.findFirst({
-      where: { OR: searchConditions },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        price: true,
-        categoryId: true,
-        mainImage: true,
-      },
-    });
+        if (!item) return null;
 
-    if (!item) return null;
+        const category = await prisma.category.findUnique({
+          where: { id: item.categoryId },
+          select: { title: true },
+        });
 
-    const category = await prisma.category.findUnique({
-      where: { id: item.categoryId },
-      select: { title: true },
-    });
+        return {
+          ...item,
+          category: category?.title,
+        };
+      }
 
-    return {
-      ...item,
-      category: category?.title,
-    };
+      // Build search conditions using the processed terms
+      // We'll use a weighted search approach to prioritize matches
+      const items = await prisma.item.findMany({
+        where: {
+          OR: processedTerms.map((term) => ({
+            OR: [
+              { name: { contains: term, mode: Prisma.QueryMode.insensitive } },
+              {
+                description: {
+                  contains: term,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+            ],
+          })),
+        },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          price: true,
+          categoryId: true,
+          mainImage: true,
+        },
+      });
+
+      if (!items.length) return null;
+
+      // Calculate relevance score for each item
+      const scoredItems = items.map((item) => {
+        let score = 0;
+
+        // Check how many terms match in the name (higher weight)
+        processedTerms.forEach((term) => {
+          if (removeAccents(item.name.toLowerCase()).includes(term)) {
+            score += 3;
+          }
+
+          // Check description with lower weight
+          if (
+            item.description &&
+            removeAccents(item.description.toLowerCase()).includes(term)
+          ) {
+            score += 1;
+          }
+        });
+
+        return { item, score };
+      });
+
+      // Sort by score and get the highest scoring item
+      const bestMatch = _.maxBy(scoredItems, "score");
+
+      if (!bestMatch) return null;
+
+      // Get category information
+      const category = await prisma.category.findUnique({
+        where: { id: bestMatch.item.categoryId },
+        select: { title: true },
+      });
+
+      return {
+        ...bestMatch.item,
+        category: category?.title,
+      };
+    } catch (error) {
+      console.error("Error in getProductDetails:", error);
+      return null;
+    }
   },
 
   getSimilarProducts: async (productInquiry: string) => {
