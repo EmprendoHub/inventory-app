@@ -29,6 +29,9 @@ import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { createWhatsAppMessagesType } from "@/types/whatsapp";
 import { OrderType } from "@/types/sales";
 import { sendRichMediaMessage } from "@/lib/whatsapp";
+import natural from "natural";
+const { WordTokenizer, PorterStemmer } = natural;
+import fuzzy from "fuzzy";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 const locationKeywords = [
@@ -58,6 +61,7 @@ const contactKeywords = [
   "contact",
   "support",
 ];
+
 const stopWords = [
   // Spanish
   "el",
@@ -93,6 +97,17 @@ const stopWords = [
   "price",
   "buy",
 ];
+
+// Function to fetch all product names from the database
+async function fetchProductNames(): Promise<string[]> {
+  const products = await prisma.item.findMany({
+    select: {
+      name: true,
+    },
+  });
+
+  return products.map((product) => product.name.toLowerCase());
+}
 
 // Helper function to process search queries
 function processSearchQuery(query: string): string[] {
@@ -612,8 +627,8 @@ async function handleTextMessage(messageDetails: any) {
     timestamp: createdAt,
   });
 
-  const productInquiry = detectProductInquiry(messageDetails.messageText);
-  if (productInquiry) {
+  const productInquiry = await detectProductInquiry(messageDetails.messageText);
+  if (productInquiry !== null) {
     const product = await dbService.getProductDetails(productInquiry);
 
     if (product && product.name) {
@@ -701,48 +716,192 @@ async function handleTextMessage(messageDetails: any) {
   }
 }
 
-function detectProductInquiry(message: string): string | null {
-  const productKeywords = [
-    "precio",
-    "costo",
-    "cuanto cuesta",
-    "cuánto cuesta",
-    "cuanto vale",
-    "cuánto vale",
-    "cuanto sale",
-    "cuánto sale",
-    "a cuanto",
-    "a cuánto",
-    "precio de",
-    "costo de",
-    "valor de",
-    "cuanto está",
-    "cuánto está",
-    "valor",
-    "información de producto",
-    "detalles de producto",
-    "características de producto",
-    "especificaciones de producto",
-    "ficha técnica de producto",
-    "datos de productos",
-    "info de productos",
-    "información sobre productos",
-    "detalles sobre producto",
-    "tienes",
-    "vendes",
-    "muestrame",
-    "muéstrame",
-    "hay stock de",
-    "tienen",
-  ];
-  const productRegex = new RegExp(
-    `(${productKeywords.join("|")})\\s+(.*)`,
-    "i"
-  );
-  const match = message.match(productRegex);
-  return match ? match[2].trim() : null;
-}
+// function detectProductInquiry(message: string): string | null {
+//   const productKeywords = [
+//     "precio",
+//     "costo",
+//     "cuanto cuesta",
+//     "cuánto cuesta",
+//     "cuanto vale",
+//     "cuánto vale",
+//     "cuanto sale",
+//     "cuánto sale",
+//     "a cuanto",
+//     "a cuánto",
+//     "precio de",
+//     "costo de",
+//     "valor de",
+//     "cuanto está",
+//     "cuánto está",
+//     "valor",
+//     "información de producto",
+//     "detalles de producto",
+//     "características de producto",
+//     "especificaciones de producto",
+//     "ficha técnica de producto",
+//     "datos de productos",
+//     "info de productos",
+//     "información sobre productos",
+//     "detalles sobre producto",
+//     "tienes",
+//     "vendes",
+//     "muestrame",
+//     "muéstrame",
+//     "hay stock de",
+//     "tienen",
+//   ];
 
+//   const productRegex = new RegExp(
+//     `(${productKeywords.join("|")})\\s+(.*)`,
+//     "i"
+//   );
+//   const match = message.match(productRegex);
+//   return match ? match[2].trim() : null;
+// }
+
+// Function to detect product inquiries and extract product names
+async function detectProductInquiry(message: string): Promise<string | null> {
+  try {
+    // Handle empty messages
+    if (!message || message.trim() === "") {
+      return null;
+    }
+
+    const tokenizer = new WordTokenizer();
+    const tokens = tokenizer.tokenize(message.toLowerCase()) || [];
+    const lemmas = tokens.map((token) => PorterStemmer.stem(token));
+
+    // Fetch product names from the database
+    const productNames = await fetchProductNames();
+
+    // If no products in database, return early
+    if (!productNames || productNames.length === 0) {
+      return null;
+    }
+
+    // Step 1: Check if the message contains any product inquiry keywords
+    const productKeywords = [
+      "precio",
+      "costo",
+      "cuanto cuesta",
+      "cuánto cuesta",
+      "cuanto vale",
+      "cuánto vale",
+      "cuanto sale",
+      "cuánto sale",
+      "a cuanto",
+      "a cuánto",
+      "precio de",
+      "costo de",
+      "valor de",
+      "cuanto está",
+      "cuánto está",
+      "valor",
+      "información de producto",
+      "detalles de producto",
+      "características de producto",
+      "especificaciones de producto",
+      "ficha técnica de producto",
+      "datos de productos",
+      "info de productos",
+      "información sobre productos",
+      "detalles sobre producto",
+      "tienes",
+      "vendes",
+      "muestrame",
+      "muéstrame",
+      "hay stock de",
+      "tienen",
+    ];
+
+    // Escape special regex characters in keywords
+    const escapedKeywords = productKeywords.map((keyword) =>
+      keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    );
+
+    const productRegex = new RegExp(
+      `(${escapedKeywords.join("|")})\\s+(.*)`,
+      "i"
+    );
+    const match = message.match(productRegex);
+
+    if (match) {
+      const productName = match[2].trim();
+
+      // Step 2: Tokenize and lemmatize the potential product name from the message
+      const productTokens = tokenizer.tokenize(productName) || [];
+      const productLemmas = productTokens.map((token) =>
+        PorterStemmer.stem(token)
+      );
+
+      // Step 3: Compare the lemmatized product name with product names from the database
+      for (const product of productNames) {
+        const dbProductTokens = tokenizer.tokenize(product.toLowerCase()) || [];
+        const dbProductLemmas = dbProductTokens.map((token) =>
+          PorterStemmer.stem(token)
+        );
+
+        // Check if any lemma from the extracted product name matches any lemma from the database product
+        if (productLemmas.some((lemma) => dbProductLemmas.includes(lemma))) {
+          return product; // Return the matched product name
+        }
+
+        // Also check if any lemma from the database product matches any lemma from the extracted product name
+        if (dbProductLemmas.some((lemma) => productLemmas.includes(lemma))) {
+          return product; // Return the matched product name
+        }
+      }
+
+      // Step 4: If no match is found using the extracted product name, check the full message lemmas
+      for (const product of productNames) {
+        const dbProductTokens = tokenizer.tokenize(product.toLowerCase()) || [];
+        const dbProductLemmas = dbProductTokens.map((token) =>
+          PorterStemmer.stem(token)
+        );
+
+        // Check if any lemma from the full message matches any lemma from the product name
+        if (lemmas.some((lemma) => dbProductLemmas.includes(lemma))) {
+          return product; // Return the matched product name
+        }
+
+        // Also check if any lemma from the product name matches any lemma from the full message
+        if (dbProductLemmas.some((lemma) => lemmas.includes(lemma))) {
+          return product; // Return the matched product name
+        }
+      }
+
+      // Step 5: If no exact match is found, use fuzzy matching as a fallback
+      const fuzzyMatches = fuzzy.filter(productName, productNames);
+      if (fuzzyMatches.length > 0) {
+        return fuzzyMatches[0].string; // Return the closest match
+      }
+    } else {
+      // If no product inquiry keywords are found, still check for product mentions in the full message
+      for (const product of productNames) {
+        const dbProductTokens = tokenizer.tokenize(product.toLowerCase()) || [];
+        const dbProductLemmas = dbProductTokens.map((token) =>
+          PorterStemmer.stem(token)
+        );
+
+        // Check if any lemma from the full message matches any lemma from the product name
+        if (lemmas.some((lemma) => dbProductLemmas.includes(lemma))) {
+          return product; // Return the matched product name
+        }
+
+        // Also check if any lemma from the product name matches any lemma from the full message
+        if (dbProductLemmas.some((lemma) => lemmas.includes(lemma))) {
+          return product; // Return the matched product name
+        }
+      }
+    }
+
+    // Step 6: If no product inquiry is detected, return null
+    return null;
+  } catch (error) {
+    console.error("Error in detectProductInquiry:", error);
+    return null;
+  }
+}
 function createDynamicPrompt(
   message: string,
   sentiment: string,
