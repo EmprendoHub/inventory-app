@@ -33,6 +33,7 @@ import natural from "natural";
 const { WordTokenizer, PorterStemmer } = natural;
 import fuzzy from "fuzzy";
 import _ from "lodash";
+import { revalidateClientPaths } from "@/app/(backend)/sistema/ventas/clientes/_actions/clientActions";
 
 const FACEBOOK_VERIFY_TOKEN = process.env.FB_WEBHOOKTOKEN;
 const locationKeywords = [
@@ -125,6 +126,7 @@ const dbService = {
           updatedAt: createdAt,
         },
       });
+      await revalidateClientPaths();
 
       return newClient;
     }

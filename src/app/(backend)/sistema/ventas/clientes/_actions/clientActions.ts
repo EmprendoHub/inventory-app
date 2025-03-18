@@ -378,3 +378,9 @@ export async function toggleClientStatusAction(formData: FormData) {
     };
   }
 }
+
+export async function revalidateClientPaths() {
+  revalidatePath("/sistema/ventas/clientes");
+  revalidatePath("/sistema/ventas/pedidos/nuevo");
+  revalidatePath("/sistema/negocio/articulos/nuevo");
+}
