@@ -249,7 +249,7 @@ export default function OrderForm({
               </>
             )}
           </div>
-          <div className="flex maxmd:flex-col items-center gap-4 space-y-2 bg-card p-4 rounded-lg">
+          <div className="flex items-center gap-4 space-y-2 bg-card p-4 rounded-lg">
             <NumericInput
               label="Costo de Envió"
               name="price"
