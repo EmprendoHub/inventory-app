@@ -60,6 +60,7 @@ export default function OrderForm({
     null
   );
   const [selectedItems, setSelectedItems] = useState<SelectedItemType[]>([]);
+  // eslint-disable-next-line
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [deliveryCost, setDeliveryCost] = useState(0);
@@ -74,10 +75,18 @@ export default function OrderForm({
   const grandTotal = subtotal - discount + deliveryCost;
 
   // Update the handleAddItem function
-  const handleAddItem = () => {
-    const selectedGroup = itemGroups.find(
-      (group) => group.id === selectedItemId
+  const handleAddItem = (selectedId: string) => {
+    // Check if the item is already in selectedItems
+    const isItemAlreadySelected = selectedItems.some(
+      (item) => item.id === selectedId
     );
+
+    if (isItemAlreadySelected) {
+      console.warn("Item already selected.");
+      return;
+    }
+
+    const selectedGroup = itemGroups.find((group) => group.id === selectedId);
 
     if (selectedGroup) {
       const groupItem: SelectedItemType = {
@@ -88,7 +97,7 @@ export default function OrderForm({
       };
       setSelectedItems((prev) => [...prev, groupItem]);
     } else {
-      const selectedItem = items.find((item) => item.id === selectedItemId);
+      const selectedItem = items.find((item) => item.id === selectedId);
       if (selectedItem) {
         const singleItem: SelectedItemType = {
           ...selectedItem,
@@ -290,7 +299,11 @@ export default function OrderForm({
                 image: group.mainImage, // Assuming `group.image` contains the image URL
               })),
             ]}
-            onChange={setSelectedItemId}
+            onChange={(value) => {
+              const item = items.find((i) => i.id === value);
+              setSelectedItemId(item?.id || "");
+              handleAddItem(item?.id || "");
+            }}
           />
           <Input
             type="number"
@@ -300,9 +313,6 @@ export default function OrderForm({
             className="w-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             placeholder="Qty"
           />
-          <Button type="button" onClick={handleAddItem} className="text-white">
-            +
-          </Button>
         </div>
 
         {/* Items Table */}
