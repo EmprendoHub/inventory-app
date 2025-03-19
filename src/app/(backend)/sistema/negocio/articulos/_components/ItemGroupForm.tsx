@@ -162,7 +162,7 @@ export default function ItemGroupForm({ items }: { items: ItemType[] }) {
             </p>
           )}
         </div>
-        <div className="flex maxsm:flex-col items-center gap-4">
+        <div className="flex maxmd:flex-col items-center gap-4">
           <TextInput label="Nombre" name="name" state={state} />
           <NumericInput
             label="Precio Sugerido"

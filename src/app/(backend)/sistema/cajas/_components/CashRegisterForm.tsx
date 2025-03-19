@@ -74,7 +74,7 @@ export default function CashRegisterForm({ users }: { users: UserType[] }) {
     <form
       id="register-form"
       onSubmit={handleSubmit}
-      className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+      className="flex-1 p-8 maxmd:p-4 bg-card rounded-lg shadow-md"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault(); // Prevent form submission

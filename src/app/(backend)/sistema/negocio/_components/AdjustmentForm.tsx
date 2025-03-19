@@ -76,7 +76,7 @@ export default function AdjustmentForm({
       {formType === "add" ? (
         <form action={formAction} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
-          <div className="flex maxsm:flex-col gap-3 items-start">
+          <div className="flex maxmd:flex-col gap-3 items-start">
             <div className="flex flex-col gap-3 w-full">
               <SelectInput
                 className="w-full"

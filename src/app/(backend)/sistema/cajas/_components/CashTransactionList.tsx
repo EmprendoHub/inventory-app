@@ -69,11 +69,11 @@ export function CashTransactionList({
       {
         accessorKey: "description",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden w-20">Ref</div>
+          <div className="text-left text-xs maxmd:hidden w-20">Ref</div>
         ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-60 px-2 leading-none`}
+            className={`uppercase text-[12px] text-center text-white maxmd:hidden  rounded-md w-60 px-2 leading-none`}
           >
             {row.getValue("description")}
           </div>
@@ -116,7 +116,7 @@ export function CashTransactionList({
 
       //     return (
       //       <div
-      //         className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-auto px-2 `}
+      //         className={`uppercase text-[12px] text-center text-white maxmd:hidden  rounded-md w-auto px-2 `}
       //       >
       //         {user.name}
       //       </div>

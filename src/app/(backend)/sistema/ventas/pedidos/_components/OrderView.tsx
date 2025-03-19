@@ -322,7 +322,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
   return (
     <div className="order-view relative">
-      <div className="absolute flex maxsm:flex-col-reverse items-start gap-4 maxsm:gap-0 z-40 top-20 maxmd:top-20">
+      <div className="absolute flex maxmd:flex-col-reverse items-start gap-4 maxmd:gap-0 z-40 top-20 maxmd:top-20">
         <div className="flex flex-col leading-none">
           {order.status === "CANCELADO" ? (
             <h2 className="text-2xl maxmd:text-2xl text-red-900 font-black ">
@@ -387,8 +387,8 @@ export default function OrderView({ order }: { order: FullOderType }) {
       )}
 
       {/* Company Header */}
-      <div className="flex maxmd:flex-col justify-between gap-3 items-start maxsm:items-end border-b pt-0 pb-8 px-4 maxmd:pr-10 maxsm:pl-0">
-        <div className="flex maxsm:items-start items-center gap-1">
+      <div className="flex maxmd:flex-col justify-between gap-3 items-start maxmd:items-end border-b pt-0 pb-8 px-4 maxmd:pr-10 maxmd:pl-0">
+        <div className="flex maxmd:items-start items-center gap-1">
           <div className=" p-2 rounded-lg">
             <LogoIcon className="h-12 w-14" />
           </div>
@@ -408,13 +408,13 @@ export default function OrderView({ order }: { order: FullOderType }) {
 
         <div className="text-right w-1/2 maxmd:w-full flex flex-col gap-1">
           <div>
-            <h2 className="text-2xl maxsm:text-lg font-bold text-muted mb-2">
+            <h2 className="text-2xl maxmd:text-lg font-bold text-muted mb-2">
               Pedido #: {order.orderNo}
             </h2>
-            <p className="text-sm maxsm:text-xs text-muted">
+            <p className="text-sm maxmd:text-xs text-muted">
               Fecha: {getMexicoDate(order.createdAt)}
             </p>
-            <p className="text-sm maxsm:text-xs text-muted">
+            <p className="text-sm maxmd:text-xs text-muted">
               Hora: {getMexicoTime(order.createdAt)}
             </p>
           </div>
@@ -470,7 +470,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
             <TableHead className="">img</TableHead>
             <TableHead>Articulo</TableHead>
             <TableHead>Cnt.</TableHead>
-            <TableHead className="maxsm:hidden">Precio unitario</TableHead>
+            <TableHead className="maxmd:hidden">Precio unitario</TableHead>
             <TableHead>Total</TableHead>
             <TableHead></TableHead>
           </TableRow>
@@ -499,7 +499,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 </div>
               </TableCell>
               <TableCell>{item.quantity}</TableCell>
-              <TableCell className="maxsm:hidden">
+              <TableCell className="maxmd:hidden">
                 $
                 {item.price.toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -598,7 +598,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
       </div>
       {/* Payments */}
       {(order.payments?.length ?? 0) > 0 && (
-        <section className="px-8 pb-8 maxsm:pl-1 mt-2 bg-card rounded-lg shadow-md">
+        <section className="px-8 pb-8 maxmd:pl-1 mt-2 bg-card rounded-lg shadow-md">
           {/* Customer Info */}
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-2 bg-card p-4 rounded-lg">
@@ -613,7 +613,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                 <TableHead>Fecha</TableHead>
                 <TableHead>Cant.</TableHead>
                 <TableHead>Método</TableHead>
-                <TableHead className=" maxsm:hidden">Ref.</TableHead>
+                <TableHead className=" maxmd:hidden">Ref.</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -630,7 +630,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                     })}
                   </TableCell>
                   <TableCell className="uppercase">{item.method}</TableCell>
-                  <TableCell className=" maxsm:hidden">
+                  <TableCell className=" maxmd:hidden">
                     {item.reference}
                   </TableCell>
                   <TableCell>{item.status}</TableCell>

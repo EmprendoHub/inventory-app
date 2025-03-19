@@ -50,7 +50,7 @@ const SystemHeader = () => {
   };
 
   return (
-    <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxsm:px-4  z-30">
+    <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxmd:px-4  z-30">
       <div className="flex items-center justify-between w-full">
         <Link
           href={"/sistema/ventas/pedidos/nuevo"}

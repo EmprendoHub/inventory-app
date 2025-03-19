@@ -180,7 +180,7 @@ export default function ProductEdit({
               label="Descripción"
               state={state}
             />
-            <div className="w-full flex maxsm:flex-col gap-3">
+            <div className="w-full flex maxmd:flex-col gap-3">
               <SelectInput
                 label="Bodega"
                 name="warehouse"
@@ -213,7 +213,7 @@ export default function ProductEdit({
           </div>
         </div>
         <div className="w-full flex items-center maxmd:flex-col gap-3">
-          <div className="flex w-full gap-3 maxsm:flex-col">
+          <div className="flex w-full gap-3 maxmd:flex-col">
             <SelectInput
               label="Marca"
               name="brand"
@@ -253,7 +253,7 @@ export default function ProductEdit({
           />
         </div>
 
-        {/* <div className="flex maxsm:flex-col gap-3">
+        {/* <div className="flex maxmd:flex-col gap-3">
         <TextInput
           value={formData.sku}
           onChange={handleInputChange}
@@ -271,7 +271,7 @@ export default function ProductEdit({
       </div> */}
 
         {/* Numeric inputs */}
-        <div className="flex maxsm:flex-col gap-3 ">
+        <div className="flex maxmd:flex-col gap-3 ">
           <NumericInput
             onChange={(value) => handleInputChange("cost", value)}
             name="cost"
@@ -287,7 +287,7 @@ export default function ProductEdit({
             defaultValue={formData.price}
           />
         </div>
-        <div className="flex maxsm:flex-col gap-3">
+        <div className="flex maxmd:flex-col gap-3">
           <NumericInput
             onChange={(value) => handleInputChange("minStock", value)}
             name="minStock"
@@ -296,7 +296,7 @@ export default function ProductEdit({
             defaultValue={formData.minStock}
           />
         </div>
-        <div className="flex maxsm:flex-col gap-3">
+        <div className="flex maxmd:flex-col gap-3">
           <NumericInput
             onChange={(value) => handleInputChange("tax", value)}
             name="tax"

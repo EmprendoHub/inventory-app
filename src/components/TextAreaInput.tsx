@@ -15,7 +15,7 @@ export default function TextAreaInput({
   state,
   value,
   onChange,
-  className = "col-span-1 maxsm:col-span-2 w-full",
+  className = "col-span-1 maxmd:col-span-2 w-full",
 }: TextType) {
   return (
     <div className={className}>

@@ -84,10 +84,10 @@ export function WarehouseList({
       {
         accessorKey: "description",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Desc.</div>
+          <div className="text-left text-xs maxmd:hidden">Desc.</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("description")}
           </div>
         ),
@@ -95,10 +95,10 @@ export function WarehouseList({
       {
         accessorKey: "location",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Ubicación</div>
+          <div className="text-left text-xs maxmd:hidden">Ubicación</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("location")}
           </div>
         ),

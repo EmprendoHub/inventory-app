@@ -79,10 +79,10 @@ export function UnitList({ units }: { units: unitType[] }) {
       {
         accessorKey: "abbreviation",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Abreviación</div>
+          <div className="text-left text-xs maxmd:hidden">Abreviación</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("abbreviation")}
           </div>
         ),

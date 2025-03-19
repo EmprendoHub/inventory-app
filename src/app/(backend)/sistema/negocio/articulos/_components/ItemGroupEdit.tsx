@@ -187,7 +187,7 @@ export default function ItemGroupEdit({
             </p>
           )}
         </div>
-        <div className="flex maxsm:flex-col items-center gap-4">
+        <div className="flex maxmd:flex-col items-center gap-4">
           <TextInput
             label="Nombre"
             name="name"

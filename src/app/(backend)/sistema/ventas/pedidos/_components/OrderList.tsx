@@ -140,11 +140,11 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       {
         accessorKey: "status",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden w-20">Estado</div>
+          <div className="text-left text-xs maxmd:hidden w-20">Estado</div>
         ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-24 px-2 ${
+            className={`uppercase text-[12px] text-center text-white maxmd:hidden  rounded-md w-24 px-2 ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "PENDIENTE"
@@ -206,12 +206,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       {
         accessorKey: "createdAt",
         header: () => (
-          <div className="text-left maxsm:hidden  text-xs">Fecha</div>
+          <div className="text-left maxmd:hidden  text-xs">Fecha</div>
         ),
         cell: ({ row }) => {
           const date = new Date(row.getValue("createdAt")).toLocaleDateString();
           return (
-            <div className="text-left text-xs maxsm:hidden  font-medium">
+            <div className="text-left text-xs maxmd:hidden  font-medium">
               {date}
             </div>
           );

@@ -98,10 +98,10 @@ export function ClientList({ clients }: { clients: clientType[] }) {
       {
         accessorKey: "phone",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Tel.</div>
+          <div className="text-left text-xs maxmd:hidden">Tel.</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("phone")}
           </div>
         ),
@@ -109,10 +109,10 @@ export function ClientList({ clients }: { clients: clientType[] }) {
       {
         accessorKey: "email",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Email</div>
+          <div className="text-left text-xs maxmd:hidden">Email</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("email")}
           </div>
         ),
@@ -120,10 +120,10 @@ export function ClientList({ clients }: { clients: clientType[] }) {
       {
         accessorKey: "status",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Estado</div>
+          <div className="text-left text-xs maxmd:hidden">Estado</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("status") === "ACTIVE" ? "Activado" : "Desactivado"}
           </div>
         ),

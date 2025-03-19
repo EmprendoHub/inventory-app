@@ -123,10 +123,10 @@ const RegisterFormComponent = ({ cookie }: { cookie: any }) => {
   };
 
   return (
-    <main className="flex min-h-screen maxsm:min-h-[70vh] flex-col items-center justify-center">
-      <div className="w-fit flex flex-col items-center bg-card maxsm:p-8 p-20 shadow-xl text-center mx-auto">
+    <main className="flex min-h-screen maxmd:min-h-[70vh] flex-col items-center justify-center">
+      <div className="w-fit flex flex-col items-center bg-card maxmd:p-8 p-20 shadow-xl text-center mx-auto">
         {/* <LogoComponent /> */}
-        <LogoComponent className={"mt-4 w-[200px] maxsm:w-[120px]"} />
+        <LogoComponent className={"mt-4 w-[200px] maxmd:w-[120px]"} />
         <h2 className="my-4 text-foreground font-bold font-EB_Garamond text-xs">
           Registro Nuevo
         </h2>

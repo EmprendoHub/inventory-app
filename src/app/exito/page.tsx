@@ -49,7 +49,7 @@ const SuccessPage = async ({ searchParams }: { searchParams: any }) => {
             <p className="text-base text-slate-600 mt-5">
               Ya puedes iniciar tu session.
             </p>
-            <div className="flex maxsm:flex-col gap-4 items-center gap-x-5 justify-center mt-10">
+            <div className="flex maxmd:flex-col gap-4 items-center gap-x-5 justify-center mt-10">
               <Link href={"/iniciar"}>
                 <button className="bg-black text-xs text-slate-100 hover:text-foreground w-44 h-12 rounded-md font-semibold hover:bg-gray-200 duration-500">
                   iniciar tu session.

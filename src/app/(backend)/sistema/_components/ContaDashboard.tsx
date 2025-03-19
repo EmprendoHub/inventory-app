@@ -14,7 +14,7 @@ export default function ContaDashboard() {
           return (
             <div
               key={index}
-              className="shadow-xl items-center bg-card p-8  maxsm:p-4 rounded-md flex flex-col"
+              className="shadow-xl items-center bg-card p-8  maxmd:p-4 rounded-md flex flex-col"
             >
               <Link href={item.linkAll} className="flex flex-col items-center">
                 <h3 className="font-semibold">{item.title}</h3>

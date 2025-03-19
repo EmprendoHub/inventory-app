@@ -17,8 +17,8 @@ export default function SystemLayout({
       <ModalProvider>
         <SideBar setHidden={setHidden} hidden={hidden} />
         <main
-          className={` w-full bg-background min-h-screen maxsm:mb-10 ${
-            hidden ? "ml-10 maxsm:ml-0" : "ml-44 maxsm:ml-0"
+          className={` w-full bg-background min-h-screen maxmd:mb-10 ${
+            hidden ? "ml-10 maxmd:ml-0" : "ml-44 maxmd:ml-0"
           } duration-300 ease-in-out`}
         >
           <SystemHeader />

@@ -146,7 +146,7 @@ export default function PurchaseOrderEdit({
     <form
       id="purchase-order-form"
       onSubmit={handleSubmit}
-      className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+      className="flex-1 p-8 maxmd:p-4 bg-card rounded-lg shadow-md"
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault(); // Prevent form submission
@@ -154,8 +154,8 @@ export default function PurchaseOrderEdit({
       }}
     >
       {/* Supplier Info */}
-      <div className="flex maxsm:flex-col-reverse gap-4 mb-8">
-        <div className="flex flex-col gap-3 w-1/2 maxsm:w-full">
+      <div className="flex maxmd:flex-col-reverse gap-4 mb-8">
+        <div className="flex flex-col gap-3 w-1/2 maxmd:w-full">
           <SearchSelectInput
             label="Proveedor:"
             name="supplierId"
@@ -331,7 +331,7 @@ export default function PurchaseOrderEdit({
       </Table>
 
       {/* Totals */}
-      <div className="flex maxsm:flex-col-reverse items-center justify-between gap-8 space-y-2 mt-4">
+      <div className="flex maxmd:flex-col-reverse items-center justify-between gap-8 space-y-2 mt-4">
         <TextAreaInput
           name="notes"
           label="Notas"

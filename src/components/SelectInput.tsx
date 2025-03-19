@@ -17,7 +17,7 @@ export default function SelectInput({
   label,
   name,
   isSelected,
-  className = "w-full col-span-1 maxsm:col-span-2",
+  className = "w-full col-span-1 maxmd:col-span-2",
   options = [],
   state,
   onChange, // Destructure onChange

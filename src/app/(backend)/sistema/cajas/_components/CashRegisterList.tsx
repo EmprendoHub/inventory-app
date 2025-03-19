@@ -85,11 +85,11 @@ export function CashRegisterList({
       {
         accessorKey: "name",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden w-20">Caja</div>
+          <div className="text-left text-xs maxmd:hidden w-20">Caja</div>
         ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxsm:hidden  rounded-md w-24 px-2 `}
+            className={`uppercase text-[12px] text-center text-white maxmd:hidden  rounded-md w-24 px-2 `}
           >
             {row.getValue("name")}
           </div>

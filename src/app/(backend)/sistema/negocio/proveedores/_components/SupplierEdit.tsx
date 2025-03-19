@@ -174,7 +174,7 @@ export default function SupplierEdit({ supplier }: { supplier: supplierType }) {
 
       {/* Numeric inputs */}
 
-      <div className="flex maxsm:flex-col gap-3">
+      <div className="flex maxmd:flex-col gap-3">
         <TextInput
           value={formData.contactPerson}
           onChange={handleInputChange}
@@ -191,7 +191,7 @@ export default function SupplierEdit({ supplier }: { supplier: supplierType }) {
           state={state}
         />
       </div>
-      <div className="flex maxsm:flex-col gap-3">
+      <div className="flex maxmd:flex-col gap-3">
         <TextInput
           value={formData.paymentTerms}
           onChange={handleInputChange}

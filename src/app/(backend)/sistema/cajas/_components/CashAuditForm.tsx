@@ -141,7 +141,7 @@ export default function CashAuditForm({
         <form
           id="audit-register-form"
           onSubmit={handleDeliveryCashSubmit}
-          className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+          className="flex-1 p-8 maxmd:p-4 bg-card rounded-lg shadow-md"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault(); // Prevent form submission
@@ -193,7 +193,7 @@ export default function CashAuditForm({
         <form
           id="audit-register-form"
           onSubmit={handleAuditSubmit}
-          className="flex-1 p-8 maxsm:p-4 bg-card rounded-lg shadow-md"
+          className="flex-1 p-8 maxmd:p-4 bg-card rounded-lg shadow-md"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault(); // Prevent form submission

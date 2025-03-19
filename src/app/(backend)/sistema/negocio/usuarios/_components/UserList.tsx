@@ -101,11 +101,11 @@ export function UserList({ users }: { users: UserType[] }) {
       {
         accessorKey: "role",
         header: () => (
-          <div className="text-left text-xs  maxsm:hidden">Rol</div>
+          <div className="text-left text-xs  maxmd:hidden">Rol</div>
         ),
         cell: ({ row }) => {
           return (
-            <div className="text-left text-xs font-medium maxsm:hidden">
+            <div className="text-left text-xs font-medium maxmd:hidden">
               {row.getValue("role")}
             </div>
           );

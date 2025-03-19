@@ -83,7 +83,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
             className="w-[500px] h-auto"
           />
         </div>
-        <div className="w-full bg-background h-screen p-20 maxsm:p-8 shadow-xl text-center text-primary mx-auto flex flex-col items-center justify-center">
+        <div className="w-full bg-background h-screen p-20 maxmd:p-8 shadow-xl text-center text-primary mx-auto flex flex-col items-center justify-center">
           <h2 className="flex tracking-wide text-xl justify-center py-5 text-foreground">
             Acceso
           </h2>

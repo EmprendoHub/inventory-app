@@ -164,7 +164,7 @@ export default function ProductForm({
               label="Description"
               state={state}
             />
-            <div className="w-full flex maxsm:flex-col gap-3">
+            <div className="w-full flex maxmd:flex-col gap-3">
               <SelectInput
                 label="Bodega"
                 name="warehouse"
@@ -201,7 +201,7 @@ export default function ProductForm({
           </div>
         </div>
         <div className="w-full flex items-center maxmd:flex-col gap-3">
-          <div className="flex w-full gap-3 maxsm:flex-col">
+          <div className="flex w-full gap-3 maxmd:flex-col">
             <SelectInput
               label="Marca"
               name="brand"
@@ -235,15 +235,15 @@ export default function ProductForm({
         </div>
 
         {/* Numeric inputs */}
-        <div className="flex maxsm:flex-col gap-3">
+        <div className="flex maxmd:flex-col gap-3">
           <NumericInput name="cost" label="Costo de Compra" state={state} />
           <NumericInput name="price" label="Precio de Venta" state={state} />
         </div>
-        <div className="flex maxsm:flex-col gap-3">
+        <div className="flex maxmd:flex-col gap-3">
           <NumericInput name="stock" label="Stock" state={state} />
           <NumericInput name="minStock" label="Stock Minio" state={state} />
         </div>
-        <div className="flex maxsm:flex-col gap-3">
+        <div className="flex maxmd:flex-col gap-3">
           <NumericInput name="tax" label="Impuesto" state={state} />
           <SelectInput
             label="Proveedor"

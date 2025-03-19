@@ -80,10 +80,10 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
       {
         accessorKey: "method",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Método</div>
+          <div className="text-left text-xs maxmd:hidden">Método</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("method")}
           </div>
         ),
@@ -91,10 +91,10 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
       {
         accessorKey: "status",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Estado</div>
+          <div className="text-left text-xs maxmd:hidden">Estado</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("status")}
           </div>
         ),

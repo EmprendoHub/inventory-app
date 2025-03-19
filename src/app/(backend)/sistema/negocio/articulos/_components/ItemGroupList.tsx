@@ -124,7 +124,7 @@ export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
       // {
       //   accessorKey: "totalAvailableStock",
       //   header: () => (
-      //     <div className="text-left text-xs  maxsm:hidden">Inventario</div>
+      //     <div className="text-left text-xs  maxmd:hidden">Inventario</div>
       //   ),
       //   cell: ({ row }) => {
       //     const amount = parseFloat(row.getValue("totalAvailableStock"));
@@ -132,7 +132,7 @@ export function ItemsGroupList({ items }: { items: ItemGroupType[] }) {
       //     // Format the amount as a dollar amount
 
       //     return (
-      //       <div className="text-left text-xs font-medium maxsm:hidden">
+      //       <div className="text-left text-xs font-medium maxmd:hidden">
       //         {amount}
       //       </div>
       //     );

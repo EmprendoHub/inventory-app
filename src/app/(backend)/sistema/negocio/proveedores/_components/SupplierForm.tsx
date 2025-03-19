@@ -131,7 +131,7 @@ export default function SupplierForm() {
 
       {/* Numeric inputs */}
 
-      <div className="flex maxsm:flex-col gap-3">
+      <div className="flex maxmd:flex-col gap-3">
         <TextInput
           name="contactPerson"
           label="Persona de contacto"
@@ -144,7 +144,7 @@ export default function SupplierForm() {
           state={state}
         />
       </div>
-      <div className="flex maxsm:flex-col gap-3">
+      <div className="flex maxmd:flex-col gap-3">
         <TextInput name="paymentTerms" label="Términos de pago" state={state} />
         <TextInput name="taxId" label="RFC" state={state} />
       </div>

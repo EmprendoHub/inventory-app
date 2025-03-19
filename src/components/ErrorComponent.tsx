@@ -19,7 +19,7 @@ const ErrorComponent = ({
   const router = useRouter();
 
   return (
-    <main className="flex min-h-screen maxsm:min-h-[70vh] flex-col items-center justify-center ">
+    <main className="flex min-h-screen maxmd:min-h-[70vh] flex-col items-center justify-center ">
       <div className="h-screen flex flex-col items-center justify-center">
         <br />
         {ifEmailNotVerified && (

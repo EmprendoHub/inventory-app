@@ -45,7 +45,7 @@ export default function SalesOverview({
     },
   ];
   return (
-    <div className="bg-secondary border-b border-slate-300 p-8 maxsm:p-4 flex maxxlg:flex-wrap items-center justify-between gap-12 rounded-lg ">
+    <div className="bg-secondary border-b border-slate-300 p-8 maxmd:p-4 flex maxxlg:flex-wrap items-center justify-between gap-12 rounded-lg ">
       {/* SUPER ADMIN */}
       {user?.role === "SUPER_ADMIN" && (
         <>

@@ -81,10 +81,10 @@ export function CategoryList({ categories }: { categories: categoryType[] }) {
       {
         accessorKey: "description",
         header: () => (
-          <div className="text-left text-xs maxsm:hidden">Desc.</div>
+          <div className="text-left text-xs maxmd:hidden">Desc.</div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxsm:hidden">
+          <div className="uppercase text-xs maxmd:hidden">
             {row.getValue("description")}
           </div>
         ),

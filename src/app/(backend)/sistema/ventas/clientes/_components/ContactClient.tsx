@@ -104,7 +104,7 @@ export default function ContactClient({
                     </div>
                   </TableCell>
 
-                  <TableCell className="maxsm:hidden">
+                  <TableCell className="maxmd:hidden">
                     $
                     {order.totalAmount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
@@ -156,7 +156,7 @@ export default function ContactClient({
                       </Link>
                     </TableCell>
 
-                    <TableCell className="maxsm:hidden">
+                    <TableCell className="maxmd:hidden">
                       $
                       {payment.amount.toLocaleString(undefined, {
                         minimumFractionDigits: 2,

@@ -80,7 +80,7 @@ export function DeliveryList({
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="maxsm:text-[12px] maxsm:w-8"
+            className="maxmd:text-[12px] maxmd:w-8"
           >
             Pedido
             <ArrowUpDown />
@@ -95,12 +95,12 @@ export function DeliveryList({
       {
         accessorKey: "orders",
         header: () => (
-          <div className="text-xs maxsm:hidden  maxsm:absolute">Cliente</div>
+          <div className="text-xs maxmd:hidden  maxmd:absolute">Cliente</div>
         ),
         cell: ({ row }) => {
           const clientName = row.original?.orders[0].client.name;
           return (
-            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxsm:hidden maxsm:absolute">
+            <div className="text-[12px] uppercase px-2 bg-slate-600 text-white rounded-md maxmd:hidden maxmd:absolute">
               {clientName}
             </div>
           );
@@ -109,12 +109,12 @@ export function DeliveryList({
       {
         accessorKey: "driver",
         header: () => (
-          <div className="text-xs maxsm:hidden  maxsm:absolute">Ubicación</div>
+          <div className="text-xs maxmd:hidden  maxmd:absolute">Ubicación</div>
         ),
         cell: ({ row }) => {
           const driver = row.original?.driver?.name || "BODEGA";
           return (
-            <div className="text-[12px] uppercase px-2 rounded-md maxsm:hidden maxsm:absolute">
+            <div className="text-[12px] uppercase px-2 rounded-md maxmd:hidden maxmd:absolute">
               {driver}
             </div>
           );
@@ -132,12 +132,12 @@ export function DeliveryList({
       {
         accessorKey: "trackingNumber",
         header: () => (
-          <div className="text-xs maxsm:hidden maxsm:absolute">
+          <div className="text-xs maxmd:hidden maxmd:absolute">
             No. de rastreo
           </div>
         ),
         cell: ({ row }) => (
-          <div className="text-[12px] maxsm:hidden maxsm:absolute">
+          <div className="text-[12px] maxmd:hidden maxmd:absolute">
             {row.original.trackingNumber}
           </div>
         ),
@@ -147,7 +147,7 @@ export function DeliveryList({
         header: () => <div className="text-xs max-w-16">Estado</div>,
         cell: ({ row }) => (
           <div
-            className={`text-[10px] maxsm:w-18 text-center font-medium px-2 rounded-md text-white ${
+            className={`text-[10px] maxmd:w-18 text-center font-medium px-2 rounded-md text-white ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "ENTREGADO"
@@ -166,10 +166,10 @@ export function DeliveryList({
       {
         accessorKey: "deliveryDate",
         header: () => (
-          <div className="text-xs  maxsm:hidden">Fecha Entrega</div>
+          <div className="text-xs  maxmd:hidden">Fecha Entrega</div>
         ),
         cell: ({ row }) => (
-          <div className="text-xs font-medium  maxsm:hidden">
+          <div className="text-xs font-medium  maxmd:hidden">
             {row.original.deliveryDate
               ? new Date(row.original.deliveryDate).toLocaleDateString()
               : "N/A"}
@@ -633,7 +633,7 @@ export function DeliveryList({
 
   return (
     <div className="w-full">
-      <div className="flex maxsm:flex-col maxsm:items-start gap-3 items-center justify-between py-4">
+      <div className="flex maxmd:flex-col maxmd:items-start gap-3 items-center justify-between py-4">
         <Input
           placeholder="No de Pedido..."
           value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
