@@ -216,7 +216,7 @@ export default function OrderForm({
       >
         {/* Customer Info */}
         <div className="flex justify-between maxmd:flex-col-reverse gap-4 mb-8">
-          <div className="flex flex-col gap-3 w-1/2 maxmd:w-full">
+          <div className="flex flex-col gap-3 w-1/2 maxmd:w-full maxmd:mt-4">
             <div className=" flex items-end justify-center gap-4">
               <SearchSelectInput
                 label="Cliente"
@@ -309,14 +309,14 @@ export default function OrderForm({
               handleAddItem(item?.id || group?.id || "");
             }}
           />
-          <Input
+          {/* <Input
             type="number"
             min="1"
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
             className="w-16 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             placeholder="Qty"
-          />
+          /> */}
         </div>
 
         {/* Items Table */}
@@ -463,7 +463,7 @@ export default function OrderForm({
         />
 
         {/* Submit Section */}
-        <div className="mt-8 flex justify-end gap-4 border-t pt-8">
+        <div className="mt-4 flex justify-end gap-4 border-t pt-8">
           <button
             type="submit"
             disabled={sending}
@@ -484,7 +484,7 @@ export default function OrderForm({
         </div>
       </form>
 
-      {/*  client modal */}
+      {/*  client Modal */}
       {showClientModal && (
         <div className="fixed top-0 left-0 w-full h-full z-40 bg-black/50">
           <section className="relative h-auto w-auto flex flex-col items-center justify-center bg-card p-8">
