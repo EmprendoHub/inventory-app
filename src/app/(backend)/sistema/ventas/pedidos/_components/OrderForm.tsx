@@ -6,7 +6,6 @@ import { ItemType, ProcessedItemGroup, SelectedItemType } from "@/types/items";
 import { clientType } from "@/types/sales";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -378,9 +377,8 @@ export default function OrderForm({
                   })}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="destructive"
-                    size="sm"
+                  <div
+                    className="cursor-pointer"
                     onClick={() =>
                       setSelectedItems((prev) =>
                         prev.filter((_, i) => i !== index)
@@ -388,7 +386,7 @@ export default function OrderForm({
                     }
                   >
                     <X />
-                  </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
