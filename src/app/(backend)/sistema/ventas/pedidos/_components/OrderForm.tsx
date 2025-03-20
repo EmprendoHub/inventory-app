@@ -215,14 +215,14 @@ export default function OrderForm({
         }}
       >
         {/* Customer Info */}
-        <div className="flex maxmd:flex-col-reverse gap-4 mb-8">
+        <div className="flex justify-between maxmd:flex-col-reverse gap-4 mb-8">
           <div className="flex flex-col gap-3 w-1/2 maxmd:w-full">
-            <div className=" flex items-center justify-center gap-4">
+            <div className=" flex items-end justify-center gap-4">
               <SearchSelectInput
-                label="Seleccionar Cliente:"
+                label="Cliente"
                 name="client"
                 state={state}
-                className="flex-1 mb-4"
+                className="flex-1"
                 options={clients.map((item) => ({
                   value: item.id,
                   name: item.name,
@@ -234,30 +234,34 @@ export default function OrderForm({
               />
               <div
                 onClick={() => setShowClientModal(true)}
-                className="p-4 bg-blue-500 text-white h-auto w-10 rounded-md cursor-pointer"
+                className="px-4 py-2  bg-blue-500 text-white h-auto w-10 rounded-md cursor-pointer"
               >
                 +
               </div>
             </div>
-            {/* Delivery info */}
+            {/*Customer Delivery info */}
             {selectedClient && (
-              <>
-                <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
-                <p className="text-sm text-muted leading-none">
-                  {selectedClient.address}
-                </p>
+              <div className="flex gap-2 items-end">
+                <div className="flex flex-col ">
+                  <h3 className="font-semibold text-lg">
+                    {selectedClient.name}
+                  </h3>
+                  <p className="text-sm text-muted leading-none">
+                    {selectedClient.address}
+                  </p>
+                </div>
                 <p className="text-sm text-muted leading-none">
                   Tel: {selectedClient.phone}
                 </p>
-                {selectedClient.email && (
+                {/* {selectedClient.email && (
                   <p className="text-sm text-muted leading-none">
                     Email: {selectedClient.email}
                   </p>
-                )}
-              </>
+                )} */}
+              </div>
             )}
           </div>
-          <div className="flex items-center gap-4 space-y-2 bg-card p-4 rounded-lg">
+          <div className="flex items-center gap-4 bg-card rounded-lg">
             <NumericInput
               label="Costo de Envió"
               name="price"
@@ -279,7 +283,7 @@ export default function OrderForm({
         <div className="flex items-end gap-4 mb-4">
           <SearchSelectInput
             key={selectedItemKey} // This will force re-render and reset internal state
-            label="Seleccionar Producto:"
+            label="Producto"
             name="productId"
             state={state}
             className="flex-1"
@@ -394,14 +398,14 @@ export default function OrderForm({
         </Table>
 
         {/* Totals */}
-        <div className="flex maxmd:flex-col-reverse items-center justify-between gap-8 space-y-2 mt-4">
+        <div className="flex maxmd:flex-col-reverse items-center justify-between gap-4 mt-2">
           <TextAreaInput
             name="notes"
             label="Notas"
             state={state}
             className="w-full"
           />
-          <div className="flex flex-col gap-4 w-full">
+          <div className="flex flex-col gap-2 w-full">
             <div className="flex justify-between">
               <span className="font-medium">Subtotal:</span>
               <span>
@@ -434,7 +438,7 @@ export default function OrderForm({
               </span>
             </div>
             <div className="flex justify-between border-t pt-2 font-bold text-2xl">
-              <span className="text-xl">Grand Total:</span>
+              <span className="text-xl">Gran Total:</span>
               <span>
                 $
                 {grandTotal.toLocaleString(undefined, {

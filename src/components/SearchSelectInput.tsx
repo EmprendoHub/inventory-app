@@ -43,7 +43,7 @@ export function SearchSelectInput({
   name,
   className = "w-full flex",
   options = [],
-  placeholder = "Seleccionar...",
+  placeholder = `Seleccionar ${label}...`,
   emptyMessage = "No se encontraron opciones.",
   value: externalValue,
   hidden,
@@ -78,12 +78,12 @@ export function SearchSelectInput({
 
   return (
     <div className={className}>
-      <label
+      {/* <label
         htmlFor={name}
         className="block mb-2 text-sm font-medium text-muted"
       >
         {label}
-      </label>
+      </label> */}
       <Popover
         open={open}
         onOpenChange={(newOpen) => {
