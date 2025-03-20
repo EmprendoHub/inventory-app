@@ -19,13 +19,14 @@ export default function TextAreaInput({
 }: TextType) {
   return (
     <div className={className}>
-      <label htmlFor={name} className="block text-sm font-medium text-muted">
+      {/* <label htmlFor={name} className="block text-sm font-medium text-muted">
         {label}
-      </label>
+      </label> */}
       <textarea
         name={name}
         id={name}
         value={value}
+        placeholder={`Ingrese ${label.toLowerCase()}...`}
         onChange={(e) => onChange && onChange(name, e.target.value)}
         rows={2}
         className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
