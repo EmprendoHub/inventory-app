@@ -22,7 +22,9 @@ export default function SystemLayout({
           } duration-300 ease-in-out`}
         >
           <SystemHeader />
-          <div className="p-4 maxmd:pt-2 flex-1  pt-14">{children}</div>
+          <div className="p-4 maxmd:p-2 flex-1 pt-14 maxmd:pt-12">
+            {children}
+          </div>
         </main>
         <MobileMenu />
       </ModalProvider>
