@@ -301,8 +301,9 @@ export default function OrderForm({
             ]}
             onChange={(value) => {
               const item = items.find((i) => i.id === value);
-              setSelectedItemId(item?.id || "");
-              handleAddItem(item?.id || "");
+              const group = itemGroups.find((g) => g.id === value);
+              setSelectedItemId(item?.id || group?.id || "");
+              handleAddItem(item?.id || group?.id || "");
             }}
           />
           <Input
