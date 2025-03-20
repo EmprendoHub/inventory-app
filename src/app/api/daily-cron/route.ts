@@ -106,8 +106,6 @@ export async function GET(request: Request) {
             <p>${greeting}</p>
             <p>${title}</p>
             <p><strong>${todaysDate}</strong></p>
-            <p>${endOfToday}</p>
-            <p>${startOfToday}</p>
 
             <div>${bodyHeader}</div>
             <p></p>
