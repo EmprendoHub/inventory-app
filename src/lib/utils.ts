@@ -115,6 +115,14 @@ export function getMexicoGlobalUtcDate() {
   return zonedDate;
 }
 
+export function getMexicoGlobalUtcSelectedDate(date: Date | string) {
+  // Define your desired time zone (e.g., 'America/Mexico_City')
+  const timeZone = "America/Mexico_City";
+  const zonedDate = toZonedTime(date, timeZone);
+
+  return zonedDate;
+}
+
 export function getMexicoFullDate(date: Date | string) {
   const d = new Date(date);
   return d.toLocaleString("es-MX", {

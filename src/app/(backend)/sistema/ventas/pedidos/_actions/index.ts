@@ -431,6 +431,34 @@ export async function payOrderAction(formData: FormData) {
         });
       }
 
+      if (payment.method === "TRANSFERENCIA") {
+        const account = await prisma.account.findFirst({
+          where: {
+            parentAccount: null,
+          },
+        });
+        await prisma.transaction.create({
+          data: {
+            type: "DEPOSITO",
+            date: createdAt,
+            amount: Math.round(paymentAmount),
+            description: `TRANSFERENCIA PAGO ACEPTADO POR: (${user?.name})`,
+            accountId: account?.id || "",
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+        await prisma.account.update({
+          where: {
+            id: account?.id,
+          },
+          data: {
+            balance: { increment: Math.round(paymentAmount) },
+            updatedAt: createdAt,
+          },
+        });
+      }
+
       let orderStatus = "PENDIENTE";
 
       if (previousPayments + paymentAmount >= order.totalAmount) {
@@ -466,6 +494,8 @@ export async function payOrderAction(formData: FormData) {
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/envios");
     revalidatePath("/sistema/ventas/pagos");
+    revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
 
     return {
       errors: {},

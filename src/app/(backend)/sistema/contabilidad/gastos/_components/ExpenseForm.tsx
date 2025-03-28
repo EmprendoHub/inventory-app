@@ -12,6 +12,7 @@ import { TruckType } from "@/types/truck";
 import { supplierType } from "@/types/categories";
 import { UserType } from "@/types/users";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
+import { useRouter } from "next/navigation";
 
 export default function ExpenseForm({
   drivers,
@@ -33,7 +34,7 @@ export default function ExpenseForm({
   );
 
   const [description, setDescription] = React.useState<string>("");
-
+  const router = useRouter();
   const [selectedDriver, setSelectedDriver] = React.useState<UserType | null>(
     null
   );
@@ -79,10 +80,12 @@ export default function ExpenseForm({
       ) as HTMLFormElement;
       formElement.reset();
     }
-    setSending(false);
+
     setSelectedDriver(null);
     setSelectedTruck(null);
     setSelectedSupplier(null);
+    setSending(false);
+    router.push(`/sistema/contabilidad/gastos`);
   };
 
   return (
@@ -204,7 +207,7 @@ export default function ExpenseForm({
           className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
         >
           {sending && <span className="loader"></span>}
-          Crear Gasto
+          {sending ? "Creando Gasto..." : "Crear Gasto"}
         </button>
 
         {state.message && (

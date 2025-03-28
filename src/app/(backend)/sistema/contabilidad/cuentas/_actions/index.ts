@@ -164,7 +164,7 @@ export const createTransactionAction = async (
     const createdAt = getMexicoGlobalUtcDate();
     await prisma.transaction.create({
       data: {
-        date: new Date(rawData.date as string),
+        date: createdAt,
         description: rawData.description as string,
         amount: rawData.amount,
         type: rawData.type as TransactionType,

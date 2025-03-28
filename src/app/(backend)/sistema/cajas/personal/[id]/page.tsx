@@ -1,6 +1,7 @@
 import prisma from "@/lib/db";
 import { CashTransactionList } from "../../_components/CashTransactionList";
 import SingleCashAuditForm from "../../_components/SingleCashAudit";
+import SingleCashDeposit from "../../_components/SingleCashDeposit";
 
 export default async function CashRegisterDetailsPage({
   params,
@@ -32,6 +33,7 @@ export default async function CashRegisterDetailsPage({
             <span className="text-4xl">
               ${cashRegister.balance.toLocaleString()}
             </span>
+            <SingleCashDeposit cashRegister={cashRegister} />
           </div>
         </div>
         <div>

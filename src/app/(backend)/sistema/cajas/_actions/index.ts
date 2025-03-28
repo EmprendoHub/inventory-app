@@ -159,7 +159,7 @@ export const createCashAuditAction = async (
           cashRegisterId: register.id,
           startBalance: rawData.startBalance,
           endBalance: rawData.endBalance,
-          auditDate: new Date(rawData.auditDate),
+          auditDate: createdAt,
           userId: user.id,
           managerId: rawData.managerId,
           createdAt,
@@ -204,7 +204,7 @@ export const createCashAuditAction = async (
       await prisma.transaction.create({
         data: {
           type: "DEPOSITO",
-          date: new Date(),
+          date: createdAt,
           amount: Math.round(rawData.endBalance),
           description: `CORTE DE CAJA (${updatedRegister.name}) DEPOSITADO POR: (${managerUser?.name})`,
           registerId: updatedRegister.id,
@@ -220,6 +220,134 @@ export const createCashAuditAction = async (
         },
         data: {
           balance: { increment: Math.round(rawData.endBalance) },
+          updatedAt: createdAt,
+        },
+      });
+    });
+    revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
+    revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/auditoria");
+    return {
+      errors: {},
+      success: true,
+      message: "Cash Audit created successfully!",
+    };
+  } catch (error) {
+    console.error("Error creating cash audit:", error);
+    return {
+      errors: {},
+      success: false,
+      message: "Error al crear auditoría de caja.",
+    };
+  }
+};
+
+export const createPettyCashAction = async (
+  state: {
+    errors?: Record<string, string[]>;
+    success?: boolean;
+    message?: string;
+  },
+  formData: FormData
+): Promise<{
+  success: boolean;
+  message: string;
+  errors: Record<string, string[]>;
+}> => {
+  const rawData = {
+    managerId: formData.get("managerId") as string,
+    register: formData.get("register") as string,
+    startBalance: parseFloat(formData.get("startBalance") as string),
+    endBalance: parseFloat(formData.get("endBalance") as string),
+    auditDate: formData.get("auditDate") as string,
+  };
+
+  const register = JSON.parse(rawData.register);
+
+  if (
+    !register.id ||
+    !rawData.endBalance ||
+    !rawData.auditDate ||
+    !rawData.managerId
+  ) {
+    return {
+      errors: {},
+      success: false,
+      message: "Missing required fields.",
+    };
+  }
+  const session = await getServerSession(options);
+  const user = session?.user;
+  try {
+    const createdAt = getMexicoGlobalUtcDate();
+    await prisma.$transaction(async (prisma) => {
+      await prisma.cashAudit.create({
+        data: {
+          cashRegisterId: register.id,
+          startBalance: rawData.startBalance,
+          endBalance: rawData.endBalance,
+          auditDate: createdAt,
+          userId: user.id,
+          managerId: rawData.managerId,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      const updatedRegister = await prisma.cashRegister.update({
+        where: { userId: user?.id || "" },
+        data: {
+          balance: {
+            increment: rawData.endBalance, // deducts cash withdraw to the current balance
+          },
+          updatedAt: createdAt,
+        },
+      });
+
+      const managerUser = await prisma.user.findFirst({
+        where: {
+          id: rawData.managerId,
+        },
+      });
+
+      await prisma.cashTransaction.create({
+        data: {
+          type: "DEPOSITO",
+          amount: Math.round(rawData.endBalance),
+          description: `AGREGAR FONDO (${updatedRegister.name}) AGREGADO POR: (${managerUser?.name})`,
+          cashRegisterId: updatedRegister.id,
+          userId: rawData.managerId,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      const account = await prisma.account.findFirst({
+        where: {
+          parentAccount: null,
+        },
+      });
+
+      await prisma.transaction.create({
+        data: {
+          type: "RETIRO",
+          date: createdAt,
+          amount: Math.round(rawData.endBalance),
+          description: `AGREGAR FONDO (${updatedRegister.name}) RETIRADO POR: (${managerUser?.name})`,
+          registerId: updatedRegister.id,
+          accountId: account?.id || "",
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      await prisma.account.update({
+        where: {
+          id: account?.id,
+        },
+        data: {
+          balance: { decrement: Math.round(rawData.endBalance) },
           updatedAt: createdAt,
         },
       });

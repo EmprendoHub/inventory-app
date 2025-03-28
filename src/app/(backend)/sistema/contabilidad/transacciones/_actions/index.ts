@@ -1,7 +1,10 @@
 "use server";
 
 import prisma from "@/lib/db";
-import { getMexicoGlobalUtcDate } from "@/lib/utils";
+import {
+  getMexicoGlobalUtcDate,
+  getMexicoGlobalUtcSelectedDate,
+} from "@/lib/utils";
 import { AccountingFormState } from "@/types/accounting";
 import { TransactionType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -38,9 +41,10 @@ export const createTransactionAction = async (
 
   try {
     const createdAt = getMexicoGlobalUtcDate();
+    const selectedDate = getMexicoGlobalUtcSelectedDate(rawData.date as string);
     await prisma.transaction.create({
       data: {
-        date: new Date(rawData.date as string),
+        date: selectedDate,
         description: rawData.description as string,
         amount: rawData.amount,
         type: rawData.type as TransactionType,
@@ -54,7 +58,19 @@ export const createTransactionAction = async (
       },
     });
 
+    await prisma.account.update({
+      where: {
+        id: rawData.accountId as string,
+      },
+      data: {
+        balance: { increment: Math.round(rawData.amount) },
+        updatedAt: createdAt,
+      },
+    });
+
     revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
+
     return {
       success: true,
       message: "Transaction created successfully!",

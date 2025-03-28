@@ -40,6 +40,17 @@ export const createExpenseAction = async (
   const createdAt = getMexicoGlobalUtcDate();
   try {
     await prisma.$transaction(async (prisma) => {
+      const cashRegister = await prisma.cashRegister.findFirst({
+        where: { userId: user.id || "" },
+      });
+
+      if (!cashRegister) {
+        return {
+          success: false,
+          message: "No se encontró la caja chica.",
+        };
+      }
+
       await prisma.expense.create({
         data: {
           type: rawData.type as ExpenseType,
@@ -58,30 +69,68 @@ export const createExpenseAction = async (
         },
       });
 
-      const updatedRegister = await prisma.cashRegister.update({
-        where: { userId: user.id || "" },
-        data: {
-          balance: {
-            decrement: rawData.amount, // deducts cash withdraw to the current balance
-          },
-          updatedAt: createdAt,
-        },
-      });
+      if (cashRegister?.balance < rawData.amount) {
+        // Check if the cash register has enough balance
 
-      await prisma.cashTransaction.create({
-        data: {
-          type: "RETIRO",
-          amount: Number(rawData.amount),
-          description: `GASTO ${rawData.type}: ${rawData.description}`,
-          cashRegisterId: updatedRegister.id,
-          userId: user.id,
-          createdAt,
-          updatedAt: createdAt,
-        },
-      });
+        const account = await prisma.account.findFirst({
+          where: {
+            parentAccount: null,
+          },
+        });
+
+        await prisma.transaction.create({
+          data: {
+            type: "RETIRO",
+            date: createdAt,
+            amount: Math.round(rawData.amount),
+            description: `PAGO DE (${rawData.type}: ${rawData.description}) PAGADO POR: (${user?.name})`,
+            registerId: cashRegister.id,
+            accountId: account?.id || "",
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+
+        await prisma.account.update({
+          where: {
+            id: account?.id,
+          },
+          data: {
+            balance: { decrement: Math.round(rawData.amount) },
+            updatedAt: createdAt,
+          },
+        });
+      } else {
+        // If the cash register has enough balance, update the cash register balance
+
+        const updatedRegister = await prisma.cashRegister.update({
+          where: { userId: user.id || "" },
+          data: {
+            balance: {
+              decrement: rawData.amount, // deducts cash withdraw to the current balance
+            },
+            updatedAt: createdAt,
+          },
+        });
+
+        await prisma.cashTransaction.create({
+          data: {
+            type: "RETIRO",
+            amount: Number(rawData.amount),
+            description: `GASTO ${rawData.type}: ${rawData.description}`,
+            cashRegisterId: updatedRegister.id,
+            userId: user.id,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+      }
     });
 
+    revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
     revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/auditoria");
     revalidatePath("/sistema/contabilidad/gastos");
     return {
       success: true,
