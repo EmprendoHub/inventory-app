@@ -68,7 +68,7 @@ export async function GET(request: Request) {
     });
 
     // Calculate totals
-    const totalSales = orders.reduce((acc, item) => acc + item.totalAmount, 0);
+    const totalSales = orders.reduce((acc, item) => acc + (item.totalAmount - (item.discount ?? 0)), 0);
     // const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
     const totalTransferPayments = payments.reduce(
       (acc, item) =>
