@@ -12,13 +12,13 @@ export default function ManualReport({ secret }: { secret: string }) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${secret}`,
       },
-      method: "POST",
+      method: "GET",
     });
 
     if (res.ok) {
       console.log("response ok");
     } else {
-      console.log("response failure");
+      console.log("response failure", res.text());
     }
   };
 
@@ -28,7 +28,7 @@ export default function ManualReport({ secret }: { secret: string }) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${secret}`,
       },
-      method: "POST",
+      method: "GET",
     });
 
     if (res.ok) {
