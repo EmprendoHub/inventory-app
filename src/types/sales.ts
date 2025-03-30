@@ -148,6 +148,7 @@ export type OrderType = {
   itemId: string;
   quantity: number;
   price: number;
+  discount: number | null;
   orderId: string;
 };
 

@@ -139,12 +139,10 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "status",
-        header: () => (
-          <div className="text-left text-xs maxmd:hidden w-20">Estado</div>
-        ),
+        header: () => <div className="text-left text-xs  w-20">Estado</div>,
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxmd:hidden  rounded-md w-24 px-2 ${
+            className={`uppercase text-[12px] text-center text-white   rounded-md w-24 px-2 ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "PENDIENTE"
@@ -174,7 +172,9 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "delivery",
-        header: () => <div className="text-left text-xs">Envió</div>,
+        header: () => (
+          <div className="text-left maxsm:hidden text-xs">Envió</div>
+        ),
         cell: ({ row }) => {
           const delivery = row.getValue("delivery") as DeliveryType;
           const amount = delivery?.price || 0;
@@ -183,17 +183,19 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             currency: "USD",
           }).format(amount);
           return (
-            <div className="text-left text-xs font-medium">{formatted}</div>
+            <div className="text-left text-xs font-medium  maxsm:hidden">
+              {formatted}
+            </div>
           );
         },
       },
       {
         accessorKey: "totalAmount",
-        header: () => <div className="text-left text-xs">Pedido</div>,
+        header: () => <div className="text-left text-xs">Total</div>,
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalAmount"));
-          const discount = parseFloat(row.getValue("discount")) || 0;
-          const totalAmount = amount - discount;
+          const order = row.getAllCells()[0].row.original;
+          const totalAmount = amount - (order.discount ?? 0);
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
