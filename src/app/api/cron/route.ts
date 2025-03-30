@@ -133,7 +133,7 @@ export async function GET(request: Request) {
                       <tr>
                         <td>${item.orderNo}</td>
                         <td>${getMexicoDate(item.createdAt)}</td>
-                        <td>$${item.totalAmount.toLocaleString(undefined, {
+                        <td>$${(item.totalAmount - (item.discount ?? 0)).toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}</td>
