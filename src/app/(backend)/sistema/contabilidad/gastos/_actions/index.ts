@@ -69,7 +69,7 @@ export const createExpenseAction = async (
         },
       });
 
-      if (cashRegister?.balance < rawData.amount) {
+      if (Number(rawData.amount) > Number(cashRegister?.balance)) {
         // Check if the cash register has enough balance
 
         const account = await prisma.account.findFirst({
