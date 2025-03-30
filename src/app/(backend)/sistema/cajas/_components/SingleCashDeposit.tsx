@@ -87,7 +87,7 @@ export default function SingleCashDeposit({
   };
 
   return (
-    <div className="flex flex-col items-end ">
+    <div className="flex flex-col items-end">
       {!hidden && (
         <form
           id="single-audit-register-form"
