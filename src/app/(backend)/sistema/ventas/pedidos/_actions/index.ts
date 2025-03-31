@@ -445,7 +445,7 @@ export async function payOrderAction(formData: FormData) {
             type: "DEPOSITO",
             date: createdAt,
             amount: Math.round(paymentAmount),
-            description: `TRANSFERENCIA PAGO ACEPTADO POR: (${user?.name})`,
+            description: `TRANSFERENCIA PAGO ACEPTADO POR: (${user?.name}) PARA PEDIDO: ${order.orderNo}`,
             accountId: account?.id || "",
             createdAt,
             updatedAt: createdAt,
