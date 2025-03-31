@@ -117,6 +117,9 @@ const addChart = (
       case "payments":
         value = items.reduce((sum, item) => sum + (item.amount || 0), 0);
         break;
+      case "expenses":
+        value = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+        break;
     }
 
     if (value > maxValue) maxValue = value;
@@ -137,6 +140,9 @@ const addChart = (
         value = items.reduce((sum, item) => sum + (item.amount || 0), 0);
         break;
       case "payments":
+        value = items.reduce((sum, item) => sum + (item.amount || 0), 0);
+        break;
+      case "expenses":
         value = items.reduce((sum, item) => sum + (item.amount || 0), 0);
         break;
     }
@@ -219,6 +225,9 @@ export const generateReportAction = async (formData: FormData) => {
         break;
       case "payments":
         reportTitle = "Reporte de Pagos";
+        break;
+      case "expenses":
+        reportTitle = "Reporte de Gastos";
         break;
     }
 
@@ -1181,6 +1190,167 @@ export const generateReportAction = async (formData: FormData) => {
         } else {
           finalY = yPosition;
           console.log("finalY", finalY);
+        }
+
+        break;
+      }
+
+      case "expenses": {
+        // Build query based on filters
+        const whereCondition: any = {
+          createdAt: {
+            gte: new Date(startDate),
+            lte: adjustedEndDate,
+          },
+        };
+
+        if (selectedStatus.length > 0) {
+          whereCondition.status = {
+            in: selectedStatus,
+          };
+        }
+
+        const data = await prisma.expense.findMany({
+          where: whereCondition,
+          orderBy:
+            sortBy === "date"
+              ? { createdAt: "desc" }
+              : sortBy === "amount"
+              ? { amount: "desc" }
+              : { id: "asc" },
+        });
+
+        if (data.length === 0) {
+          return {
+            success: false,
+            message:
+              "No se encontraron datos de gastos para el rango seleccionado",
+          };
+        }
+
+        // Calculate totals
+        const totalAmount = data.reduce(
+          (sum, expense) => sum + expense.amount,
+          0
+        );
+
+        // Add summary section
+        doc.setFontSize(12);
+        doc.text("Resumen de Gastos", 14, 50);
+        doc.setFontSize(10);
+        doc.text(`Total de Gastos: ${formatCurrency(totalAmount)}`, 14, 60);
+        doc.text(`Número de Gastos: ${data.length}`, 14, 65);
+
+        // Group data if needed
+        const groupedData = groupData(data, groupBy);
+
+        let yPosition = 85;
+
+        // Process each group
+        for (const [groupName, groupItems] of Object.entries(groupedData)) {
+          if (groupBy !== "none") {
+            // Add group header
+            doc.setFontSize(12);
+            doc.text(`Grupo: ${groupName}`, 14, yPosition);
+            yPosition += 10;
+          }
+
+          // Define headers based on selected fields
+          let headers: string[] = [];
+          let dataFields: string[] = [];
+
+          if (selectedFields.length === 0) {
+            headers = ["Fecha", "Categoría", "Monto", "Descripción"];
+            dataFields = ["createdAt", "category", "amount", "description"];
+          } else {
+            if (selectedFields.includes("createdAt")) {
+              headers.push("Fecha");
+              dataFields.push("createdAt");
+            }
+            if (selectedFields.includes("category")) {
+              headers.push("Categoría");
+              dataFields.push("category");
+            }
+            if (selectedFields.includes("amount")) {
+              headers.push("Monto");
+              dataFields.push("amount");
+            }
+            if (selectedFields.includes("description")) {
+              headers.push("Descripción");
+              dataFields.push("description");
+            }
+          }
+
+          // Transform data for table
+          const tableData = groupItems.map((item) => {
+            const rowData: any[] = [];
+            for (const field of dataFields) {
+              if (field === "createdAt") {
+                rowData.push(format(new Date(item.createdAt), "dd/MM/yyyy"));
+              } else if (field === "amount") {
+                rowData.push(formatCurrency(item.amount));
+              } else {
+                rowData.push(item[field] || "");
+              }
+            }
+            return rowData;
+          });
+
+          // Add table for this group
+          autoTable(doc, {
+            startY: yPosition,
+            head: [headers],
+            body: tableData,
+            theme: "grid",
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [41, 98, 255] },
+          });
+
+          yPosition = (doc as any).lastAutoTable.finalY + 5;
+
+          // Add group subtotal if showing totals
+          if (showTotals && groupBy !== "none") {
+            const groupTotal = groupItems.reduce(
+              (sum, expense) => sum + expense.amount,
+              0
+            );
+            doc.setFontSize(10);
+            doc.text(
+              `Subtotal ${groupName}: ${formatCurrency(groupTotal)}`,
+              14,
+              yPosition
+            );
+            yPosition += 10;
+          }
+
+          // Add space between groups
+          if (groupBy !== "none") {
+            yPosition += 5;
+          }
+
+          // Check if we need a new page
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = 20;
+          }
+        }
+
+        // Add grand total
+        if (showTotals) {
+          doc.setFontSize(12);
+          doc.text(
+            `Total General: ${formatCurrency(totalAmount)}`,
+            14,
+            yPosition
+          );
+          yPosition += 15;
+        }
+
+        // Add chart if requested
+        if (includeChart) {
+          finalY = addChart(doc, data, reportType, groupBy);
+        } else {
+          finalY = yPosition;
         }
 
         break;

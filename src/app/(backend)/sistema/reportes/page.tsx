@@ -82,6 +82,15 @@ export default function ReportsPage() {
           { id: "status", label: "Estado" },
           { id: "reference", label: "Referencia" },
         ];
+      case "expenses":
+        return [
+          { id: "id", label: "ID" },
+          { id: "date", label: "Fecha" },
+          { id: "type", label: "Tipo" },
+          { id: "category", label: "Categoría" },
+          { id: "amount", label: "Monto" },
+          { id: "description", label: "Descripción" },
+        ];
       default:
         return [];
     }
@@ -116,6 +125,14 @@ export default function ReportsPage() {
           { id: "none", label: "Ninguno" },
           { id: "status", label: "Por Estado" },
           { id: "method", label: "Por Método de Pago" },
+          { id: "month", label: "Por Mes" },
+        ];
+      case "expenses":
+        return [
+          { id: "none", label: "Ninguno" },
+          { id: "category", label: "Por Categoría" },
+          { id: "type", label: "Por Tipo" },
+          { id: "date", label: "Por Fecha (Día)" },
           { id: "month", label: "Por Mes" },
         ];
       default:
@@ -154,6 +171,13 @@ export default function ReportsPage() {
           { id: "COMPLETED", label: "Completado" },
           { id: "PENDING", label: "Pendiente" },
           { id: "FAILED", label: "Fallido" },
+        ];
+      case "expenses":
+        return [
+          { id: "PENDING", label: "Pendiente" },
+          { id: "APPROVED", label: "Autorizado" },
+          { id: "PAID", label: "Pagado" },
+          { id: "REJECTED", label: "Rechazado" },
         ];
       default:
         return [];
@@ -284,6 +308,7 @@ export default function ReportsPage() {
                     <SelectItem value="inventory">Inventario</SelectItem>
                     <SelectItem value="accounting">Contabilidad</SelectItem>
                     <SelectItem value="payments">Pagos</SelectItem>
+                    <SelectItem value="expenses">Gastos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
