@@ -372,7 +372,10 @@ export async function payOrderAction(formData: FormData) {
     );
 
     // Check if order is already paid off
-    if (previousPayments > order.totalAmount + (order.delivery?.price || 0)) {
+    if (
+      previousPayments >
+      order.totalAmount + (order.delivery?.price || 0) - (order.discount ?? 0)
+    ) {
       return {
         errors: {},
         success: false,
@@ -383,7 +386,7 @@ export async function payOrderAction(formData: FormData) {
     // Check if new payment would exceed order total
     if (
       previousPayments + paymentAmount >
-      order.totalAmount + (order.delivery?.price || 0)
+      order.totalAmount + (order.delivery?.price || 0) - (order.discount ?? 0)
     ) {
       return {
         errors: {},
@@ -461,7 +464,10 @@ export async function payOrderAction(formData: FormData) {
 
       let orderStatus = "PENDIENTE";
 
-      if (previousPayments + paymentAmount >= order.totalAmount) {
+      if (
+        previousPayments + paymentAmount >=
+        order.totalAmount - (order.discount ?? 0)
+      ) {
         orderStatus = "PROCESANDO";
 
         if (order.delivery) {
