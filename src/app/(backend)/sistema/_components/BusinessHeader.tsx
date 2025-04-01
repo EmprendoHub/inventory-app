@@ -17,7 +17,7 @@ export default function BusinessHeader({
       <div className="flex items-center gap-3">
         <Link
           href={`/sistema/${link}`}
-          className="flex gap-2 items-center text-white bg-accent rounded-md py-1.5 px-2 text-xs hover:bg-blue-900"
+          className="flex gap-2 items-center text-white bg-accent rounded-md py-1.5 px-2 text-lg hover:bg-blue-900"
         >
           + {btn}
         </Link>
