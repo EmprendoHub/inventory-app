@@ -52,12 +52,11 @@ import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
-
   return total;
 }
 
 export function OrderList({ orders }: { orders: ordersAndItem[] }) {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const user = session?.user as UserType;
   const router = useRouter();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -65,44 +64,15 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
     []
   );
   const [sending, setSending] = React.useState(false);
-
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  // const { showModal } = useModal();
+  const [mounted, setMounted] = React.useState(false);
 
-  // const sendEmailReminder = async (id: string) => {
-  //   try {
-  //     const res = await fetch(`/api/email`, {
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Cookie: "ojñolasidfioasdfuñoasdikfh",
-  //       },
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         id,
-  //       }),
-  //     });
-
-  //     if (res.ok) {
-  //       await showModal({
-  //         title: "Correo Enviado!",
-  //         type: "delete",
-  //         text: "El correo se envió exitosamente",
-  //         icon: "success",
-  //       });
-  //     } else {
-  //       await showModal({
-  //         title: "¡Correo No Enviado!",
-  //         type: "delete",
-  //         text: "El correo no se envió correctamente",
-  //         icon: "error",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
+  // Add useEffect to handle the component mounting state
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const columns = React.useMemo<ColumnDef<ordersAndItem>[]>(
     () => [
@@ -239,7 +209,19 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
             );
             const grandTotal =
               (subtotal || 0) + (row.original.delivery?.price || 0) - discount;
-            const isOrderPaid = previousPayments === grandTotal;
+            const isOrderPaid = previousPayments >= grandTotal; // Using >= to handle floating point issues
+
+            // Only check role if session is available and component is mounted
+            const isAuthorizedRole =
+              mounted &&
+              sessionStatus === "authenticated" &&
+              ["SUPER_ADMIN", "GERENTE"].includes(user?.role || "");
+
+            const isAdminRole =
+              mounted &&
+              sessionStatus === "authenticated" &&
+              ["SUPER_ADMIN", "ADMIN"].includes(user?.role || "");
+
             const deleteOrder = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
@@ -281,6 +263,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                         text: "El pedido ha sido cancelado.",
                         icon: "success",
                       });
+                      router.refresh();
                     } catch (error) {
                       console.log("error from modal", error);
 
@@ -303,8 +286,9 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
               }
             }, [showModal]);
 
-            // In your OrderList component
             const receivePayment = React.useCallback(async () => {
+              setSending(true);
+
               const result = await showModal({
                 title: "¿Cuanto te gustaría pagar?",
                 type: "payment",
@@ -314,30 +298,28 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                 confirmButtonText: "Sí, pagar",
                 cancelButtonText: "Cancelar",
               });
-              setSending((prev) => !prev);
 
               if (result.confirmed) {
                 try {
                   const formData = new FormData();
                   formData.set("id", row.original.id);
-                  formData.set("amount", result.data?.amount || "0"); // Handle empty input
+                  formData.set("amount", result.data?.amount || "0");
                   formData.set("reference", result.data?.reference || "");
                   formData.set("method", result.data?.method || "");
 
                   const response = await payOrderAction(formData);
 
-                  if (response.success) {
-                    setSending((prev) => !prev);
+                  setSending(false);
 
+                  if (response.success) {
                     await showModal({
                       title: "¡Pago Aplicado!",
                       type: "delete",
                       text: response.message,
                       icon: "success",
                     });
+                    router.refresh();
                   } else {
-                    setSending((prev) => !prev);
-
                     await showModal({
                       title: "¡Pago No Aplicado!",
                       type: "delete",
@@ -346,8 +328,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                     });
                   }
                 } catch (error) {
-                  setSending((prev) => !prev);
-
+                  setSending(false);
                   console.log("Error processing payment:", error);
                   await showModal({
                     title: "Error",
@@ -357,14 +338,13 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   });
                 }
               } else {
-                setSending((prev) => !prev);
+                setSending(false);
               }
-
-              // eslint-disable-next-line
-            }, [showModal, row.original.id, row.original.totalAmount]);
+              //eslint-disable-next-line
+            }, [showModal, row.original.id]);
 
             const markCompleted = React.useCallback(async () => {
-              setSending((prev) => !prev);
+              setSending(true);
 
               try {
                 const formData = new FormData();
@@ -373,18 +353,17 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
 
                 const response = await markCompletedOrderAction(formData);
 
-                if (response.success) {
-                  setSending((prev) => !prev);
+                setSending(false);
 
+                if (response.success) {
                   await showModal({
                     title: "¡Entregado!",
                     type: "delete",
                     text: response.message,
                     icon: "success",
                   });
+                  router.refresh();
                 } else {
-                  setSending((prev) => !prev);
-
                   await showModal({
                     title: "¡No ¡Entregado!",
                     type: "delete",
@@ -393,8 +372,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   });
                 }
               } catch (error) {
-                setSending((prev) => !prev);
-
+                setSending(false);
                 console.log("Error processing payment:", error);
                 await showModal({
                   title: "Error",
@@ -403,13 +381,13 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   icon: "error",
                 });
               }
-
-              // eslint-disable-next-line
-            }, [showModal, row.original.id, row.original.totalAmount]);
+              //eslint-disable-next-line
+            }, [showModal, row.original.id]);
 
             const viewOrder = React.useCallback(async () => {
               router.push(`/sistema/ventas/pedidos/ver/${row.original.id}`);
             }, []);
+
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -429,44 +407,28 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                     <Eye />
                     Ver detalles
                   </DropdownMenuItem>
-                  {row.original.status !== "CANCELADO" && (
+                  {row.original.status !== "CANCELADO" && mounted && (
                     <>
-                      {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
-                        !isOrderPaid && (
-                          <DropdownMenuItem
-                            onClick={receivePayment}
-                            className="text-xs cursor-pointer"
-                          >
-                            <MdCurrencyExchange /> Recibir pago
-                          </DropdownMenuItem>
-                        )}
-                      {["SUPER_ADMIN", "GERENTE"].includes(user?.role || "") &&
+                      {isAuthorizedRole && !isOrderPaid && (
+                        <DropdownMenuItem
+                          onClick={receivePayment}
+                          className="text-xs cursor-pointer"
+                        >
+                          <MdCurrencyExchange /> Recibir pago
+                        </DropdownMenuItem>
+                      )}
+                      {isAuthorizedRole &&
                         isOrderPaid &&
                         row.original.status !== "ENTREGADO" && (
                           <DropdownMenuItem
                             onClick={markCompleted}
-                            className="text-xs  cursor-pointer"
+                            className="text-xs cursor-pointer"
                           >
                             <GiCheckMark /> Entregar
                           </DropdownMenuItem>
                         )}
-                      {/* <DropdownMenuItem
-                        onClick={() => sendEmailReminder(row.original.id)}
-                        className="text-xs cursor-pointer"
-                      >
-                        <MdSms /> Enviar recordatorio
-                      </DropdownMenuItem> */}
-                      {/* <DropdownMenuItem
-                        onClick={() =>
-                          router.push(`/api/recibo/${row.original.id}`)
-                        }
-                        className="text-xs cursor-pointer"
-                      >
-                        <DownloadCloud /> Descargar PDF
-                      </DropdownMenuItem> */}
-                      {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
+                      {isAdminRole && (
                         <>
-                          {" "}
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={deleteOrder}
@@ -488,8 +450,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         },
       },
     ],
-    // eslint-disable-next-line
-    []
+    //eslint-disable-next-line
+    [mounted, sessionStatus]
   );
 
   const [globalFilter, setGlobalFilter] = React.useState("");
@@ -528,6 +490,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       globalFilter,
     },
   });
+
   const handleRefresh = () => {
     // Refresh the page
     router.refresh();
@@ -635,10 +598,6 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           </Table>
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
-          {/* <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} pedido(s) seleccionada(s).
-        </div> */}
           <div className="space-x-2">
             <Button
               variant="outline"
