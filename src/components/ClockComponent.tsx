@@ -19,7 +19,7 @@ const ClockTime = () => {
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
-  return <div className="text-2xl font-mono">{time.toLocaleTimeString()}</div>;
+  return <div className="font-mono">{time.toLocaleTimeString()}</div>;
 };
 
 export default ClockTime;

@@ -63,9 +63,9 @@ const SystemHeader = () => {
           >
             <PlusCircleIcon size={20} />
           </Link>
-          <span>
+          <div className="flex items-center">
             {createdAt.toLocaleDateString()} - <ClockTime />
-          </span>
+          </div>
         </div>
 
         {/*  User Info  */}
