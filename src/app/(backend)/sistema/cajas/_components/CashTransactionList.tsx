@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { CashTransactionResponse } from "@/types/accounting";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function CashTransactionList({
   transactions,
@@ -127,7 +128,9 @@ export function CashTransactionList({
         accessorKey: "createdAt",
         header: () => <div className="text-left text-xs w-5">Fecha</div>,
         cell: ({ row }) => {
-          const date = new Date(row.getValue("createdAt")).toLocaleDateString();
+          const date = getMexicoGlobalUtcSelectedDate(
+            row.getValue("createdAt")
+          ).toLocaleDateString();
           return (
             <div className="text-left text-xs font-medium w-5">{date}</div>
           );
