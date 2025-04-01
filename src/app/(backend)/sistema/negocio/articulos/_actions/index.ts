@@ -155,6 +155,7 @@ export const createItemAction = async (
 
       // Clean up the temporary file
       await unlink(path);
+      revalidatePath("/sistema/negocio/articulos/nuevo");
       revalidatePath("/sistema/negocio/articulos");
       revalidatePath("/sistema/ventas/pedidos/nuevo");
       return {
