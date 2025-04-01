@@ -130,6 +130,7 @@ export const PaymentSchema = z.object({
   amount: z.string().min(1, "Se require una cantidad"),
   reference: z.string(),
   method: z.string(),
+  createdAt: z.date().nullable().optional(),
 });
 
 export const UserSchema = z.object({

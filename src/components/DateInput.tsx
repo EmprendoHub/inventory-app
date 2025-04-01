@@ -12,7 +12,7 @@ type DateInputProps = {
   name: string;
   label: string;
   defaultValue: Date | string | null;
-  state: DeliveryFormState;
+  state?: DeliveryFormState | null;
   isOptional?: boolean;
 };
 
@@ -57,7 +57,7 @@ const DateInput: React.FC<DateInputProps> = ({
         <Popover.Trigger
           className={cn(
             "flex z-30 items-center justify-between px-3 py-2 border rounded-md cursor-pointer",
-            state.errors?.[name] ? "border-red-500" : "border-gray-300",
+            state?.errors?.[name] ? "border-red-500" : "border-gray-300",
             "hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           )}
         >
@@ -84,7 +84,7 @@ const DateInput: React.FC<DateInputProps> = ({
 
       <input type="hidden" name={name} value={formattedDate} />
 
-      {state.errors?.[name] && (
+      {state?.errors?.[name] && (
         <p className="mt-1 text-sm text-red-600">
           {state.errors[name].join(", ")}
         </p>

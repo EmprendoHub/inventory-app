@@ -353,6 +353,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                     icon: "error",
                   });
                 }
+              } else {
+                setSending((prev) => !prev);
               }
 
               // eslint-disable-next-line

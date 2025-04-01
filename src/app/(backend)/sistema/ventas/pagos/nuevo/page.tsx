@@ -8,7 +8,7 @@ export default function NewPayment() {
       {/* Header */}
       <SuperHeader title={"Nuevo Pago"} />
       {/* Form */}
-      <PaymentForm />;
+      <PaymentForm />
     </div>
   );
 }

@@ -5,7 +5,7 @@ type TextType = {
   name: string;
   className?: string;
   value?: string;
-  state: { errors?: { [key: string]: string[] } };
+  state?: { errors?: { [key: string]: string[] } };
   disabled?: boolean | null;
   onChange?: (name: string, value: string) => void;
 };
@@ -33,7 +33,7 @@ export default function TextInput({
         type="text"
         className="mt-1 block w-full rounded-md bg-input border-gray-300 shadow-sm"
       />
-      {state.errors?.[`${name}`] && (
+      {state?.errors?.[`${name}`] && (
         <p className="text-sm text-red-500">
           {state.errors?.[`${name}`].join(", ")}
         </p>

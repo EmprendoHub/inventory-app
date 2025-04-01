@@ -1,8 +1,18 @@
 "use server";
 
+import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
-import { AddInventorySchema, AdjustmentSchema } from "@/lib/schemas";
-import { getMexicoGlobalUtcDate } from "@/lib/utils";
+import {
+  AddInventorySchema,
+  AdjustmentSchema,
+  PaymentSchema,
+} from "@/lib/schemas";
+import {
+  getMexicoGlobalUtcDate,
+  getMexicoGlobalUtcSelectedDate,
+} from "@/lib/utils";
+import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 
 export const createAdjustment = async (
   state: {
@@ -159,6 +169,10 @@ export async function processPayment(
       },
     });
 
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pedidos");
+    revalidatePath("/sistema/ventas/pagos");
+
     return {
       errors: {},
       success: true,
@@ -170,6 +184,136 @@ export async function processPayment(
       errors: {},
       success: false,
       message: "Failed to process payment",
+    };
+  }
+}
+
+export async function updatePaymentAction(formData: FormData) {
+  // Extract and validate form data
+  const rawData = {
+    id: formData.get("id"),
+    amount: formData.get("amount"),
+    reference: formData.get("reference"),
+    method: formData.get("method"),
+    createdAt: formData.get("createdAt"),
+  };
+
+  // Validate the data using Zod
+  const validatedData = PaymentSchema.safeParse(rawData);
+  if (!validatedData.success) {
+    return {
+      errors: validatedData.error.flatten().fieldErrors,
+      success: false,
+      message: "Validation failed. Please check the fields.",
+    };
+  }
+
+  const session = await getServerSession(options);
+  const user = session?.user;
+  const { id, amount, reference, method } = validatedData.data;
+  const paymentAmount = Number(amount);
+
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { id: id as string },
+      include: {
+        order: true,
+      },
+    });
+
+    if (!payment) {
+      return {
+        errors: {},
+        success: false,
+        message: "Payment not found",
+      };
+    }
+
+    const createdAt = getMexicoGlobalUtcSelectedDate(
+      rawData.createdAt as string
+    );
+    await prisma.$transaction(async (prisma) => {
+      // Create new payment
+      await prisma.payment.update({
+        where: { id },
+        data: {
+          amount: Math.round(paymentAmount),
+          method: method,
+          reference,
+          status: "PAGADO",
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+    });
+
+    if (payment.method === "EFECTIVO") {
+      const updatedRegister = await prisma.cashRegister.update({
+        where: { userId: user.id || "" },
+        data: {
+          balance: {
+            increment: Math.round(paymentAmount), // deducts cash withdraw to the current balance
+          },
+          updatedAt: createdAt,
+        },
+      });
+      await prisma.cashTransaction.update({
+        where: { id: updatedRegister.id },
+        data: {
+          type: "DEPOSITO",
+          amount: Math.round(paymentAmount),
+          userId: user.id,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+    }
+
+    if (payment.method === "TRANSFERENCIA") {
+      const account = await prisma.account.findFirst({
+        where: {
+          parentAccount: null,
+        },
+      });
+      await prisma.transaction.update({
+        where: { id: account?.id },
+        data: {
+          date: createdAt,
+          amount: Math.round(paymentAmount),
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+      await prisma.account.update({
+        where: {
+          id: account?.id,
+        },
+        data: {
+          balance: { increment: Math.round(paymentAmount) },
+          updatedAt: createdAt,
+        },
+      });
+    }
+
+    revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
+    revalidatePath(`/sistema/ventas/pedidos/ver/${payment.order.id}`);
+    revalidatePath("/sistema/ventas/pedidos");
+    revalidatePath("/sistema/ventas/envios");
+    revalidatePath("/sistema/ventas/pagos");
+    revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
+
+    return {
+      errors: {},
+      success: true,
+      message: `Pago de $${paymentAmount} aceptado.`,
+    };
+  } catch (error) {
+    return {
+      errors: {},
+      success: false,
+      message: `Failed to process payment ${error}`,
     };
   }
 }

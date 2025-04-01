@@ -303,6 +303,7 @@ export async function updateItemAction(
     revalidatePath(`/sistemas/negocio/articulos/editar/${rawData.itemId}`);
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
 
     return {
       errors: {},

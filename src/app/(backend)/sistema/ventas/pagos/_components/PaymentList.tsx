@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
+import { Edit2, Eye, MoreHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -61,21 +61,27 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
         accessorKey: "orderNo",
         header: ({ column }) => {
           return (
-            <Button
-              variant="ghost"
+            <div
               onClick={() =>
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
-              Pedido #
-              <ArrowUpDown />
-            </Button>
+              Pedido
+            </div>
           );
         },
         cell: ({ row }) => (
           <div className="uppercase text-xs">{row.getValue("orderNo")}</div>
         ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: () => <div className="text-left text-xs">Fecha</div>,
+        cell: ({ row }) => {
+          const date = new Date(row.getValue("createdAt")).toLocaleDateString();
+          return <div className="text-left text-xs font-medium">{date}</div>;
+        },
       },
       {
         accessorKey: "method",
@@ -90,11 +96,19 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
       },
       {
         accessorKey: "status",
-        header: () => (
-          <div className="text-left text-xs maxmd:hidden">Estado</div>
-        ),
+        header: () => <div className="text-left text-xs ">Estado</div>,
         cell: ({ row }) => (
-          <div className="uppercase text-xs maxmd:hidden">
+          <div
+            className={`uppercase text-[12px] text-center text-white rounded-md w-24 px-2 ${
+              row.original.status === "CANCELADO"
+                ? "bg-red-900"
+                : row.original.status === "PENDIENTE"
+                ? "bg-yellow-700"
+                : row.original.status === "PAGADO"
+                ? "bg-emerald-900"
+                : "bg-emerald-900"
+            }`}
+          >
             {row.getValue("status")}
           </div>
         ),
@@ -185,6 +199,11 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
                 `/sistema/ventas/pedidos/ver/${row.original.orderId}`
               );
             }, []);
+
+            const editPayment = React.useCallback(async () => {
+              router.push(`/sistema/ventas/pagos/editar/${row.original.id}`);
+            }, []);
+
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -204,6 +223,18 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
                     <Eye />
                     Ver pedido
                   </DropdownMenuItem>
+                  {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
+                    row.original.status !== "CANCELADO" && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={editPayment}
+                          className="bg-blue-600 text-white focus:bg-blue-700 focus:text-white cursor-pointer text-xs"
+                        >
+                          <Edit2 />
+                          Editar
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") &&
                     row.original.status !== "CANCELADO" && (
                       <>

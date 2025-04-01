@@ -19,6 +19,7 @@ import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
 
 const SystemHeader = () => {
   const { data: session } = useSession();
@@ -49,15 +50,24 @@ const SystemHeader = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const createdAt = getMexicoGlobalUtcDate();
+
   return (
     <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxmd:px-4  z-30">
       <div className="flex items-center justify-between w-full">
-        <Link
-          href={"/sistema/ventas/pedidos/nuevo"}
-          className="bg-muted text-white hover:text-accent p-1 rounded-lg"
-        >
-          <PlusCircleIcon size={20} />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={"/sistema/ventas/pedidos/nuevo"}
+            className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+          >
+            <PlusCircleIcon size={20} />
+          </Link>
+          <span>
+            {createdAt.toLocaleDateString()} -{" "}
+            {createdAt.toTimeString().substring(0, 5)}
+          </span>
+        </div>
+
         {/*  User Info  */}
         <TooltipProvider>
           <Tooltip>

@@ -5,7 +5,7 @@ type NumericInputType = {
   name: string;
   defaultValue?: number;
   className?: string;
-  state: { errors?: { [key: string]: string[] } };
+  state?: { errors?: { [key: string]: string[] } };
   onChange?: (value: number) => void; // Add onChange prop
 };
 
@@ -41,7 +41,7 @@ export default function NumericInput({
         onChange={handleChange} // Attach the onChange handler
         min={0}
       />
-      {state.errors?.[`${name}`] && (
+      {state?.errors?.[`${name}`] && (
         <p className="text-sm text-red-500">
           {state.errors?.[`${name}`].join(", ")}
         </p>
