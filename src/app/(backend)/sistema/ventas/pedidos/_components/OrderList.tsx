@@ -479,7 +479,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
     },
     initialState: {
       pagination: {
-        pageSize: 7, // Set the default page size to 5
+        pageSize: 10, // Set the default page size to 5
       },
     },
     state: {

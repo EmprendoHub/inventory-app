@@ -16,8 +16,16 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "MUEBLES YUNY",
+  manifest: "/manifest.json",
+  metadataBase: new URL("https://www.mueblesyuny.com/"),
+  title: {
+    default: "MUEBLES YUNY | Muebles modernos restaurados de alta calidad",
+    template: `%s | Mx MUEBLES YUNY`,
+  },
   description: "Muebles modernos restaurados de alta calidad.",
+};
+export const viewport = {
+  themeColor: "#0e192b",
 };
 
 export default function RootLayout({

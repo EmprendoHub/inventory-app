@@ -1,0 +1,27 @@
+{
+  "name": "Muebles modernos restaurados de alta calidad",
+  "short_name": "MUEBLES YUNY",
+  "icons": [
+    {
+      "src": "/icons/inventory-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/inventory-icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/inventory-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#3f4561",
+  "background_color": "#0e192b",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

@@ -19,19 +19,6 @@ const nextConfig = {
       },
     ],
   },
-  // Disable source maps in development
-  productionBrowserSourceMaps: false,
-
-  // Optional: Disable Webpack cache in development
-  webpack: (config, { dev }) => {
-    if (config.cache && !dev) {
-      config.cache = Object.freeze({
-        type: "memory",
-      });
-    }
-    // Important: return the modified config
-    return config;
-  },
 };
 
 export default nextConfig;
