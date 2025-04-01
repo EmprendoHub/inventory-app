@@ -45,7 +45,7 @@ export default function MobileMenu() {
             } hover:bg-slate-900 p-2 rounded-md`}
             href={"/sistema/home"}
           >
-            <Home size={16} />
+            <Home size={24} />
           </Link>
 
           {/* Negocio */}
@@ -57,8 +57,8 @@ export default function MobileMenu() {
               href={"/sistema/negocio"}
             >
               <div className="flex items-center gap-1">
-                <FaDollyFlatbed size={16} />
-                <span className={`text-xs $`}>Negocio</span>
+                <FaDollyFlatbed size={24} />
+                <span className={`text-xl $`}>Negocio</span>
               </div>
             </Link>
           )}
@@ -71,8 +71,8 @@ export default function MobileMenu() {
               } hover:bg-slate-900 rounded-md`}
               href={"/sistema/ventas"}
             >
-              <DollarSign size={16} />
-              <span className={`text-xs `}>Ventas</span>
+              <DollarSign size={24} />
+              <span className={`text-xl `}>Ventas</span>
             </Link>
           )}
 
@@ -85,8 +85,8 @@ export default function MobileMenu() {
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/ventas/envios"}
               >
-                <Truck size={16} />
-                <span className={`text-xs `}>Envíos</span>
+                <Truck size={24} />
+                <span className={`text-xl `}>Envíos</span>
               </Link>
               <Link
                 className={`flex w-full items-center gap-2 p-1.5   ${
@@ -96,8 +96,8 @@ export default function MobileMenu() {
                 } hover:bg-slate-900 rounded-md`}
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
-                <Wallet2 size={16} />
-                <span className={`text-xs `}>Cartera</span>
+                <Wallet2 size={24} />
+                <span className={`text-xl `}>Cartera</span>
               </Link>
             </>
           )}
@@ -111,8 +111,8 @@ export default function MobileMenu() {
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/ventas"}
               >
-                <DollarSign size={16} />
-                <span className={`text-xs `}>Ventas</span>
+                <DollarSign size={24} />
+                <span className={`text-xl `}>Ventas</span>
               </Link>
               <Link
                 className={`flex w-full items-center gap-2 p-1.5   ${
@@ -122,8 +122,8 @@ export default function MobileMenu() {
                 } hover:bg-slate-900 rounded-md`}
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
-                <FaCashRegister size={16} />
-                <span className={`text-xs `}>Caja</span>
+                <FaCashRegister size={24} />
+                <span className={`text-xl `}>Caja</span>
               </Link>
               <Link
                 className={`flex w-full items-center gap-2  p-1.5  pl-2 pr-2
@@ -132,8 +132,8 @@ export default function MobileMenu() {
                  } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/contabilidad/gastos"}
               >
-                <GiExpense size={16} />
-                <span className={`text-xs `}>Gastos</span>
+                <GiExpense size={24} />
+                <span className={`text-xl `}>Gastos</span>
               </Link>
             </>
           )}
@@ -147,8 +147,8 @@ export default function MobileMenu() {
            } hover:bg-slate-900 rounded-md`}
               href={"/sistema/contabilidad"}
             >
-              <GiExpense size={16} />
-              <span className={`text-xs `}>Conta</span>
+              <GiExpense size={24} />
+              <span className={`text-xl `}>Conta</span>
             </Link>
           )}
           {/* Contabilidad */}
@@ -158,8 +158,8 @@ export default function MobileMenu() {
               <CollapsibleTrigger className="w-full">
                 <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
                   <div className="flex items-center gap-2 ">
-                    <Building2 size={16} />
-                    <span className={`text-xs `}>Contabilidad</span>
+                    <Building2 size={24} />
+                    <span className={`text-xl `}>Contabilidad</span>
                   </div>
 
                   <ChevronRight size={25} />
@@ -175,8 +175,8 @@ export default function MobileMenu() {
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/contabilidad/cuentas"}
                 >
-                  <FilesIcon size={16} />
-                  <span className={`text-xs `}>Cuentas</span>
+                  <FilesIcon size={24} />
+                  <span className={`text-xl `}>Cuentas</span>
                 </Link>
 
                 <Link
@@ -185,8 +185,8 @@ export default function MobileMenu() {
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/cajas"}
                 >
-                  <FaCashRegister size={16} />
-                  <span className={`text-xs `}>Cajas</span>
+                  <FaCashRegister size={24} />
+                  <span className={`text-xl `}>Cajas</span>
                 </Link>
                 <Link
                   className={`flex w-full items-center gap-2 p-1.5    ${
@@ -194,8 +194,8 @@ export default function MobileMenu() {
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/cajas/auditoria"}
                 >
-                  <BanknoteIcon size={16} />
-                  <span className={`text-xs `}>Cortes</span>
+                  <BanknoteIcon size={24} />
+                  <span className={`text-xl `}>Cortes</span>
                 </Link>
                 <Link
                   className={`flex w-full items-center gap-2  p-1.5  ${
@@ -203,8 +203,8 @@ export default function MobileMenu() {
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/contabilidad/gastos"}
                 >
-                  <GiExpense size={16} />
-                  <span className={`text-xs `}>Gastos</span>
+                  <GiExpense size={24} />
+                  <span className={`text-xl `}>Gastos</span>
                 </Link>
 
                 <Link
@@ -215,8 +215,8 @@ export default function MobileMenu() {
                   } hover:bg-slate-900 rounded-md`}
                   href={"/sistema/contabilidad/transacciones"}
                 >
-                  <TbTransactionDollar size={16} />
-                  <span className={`text-xs `}>Transacciones</span>
+                  <TbTransactionDollar size={24} />
+                  <span className={`text-xl `}>Transacciones</span>
                 </Link>
               </CollapsibleContent>
             </Collapsible>
@@ -230,8 +230,8 @@ export default function MobileMenu() {
               } hover:bg-slate-900 rounded-md`}
               href={"/sistema/compras"}
             >
-              <FilesIcon size={16} />
-              <span className={`text-xs `}>OC</span>
+              <FilesIcon size={24} />
+              <span className={`text-xl `}>OC</span>
             </Link>
           )}
 
@@ -242,15 +242,15 @@ export default function MobileMenu() {
               }`}
               href={"/sistema/reportes"}
             >
-              <BarChart size={16} />
-              <span className={`text-xs `}>Reportes</span>
+              <BarChart size={24} />
+              <span className={`text-xl `}>Reportes</span>
             </Link>
           )}
         </nav>
       </div>
       {/*   Middle Logo  */}
       <div className="flex items-center gap-2 p-3 bg-slate-900">
-        <LogoIcon className="w-8 h-auto" />
+        <LogoIcon className="w-14 h-auto" />
       </div>
     </div>
   );
