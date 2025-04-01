@@ -48,6 +48,7 @@ import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { DeliveryType } from "@/types/delivery";
 import { GiCheckMark } from "react-icons/gi";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -211,7 +212,9 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           <div className="text-left maxmd:hidden  text-xs">Fecha</div>
         ),
         cell: ({ row }) => {
-          const date = new Date(row.getValue("createdAt")).toLocaleDateString();
+          const date = getMexicoGlobalUtcSelectedDate(
+            row.getValue("createdAt")
+          ).toLocaleDateString();
           return (
             <div className="text-left text-xs maxmd:hidden  font-medium">
               {date}

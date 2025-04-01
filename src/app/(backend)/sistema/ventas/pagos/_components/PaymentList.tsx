@@ -42,6 +42,7 @@ import { verifySupervisorCode } from "@/app/_actions";
 import { deletePaymentAction } from "../../pedidos/_actions";
 import { UserType } from "@/types/users";
 import { useSession } from "next-auth/react";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function PaymentList({ payments }: { payments: paymentType[] }) {
   const { data: session } = useSession();
@@ -79,7 +80,9 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
         accessorKey: "createdAt",
         header: () => <div className="text-left text-xs">Fecha</div>,
         cell: ({ row }) => {
-          const date = new Date(row.getValue("createdAt")).toLocaleDateString();
+          const date = getMexicoGlobalUtcSelectedDate(
+            row.getValue("createdAt")
+          ).toLocaleDateString();
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },

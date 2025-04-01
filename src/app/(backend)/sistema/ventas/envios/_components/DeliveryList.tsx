@@ -50,6 +50,7 @@ import {
   updateOrderOnDelivery,
 } from "../../pedidos/_actions";
 import { uploadImageAction } from "@/app/_actions";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function DeliveryList({
   deliveries,
@@ -171,7 +172,9 @@ export function DeliveryList({
         cell: ({ row }) => (
           <div className="text-xs font-medium  maxmd:hidden">
             {row.original.deliveryDate
-              ? new Date(row.original.deliveryDate).toLocaleDateString()
+              ? getMexicoGlobalUtcSelectedDate(
+                  row.getValue("deliveryDate")
+                ).toLocaleDateString()
               : "N/A"}
           </div>
         ),

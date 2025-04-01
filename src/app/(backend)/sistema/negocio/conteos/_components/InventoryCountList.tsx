@@ -38,6 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteInventoryCountAction } from "../_actions";
 import { useModal } from "@/app/context/ModalContext";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function InventoryCountList({
   inventoryCounts,
@@ -78,7 +79,9 @@ export function InventoryCountList({
         header: () => <div className="text-left text-xs">Fecha de Conteo</div>,
         cell: ({ row }) => (
           <div className="text-left text-xs font-medium">
-            {new Date(row.getValue("countDate")).toLocaleDateString()}
+            {getMexicoGlobalUtcSelectedDate(
+              row.getValue("countDate")
+            ).toLocaleDateString()}
           </div>
         ),
       },
