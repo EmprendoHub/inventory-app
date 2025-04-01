@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { getMexicoGlobalUtcDate } from "@/lib/utils";
+import ClockTime from "@/components/ClockComponent";
 
 const SystemHeader = () => {
   const { data: session } = useSession();
@@ -63,8 +64,7 @@ const SystemHeader = () => {
             <PlusCircleIcon size={20} />
           </Link>
           <span>
-            {createdAt.toLocaleDateString()} -{" "}
-            {createdAt.toTimeString().substring(0, 5)}
+            {createdAt.toLocaleDateString()} - <ClockTime />
           </span>
         </div>
 
