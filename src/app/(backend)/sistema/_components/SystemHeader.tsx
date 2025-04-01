@@ -63,7 +63,7 @@ const SystemHeader = () => {
           >
             <PlusCircleIcon size={20} />
           </Link>
-          <div className="flex items-center">
+          <div className="flex items-center font-mono justify-center">
             {createdAt.toLocaleDateString()} - <ClockTime />
           </div>
         </div>
