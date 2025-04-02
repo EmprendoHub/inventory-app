@@ -81,13 +81,13 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         header: ({ column }) => (
           <div
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-16 px-2 cursor-pointer"
+            className="text-xs w-auto px-2 cursor-pointer"
           >
             Pedido
           </div>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs w-16">
+          <div className="uppercase text-xs w-auto">
             {row.getValue("orderNo")}
           </div>
         ),
@@ -110,10 +110,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-left text-xs  w-20">Estado</div>,
+        header: () => (
+          <div className="text-left text-[10px]  w-auto">Estado</div>
+        ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white   rounded-md w-24 px-2 ${
+            className={`uppercase text-[12px] text-center text-white   rounded-md w-auto px-2 ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "PENDIENTE"
@@ -135,6 +137,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0,
           }).format(amount);
           return (
             <div className="text-left text-xs font-medium">{formatted}</div>
@@ -176,6 +180,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0,
           }).format(totalAmount);
           return (
             <div className="text-left text-xs font-medium">{formatted}</div>

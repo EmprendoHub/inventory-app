@@ -105,6 +105,8 @@ export function CashRegisterList({
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
+            maximumFractionDigits: 0,
+            minimumFractionDigits: 0,
           }).format(amount);
           return (
             <div className="text-left text-xs font-medium">{formatted}</div>

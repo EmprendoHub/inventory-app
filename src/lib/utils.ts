@@ -29,6 +29,8 @@ export function formatCurrency({ amount, currency }: iAppProps) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: currency,
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
   }).format(amount);
 }
 
