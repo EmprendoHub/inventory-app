@@ -157,14 +157,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           // }).format(amount);
           return (
             <div
-              className={`text-left text-xs font-medium rounded-full ${
+              className={`flex items-center justify-center text-left text-xs font-medium rounded-full ${
                 amount > 0 ? "bg-emerald-700" : "bg-gray-500"
               }`}
             >
               {amount > 0 ? (
-                <CheckIcon className="text-white" />
+                <CheckIcon className="text-white text-xs" />
               ) : (
-                <X className="text-white" />
+                <X className="text-white text-xs" />
               )}
             </div>
           );
