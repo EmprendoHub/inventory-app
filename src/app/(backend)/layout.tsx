@@ -21,7 +21,7 @@ export default function SystemLayout({
             hidden ? "ml-10 maxmd:ml-0" : "ml-44 maxmd:ml-0"
           } duration-300 ease-in-out`}
         >
-          <SystemHeader />
+          <SystemHeader hidden={hidden} />
           <div className="p-4 maxmd:p-2 flex-1 pt-14 maxmd:pt-12">
             {children}
           </div>
