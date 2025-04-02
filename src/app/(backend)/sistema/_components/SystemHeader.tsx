@@ -75,7 +75,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
               <div
                 ref={buttonRef}
                 className={`flex items-center gap-2 cursor-pointer  ${
-                  hidden ? "mr-0" : "mr-36"
+                  hidden ? "mr-0" : "mr-36 maxmd:mr-0"
                 }`}
                 onClick={toggleMenu}
               >
