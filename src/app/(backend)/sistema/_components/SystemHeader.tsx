@@ -74,7 +74,9 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
             <TooltipTrigger>
               <div
                 ref={buttonRef}
-                className="flex items-center gap-2 cursor-pointer"
+                className={`flex items-center gap-2 cursor-pointer  ${
+                  hidden ? "mr-10" : "mr-44"
+                }`}
                 onClick={toggleMenu}
               >
                 <Image
@@ -105,9 +107,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
             transition={{ duration: 0.5 }}
             className="fixed top-0 right-0 bg-background shadow-lg rounded-lg p-6 z-[9999]"
           >
-            <div
-              className={`flex flex-col gap-3 ${hidden ? "mr-10" : "mr-44"}`}
-            >
+            <div className={`flex flex-col gap-3`}>
               <div className="flex items-start gap-2">
                 <Image
                   src={session?.user?.image || "/images/avatar_placeholder.jpg"}
