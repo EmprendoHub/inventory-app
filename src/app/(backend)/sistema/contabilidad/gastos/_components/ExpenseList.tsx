@@ -41,6 +41,7 @@ import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
   const { data: session } = useSession();
@@ -59,18 +60,27 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
       {
         accessorKey: "type",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
+          <div
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-20"
+            className="text-xs w-20 cursor-pointer"
           >
             Tipo
             <ArrowUpDown />
-          </Button>
+          </div>
         ),
         cell: ({ row }) => (
           <div className="uppercase text-xs w-20">{row.getValue("type")}</div>
         ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: () => <div className="text-left text-xs">Fecha</div>,
+        cell: ({ row }) => {
+          const date = getMexicoGlobalUtcSelectedDate(
+            row.getValue("createdAt")
+          ).toLocaleDateString();
+          return <div className="text-left text-xs font-medium">{date}</div>;
+        },
       },
       {
         accessorKey: "description",

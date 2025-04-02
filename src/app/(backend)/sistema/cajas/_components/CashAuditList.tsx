@@ -40,6 +40,7 @@ import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { CashAuditResponse } from "@/types/accounting";
 import { deleteCashAuditAction } from "../_actions";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function CashAuditList({ audits }: { audits: CashAuditResponse[] }) {
   const { data: session } = useSession();
@@ -57,17 +58,18 @@ export function CashAuditList({ audits }: { audits: CashAuditResponse[] }) {
       {
         accessorKey: "auditDate",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
+          <div
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-16 px-2"
+            className="text-xs w-16 px-2 cursor-pointer"
           >
             Fecha
             <ArrowUpDown />
-          </Button>
+          </div>
         ),
         cell: ({ row }) => {
-          const date = new Date(row.getValue("auditDate")).getUTCDate();
+          const date = getMexicoGlobalUtcSelectedDate(
+            row.getValue("auditDate")
+          ).toLocaleDateString();
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },

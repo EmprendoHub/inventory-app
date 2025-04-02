@@ -38,6 +38,7 @@ import { CheckedState } from "@radix-ui/react-checkbox";
 import { useRouter } from "next/navigation";
 import { deleteTransactionAction } from "../_actions";
 import { useModal } from "@/app/context/ModalContext";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export function TransactionList({
   transactions,
@@ -58,20 +59,20 @@ export function TransactionList({
       {
         accessorKey: "date",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
+          <div
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-20"
+            className="text-xs w-20 cursor-pointer"
           >
             Fecha
             <ArrowUpDown />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="uppercase text-xs w-20">
-            {new Date(row.getValue("date")).toLocaleDateString()}
           </div>
         ),
+        cell: ({ row }) => {
+          const date = getMexicoGlobalUtcSelectedDate(
+            row.getValue("date")
+          ).toLocaleDateString();
+          return <div className="text-left text-xs font-medium">{date}</div>;
+        },
       },
       {
         accessorKey: "description",
