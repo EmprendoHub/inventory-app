@@ -69,10 +69,10 @@ export function CashTransactionList({
       },
       {
         accessorKey: "description",
-        header: () => <div className="flex text-left text-xs w-20">Ref</div>,
+        header: () => <div className="flex text-left text-xs w-36">Ref</div>,
         cell: ({ row }) => (
           <div
-            className={`flex uppercase text-[12px] text-center text-white  w-20 rounded-md  px-2 leading-none`}
+            className={`flex uppercase text-[12px] text-center text-white  w-36 rounded-md  px-2 leading-none`}
           >
             {row.getValue("description")}
           </div>
