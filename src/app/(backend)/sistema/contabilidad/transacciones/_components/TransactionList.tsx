@@ -68,9 +68,7 @@ export function TransactionList({
           </div>
         ),
         cell: ({ row }) => {
-          const date = getMexicoGlobalUtcSelectedDate(
-            row.getValue("date")
-          ).toLocaleDateString();
+          const date = getMexicoGlobalUtcSelectedDate(row.getValue("date"));
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },

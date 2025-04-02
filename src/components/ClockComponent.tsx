@@ -1,16 +1,18 @@
 "use client";
 
-import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
+import { getMexicoGlobalUtcSelectedDateTime } from "@/lib/utils";
 import { useState, useEffect } from "react";
 
 const ClockTime = () => {
-  const [time, setTime] = useState(getMexicoGlobalUtcSelectedDate(new Date()));
+  const [time, setTime] = useState(
+    getMexicoGlobalUtcSelectedDateTime(new Date())
+  );
 
   useEffect(() => {
     let animationFrameId: number;
 
     const updateClock = () => {
-      setTime(getMexicoGlobalUtcSelectedDate(new Date()));
+      setTime(getMexicoGlobalUtcSelectedDateTime(new Date()));
       animationFrameId = requestAnimationFrame(updateClock);
     };
 

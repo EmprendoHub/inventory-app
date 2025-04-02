@@ -14,7 +14,7 @@ import { PiInvoice } from "react-icons/pi";
 import { RiSofaFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import { RBAC_CONFIG } from "./rbac-config";
-import { toZonedTime } from "date-fns-tz";
+import { format, toZonedTime } from "date-fns-tz";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -116,6 +116,14 @@ export function getMexicoGlobalUtcDate() {
 }
 
 export function getMexicoGlobalUtcSelectedDate(date: Date | string) {
+  // Define your desired time zone (e.g., 'America/Mexico_City')
+  const timeZone = "America/Mexico_City";
+  const zonedDate = toZonedTime(date, timeZone);
+  // Format the date as desired - you can customize this format
+  return format(zonedDate, "yyyy-MM-dd HH:mm:ss", { timeZone });
+}
+
+export function getMexicoGlobalUtcSelectedDateTime(date: Date | string) {
   // Define your desired time zone (e.g., 'America/Mexico_City')
   const timeZone = "America/Mexico_City";
   const zonedDate = toZonedTime(date, timeZone);

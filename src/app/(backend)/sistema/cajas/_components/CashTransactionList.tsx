@@ -130,7 +130,7 @@ export function CashTransactionList({
         cell: ({ row }) => {
           const date = getMexicoGlobalUtcSelectedDate(
             row.getValue("createdAt")
-          ).toLocaleDateString();
+          );
           return (
             <div className="text-left text-xs font-medium w-5">{date}</div>
           );

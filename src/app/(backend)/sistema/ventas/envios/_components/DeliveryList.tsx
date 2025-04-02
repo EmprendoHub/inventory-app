@@ -172,9 +172,7 @@ export function DeliveryList({
         cell: ({ row }) => (
           <div className="text-xs font-medium  maxmd:hidden">
             {row.original.deliveryDate
-              ? getMexicoGlobalUtcSelectedDate(
-                  row.getValue("deliveryDate")
-                ).toLocaleDateString()
+              ? getMexicoGlobalUtcSelectedDate(row.getValue("deliveryDate"))
               : "N/A"}
           </div>
         ),

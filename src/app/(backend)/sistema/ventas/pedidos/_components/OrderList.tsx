@@ -184,7 +184,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         cell: ({ row }) => {
           const date = getMexicoGlobalUtcSelectedDate(
             row.getValue("createdAt")
-          ).toLocaleDateString();
+          );
           return (
             <div className="text-left text-xs maxmd:hidden  font-medium">
               {date}

@@ -69,7 +69,7 @@ export function CashAuditList({ audits }: { audits: CashAuditResponse[] }) {
         cell: ({ row }) => {
           const date = getMexicoGlobalUtcSelectedDate(
             row.getValue("auditDate")
-          ).toLocaleDateString();
+          );
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },

@@ -78,7 +78,7 @@ export function ExpenseList({ expenses }: { expenses: ExpenseType[] }) {
         cell: ({ row }) => {
           const date = getMexicoGlobalUtcSelectedDate(
             row.getValue("createdAt")
-          ).toLocaleDateString();
+          );
           return <div className="text-left text-xs font-medium">{date}</div>;
         },
       },
