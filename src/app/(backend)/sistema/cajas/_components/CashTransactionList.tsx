@@ -69,12 +69,10 @@ export function CashTransactionList({
       },
       {
         accessorKey: "description",
-        header: () => (
-          <div className="text-left text-xs maxmd:hidden w-20">Ref</div>
-        ),
+        header: () => <div className="flex text-left text-xs w-20">Ref</div>,
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white maxmd:hidden  rounded-md w-60 px-2 leading-none`}
+            className={`flex uppercase text-[12px] text-center text-white  w-20 rounded-md  px-2 leading-none`}
           >
             {row.getValue("description")}
           </div>
@@ -98,14 +96,14 @@ export function CashTransactionList({
       },
       {
         accessorKey: "type",
-        header: () => <div className="text-left text-xs w-16">Tipo</div>,
+        header: () => <div className="text-left text-xs w-auto">Tipo</div>,
         cell: ({ row }) => (
           <div
             className={`uppercase text-[12px] text-center text-white  ${
               row.getValue("type") === "RETIRO"
                 ? "bg-emerald-800"
                 : "bg-blue-700"
-            } rounded-md w-16 px-2 `}
+            } rounded-md w-auto px-2 `}
           >
             {row.getValue("type")}
           </div>

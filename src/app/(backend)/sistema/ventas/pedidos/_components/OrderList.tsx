@@ -95,7 +95,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       {
         accessorKey: "client",
         header: () => (
-          <div className="text-left text-xs w-32 flex">Cliente</div>
+          <div className="text-center text-xs w-32 flex">Cliente</div>
         ),
         cell: ({ row }) => {
           const client: clientType = row.getValue("client");
@@ -157,14 +157,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           // }).format(amount);
           return (
             <div
-              className={`flex items-center justify-center text-left text-xs font-medium rounded-full ${
+              className={`flex items-center py-1 justify-center text-left text-xs font-medium rounded-full ${
                 amount > 0 ? "bg-emerald-700" : "bg-gray-500"
               }`}
             >
               {amount > 0 ? (
-                <CheckIcon className="text-white text-xs" />
+                <CheckIcon size={14} className="text-white text-xs" />
               ) : (
-                <X className="text-white text-xs" />
+                <X size={14} className="text-white text-xs" />
               )}
             </div>
           );
