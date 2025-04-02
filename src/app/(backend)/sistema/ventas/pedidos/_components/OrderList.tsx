@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
+import { CheckIcon, Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -79,14 +79,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       {
         accessorKey: "orderNo",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
+          <div
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="text-xs w-16 px-2"
+            className="text-xs w-16 px-2 cursor-pointer"
           >
             Pedido
-            <ArrowUpDown />
-          </Button>
+          </div>
         ),
         cell: ({ row }) => (
           <div className="uppercase text-xs w-16">
@@ -96,12 +94,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "client",
-        header: () => <div className="text-left text-xs w-48">Cliente</div>,
+        header: () => (
+          <div className="text-left text-xs w-32 flex">Cliente</div>
+        ),
         cell: ({ row }) => {
           const client: clientType = row.getValue("client");
           return (
             <div
-              className={`uppercase text-[12px] text-center text-white rounded-md w-48 px-2 bg-sky-900`}
+              className={`uppercase flex text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900`}
             >
               {client.name}
             </div>
@@ -143,19 +143,25 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "delivery",
-        header: () => (
-          <div className="text-left maxsm:hidden text-xs">Envió</div>
-        ),
+        header: () => <div className="text-left text-xs">Envió</div>,
         cell: ({ row }) => {
           const delivery = row.getValue("delivery") as DeliveryType;
           const amount = delivery?.price || 0;
-          const formatted = new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-          }).format(amount);
+          // const formatted = new Intl.NumberFormat("en-US", {
+          //   style: "currency",
+          //   currency: "USD",
+          // }).format(amount);
           return (
-            <div className="text-left text-xs font-medium  maxsm:hidden">
-              {formatted}
+            <div
+              className={`text-left text-xs font-medium rounded-full ${
+                amount > 0 ? "bg-emerald-700" : "bg-gray-500"
+              }`}
+            >
+              {amount > 0 ? (
+                <CheckIcon className="text-white" />
+              ) : (
+                <X className="text-white" />
+              )}
             </div>
           );
         },
@@ -178,18 +184,12 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "createdAt",
-        header: () => (
-          <div className="text-left maxmd:hidden  text-xs">Fecha</div>
-        ),
+        header: () => <div className="text-left text-xs">Fecha</div>,
         cell: ({ row }) => {
           const date = getMexicoGlobalUtcSelectedDate(
             row.getValue("createdAt")
           );
-          return (
-            <div className="text-left text-xs maxmd:hidden  font-medium">
-              {date}
-            </div>
-          );
+          return <div className="text-left text-xs  font-medium">{date}</div>;
         },
       },
       {
