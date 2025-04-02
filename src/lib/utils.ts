@@ -15,15 +15,7 @@ import { RiSofaFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import { RBAC_CONFIG } from "./rbac-config";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
-import { format, parseISO } from "date-fns";
 
-export function formatDateString(date: Date | string) {
-  // Parse the string to a Date object if it's a string
-  const dateObj = typeof date === "string" ? parseISO(date) : date;
-
-  // Format the date without changing the time zone
-  return format(dateObj, "MM/dd/yyyy h:mm a");
-}
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

@@ -96,14 +96,14 @@ export function CashTransactionList({
       },
       {
         accessorKey: "type",
-        header: () => <div className="text-left text-xs">Tipo</div>,
+        header: () => <div className="text-left text-xs w-16">Tipo</div>,
         cell: ({ row }) => (
           <div
             className={`uppercase text-[12px] text-center text-white  ${
               row.getValue("type") === "RETIRO"
                 ? "bg-emerald-800"
                 : "bg-blue-700"
-            } rounded-md w-auto px-2 `}
+            } rounded-md w-16 px-2 `}
           >
             {row.getValue("type")}
           </div>
@@ -126,13 +126,13 @@ export function CashTransactionList({
       // },
       {
         accessorKey: "createdAt",
-        header: () => <div className="text-left text-xs w-5">Fecha</div>,
+        header: () => <div className="text-left text-xs w-auto">Fecha</div>,
         cell: ({ row }) => {
           const date = getMexicoGlobalUtcSelectedDate(
             row.getValue("createdAt")
           );
           return (
-            <div className="text-left text-xs font-medium w-5">{date}</div>
+            <div className="text-left text-xs font-medium w-auto">{date}</div>
           );
         },
       },
