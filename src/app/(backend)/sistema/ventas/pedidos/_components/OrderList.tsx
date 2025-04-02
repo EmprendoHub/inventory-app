@@ -101,7 +101,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           const client: clientType = row.getValue("client");
           return (
             <div
-              className={`uppercase flex text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900`}
+              className={`uppercase flex justify-center items-center text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900`}
             >
               {client.name}
             </div>
@@ -157,7 +157,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           // }).format(amount);
           return (
             <div
-              className={`flex items-center py-1 justify-center text-left text-xs font-medium rounded-full ${
+              className={`flex items-center py-1.5 justify-center text-left text-xs font-medium rounded-full ${
                 amount > 0 ? "bg-emerald-700" : "bg-gray-500"
               }`}
             >
