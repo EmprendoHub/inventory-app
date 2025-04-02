@@ -101,7 +101,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           const client: clientType = row.getValue("client");
           return (
             <div
-              className={`uppercase flex justify-center items-center text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900`}
+              className={`uppercase flex justify-center items-center text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900 leading-none`}
             >
               {client.name}
             </div>
