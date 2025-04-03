@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 // import { requireUser } from "@/app/utils/hooks";
 import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
-import { getMexicoDate, getMexicoFullDate } from "@/lib/utils";
+import { getMexicoDate, getMexicoGlobalUtcDate } from "@/lib/utils";
 import { sendWhatsAppMessage } from "@/app/(backend)/sistema/ventas/clientes/_actions/chatgpt";
 import { toZonedTime } from "date-fns-tz";
 
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
     const subject = "Resumen Semanal de Ventas, Pagos y Gastos";
     const greeting = `Resumen Semanal de Ventas, Pagos y Gastos:`;
     const title = `A continuación encontraras un resumen de ventas, pagos y gastos semanales de tu negocio.`;
-    const todaysDate = `${getMexicoFullDate(new Date())}`;
+    const todaysDate = `${getMexicoGlobalUtcDate().toLocaleString()}`;
     const bodyHeader = `Ventas:`;
     const bodyTwoHeader = `Pagos:`;
     const bodyThreeHeader = `Gastos:`;
