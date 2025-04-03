@@ -106,7 +106,14 @@ const addChart = (
 
     switch (reportType) {
       case "sales":
-        value = items.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+        value = items.reduce(
+          (sum, item) =>
+            sum +
+            (item.totalAmount +
+              (item.delivery?.price ?? 0) -
+              (item.discount ?? 0)),
+          0
+        );
         break;
       case "inventory":
         value = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -131,7 +138,14 @@ const addChart = (
 
     switch (reportType) {
       case "sales":
-        value = items.reduce((sum, item) => sum + (item.totalAmount || 0), 0);
+        value = items.reduce(
+          (sum, item) =>
+            sum +
+            (item.totalAmount +
+              (item.delivery?.price ?? 0) -
+              (item.discount ?? 0)),
+          0
+        );
         break;
       case "inventory":
         value = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -392,7 +406,13 @@ export const generateReportAction = async (formData: FormData) => {
               if (field === "createdAt") {
                 rowData.push(format(new Date(item.createdAt), "dd/MM/yyyy"));
               } else if (field === "totalAmount") {
-                rowData.push(formatCurrency(item.totalAmount));
+                rowData.push(
+                  formatCurrency(
+                    item.totalAmount +
+                      (item.delivery?.price ?? 0) -
+                      (item.discount ?? 0)
+                  )
+                );
               } else if (field === "client.name") {
                 rowData.push(item.client?.name || "Sin cliente");
               } else if (field === "orderItems.length") {
@@ -402,7 +422,11 @@ export const generateReportAction = async (formData: FormData) => {
                   (sum: number, payment: any) => sum + payment.amount,
                   0
                 );
-                const isPaid = totalPaid >= item.totalAmount;
+                const isPaid =
+                  totalPaid >=
+                  item.totalAmount +
+                    (item.delivery?.price ?? 0) -
+                    (item.discount ?? 0);
                 rowData.push(isPaid ? "Pagado" : "Pendiente");
               } else if (field === "paymentMethod") {
                 const methods = item.payments
