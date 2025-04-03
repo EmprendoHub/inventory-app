@@ -254,7 +254,7 @@ export const generateReportAction = async (formData: FormData) => {
     doc.text(
       `Período: ${getMexicoGlobalUtcSelectedDate(
         startDate
-      )} - ${getMexicoGlobalUtcSelectedDate(endDate)}`,
+      )} - ${getMexicoGlobalUtcSelectedDate(adjustedEndDate)}`,
       105,
       35,
       { align: "center" }
