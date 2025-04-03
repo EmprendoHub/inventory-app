@@ -249,17 +249,21 @@ export const generateReportAction = async (formData: FormData) => {
     doc.text(reportTitle, 105, 25, { align: "center" });
     doc.setFontSize(10);
     doc.text(
-      `Período: ${format(new Date(startDate), "dd/MM/yyyy")} - ${format(
-        new Date(endDate),
-        "dd/MM/yyyy"
-      )}`,
+      `Período: ${getMexicoGlobalUtcSelectedDate(
+        startDate
+      )} - ${getMexicoGlobalUtcSelectedDate(new Date(endDate))}`,
       105,
       35,
       { align: "center" }
     );
-    doc.text(`Generado: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 105, 40, {
-      align: "center",
-    });
+    doc.text(
+      `Generado: ${getMexicoGlobalUtcSelectedDate(new Date())}`,
+      105,
+      40,
+      {
+        align: "center",
+      }
+    );
 
     switch (reportType) {
       case "sales": {
