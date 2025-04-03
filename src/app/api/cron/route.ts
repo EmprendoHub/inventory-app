@@ -47,6 +47,9 @@ export async function GET(request: Request) {
           lte: today, // Orders created on or before today
         },
       },
+      include: {
+        delivery: true,
+      },
     });
 
     const payments = await prisma.payment.findMany({
@@ -68,7 +71,13 @@ export async function GET(request: Request) {
     });
 
     // Calculate totals
-    const totalSales = orders.reduce((acc, item) => acc + (item.totalAmount - (item.discount ?? 0)), 0);
+    // Calculate totals
+    const totalSales = orders.reduce(
+      (acc, item) =>
+        acc +
+        (item.totalAmount + (item.delivery?.price ?? 0) - (item.discount ?? 0)),
+      0
+    );
     // const totalPayments = payments.reduce((acc, item) => acc + item.amount, 0);
     const totalTransferPayments = payments.reduce(
       (acc, item) =>
@@ -133,7 +142,11 @@ export async function GET(request: Request) {
                       <tr>
                         <td>${item.orderNo}</td>
                         <td>${getMexicoDate(item.createdAt)}</td>
-                        <td>$${(item.totalAmount - (item.discount ?? 0)).toLocaleString(undefined, {
+                        <td>$${(
+                          item.totalAmount +
+                          (item.delivery?.price ?? 0) -
+                          (item.discount ?? 0)
+                        ).toLocaleString(undefined, {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}</td>
