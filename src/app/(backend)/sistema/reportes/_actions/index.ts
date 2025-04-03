@@ -12,6 +12,7 @@ declare module "jspdf" {
 }
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 // Helper for getting month name from date
 const getMonthName = (date: Date) => {
@@ -404,7 +405,7 @@ export const generateReportAction = async (formData: FormData) => {
             const rowData: any[] = [];
             for (const field of dataFields) {
               if (field === "createdAt") {
-                rowData.push(format(new Date(item.createdAt), "dd/MM/yyyy"));
+                rowData.push(getMexicoGlobalUtcSelectedDate(item.createdAt));
               } else if (field === "totalAmount") {
                 rowData.push(
                   formatCurrency(
@@ -1135,7 +1136,7 @@ export const generateReportAction = async (formData: FormData) => {
             const rowData: any[] = [];
             for (const field of dataFields) {
               if (field === "createdAt") {
-                rowData.push(format(new Date(item.createdAt), "dd/MM/yyyy"));
+                rowData.push(getMexicoGlobalUtcSelectedDate(item.createdAt));
               } else if (field === "amount") {
                 rowData.push(formatCurrency(item.amount));
               } else if (field === "order.client.name") {
@@ -1143,11 +1144,7 @@ export const generateReportAction = async (formData: FormData) => {
               } else if (field === "order.orderNo") {
                 rowData.push(item.order?.orderNo || "");
               } else if (field === "status") {
-                rowData.push(
-                  item.status === "COMPLETED" || item.status === "Completed"
-                    ? "Completado"
-                    : "Pendiente"
-                );
+                rowData.push(item.status);
               } else {
                 // Handle nested properties
                 const getValue = (obj: any, path: string) => {
@@ -1319,7 +1316,7 @@ export const generateReportAction = async (formData: FormData) => {
             const rowData: any[] = [];
             for (const field of dataFields) {
               if (field === "createdAt") {
-                rowData.push(format(new Date(item.createdAt), "dd/MM/yyyy"));
+                rowData.push(getMexicoGlobalUtcSelectedDate(item.createdAt));
               } else if (field === "amount") {
                 rowData.push(formatCurrency(item.amount));
               } else {
