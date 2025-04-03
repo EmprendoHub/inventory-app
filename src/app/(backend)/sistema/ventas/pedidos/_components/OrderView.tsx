@@ -19,7 +19,11 @@ import {
   payOrderAction,
 } from "../_actions";
 import Link from "next/link";
-import { getMexicoDate, getMexicoTime } from "@/lib/utils";
+import {
+  getMexicoDate,
+  getMexicoGlobalUtcSelectedDate,
+  getMexicoTime,
+} from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BsEnvelopeArrowUp, BsWhatsapp } from "react-icons/bs";
 import LogoIcon from "@/components/LogoIcon";
@@ -530,69 +534,75 @@ export default function OrderView({ order }: { order: FullOderType }) {
         </TableBody>
       </Table>
       {/* Totals */}
-      <div className="ml-auto w-80 space-y-1">
-        <div className="flex justify-between">
-          <span className="font-medium">Subtotal:</span>
-          <span>
-            $
-            {subtotal?.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </span>
+      <div className="flex justify-between items-center border-b pb-4 px-4">
+        <div className="flex flex-col gap-2">
+          <h3 className="font-semibold text-lg">Nota</h3>
+          <p className="text-sm text-muted">{order.notes}</p>
         </div>
-        <div className="flex justify-between">
-          <span className="font-medium">Envió:</span>
-          <span>
-            $
-            {(order.delivery?.price || 0).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </span>
-        </div>
-        {order.discount && (
+        <div className="ml-auto w-80 space-y-1">
           <div className="flex justify-between">
-            <span className="font-medium">Descuento:</span>
+            <span className="font-medium">Subtotal:</span>
             <span>
-              -$
-              {(order.discount || 0).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-        )}
-        <div className="flex text-xl justify-between border-t pt-2 font-bold">
-          <span>Gran Total:</span>
-          <span>
-            $
-            {grandTotal?.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </span>
-        </div>
-        <div className="flex flex-col">
-          <div className="flex justify-between">
-            <span className="font-medium">Pagado:</span>
-            <span className="text-emerald-700">
               $
-              {previousPayments.toLocaleString(undefined, {
+              {subtotal?.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="font-medium">Pendiente:</span>
-            <span className="text-yellow-500">
+            <span className="font-medium">Envió:</span>
+            <span>
               $
-              {(grandTotal - previousPayments).toLocaleString(undefined, {
+              {(order.delivery?.price || 0).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
             </span>
+          </div>
+          {order.discount && (
+            <div className="flex justify-between">
+              <span className="font-medium">Descuento:</span>
+              <span>
+                -$
+                {(order.discount || 0).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          )}
+          <div className="flex text-xl justify-between border-t pt-2 font-bold">
+            <span>Gran Total:</span>
+            <span>
+              $
+              {grandTotal?.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex justify-between">
+              <span className="font-medium">Pagado:</span>
+              <span className="text-emerald-700">
+                $
+                {previousPayments.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Pendiente:</span>
+              <span className="text-yellow-500">
+                $
+                {(grandTotal - previousPayments).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -621,7 +631,9 @@ export default function OrderView({ order }: { order: FullOderType }) {
             <TableBody>
               {order.payments?.map((item, index) => (
                 <TableRow key={index}>
-                  <TableCell>{item.createdAt.toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {getMexicoGlobalUtcSelectedDate(item.createdAt)}
+                  </TableCell>
                   <TableCell>
                     $
                     {item.amount.toLocaleString(undefined, {
@@ -640,7 +652,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
                       <TableCell>
                         <div
                           onClick={() => deletePayment(item.id)}
-                          className="bg-red-600 text-white rounded-md p-2 cursor-pointer"
+                          className="bg-red-700 text-white rounded-md p-2 cursor-pointer w-auto"
                         >
                           <X />
                         </div>
