@@ -269,6 +269,7 @@ export const generateReportAction = async (formData: FormData) => {
             client: true,
             orderItems: true,
             payments: true,
+            delivery: true,
           },
           orderBy:
             sortBy === "date"
@@ -288,7 +289,11 @@ export const generateReportAction = async (formData: FormData) => {
 
         // Calculate overall totals
         const totalAmount = data.reduce(
-          (sum, order) => sum + order.totalAmount,
+          (sum, order) =>
+            sum +
+            (order.totalAmount +
+              (order.delivery?.price ?? 0) -
+              (order.discount ?? 0)),
           0
         );
         const averageOrderValue = totalAmount / data.length;
@@ -439,7 +444,11 @@ export const generateReportAction = async (formData: FormData) => {
 
           // Add group subtotal
           const groupTotal = (groupItems as any[]).reduce(
-            (sum, order) => sum + order.totalAmount,
+            (sum, order) =>
+              sum +
+              (order.totalAmount +
+                (order.delivery?.price ?? 0) -
+                (order.discount ?? 0)),
             0
           );
 

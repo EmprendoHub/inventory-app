@@ -102,7 +102,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           const client: clientType = row.getValue("client");
           return (
             <div
-              className={`uppercase flex justify-center items-center text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900 leading-none`}
+              className={`uppercase py-1 flex justify-center items-center text-[12px] text-center text-white rounded-md w-32 px-2 bg-sky-900 leading-none`}
             >
               {client.name}
             </div>
@@ -116,7 +116,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         ),
         cell: ({ row }) => (
           <div
-            className={`uppercase text-[12px] text-center text-white   rounded-md w-auto px-2 ${
+            className={`uppercase text-[12px] text-center text-white   rounded-md w-auto px-1 ${
               row.original.status === "CANCELADO"
                 ? "bg-red-900"
                 : row.original.status === "PENDIENTE"
