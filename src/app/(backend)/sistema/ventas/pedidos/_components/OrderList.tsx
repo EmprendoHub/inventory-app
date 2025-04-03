@@ -49,6 +49,7 @@ import { UserType } from "@/types/users";
 import { DeliveryType } from "@/types/delivery";
 import { GiCheckMark } from "react-icons/gi";
 import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
+import { FaTruckFast } from "react-icons/fa6";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -147,7 +148,11 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       },
       {
         accessorKey: "delivery",
-        header: () => <div className="text-left text-xs">Envió</div>,
+        header: () => (
+          <div className="text-left text-xs w-auto">
+            <FaTruckFast size={16} />
+          </div>
+        ),
         cell: ({ row }) => {
           const delivery = row.getValue("delivery") as DeliveryType;
           const amount = delivery?.price || 0;
@@ -157,7 +162,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           // }).format(amount);
           return (
             <div
-              className={`flex items-center py-1.5 justify-center text-left text-xs font-medium rounded-full ${
+              className={`flex items-center py-1.5 justify-center text-left text-xs font-medium rounded-full w-auto ${
                 amount > 0 ? "bg-emerald-700" : "bg-gray-500"
               }`}
             >
@@ -176,7 +181,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         cell: ({ row }) => {
           const amount = parseFloat(row.getValue("totalAmount"));
           const order = row.getAllCells()[0].row.original;
-          const totalAmount = amount - (order.discount ?? 0);
+          const totalAmount =
+            amount + (order.delivery?.price ?? 0) - (order.discount ?? 0);
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",
