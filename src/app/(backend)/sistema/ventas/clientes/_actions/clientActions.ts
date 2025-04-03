@@ -215,6 +215,8 @@ export async function updateClient(
     }
     revalidatePath(`/sistemas/ventas/clientes/editar/${clientId}`);
     revalidatePath("/sistema/ventas/clientes");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
+
     return {
       errors: {},
       success: true,
