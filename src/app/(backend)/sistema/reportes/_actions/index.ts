@@ -12,7 +12,10 @@ declare module "jspdf" {
 }
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
+import {
+  getMexicoGlobalUtcDate,
+  getMexicoGlobalUtcSelectedDate,
+} from "@/lib/utils";
 
 // Helper for getting month name from date
 const getMonthName = (date: Date) => {
@@ -251,13 +254,13 @@ export const generateReportAction = async (formData: FormData) => {
     doc.text(
       `Período: ${getMexicoGlobalUtcSelectedDate(
         startDate
-      )} - ${getMexicoGlobalUtcSelectedDate(new Date(endDate))}`,
+      )} - ${getMexicoGlobalUtcSelectedDate(endDate)}`,
       105,
       35,
       { align: "center" }
     );
     doc.text(
-      `Generado: ${getMexicoGlobalUtcSelectedDate(new Date())}`,
+      `Generado: ${getMexicoGlobalUtcDate().toLocaleString()}`,
       105,
       40,
       {
