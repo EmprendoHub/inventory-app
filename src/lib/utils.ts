@@ -1,9 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Shirt, UserPlus } from "lucide-react";
-import { GiClothes } from "react-icons/gi";
-import { TbComponents, TbRulerMeasure } from "react-icons/tb";
+import { BanknoteIcon, FilesIcon, Shirt, UserPlus } from "lucide-react";
+import { GiClothes, GiExpense } from "react-icons/gi";
+import {
+  TbComponents,
+  TbRulerMeasure,
+  TbTransactionDollar,
+} from "react-icons/tb";
 import { BiCategory } from "react-icons/bi";
 import { FaWarehouse } from "react-icons/fa";
 import { IconComponent } from "@/app/constants";
@@ -15,6 +19,7 @@ import { RiSofaFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import { RBAC_CONFIG } from "./rbac-config";
 import { toZonedTime, formatInTimeZone } from "date-fns-tz";
+import { FaCashRegister } from "react-icons/fa6";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -213,6 +218,11 @@ export const iconMap: Record<string, IconComponent> = {
   PiInvoice,
   FaShippingFast,
   RiSofaFill,
+  FaCashRegister,
+  GiExpense,
+  BanknoteIcon,
+  FilesIcon,
+  TbTransactionDollar,
 };
 
 export async function generateUniqueBarcode() {

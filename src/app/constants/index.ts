@@ -98,22 +98,45 @@ export const SALES_ITEMS: InventoryItem[] = [
 
 export const ACCOUNTING_ITEMS: InventoryItem[] = [
   {
-    title: "Gastos",
+    title: "Cuentas",
     iconName: "LiaFileInvoiceDollarSolid",
+    description: "Historial de gastos de negocio.",
+    link: "/sistema/contabilidad/cuentas/nueva",
+    linkAll: "/sistema/contabilidad/cuentas",
+    buttonText: "Gasto Nuevo",
+  },
+  {
+    title: "Cajas",
+    iconName: "FaCashRegister",
+    description: "Historial de cortes de caja.",
+    link: "",
+    linkAll: "/sistema/cajas",
+    buttonText: "",
+  },
+  {
+    title: "Cortes",
+    iconName: "LiaFileInvoiceDollarSolid",
+    description: "Historial de cortes de caja.",
+    link: "",
+    linkAll: "/sistema/cajas/auditoria",
+    buttonText: "",
+  },
+  {
+    title: "Gastos",
+    iconName: "GiExpense",
     description: "Historial de gastos de negocio.",
     link: "/sistema/contabilidad/gastos/nuevo",
     linkAll: "/sistema/contabilidad/gastos",
     buttonText: "Gasto Nuevo",
   },
   {
-    title: "Cortes",
-    iconName: "FaUsers",
-    description: "Historial de cortes de caja.",
+    title: "Transacciones",
+    iconName: "TbTransactionDollar",
+    description: "Historial de gastos de negocio.",
     link: "",
-    linkAll: "sistema/cajas/auditoria",
+    linkAll: "/sistema/contabilidad/transacciones",
     buttonText: "",
   },
-
   {
     title: "Ordenes de Compra",
     iconName: "GiPayMoney",

@@ -529,7 +529,7 @@ export default function SideBar({
                   <div className="flex items-center gap-2 ">
                     <Building2 size={16} />
                     <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Contabilidad
+                      ACCG
                     </span>
                   </div>
 
