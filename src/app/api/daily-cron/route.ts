@@ -83,7 +83,7 @@ export async function GET(request: Request) {
     const subject = "Resumen Diario de Ventas, Pagos y Gastos";
     const greeting = `Resumen Diario de Ventas, Pagos y Gastos:`;
     const title = `A continuación encontraras un resumen de ventas, pagos y gastos diarios de tu negocio.`;
-    const todaysDate = `${getMexicoGlobalUtcDate()}`;
+    const todaysDate = `${getMexicoGlobalUtcDate().toLocaleString()}`;
     const bodyHeader = `Ventas:`;
     const bodyTwoHeader = `Pagos:`;
     const bodyThreeHeader = `Gastos:`;

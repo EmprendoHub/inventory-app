@@ -652,9 +652,9 @@ export default function OrderView({ order }: { order: FullOderType }) {
                       <TableCell>
                         <div
                           onClick={() => deletePayment(item.id)}
-                          className="bg-red-700 text-white rounded-md p-2 cursor-pointer w-auto"
+                          className="bg-red-700 text-white rounded-md p-2 cursor-pointer w-[40px]"
                         >
-                          <X />
+                          <X size={16} />
                         </div>
                       </TableCell>
                     )}
