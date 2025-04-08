@@ -2,7 +2,7 @@
 import { OpenAI } from "openai";
 import axios from "axios";
 import prisma from "../db";
-import { ChatCompletionMessageParam } from "openai/resources/chat";
+import { ChatCompletionMessageParam } from "openai/resources";
 import { getMexicoGlobalUtcDate } from "../utils";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
