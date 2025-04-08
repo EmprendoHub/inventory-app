@@ -2,7 +2,7 @@
 
 import OpenAI from "openai";
 import prisma from "@/lib/db";
-import { ChatCompletionMessageParam } from "openai/resources/chat";
+import { ChatCompletionMessageParam } from "openai/resources";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
