@@ -7,12 +7,15 @@ export async function middleware(request: any) {
   const pathname = request.nextUrl.pathname;
   let redirectUrl;
 
-  // console.log("Middleware triggered for path:", pathname);
-
   // Redirect to login if not authenticated
   if (!token) {
     // console.log("User not authenticated, redirecting to login");
     if (!["/legal", "/legal"].some((path) => pathname.includes(path))) {
+      if (pathname === "/") {
+        // Redirect to the login page if the user is not authenticated and trying to access the root path
+        return NextResponse.next();
+      }
+      // Redirect to the login page if the user is not authenticated and trying to access any other path
       redirectUrl = new URL("/iniciar", request.url);
       redirectUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(redirectUrl);

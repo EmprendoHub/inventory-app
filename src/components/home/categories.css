@@ -1,0 +1,27 @@
+/* Octagon container for image and overlay */
+.octagon-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Octagonal shape using clip-path */
+.octagon {
+  clip-path: circle(50%);
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Overlay with the same octagonal shape */
+.octagon-overlay {
+  clip-path: circle(50%);
+  background: rgba(0, 0, 0, 0.4); /* Semi-transparent overlay */
+  pointer-events: none; /* Avoid blocking interactions */
+  transition: background 0.3s ease-in-out;
+  width: 100%;
+  height: 100%;
+}
+
+.octagon-container:hover .octagon-overlay {
+  background: rgba(0, 0, 0, 0.6); /* Darker overlay on hover */
+}

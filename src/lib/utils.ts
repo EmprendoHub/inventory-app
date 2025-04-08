@@ -257,6 +257,11 @@ export function isRouteAllowed(role: string, pathname: string): boolean {
     return true;
   }
 
+  // Always allow access to /no-autorizado
+  if (pathname === "/") {
+    return true;
+  }
+
   // If the role has access to all routes
   if (allowedRoutes.includes("*")) {
     return true;

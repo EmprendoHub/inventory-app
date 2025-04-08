@@ -1,0 +1,89 @@
+.textSlider,
+.imageSlider {
+  position: relative;
+  width: 100%;
+}
+
+/* // Base slide styles */
+.slide {
+  overflow: hidden;
+  position: absolute;
+  width: 100%;
+  top: 0;
+  left: 0;
+  transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+  opacity: 0;
+
+  &.active {
+    opacity: 1;
+    transform: translateX(0%);
+    z-index: 2;
+  }
+}
+
+/* // Image-specific styles */
+.imageSlider {
+  height: 100%;
+
+  .slide {
+    height: 100%;
+  }
+}
+
+.fromLeft {
+  transform: translateX(-100%);
+  &.active {
+    transform: translateX(0%);
+  }
+}
+
+.fromRight {
+  transform: translateX(100%);
+  &.active {
+    transform: translateX(0%);
+  }
+}
+
+.arrowLeft,
+.arrowRight {
+  position: absolute;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* // Social Media Circle */
+.circle {
+  height: 60px;
+  width: 60px;
+  z-index: 10;
+
+  .background {
+    fill: transparent;
+    stroke: #ffffff00;
+    transition: all 200ms ease;
+  }
+
+  .foreground {
+    fill: transparent;
+    stroke-dasharray: 188;
+    stroke-dashoffset: 188;
+    stroke: #32a2ed;
+    transform-origin: 50% 50%;
+    transform: rotate(-270deg);
+    transition: all 800ms ease;
+  }
+
+  &:hover {
+    cursor: pointer;
+    color: #32a2ed;
+
+    .background {
+      stroke: transparent;
+    }
+
+    .foreground {
+      stroke-dashoffset: 0;
+      transform: rotate(-90deg);
+    }
+  }
+}
