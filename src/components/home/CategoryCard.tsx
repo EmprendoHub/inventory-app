@@ -1,9 +1,8 @@
 "use client";
 import Link from "next/link";
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import ModalProduct from "../layout/ModalProduct";
 
 interface Category {
   id: string;
@@ -34,15 +33,15 @@ export default function CategoryCard({
   category: Category;
   index: number;
 }) {
-  const [showModal, setShowModal] = useState(false);
+  // const [showModal, setShowModal] = useState(false);
 
   return (
     <>
-      <ModalProduct
+      {/* <ModalProduct
         showModal={showModal}
         setShowModal={setShowModal}
         data={category}
-      />
+      /> */}
       <Link
         key={category.title}
         href={`${category.name}`}
