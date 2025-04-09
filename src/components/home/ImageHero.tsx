@@ -54,7 +54,7 @@ const ImageHero = () => {
             }}
             className=" font-secondary text-lg mb-8  maxmd:text-sm flex flex-col gap-3"
           >
-            <p className=" flex items-center gap-2">
+            <p className=" flex items-center gap-2 text-lg">
               {"Precios bajos y productos de calidad"}
             </p>
           </motion.div>

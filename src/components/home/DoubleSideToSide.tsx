@@ -6,7 +6,7 @@ import { CiCircleChevDown } from "react-icons/ci";
 
 const DoubleSideToSide = () => {
   return (
-    <div className="w-full min-h-full  py-40" id="acerca">
+    <div className="w-full min-h-full bg-slate-100 py-40" id="acerca">
       <div className="h-full py-8">
         {/* Top Side */}
         <div className="h-full max-w-5xl mx-auto m-8">
@@ -25,7 +25,7 @@ const DoubleSideToSide = () => {
                 className="relative w-[20rem] h-[20rem] maxsm:w-[15rem] maxsm:h-[15rem]  rounded-full overflow-hidden ml-10"
               >
                 {/* Diamond image container */}
-                <div className="absolute  w-[141%] h-[141%] top-[-20.5%] left-[-20.5%] ">
+                <div className="absolute w-[141%] h-[141%] top-[-20.5%] left-[-20.5%] ">
                   <Image
                     className="object-cover w-full h-full"
                     src={"/images/Buffetera.webp"}
@@ -39,23 +39,26 @@ const DoubleSideToSide = () => {
             </div>
             {/* text */}
             <div className="relative maxmd:ml-5 w-6/12 pr-20 maxmd:w-full">
-              <motion.h2
-                initial={{ x: -180, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1.2 }}
-                className="text-5xl maxmd:text-3xl text-gray-800 dark:text-gray-300 font-primary leading-none mb-3 w-[90%] h-full"
-              >
-                <span>{"Muebles de alta calidad"} </span>
-              </motion.h2>
-              <motion.h2
-                initial={{ x: -180, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
-                transition={{ duration: 1.6 }}
-                className="text-5xl maxmd:text-3xl text-gray-800 dark:text-gray-300 font-primary leading-none mb-3 w-[90%] h-full"
-              >
-                <span className="text-primary">{"a precios accesibles"}</span>
-              </motion.h2>
-              <div className="text-gray-800 dark:text-gray-300 font-secondary text-sm mb-2 maxmd:text-sm flex flex-col gap-3 min-h-full">
+              <h2>
+                <motion.span
+                  initial={{ x: -180, opacity: 0 }}
+                  whileInView={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 1.2 }}
+                  className="text-5xl maxmd:text-3xl text-gray-800  font-primary leading-none mb-3 w-[90%] h-full"
+                >
+                  {"Vibras de hotel"}{" "}
+                </motion.span>
+                <motion.span
+                  initial={{ x: -180, opacity: 0 }}
+                  whileInView={{ x: 0, opacity: 1 }}
+                  transition={{ duration: 1.6 }}
+                  className="text-5xl maxmd:text-3xl font-primary leading-none mb-3 w-[90%] h-full text-primary"
+                >
+                  {" en tu hogar"}
+                </motion.span>
+              </h2>
+
+              <div className="text-gray-800 font-secondary text-lg mb-2 maxmd:text-base flex flex-col gap-3 min-h-full">
                 <motion.p
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
@@ -67,10 +70,10 @@ const DoubleSideToSide = () => {
                   }}
                   className="flex items-center gap-2"
                 >
-                  {"homeDic.doublesides.boxTwo.text"}
+                  {"Precios de remate, calidad garantizada"}
                 </motion.p>
               </div>
-              <ul className="text-xs italic text-gray-500 dark:text-gray-300 font-secondary flex flex-col gap-2">
+              <ul className="text-base maxsm:text-sm italic text-gray-500 font-secondary flex flex-col gap-2">
                 <motion.li
                   initial={{ opacity: 0, x: 0 }}
                   whileInView={{ opacity: 1, x: 1 }}
@@ -140,7 +143,7 @@ const DoubleSideToSide = () => {
                 <span>{"Remodela tu hogar "} </span>
                 <span className="text-primary">{"a precios accesibles"}</span>
               </motion.h2>
-              <div className="text-gray-800 dark:text-gray-300 font-secondary text-sm mb-8 maxmd:text-sm flex flex-col gap-3 min-h-full">
+              <div className="text-gray-800 dark:text-gray-300 font-secondary text-lg mb-8 maxmd:text-base flex flex-col gap-3 min-h-full">
                 <motion.p
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
@@ -157,7 +160,7 @@ const DoubleSideToSide = () => {
                   }
                 </motion.p>
               </div>
-              <ul className="text-xs italic text-gray-500 dark:text-gray-300 font-secondary flex flex-col gap-2">
+              <ul className="text-base maxsm:text-sm italic text-gray-500 dark:text-gray-300 font-secondary flex flex-col gap-2">
                 <motion.li
                   initial={{ opacity: 0, x: 0 }}
                   whileInView={{ opacity: 1, x: 1 }}
