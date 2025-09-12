@@ -774,3 +774,68 @@ export async function sendRecentOrdersInteractiveMessage(
     return false; // Request failed
   }
 }
+
+export async function getAllPOSProductNoFilter() {
+  try {
+    // Get all items with their stock information
+    const items = await prisma.item.findMany({
+      where: {
+        status: "ACTIVE",
+        stocks: {
+          some: {
+            availableQty: { gt: 0 }, // Only items with available stock
+          },
+        },
+      },
+      include: {
+        stocks: {
+          where: {
+            availableQty: { gt: 0 }, // Only stocks with available quantity
+          },
+        },
+        variants: true,
+      },
+      orderBy: [
+        {
+          name: "asc", // Sort alphabetically by name
+        },
+      ],
+    });
+
+    // Calculate total counts
+    const filteredProductsCount = items.length;
+
+    // Transform data to match expected format
+    const products = items.map((item) => {
+      const totalAvailableStock = item.stocks.reduce(
+        (sum, stock) => sum + stock.availableQty,
+        0
+      );
+
+      return {
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        sku: item.sku,
+        barcode: item.barcode,
+        price: item.price,
+        cost: item.cost,
+        mainImage: item.mainImage,
+        images: item.images,
+        status: item.status,
+        totalAvailableStock,
+        stocks: item.stocks,
+        variants: item.variants,
+      };
+    });
+
+    // Return the products and count of filtered products
+    return {
+      products,
+      filteredProductsCount,
+    };
+  } catch (error: any) {
+    console.error("Error fetching POS products:", error);
+    throw new Error(`Failed to fetch POS products: ${error.message}`);
+  }
+}

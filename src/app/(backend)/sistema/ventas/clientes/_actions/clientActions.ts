@@ -26,20 +26,21 @@ export async function createClient(
   const errors: { [key: string]: string[] } = {};
 
   if (!name || name.trim() === "") {
-    errors.name = ["Name is required"];
+    errors.name = ["El nombre es requerido"];
   }
 
   if (!email || !/\S+@\S+\.\S+/.test(email)) {
-    errors.email = ["Valid email is required"];
+    errors.email = ["Se requiere un email válido"];
   }
 
-  if (!phone || !/^\+?[1-9]\d{1,14}$/.test(phone)) {
-    errors.phone = ["Valid phone number is required"];
+  if (!phone || phone.trim() === "") {
+    errors.phone = ["El teléfono es requerido"];
+  } else if (!/^\d{10}$/.test(phone.replace(/\D/g, ""))) {
+    errors.phone = ["El teléfono debe tener 10 dígitos"];
   }
 
-  if (!address || address.trim() === "") {
-    errors.address = ["Address is required"];
-  }
+  // Make address optional - only validate if provided and not empty
+  // This allows the OrderForm modal to work without address field
 
   // Convert the image file to Base64
   let savedImageUrl = `${process.env.MINIO_URL}avatars/avatar_placeholder.jpg`;
@@ -67,7 +68,7 @@ export async function createClient(
     return {
       errors,
       success: false,
-      message: "Please fix the errors before submitting.",
+      message: "Por favor corrija los errores antes de enviar.",
     };
   }
   const createdAt = getMexicoGlobalUtcDate();
@@ -180,7 +181,7 @@ export async function updateClient(
     return {
       errors,
       success: false,
-      message: "Please fix the errors before submitting.",
+      message: "Por favor corrija los errores antes de enviar.",
     };
   }
   const createdAt = getMexicoGlobalUtcDate();

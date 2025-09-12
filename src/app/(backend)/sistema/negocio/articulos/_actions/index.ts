@@ -482,7 +482,7 @@ export async function createItemGroup(
     return {
       errors,
       success: false,
-      message: "Please fix the errors before submitting.",
+      message: "Por favor corrija los errores antes de enviar.",
     };
   }
 
@@ -580,7 +580,7 @@ export async function updateItemGroupAction(
     return {
       errors,
       success: false,
-      message: "Please fix the errors before submitting.",
+      message: "Por favor corrija los errores antes de enviar.",
     };
   }
 

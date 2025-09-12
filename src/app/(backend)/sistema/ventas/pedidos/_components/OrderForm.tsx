@@ -21,7 +21,6 @@ import DateInput from "@/components/DateInput";
 import { useFormState } from "react-dom";
 import Image from "next/image";
 import { useModal } from "@/app/context/ModalContext";
-import TextInput from "@/components/TextInput";
 import { createClient } from "../../clientes/_actions/clientActions";
 import { X } from "lucide-react";
 
@@ -53,6 +52,7 @@ export default function OrderForm({
   const { showModal } = useModal();
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [error, setError] = useState("");
 
   const [selectedClient, setSelectedClient] = React.useState<clientType | null>(
@@ -118,6 +118,7 @@ export default function OrderForm({
 
     formData.append("email", email);
     formData.append("phone", phone);
+    formData.append("address", "Sin Dirección");
     // Call the form action
     const result = await createClient(state, formData);
     setSending((prev) => !prev);
@@ -135,11 +136,58 @@ export default function OrderForm({
         "client-form"
       ) as HTMLFormElement;
       formElement.reset();
+      // Reset state variables
+      setCustomerName("");
+      setEmail("");
+      setPhone("");
+      setError(""); // Clear any errors
       setShowClientModal(false);
     } else {
-      console.log("result.errors[0]", result.errors.email[0]);
+      // Handle different types of errors
+      let errorMessage = "Error desconocido";
 
-      setError(result.errors.email[0]);
+      if (
+        result.errors &&
+        result.errors.email &&
+        result.errors.email.length > 0
+      ) {
+        errorMessage = result.errors.email[0];
+      } else if (
+        result.errors &&
+        result.errors.phone &&
+        result.errors.phone.length > 0
+      ) {
+        errorMessage = result.errors.phone[0];
+      } else if (
+        result.errors &&
+        result.errors.name &&
+        result.errors.name.length > 0
+      ) {
+        errorMessage = result.errors.name[0];
+      } else if (result.message) {
+        errorMessage = result.message;
+      } else if (typeof result.errors === "string") {
+        errorMessage = result.errors;
+      }
+
+      console.log("Error creating client:", errorMessage);
+      setError(errorMessage);
+    }
+  };
+
+  // Auto-generate email based on customer name
+  const handleCustomerNameChange = (name: string) => {
+    setCustomerName(name);
+    if (name.trim()) {
+      // Remove spaces and special characters, convert to lowercase
+      const cleanName = name.replace(/\s+/g, "").toLowerCase();
+      // Add timestamp (current date and time as number)
+      const timestamp = Date.now();
+      // Generate email
+      const generatedEmail = `${cleanName}${timestamp}@yunuencompany.com`;
+      setEmail(generatedEmail);
+    } else {
+      setEmail("");
     }
   };
 
@@ -160,7 +208,7 @@ export default function OrderForm({
     }
 
     setPhone(formattedPhone);
-    setEmail(formattedPhone.toString() + "@mueblesyuny.com");
+    // Don't auto-generate email from phone anymore since we're using name
   };
 
   useEffect(() => {
@@ -180,13 +228,28 @@ export default function OrderForm({
     const result = await createNewOrder(state, formData);
 
     if (!result.success) {
+      // Get error message with fallback
+      let errorMessage = "Error desconocido al crear el pedido";
+
+      if (result.message) {
+        errorMessage = result.message;
+      } else if (result.errors) {
+        // Try to extract the first error from the errors object
+        const firstError = Object.values(result.errors).find(
+          (err) => Array.isArray(err) && err.length > 0
+        );
+        if (firstError && Array.isArray(firstError)) {
+          errorMessage = firstError[0];
+        }
+      }
+
       await showModal({
         title: "¡Error!",
         type: "delete",
-        text: `${result.message}`,
+        text: errorMessage,
         icon: "error",
       });
-      setSending(false); // Set sending to true
+      setSending(false); // Set sending to false on error
     }
 
     if (result.success) {
@@ -233,7 +296,10 @@ export default function OrderForm({
                 }}
               />
               <div
-                onClick={() => setShowClientModal(true)}
+                onClick={() => {
+                  setError(""); // Clear any previous errors
+                  setShowClientModal(true);
+                }}
                 className="px-4 py-2  bg-blue-500 text-white h-auto w-10 rounded-md cursor-pointer"
               >
                 +
@@ -487,10 +553,16 @@ export default function OrderForm({
       {/*  client Modal */}
       {showClientModal && (
         <div className="fixed top-0 left-0 w-full h-full z-40 bg-black/50">
-          <section className="relative h-auto w-auto flex flex-col items-center justify-center bg-card p-8">
+          <section className="relative h-auto w-[90%]  mx-auto flex flex-col items-center justify-center bg-card p-8">
             <div
               className="absolute z-50 top-0 right-0 p-4 cursor-pointer"
-              onClick={() => setShowClientModal(false)}
+              onClick={() => {
+                setCustomerName("");
+                setEmail("");
+                setPhone("");
+                setError(""); // Clear any errors
+                setShowClientModal(false);
+              }}
             >
               <X size={24} />
             </div>
@@ -508,7 +580,19 @@ export default function OrderForm({
               <div className="flex maxmd:flex-col gap-3 w-full">
                 <div className="w-full flex items-center flex-col gap-3 mt-5">
                   {error && <p className="text-red-500">{error}</p>}
-                  <TextInput name="name" label="Nombre" state={state} />
+                  <div className="w-full">
+                    <label className="block text-sm font-medium mb-1">
+                      Nombre
+                    </label>
+                    <input
+                      className="text-center py-2 rounded-md text-sm bg-input w-full"
+                      type="text"
+                      name="name"
+                      placeholder="Nombre del cliente"
+                      value={customerName}
+                      onChange={(e) => handleCustomerNameChange(e.target.value)}
+                    />
+                  </div>
                   <input
                     className="text-center py-2 rounded-md text-sm bg-input w-full"
                     type="text"
@@ -526,11 +610,11 @@ export default function OrderForm({
                       onChange={(e) => setEmail(e.target.value)}
                     />
 
-                    <TextAreaInput
+                    {/* <TextAreaInput
                       name="address"
                       label="Dirección"
                       state={state}
-                    />
+                    /> */}
                   </div>
                 </div>
               </div>

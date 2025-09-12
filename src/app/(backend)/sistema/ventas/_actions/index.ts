@@ -148,7 +148,7 @@ export async function processPayment(
     return {
       errors,
       success: false,
-      message: "Please fix the errors before submitting.",
+      message: "Por favor corrija los errores antes de enviar.",
     };
   }
 

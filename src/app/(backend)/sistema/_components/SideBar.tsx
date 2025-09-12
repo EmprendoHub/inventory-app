@@ -11,6 +11,7 @@ import {
   Group,
   Home,
   PlusCircle,
+  QrCode,
   Truck,
   Users,
   Users2,
@@ -290,6 +291,19 @@ export default function SideBar({
                   <Users size={16} />
                   <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                     Usuarios
+                  </span>
+                </Link>
+                <Link
+                  className={`flex w-full items-center gap-2  p-1.5  ${
+                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                  } ${
+                    path === "/sistema/qr/productos" ? "bg-blue-600" : ""
+                  } hover:bg-slate-900 rounded-md`}
+                  href={"/sistema/qr/productos"}
+                >
+                  <QrCode size={16} />
+                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                    Generador QR
                   </span>
                 </Link>
                 {["SUPER_ADMIN"].includes(user?.role || "") && (

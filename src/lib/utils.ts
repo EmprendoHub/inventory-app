@@ -298,3 +298,18 @@ export function isGDPRCompliant(user: any): boolean {
     ) // Ensure the consent date is not in the future
   );
 }
+
+const FormattedPrice = ({ amount }: { amount: number }) => {
+  const formattedAmount = amount?.toLocaleString("en-US", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 2,
+  });
+
+  // Remove 'MX' from the formatted amount
+  const amountWithoutMX = formattedAmount?.replace("MX", "").trim();
+
+  return { amountWithoutMX };
+};
+
+export default FormattedPrice;
