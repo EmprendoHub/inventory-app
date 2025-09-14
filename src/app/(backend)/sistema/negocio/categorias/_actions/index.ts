@@ -38,6 +38,7 @@ export const createCategory = async (
   };
   await prisma.category.create({ data: newCatData });
   revalidatePath("/sistema/negocio/categorias");
+  revalidatePath("/sistema/negocio/articulos/nuevo");
   return { success: true, message: "Categoría creada exitosamente!" };
 };
 
@@ -86,7 +87,8 @@ export async function updateCategoryAction(
         updatedAt: createdAt,
       },
     });
-    revalidatePath(`/sistemas/negocio/categorias/editar/${rawData.categoryId}`);
+    revalidatePath(`/sistema/negocio/categorias/editar/${rawData.categoryId}`);
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,
@@ -132,6 +134,7 @@ export async function deleteCategoryAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/categorias");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,

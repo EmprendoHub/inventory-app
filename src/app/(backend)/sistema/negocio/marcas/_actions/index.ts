@@ -37,7 +37,8 @@ export const createBrand = async (
   };
 
   await prisma.brand.create({ data: newBrandData });
-
+  revalidatePath("/sistema/negocio/marcas");
+  revalidatePath("/sistema/negocio/articulos/nuevo");
   return { success: true, message: "Marca creada exitosamente!" };
 };
 
@@ -86,7 +87,9 @@ export async function updateBrandAction(
         updatedAt: createdAt,
       },
     });
-    revalidatePath(`/sistemas/negocio/marcas/editar/${rawData.brandId}`);
+    revalidatePath("/sistema/negocio/marcas");
+    revalidatePath(`/sistema/negocio/marcas/editar/${rawData.brandId}`);
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,
@@ -132,6 +135,7 @@ export async function deleteBrandAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/marcas");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,

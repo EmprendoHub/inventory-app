@@ -34,10 +34,14 @@ model User {
   loginAttempts      Int       @default(0)
   points             Int?
   role               Role    @default(CLIENTE)
+  // POS authentication
+  posPin             String?   // PIN for POS access
+  posPinSetAt        DateTime? // When PIN was set
   createdAt          DateTime  @default(now()) @map("createdAt")
   updatedAt          DateTime  @updatedAt @map("updatedAt")
   orders             Order[]
   cashRegister       CashRegister?
+  posSessions        PosSession[]
 }
 
 enum Role {
@@ -59,6 +63,8 @@ model Client {
   status        ClientStatus @default(ACTIVE)
   orders    Order[]
   whatsAppMessages      WhatsAppMessage[]
+  posOrders PosOrder[]
+  heldOrders HeldOrder[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([phone, email]) // Index on phone and email
@@ -130,7 +136,7 @@ model Order {
   invoiceId   String?  @db.ObjectId
   orderItems  OrderItem[]
   payments    Payment[]
-
+  posOrders   PosOrder[]
 }
 
 enum OrderStatus {
@@ -594,6 +600,11 @@ model CashRegister {
   userId        String  @db.ObjectId @unique
   managerId     String?
   status     CashRegisterStatus? @default(ACTIVA)
+  // POS specific fields
+  location      String?  // Physical location
+  posPin        String?  // PIN for POS access
+  posSessions   PosSession[]
+  heldOrders    HeldOrder[]
 }
 
 enum CashRegisterStatus {
@@ -819,4 +830,222 @@ model Feedback {
   feedback  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+// ******************* POS SYSTEM ****************** //
+
+model PosSession {
+  id               String      @id @default(auto()) @map("_id") @db.ObjectId
+  sessionNo        String      @unique // Format: "S000001"
+  cashRegisterId   String      @db.ObjectId
+  cashRegister     CashRegister @relation(fields: [cashRegisterId], references: [id])
+  userId           String      @db.ObjectId
+  user             User        @relation(fields: [userId], references: [id])
+  status           PosSessionStatus @default(OPEN)
+  openingCash      Float       @default(0) // Starting cash amount
+  closingCash      Float?      // Final cash amount
+  expectedCash     Float?      // System calculated cash
+  variance         Float?      // Difference between expected and actual
+  openedAt         DateTime    @default(now())
+  closedAt         DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  posOrders        PosOrder[]
+  cashCounts       CashCount[]
+  receipts         PosReceipt[]
+}
+
+enum PosSessionStatus {
+  OPEN
+  CLOSED
+  SUSPENDED
+}
+
+model PosOrder {
+  id                String       @id @default(auto()) @map("_id") @db.ObjectId
+  orderNo           String       @unique // Format: "P000001"
+  sessionId         String       @db.ObjectId
+  session           PosSession   @relation(fields: [sessionId], references: [id])
+  orderId           String?      @db.ObjectId // Link to main Order if needed
+  order             Order?       @relation(fields: [orderId], references: [id])
+  customerId        String?      @db.ObjectId
+  customer          Client?      @relation(fields: [customerId], references: [id])
+  status            PosOrderStatus @default(PENDING)
+  subtotal          Float
+  taxAmount         Float        @default(0)
+  discountAmount    Float        @default(0)
+  tipAmount         Float        @default(0)
+  totalAmount       Float
+  paymentType       PaymentType
+  cashReceived      Float?       // For cash payments
+  changeGiven       Float?       // For cash payments
+  notes             String?
+  receiptPrinted    Boolean      @default(false)
+  voidReason        String?      // If order is voided
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  items             PosOrderItem[]
+  payments          PosPayment[]
+  receipts          PosReceipt[]
+}
+
+enum PosOrderStatus {
+  PENDING
+  COMPLETED
+  VOIDED
+  REFUNDED
+}
+
+enum PaymentType {
+  CASH
+  CARD
+  MIXED
+  ACCOUNT
+}
+
+model PosOrderItem {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  posOrderId    String    @db.ObjectId
+  posOrder      PosOrder  @relation(fields: [posOrderId], references: [id])
+  itemId        String    @db.ObjectId // Reference to Item
+  name          String
+  sku           String?
+  barcode       String?
+  price         Float
+  quantity      Int
+  discount      Float     @default(0) // Item-level discount
+  totalPrice    Float
+  modifiers     String?   // JSON string for item modifiers/options
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model PosPayment {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  posOrderId  String      @db.ObjectId
+  posOrder    PosOrder    @relation(fields: [posOrderId], references: [id])
+  type        PaymentType
+  amount      Float
+  reference   String?     // Card transaction ID, check number, etc.
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model CashCount {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId   String      @db.ObjectId
+  session     PosSession  @relation(fields: [sessionId], references: [id])
+  countType   CashCountType
+  // Bill denominations
+  ones        Int         @default(0)
+  fives       Int         @default(0)
+  tens        Int         @default(0)
+  twenties    Int         @default(0)
+  fifties     Int         @default(0)
+  hundreds    Int         @default(0)
+  fiveHundreds Int        @default(0)
+  thousands   Int         @default(0)
+  // Coin denominations (centavos)
+  centavos10  Int         @default(0)
+  centavos20  Int         @default(0)
+  centavos50  Int         @default(0)
+  peso1       Int         @default(0)
+  peso2       Int         @default(0)
+  peso5       Int         @default(0)
+  peso10      Int         @default(0)
+  peso20      Int         @default(0)
+  // Calculated totals
+  totalCash   Float
+  countedBy   String      @db.ObjectId
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum CashCountType {
+  OPENING
+  CLOSING
+  MID_SHIFT
+}
+
+model HeldOrder {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  holdNumber       String         @unique // Format: "H000001"
+  cashRegisterId   String         @db.ObjectId
+  cashRegister     CashRegister   @relation(fields: [cashRegisterId], references: [id])
+  customerId       String?        @db.ObjectId
+  customer         Client?        @relation(fields: [customerId], references: [id])
+  items            String         // JSON string of cart items
+  subtotal         Float
+  discountAmount   Float          @default(0)
+  notes            String?
+  heldBy           String         @db.ObjectId // User who held the order
+  retrievedBy      String?        @db.ObjectId // User who retrieved the order
+  status           HeldOrderStatus @default(HELD)
+  heldAt           DateTime       @default(now())
+  retrievedAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+enum HeldOrderStatus {
+  HELD
+  RETRIEVED
+  EXPIRED
+}
+
+model Favorite {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  itemId      String   @db.ObjectId // Reference to Item
+  name        String
+  price       Float
+  image       String?
+  position    Int      // Display position in grid
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Discount {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  code          String?       @unique // Discount code
+  type          DiscountType
+  value         Float         // Percentage or fixed amount
+  minAmount     Float?        // Minimum order amount
+  maxAmount     Float?        // Maximum discount amount
+  isActive      Boolean       @default(true)
+  validFrom     DateTime?
+  validUntil    DateTime?
+  usageLimit    Int?          // Max number of uses
+  usageCount    Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+model PosReceipt {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  receiptNo   String     @unique // Format: "R000001"
+  sessionId   String     @db.ObjectId
+  session     PosSession @relation(fields: [sessionId], references: [id])
+  posOrderId  String     @db.ObjectId
+  posOrder    PosOrder   @relation(fields: [posOrderId], references: [id])
+  type        ReceiptType
+  content     String     // Receipt content/template
+  printed     Boolean    @default(false)
+  emailed     Boolean    @default(false)
+  emailTo     String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+enum ReceiptType {
+  SALE
+  REFUND
+  VOID
 }

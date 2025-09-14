@@ -301,7 +301,7 @@ export async function updateItemAction(
         },
       });
     }
-    revalidatePath(`/sistemas/negocio/articulos/editar/${rawData.itemId}`);
+    revalidatePath(`/sistema/negocio/articulos/editar/${rawData.itemId}`);
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
@@ -528,6 +528,7 @@ export async function createItemGroup(
     });
 
     revalidatePath("/sistema/negocio/articulos/conjuntos");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,
@@ -629,8 +630,9 @@ export async function updateItemGroupAction(
     });
 
     revalidatePath(
-      `/sistemas/negocio/articulos/conjuntos/editar/${groupItemId}`
+      `/sistema/negocio/articulos/conjuntos/editar/${groupItemId}`
     );
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,
@@ -675,6 +677,7 @@ export async function deleteItemGroupAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/articulos/conjuntos");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,
@@ -742,6 +745,7 @@ export async function toggleItemGroupStatusAction(formData: FormData) {
     });
 
     revalidatePath("/sistema/negocio/articulos/conjuntos");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,

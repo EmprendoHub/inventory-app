@@ -36,7 +36,8 @@ export const createUnit = async (
   };
 
   await prisma.unit.create({ data: newUnitData });
-  revalidatePath(`/sistemas/negocio/unidades`);
+  revalidatePath(`/sistema/negocio/unidades`);
+  revalidatePath(`/sistema/negocio/articulos/nuevo`);
   return { success: true, message: "Unidad creada exitosamente!" };
 };
 
@@ -85,7 +86,8 @@ export async function updateUnitAction(
         updatedAt: createdAt,
       },
     });
-    revalidatePath(`/sistemas/negocio/unidades/editar/${rawData.unitId}`);
+    revalidatePath(`/sistema/negocio/unidades/editar/${rawData.unitId}`);
+    revalidatePath(`/sistema/negocio/articulos/nuevo`);
     return {
       errors: {},
       success: true,
@@ -131,6 +133,7 @@ export async function deleteUnitAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/unidades");
+    revalidatePath(`/sistema/negocio/articulos/nuevo`);
     return {
       errors: {},
       success: true,

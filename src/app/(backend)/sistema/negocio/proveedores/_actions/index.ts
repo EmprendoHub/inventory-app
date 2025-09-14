@@ -109,6 +109,7 @@ export const createSupplier = async (
       // Clean up the temporary file
       await unlink(path);
       revalidatePath("/sistema/negocio/proveedores");
+      revalidatePath("/sistema/negocio/articulos/nuevo");
       return {
         success: true,
         message: "Proveedor creado exitosamente!",
@@ -246,8 +247,9 @@ export async function updateSupplierAction(
         });
       }
       revalidatePath(
-        `/sistemas/negocio/proveedores/editar/${rawData.supplierId}`
+        `/sistema/negocio/proveedores/editar/${rawData.supplierId}`
       );
+      revalidatePath("/sistema/negocio/articulos/nuevo");
       return {
         errors: {},
         success: true,
@@ -299,6 +301,7 @@ export async function deleteSupplierAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/proveedores");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     return {
       errors: {},
       success: true,

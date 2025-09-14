@@ -56,7 +56,10 @@ export const createWarehouse = async (
   await prisma.warehouse.create({
     data: newWarehouseData,
   });
-  revalidatePath(`/sistemas/negocio/bodegas`);
+  revalidatePath(`/sistema/negocio/bodegas`);
+  revalidatePath("/sistema/negocio/articulos/nuevo");
+  revalidatePath("/sistema/negocio/ajustes/nuevo");
+
   return { success: true, message: "Bodega creada exitosamente!" };
 };
 
@@ -120,7 +123,10 @@ export async function updateWarehouseAction(
         updatedAt: createdAt,
       },
     });
-    revalidatePath(`/sistemas/negocio/bodegas/editar/${rawData.warehouseId}`);
+    revalidatePath(`/sistema/negocio/bodegas/editar/${rawData.warehouseId}`);
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
+
     return {
       errors: {},
       success: true,
@@ -166,6 +172,8 @@ export async function deleteWarehouseAction(formData: FormData) {
     ]);
 
     revalidatePath("/sistema/negocio/bodegas");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
     return {
       errors: {},
       success: true,

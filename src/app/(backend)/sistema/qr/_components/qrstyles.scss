@@ -58,3 +58,40 @@
     height: 200px !important;
   }
 }
+
+/* Print Styles for 3cm x 4cm QR/Barcode Labels */
+@media print {
+  @page {
+    margin: 0.5cm;
+  }
+
+  .code-container {
+    width: 3cm !important;
+    height: 4cm !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #ddd !important;
+    padding: 0.1cm !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .code-container img {
+    max-width: 2.5cm !important;
+    max-height: 2.5cm !important;
+    object-fit: contain !important;
+  }
+
+  .code-container .text-center {
+    font-size: 6px !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+  }
+
+  /* Hide screen-only elements */
+  .print\\:hidden {
+    display: none !important;
+  }
+}

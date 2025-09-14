@@ -9,6 +9,7 @@ import { FaPrint, FaQrcode, FaTrash } from "react-icons/fa6";
 import { BiBarcode } from "react-icons/bi";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import "./qrstyles.scss";
 import {
   Select,
   SelectContent,
@@ -53,11 +54,11 @@ const QRGenerator = ({ products }: { products: any[] }) => {
       }
     }
   }, []);
-  // Generate QR code
+  // Generate QR code - sized for 3cm x 4cm print
   const generateQRCode = async (text: string): Promise<string> => {
     try {
       return await qrcode.toDataURL(text, {
-        width: 150,
+        width: 283, // 3cm at 300 DPI (3 * 94.5 ≈ 283px)
         margin: 1,
         color: {
           dark: "#000000",
@@ -70,15 +71,16 @@ const QRGenerator = ({ products }: { products: any[] }) => {
     }
   };
 
-  // Generate barcode
+  // Generate barcode - sized for 3cm x 4cm print
   const generateBarcode = (text: string): string => {
     try {
       const canvas = document.createElement("canvas");
       JsBarcode(canvas, text, {
         format: "CODE128",
-        width: 2,
-        height: 60,
+        width: 1.5,
+        height: 100, // Adjusted height for 4cm container
         displayValue: false,
+        fontSize: 12,
       });
       return canvas.toDataURL();
     } catch (error) {
@@ -138,9 +140,21 @@ const QRGenerator = ({ products }: { products: any[] }) => {
     setIsGenerating(false);
   }, [codeType, products, selectedProducts]);
 
-  // Print handler
+  // Print handler with specific settings for label printing
   const handlePrint = useReactToPrint({
     contentRef: ref,
+    pageStyle: `
+      @page {
+        margin: 0.5cm;
+      }
+      @media print {
+        .code-container {
+          width: 3cm !important;
+          height: 4cm !important;
+          break-inside: avoid !important;
+        }
+      }
+    `,
   });
 
   useEffect(() => {
@@ -270,33 +284,35 @@ const QRGenerator = ({ products }: { products: any[] }) => {
             {new Date().toLocaleDateString()}
           </h1>
 
-          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 print:grid-cols-10 gap-4 print:gap-2">
+          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 print:grid-cols-5 gap-4 print:gap-1">
             {images.map((item, index) => (
               <div
                 key={index}
-                className="flex flex-col items-center border print:border-0 p-2 print:p-1"
+                className="flex flex-col items-center justify-between border print:border print:border-gray-300 p-2 print:p-1 code-container"
               >
                 <Image
                   src={item.code}
                   alt={`${codeType} code`}
                   width={codeType === "qr" ? 80 : 100}
                   height={codeType === "qr" ? 80 : 40}
-                  className="mx-auto"
+                  className="mx-auto print:w-[2.5cm] print:h-auto print:max-h-[2.5cm] object-contain"
                 />
-                <div className="text-center mt-1">
+                <div className="text-center mt-1 print:mt-0 flex-grow flex flex-col justify-end">
                   <p
-                    className="text-xs font-medium truncate w-full"
+                    className="text-xs font-medium truncate w-full print:text-[8px] print:leading-tight"
                     title={item.title}
                   >
                     {item.title.length > 12
                       ? `${item.title.substring(0, 12)}...`
                       : item.title}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-gray-600 print:text-[7px] print:text-black">
                     {formatCurrency({ amount: item.price, currency: "MXN" })}
                   </p>
                   {codeType === "barcode" && item.barcode && (
-                    <p className="text-xs text-gray-500">{item.barcode}</p>
+                    <p className="text-xs text-gray-500 print:text-[6px] print:text-black">
+                      {item.barcode}
+                    </p>
                   )}
                 </div>
               </div>

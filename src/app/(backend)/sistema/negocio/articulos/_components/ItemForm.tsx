@@ -231,7 +231,7 @@ export default function ProductForm({
               state={state}
             />
           </div>
-          <TextInput name="dimensions" label="peso" state={state} />
+          <TextInput name="dimensions" label="Unidad" state={state} />
         </div>
 
         {/* Numeric inputs */}
