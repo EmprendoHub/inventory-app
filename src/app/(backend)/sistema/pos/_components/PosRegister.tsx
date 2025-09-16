@@ -8,7 +8,6 @@ import {
   Minus,
   X,
   Search,
-  User,
   CreditCard,
   Banknote,
   QrCode,
@@ -21,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { SearchSelectInput } from "@/components/SearchSelectInput";
 import {
   CartState,
   CartItemType,
@@ -46,7 +46,12 @@ interface PosRegisterProps {
   favorites: FavoriteType[];
   customers: clientType[];
   discounts?: Discount[];
-  onCheckout: (cart: CartState, paymentType: PaymentType) => Promise<void>;
+  onCheckout: (
+    cart: CartState,
+    paymentType: PaymentType,
+    billBreakdown?: CashBreakdown,
+    cashReceived?: number
+  ) => Promise<void>;
   onHoldOrder: (cart: CartState) => Promise<void>;
   onScanBarcode?: () => void;
   onScanResult?: (scanResult: ScanResult) => void;
@@ -76,7 +81,13 @@ export default function PosRegister({
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
+
+  // Form state for SearchSelectInput (even though we don't use it for validation)
+  const [formState] = useState({
+    errors: {},
+    success: false,
+    message: "",
+  });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCashCalculator, setShowCashCalculator] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
@@ -192,151 +203,6 @@ export default function PosRegister({
     });
   }, []);
 
-  // Print receipt function
-  const printReceipt = useCallback((receiptData: any) => {
-    const receiptWindow = window.open("", "_blank");
-    if (receiptWindow) {
-      receiptWindow.document.write(`
-        <html>
-          <head>
-            <title>Recibo de Venta</title>
-            <style>
-              body { font-family: Arial, sans-serif; width: 300px; margin: 0 auto; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-              .total { font-weight: bold; border-top: 2px solid black; padding-top: 10px; }
-              .center { text-align: center; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h2>RECIBO DE VENTA</h2>
-              <p>Orden: ${receiptData.orderNumber}</p>
-              <p>Fecha: ${receiptData.date}</p>
-              <p>Cliente: ${receiptData.customer}</p>
-            </div>
-            
-            <div>
-              ${receiptData.items
-                .map(
-                  (item: any) => `
-                <div class="item">
-                  <span>${item.name} x ${item.quantity}</span>
-                  <span>$${(item.price * item.quantity).toFixed(2)}</span>
-                </div>
-              `
-                )
-                .join("")}
-            </div>
-            
-            <div class="total">
-              <div class="item">
-                <span>Subtotal:</span>
-                <span>$${receiptData.subtotal.toFixed(2)}</span>
-              </div>
-              ${
-                receiptData.tax > 0
-                  ? `
-                <div class="item">
-                  <span>IVA (16%):</span>
-                  <span>$${receiptData.tax.toFixed(2)}</span>
-                </div>
-              `
-                  : ""
-              }
-              ${
-                receiptData.discount > 0
-                  ? `
-                <div class="item">
-                  <span>Descuento:</span>
-                  <span>-$${receiptData.discount.toFixed(2)}</span>
-                </div>
-              `
-                  : ""
-              }
-              ${
-                receiptData.tip > 0
-                  ? `
-                <div class="item">
-                  <span>Propina:</span>
-                  <span>$${receiptData.tip.toFixed(2)}</span>
-                </div>
-              `
-                  : ""
-              }
-              <div class="item">
-                <span><strong>TOTAL:</strong></span>
-                <span><strong>$${receiptData.total.toFixed(2)}</strong></span>
-              </div>
-              ${
-                receiptData.paymentType === "CASH" && receiptData.cashReceived
-                  ? `
-                <div class="item">
-                  <span>Efectivo recibido:</span>
-                  <span>$${receiptData.cashReceived.toFixed(2)}</span>
-                </div>
-                <div class="item">
-                  <span>Cambio:</span>
-                  <span>$${
-                    receiptData.changeAmount?.toFixed(2) || "0.00"
-                  }</span>
-                </div>
-              `
-                  : ""
-              }
-            </div>
-            
-            <div class="center" style="margin-top: 20px;">
-              <p>¡Gracias por su compra!</p>
-            </div>
-            
-            <script>
-              window.onload = function() {
-                window.print();
-                window.onafterprint = function() {
-                  window.close();
-                };
-              };
-            </script>
-          </body>
-        </html>
-      `);
-      receiptWindow.document.close();
-    }
-  }, []);
-
-  // Generate receipt
-  const generateReceipt = useCallback(
-    (
-      cartData: CartState,
-      paymentType: PaymentType,
-      cashReceived?: number,
-      changeAmount?: number
-    ) => {
-      const receiptData = {
-        orderNumber: `POS-${Date.now()}`,
-        date: new Date().toLocaleString("es-ES"),
-        items: cartData.items,
-        subtotal: cartData.subtotal,
-        tax: cartData.taxAmount,
-        discount: cartData.discountAmount,
-        tip: cartData.tipAmount,
-        total: cartData.totalAmount,
-        paymentType,
-        cashReceived,
-        changeAmount,
-        customer: cartData.customer?.name || "Cliente General",
-      };
-
-      // For now, just log the receipt data - in production you'd send to printer
-      console.log("Receipt Data:", receiptData);
-
-      // You can also trigger browser print dialog
-      printReceipt(receiptData);
-    },
-    [printReceipt]
-  );
-
   // Handle cash payment completion
   const handleCashPayment = useCallback(
     async (cashReceived: number, breakdown: CashBreakdown) => {
@@ -350,155 +216,23 @@ export default function PosRegister({
         return;
       }
 
-      const changeAmount = cashReceived - cart.totalAmount;
-
       // Log breakdown for future use (can be sent to backend)
       console.log("Cash breakdown:", breakdown);
 
       try {
-        // Process the checkout
-        await onCheckout(cart, PaymentType.CASH);
+        // Process the checkout with bill breakdown
+        await onCheckout(cart, PaymentType.CASH, breakdown, cashReceived);
 
-        // Generate and print receipt
-        generateReceipt(cart, PaymentType.CASH, cashReceived, changeAmount);
-
-        // Clear cart and close calculator
-        clearCart();
-        setShowCashCalculator(false);
-        setShowPaymentModal(false);
-
-        // Show success message with change using a custom toast/modal instead of alert
-        const message =
-          changeAmount > 0
-            ? `Cambio a entregar:`
-            : "Pago completado exitosamente.";
-
-        // Create a temporary success modal instead of ugly browser alert
-        const successModal = document.createElement("div");
-        successModal.innerHTML = `
-          <div style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-          ">
-            <div style="
-              background: white;
-              padding: 2rem;
-              border-radius: 12px;
-              box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-              text-align: center;
-              max-width: 400px;
-              margin: 1rem;
-            ">
-              <div style="
-                color: #059669;
-                font-size: 3rem;
-                margin-bottom: 1rem;
-              ">✓</div>
-              <h2 style="
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: #1f2937;
-                margin-bottom: 1rem;
-              ">¡Pago Exitoso!</h2>
-              <p style="
-                font-size: 1.125rem;
-                color: #4b5563;
-                margin-bottom: 0.5rem;
-              ">${message}</p>
-              <p style="
-                font-size: 4.125rem;
-                font-weight: bold;
-                color: #059669;
-                margin-bottom: 1.5rem;
-              ">$${changeAmount.toFixed(2)}</p>
-              <button onclick="this.parentElement.parentElement.remove()" style="
-                background: #059669;
-                color: white;
-                border: none;
-                padding: 0.75rem 1.5rem;
-                border-radius: 8px;
-                font-size: 1rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-              " onmouseover="this.style.background='#047857'" onmouseout="this.style.background='#059669'">
-                Continuar
-              </button>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(successModal);
+        // Only clear cart and print receipt if checkout was successful
+        // The success handling will be done by PosRegisterClient
+        // We don't clear cart or close modals here anymore
       } catch (error) {
         console.error("Cash payment error:", error);
-
-        // Create a custom error modal instead of ugly browser alert
-        const errorModal = document.createElement("div");
-        errorModal.innerHTML = `
-          <div style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-          ">
-            <div style="
-              background: white;
-              padding: 2rem;
-              border-radius: 12px;
-              box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-              text-align: center;
-              max-width: 400px;
-              margin: 1rem;
-            ">
-              <div style="
-                color: #dc2626;
-                font-size: 3rem;
-                margin-bottom: 1rem;
-              ">⚠</div>
-              <h2 style="
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: #1f2937;
-                margin-bottom: 1rem;
-              ">Error de Pago</h2>
-              <p style="
-                font-size: 1.125rem;
-                color: #4b5563;
-                margin-bottom: 1.5rem;
-              ">Error al procesar el pago en efectivo. Por favor, intente nuevamente.</p>
-              <button onclick="this.parentElement.parentElement.remove()" style="
-                background: #dc2626;
-                color: white;
-                border: none;
-                padding: 0.75rem 1.5rem;
-                border-radius: 8px;
-                font-size: 1rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-              " onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
-                Cerrar
-              </button>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(errorModal);
+        // Error handling will be done by PosRegisterClient
+        throw error;
       }
     },
-    [cart, onCheckout, clearCart, generateReceipt]
+    [cart, onCheckout]
   );
 
   // Handle barcode scan result
@@ -648,11 +382,11 @@ export default function PosRegister({
 
   // Handle checkout
   const handleCheckout = useCallback(
-    async (paymentType: PaymentType) => {
+    async (paymentType: PaymentType, billBreakdown?: CashBreakdown) => {
       if (cart.items.length === 0) return;
 
       try {
-        await onCheckout(cart, paymentType);
+        await onCheckout(cart, paymentType, billBreakdown);
         clearCart();
         setShowPaymentModal(false);
       } catch (error) {
@@ -825,14 +559,28 @@ export default function PosRegister({
             </div>
 
             {/* Customer Selection */}
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => setShowCustomerModal(true)}
-            >
-              <User className="w-4 h-4 mr-2" />
-              {cart.customer ? cart.customer.name : "Seleccionar Cliente"}
-            </Button>
+            <SearchSelectInput
+              label="Cliente"
+              name="customer"
+              state={formState}
+              className="w-full"
+              placeholder="Seleccionar Cliente"
+              options={[
+                { value: "", name: "Cliente Ocasional" },
+                ...customers.map((customer) => ({
+                  value: customer.id,
+                  name: customer.name,
+                  description: customer.phone,
+                })),
+              ]}
+              onChange={(value) => {
+                const customer = customers.find((c) => c.id === value);
+                setCart((prev) => ({
+                  ...prev,
+                  customer: customer || undefined,
+                }));
+              }}
+            />
           </div>
 
           {/* Cart Items */}
@@ -1027,7 +775,7 @@ export default function PosRegister({
                 <Button
                   variant="outline"
                   className="w-full py-3 text-base"
-                  onClick={() => handleCheckout(PaymentType.MIXED)}
+                  onClick={() => handleCheckout(PaymentType.CARD)}
                   disabled={isProcessing}
                 >
                   <CreditCard className="w-5 h-5 mr-2" />
@@ -1042,68 +790,6 @@ export default function PosRegister({
                   <MoreHorizontal className="w-5 h-5 mr-2" />
                   Pago Fraccionado
                 </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Customer Modal */}
-      <AnimatePresence>
-        {showCustomerModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-background rounded-lg p-6 w-full max-w-md max-h-96 overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Seleccionar Cliente</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowCustomerModal(false)}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setCart((prev) => ({ ...prev, customer: undefined }));
-                    setShowCustomerModal(false);
-                  }}
-                >
-                  Cliente Ocasional
-                </Button>
-
-                {customers.map((customer) => (
-                  <Button
-                    key={customer.id}
-                    variant="outline"
-                    className="w-full justify-start text-left"
-                    onClick={() => {
-                      setCart((prev) => ({ ...prev, customer }));
-                      setShowCustomerModal(false);
-                    }}
-                  >
-                    <div>
-                      <div className="font-medium">{customer.name}</div>
-                      <div className="text-xs text-gray-500">
-                        {customer.phone}
-                      </div>
-                    </div>
-                  </Button>
-                ))}
               </div>
             </motion.div>
           </motion.div>

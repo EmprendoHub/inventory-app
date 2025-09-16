@@ -289,6 +289,7 @@ export type CashBreakdown = {
   bills: {
     thousands: CashDenomination;
     fiveHundreds: CashDenomination;
+    twoHundreds: CashDenomination;
     hundreds: CashDenomination;
     fifties: CashDenomination;
     twenties: CashDenomination;

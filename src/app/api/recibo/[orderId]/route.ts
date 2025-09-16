@@ -176,7 +176,7 @@ async function addFromSection(pdf: jsPDF, yOffset: number) {
   // Company name
   pdf.setFontSize(12);
   pdf.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-  pdf.text("Yunuen Company Liquidación de Muebles Americanos", 30, yOffset + 8);
+  pdf.text("Yunuen Company", 30, yOffset + 8);
 
   // Address and phone on separate lines with more spacing
   pdf.setFontSize(11);

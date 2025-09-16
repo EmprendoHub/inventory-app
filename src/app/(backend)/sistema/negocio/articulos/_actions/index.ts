@@ -142,7 +142,7 @@ export const createItemAction = async (
             type: "PURCHASE", // Assuming the initial stock is added via a purchase
             quantity: validatedData.data.stock || 0,
             toWarehouseId: validatedData.data.warehouse,
-            reference: `Initial stock for product ${newProduct.id}`,
+            reference: `Existencia inicial al crear producto`,
             status: "COMPLETED",
             createdBy: validatedData.data.userId ?? "", // Or the user ID who created the product
             createdAt,
@@ -158,6 +158,7 @@ export const createItemAction = async (
       revalidatePath("/sistema/negocio/articulos/nuevo");
       revalidatePath("/sistema/negocio/articulos");
       revalidatePath("/sistema/ventas/pedidos/nuevo");
+      revalidatePath("/sistema/ventas/pos/register");
       return {
         success: true,
         message: "Producto creado exitosamente!",

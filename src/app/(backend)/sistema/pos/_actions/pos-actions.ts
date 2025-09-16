@@ -3,15 +3,112 @@
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import { CartState, PaymentType } from "@/types/pos";
+import { CartState, PaymentType, CashBreakdown } from "@/types/pos";
 import { revalidatePath } from "next/cache";
 import { generateOrderId } from "@/lib/utils";
+
+// Result interface for POS operations
+interface PosOrderResult {
+  success: boolean;
+  orderId?: string;
+  error?: string;
+  isStockError?: boolean;
+}
+
+// Utility function to add two CashBreakdown objects
+function addCashBreakdowns(
+  existing: CashBreakdown | null,
+  incoming: CashBreakdown
+): CashBreakdown {
+  if (!existing) return incoming;
+
+  // Helper function to safely get denomination values
+  const safeDenomination = (
+    existingDenom: any,
+    incomingDenom: any,
+    value: number
+  ) => ({
+    value,
+    count: (existingDenom?.count || 0) + (incomingDenom?.count || 0),
+    total: (existingDenom?.total || 0) + (incomingDenom?.total || 0),
+  });
+
+  return {
+    bills: {
+      thousands: safeDenomination(
+        existing.bills?.thousands,
+        incoming.bills?.thousands,
+        1000
+      ),
+      fiveHundreds: safeDenomination(
+        existing.bills?.fiveHundreds,
+        incoming.bills?.fiveHundreds,
+        500
+      ),
+      twoHundreds: safeDenomination(
+        existing.bills?.twoHundreds,
+        incoming.bills?.twoHundreds,
+        200
+      ),
+      hundreds: safeDenomination(
+        existing.bills?.hundreds,
+        incoming.bills?.hundreds,
+        100
+      ),
+      fifties: safeDenomination(
+        existing.bills?.fifties,
+        incoming.bills?.fifties,
+        50
+      ),
+      twenties: safeDenomination(
+        existing.bills?.twenties,
+        incoming.bills?.twenties,
+        20
+      ),
+      tens: safeDenomination(existing.bills?.tens, incoming.bills?.tens, 10),
+      fives: safeDenomination(existing.bills?.fives, incoming.bills?.fives, 5),
+      ones: safeDenomination(existing.bills?.ones, incoming.bills?.ones, 1),
+    },
+    coins: {
+      peso20: safeDenomination(
+        existing.coins?.peso20,
+        incoming.coins?.peso20,
+        20
+      ),
+      peso10: safeDenomination(
+        existing.coins?.peso10,
+        incoming.coins?.peso10,
+        10
+      ),
+      peso5: safeDenomination(existing.coins?.peso5, incoming.coins?.peso5, 5),
+      peso2: safeDenomination(existing.coins?.peso2, incoming.coins?.peso2, 2),
+      peso1: safeDenomination(existing.coins?.peso1, incoming.coins?.peso1, 1),
+      centavos50: safeDenomination(
+        existing.coins?.centavos50,
+        incoming.coins?.centavos50,
+        0.5
+      ),
+      centavos20: safeDenomination(
+        existing.coins?.centavos20,
+        incoming.coins?.centavos20,
+        0.2
+      ),
+      centavos10: safeDenomination(
+        existing.coins?.centavos10,
+        incoming.coins?.centavos10,
+        0.1
+      ),
+    },
+    totalCash: (existing?.totalCash || 0) + (incoming?.totalCash || 0),
+  };
+}
 
 export async function createPosOrder(
   cart: CartState,
   paymentMethod: PaymentType,
-  customerId?: string
-) {
+  customerId?: string,
+  billBreakdown?: CashBreakdown // CashBreakdown object
+): Promise<PosOrderResult> {
   const session = await getServerSession(options);
 
   if (!session?.user?.id) {
@@ -52,9 +149,11 @@ export async function createPosOrder(
       );
 
       if (totalAvailable < cartItem.quantity) {
-        throw new Error(
-          `Stock insuficiente para ${cartItem.name}. Disponible: ${totalAvailable}, Solicitado: ${cartItem.quantity}`
-        );
+        return {
+          success: false,
+          error: `Stock insuficiente para ${cartItem.name}. Disponible: ${totalAvailable}, Solicitado: ${cartItem.quantity}`,
+          isStockError: true,
+        };
       }
 
       orderItems.push({
@@ -135,13 +234,64 @@ export async function createPosOrder(
       },
     });
 
+    // Handle cash register updates for cash payments
+    if (paymentMethod === PaymentType.CASH) {
+      // Get the user's cash register
+      const cashRegister = await prisma.cashRegister.findFirst({
+        where: { userId: session.user.id },
+      });
+
+      if (cashRegister) {
+        // Parse existing breakdown and combine with incoming
+        let existingBreakdown: CashBreakdown | null = null;
+        if (cashRegister.billBreakdown) {
+          existingBreakdown = cashRegister.billBreakdown as CashBreakdown;
+        }
+
+        // Combine breakdowns if both exist
+        const updatedBreakdown = billBreakdown
+          ? addCashBreakdowns(existingBreakdown, billBreakdown)
+          : existingBreakdown;
+
+        // Update cash register balance and denominations
+        await prisma.cashRegister.update({
+          where: { id: cashRegister.id },
+          data: {
+            balance: cashRegister.balance + cart.totalAmount,
+            billBreakdown: updatedBreakdown,
+          },
+        });
+
+        // Create cash transaction record
+        await prisma.cashTransaction.create({
+          data: {
+            type: "DEPOSITO",
+            amount: cart.totalAmount,
+            description: `Venta POS - ${order.orderNo}`,
+            cashRegisterId: cashRegister.id,
+            billBreakdown,
+            userId: session.user.id,
+          },
+        });
+      }
+    }
+
     revalidatePath("/sistema/pos");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/negocio/articulos");
     return { success: true, orderId: order.id };
   } catch (error) {
     console.error("Error creating POS order:", error);
-    throw new Error("Error al procesar la venta");
+
+    // Return error information in a serializable format instead of throwing
+    const errorMessage =
+      error instanceof Error ? error.message : "Error al procesar la venta";
+
+    return {
+      success: false,
+      error: errorMessage,
+      isStockError: errorMessage.includes("Stock insuficiente"),
+    };
   }
 }
 

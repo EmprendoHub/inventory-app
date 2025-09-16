@@ -34,6 +34,7 @@ export type CashRegisterResponse = {
   name: string;
   balance: number;
   fund: number;
+  billBreakdown?: any; // Json field containing CashBreakdown data
   createdAt: Date;
   updatedAt: Date;
   userId: string | null;

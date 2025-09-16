@@ -592,6 +592,7 @@ model CashRegister {
   name          String
   balance       Float     @default(0)
   fund          Float     @default(0)
+  billBreakdown Json?     // CashBreakdown object storing current denomination counts
   transactions  CashTransaction[]
   audits        CashAudit[]
   createdAt     DateTime  @default(now())
@@ -620,6 +621,7 @@ model CashTransaction {
   description   String?
   cashRegister  CashRegister @relation(fields: [cashRegisterId], references: [id])
   cashRegisterId String    @db.ObjectId
+  billBreakdown Json?     // CashBreakdown object storing denomination data
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   userId        String?
@@ -637,6 +639,7 @@ model CashAudit {
   startBalance  Float
   endBalance    Float
   auditDate     DateTime
+  billBreakdown Json?     // CashBreakdown object storing final cash count breakdown
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   managerId     String?

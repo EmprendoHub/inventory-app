@@ -76,6 +76,11 @@ export default function CashCalculator({
             count: selectedDenominations[500] || 0,
             total: (selectedDenominations[500] || 0) * 500,
           },
+          twoHundreds: {
+            value: 200,
+            count: selectedDenominations[200] || 0,
+            total: (selectedDenominations[200] || 0) * 200,
+          },
           hundreds: {
             value: 100,
             count: selectedDenominations[100] || 0,

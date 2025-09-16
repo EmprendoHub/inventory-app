@@ -133,6 +133,7 @@ export const createCashAuditAction = async (
     startBalance: parseFloat(formData.get("startBalance") as string),
     endBalance: parseFloat(formData.get("endBalance") as string),
     auditDate: formData.get("auditDate") as string,
+    billBreakdown: formData.get("billBreakdown") as string,
   };
 
   const register = JSON.parse(rawData.register);
@@ -162,6 +163,9 @@ export const createCashAuditAction = async (
           auditDate: createdAt,
           userId: user.id,
           managerId: rawData.managerId,
+          billBreakdown: rawData.billBreakdown
+            ? JSON.parse(rawData.billBreakdown)
+            : null,
           createdAt,
           updatedAt: createdAt,
         },
@@ -173,6 +177,9 @@ export const createCashAuditAction = async (
           balance: {
             decrement: rawData.endBalance, // deducts cash withdraw to the current balance
           },
+          billBreakdown: rawData.billBreakdown
+            ? JSON.parse(rawData.billBreakdown)
+            : null, // Update the billBreakdown with remaining amounts
           updatedAt: createdAt,
         },
       });
@@ -389,6 +396,7 @@ export const createCashHandoffAction = async (
     startBalance: parseFloat(formData.get("startBalance") as string),
     endBalance: parseFloat(formData.get("endBalance") as string),
     auditDate: formData.get("auditDate") as string,
+    billBreakdown: formData.get("billBreakdown") as string,
   };
 
   const register = JSON.parse(rawData.register);
@@ -421,9 +429,124 @@ export const createCashHandoffAction = async (
           balance: {
             decrement: rawData.endBalance, // deducts cash withdraw to the current balance
           },
+          billBreakdown: rawData.billBreakdown
+            ? JSON.parse(rawData.billBreakdown)
+            : null, // Update the driver's register with remaining amounts after handoff
           updatedAt: createdAt,
         },
       });
+
+      // Get current manager register to add the delivered cash breakdown
+      const currentManagerRegister = await prisma.cashRegister.findUnique({
+        where: { userId: manager?.id },
+      });
+
+      // Helper function to add cash breakdowns
+      const addCashBreakdowns = (existing: any, incoming: any) => {
+        if (!existing) return incoming;
+        if (!incoming) return existing;
+
+        const result = { ...existing };
+
+        // Add bills
+        if (existing.bills && incoming.bills) {
+          Object.keys(incoming.bills).forEach((key) => {
+            if (result.bills[key] && incoming.bills[key]) {
+              result.bills[key].count =
+                (result.bills[key].count || 0) +
+                (incoming.bills[key].count || 0);
+              result.bills[key].total =
+                (result.bills[key].total || 0) +
+                (incoming.bills[key].total || 0);
+            }
+          });
+        }
+
+        // Add coins
+        if (existing.coins && incoming.coins) {
+          Object.keys(incoming.coins).forEach((key) => {
+            if (result.coins[key] && incoming.coins[key]) {
+              result.coins[key].count =
+                (result.coins[key].count || 0) +
+                (incoming.coins[key].count || 0);
+              result.coins[key].total =
+                (result.coins[key].total || 0) +
+                (incoming.coins[key].total || 0);
+            }
+          });
+        }
+
+        // Update total cash
+        result.totalCash =
+          (existing.totalCash || 0) + (incoming.totalCash || 0);
+        return result;
+      };
+
+      // Calculate the delivered breakdown (original breakdown minus remaining breakdown)
+      const originalBreakdown = register.billBreakdown;
+      const remainingBreakdown = rawData.billBreakdown
+        ? JSON.parse(rawData.billBreakdown)
+        : null;
+
+      let deliveredBreakdown: any = null;
+      if (originalBreakdown && remainingBreakdown) {
+        deliveredBreakdown = { ...originalBreakdown };
+
+        // Subtract remaining from original to get delivered amounts
+        if (originalBreakdown.bills && remainingBreakdown.bills) {
+          Object.keys(originalBreakdown.bills).forEach((key) => {
+            if (
+              deliveredBreakdown.bills[key] &&
+              remainingBreakdown.bills[key]
+            ) {
+              deliveredBreakdown.bills[key].count = Math.max(
+                0,
+                (originalBreakdown.bills[key].count || 0) -
+                  (remainingBreakdown.bills[key].count || 0)
+              );
+              deliveredBreakdown.bills[key].total = Math.max(
+                0,
+                (originalBreakdown.bills[key].total || 0) -
+                  (remainingBreakdown.bills[key].total || 0)
+              );
+            }
+          });
+        }
+
+        if (originalBreakdown.coins && remainingBreakdown.coins) {
+          Object.keys(originalBreakdown.coins).forEach((key) => {
+            if (
+              deliveredBreakdown.coins[key] &&
+              remainingBreakdown.coins[key]
+            ) {
+              deliveredBreakdown.coins[key].count = Math.max(
+                0,
+                (originalBreakdown.coins[key].count || 0) -
+                  (remainingBreakdown.coins[key].count || 0)
+              );
+              deliveredBreakdown.coins[key].total = Math.max(
+                0,
+                (originalBreakdown.coins[key].total || 0) -
+                  (remainingBreakdown.coins[key].total || 0)
+              );
+            }
+          });
+        }
+
+        deliveredBreakdown.totalCash = Math.max(
+          0,
+          (originalBreakdown.totalCash || 0) -
+            (remainingBreakdown.totalCash || 0)
+        );
+      }
+
+      // Add delivered breakdown to manager's register
+      const updatedManagerBreakdown = deliveredBreakdown
+        ? addCashBreakdowns(
+            currentManagerRegister?.billBreakdown,
+            deliveredBreakdown
+          )
+        : currentManagerRegister?.billBreakdown;
 
       const branchRegister = await prisma.cashRegister.update({
         where: { userId: manager?.id },
@@ -431,6 +554,7 @@ export const createCashHandoffAction = async (
           balance: {
             increment: rawData.endBalance, // adds cash withdraw to the current balance
           },
+          billBreakdown: updatedManagerBreakdown,
           updatedAt: createdAt,
         },
       });

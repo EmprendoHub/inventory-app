@@ -39,6 +39,9 @@ export const RBAC_CONFIG = {
       "/sistema/cajas/personal/", // Allow all sistema routes
       "/sistema/contabilidad/gastos", // Allow all sistema routes
       "/sistema/cajas/auditoria/nueva",
+      // POS routes
+      "/sistema/pos",
+      "/sistema/pos/register",
     ],
   },
   CHOFER: {

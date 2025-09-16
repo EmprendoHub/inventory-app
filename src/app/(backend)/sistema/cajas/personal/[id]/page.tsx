@@ -10,7 +10,16 @@ export default async function CashRegisterDetailsPage({
 }) {
   const cashRegister = await prisma.cashRegister.findUnique({
     where: { userId: params.id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      balance: true,
+      fund: true,
+      billBreakdown: true,
+      createdAt: true,
+      updatedAt: true,
+      userId: true,
+      managerId: true,
       transactions: {
         orderBy: {
           createdAt: "desc", // Latest product

@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import { AddInventorySchema, AdjustmentSchema } from "@/lib/schemas";
 import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { getServerSession } from "next-auth";
+import { revalidatePath } from "next/cache";
 
 export const createAdjustment = async (
   state: {
@@ -56,7 +57,7 @@ export const createAdjustment = async (
         await prisma.stockMovement.create({
           data: {
             itemId: validatedData.data.articulo,
-            type: "RETURN", // Indicates stock is being returned to available
+            type: "ADJUSTMENT", // Indicates stock is being returned to available
             quantity: validatedData.data.transAmount,
             reference: `Ajuste de inventario`,
             status: "COMPLETED",
@@ -69,6 +70,11 @@ export const createAdjustment = async (
     } catch (error) {
       console.log(error);
     }
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
   } else {
     // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);

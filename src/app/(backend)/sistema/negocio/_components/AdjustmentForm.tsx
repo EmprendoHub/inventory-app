@@ -1,12 +1,18 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useFormState } from "react-dom";
 import { createAdjustment } from "../_actions";
 import SelectInput from "@/components/SelectInput";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
-import { MinusCircle, PlusCircle } from "lucide-react";
+import {
+  MinusCircle,
+  PlusCircle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { StockMovement } from "@/types/accounting";
+import { Button } from "@/components/ui/button";
 
 type AdjustType = {
   items: {
@@ -40,6 +46,54 @@ export default function AdjustmentForm({
   });
 
   const [formType, setFormType] = useState("add");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Translation functions
+  const getTypeTranslation = (type: string) => {
+    const translations: { [key: string]: string } = {
+      PURCHASE: "Compra",
+      SALE: "Venta",
+      TRANSFER: "Transferencia",
+      ADJUSTMENT: "Ajuste",
+      RETURN: "Devolución",
+      DAMAGED: "Dañado",
+      EXPIRED: "Vencido",
+    };
+    return translations[type] || type;
+  };
+
+  const getStatusTranslation = (status: string) => {
+    const translations: { [key: string]: string } = {
+      PENDING: "Pendiente",
+      COMPLETED: "Completado",
+      CANCELLED: "Cancelado",
+      REJECTED: "Rechazado",
+    };
+    return translations[status] || status;
+  };
+
+  // Sort and paginate stock movements (most recent first)
+  const sortedStockMovements = useMemo(() => {
+    return [...stockMovements].sort((a, b) => {
+      // Assuming there's a createdAt field or we can use id for ordering
+      // If no timestamp, we'll reverse the array to show newest first
+      return stockMovements.indexOf(b) - stockMovements.indexOf(a);
+    });
+  }, [stockMovements]);
+
+  const totalPages = Math.ceil(sortedStockMovements.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentMovements = sortedStockMovements.slice(startIndex, endIndex);
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
 
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
@@ -224,16 +278,173 @@ export default function AdjustmentForm({
         </form>
       )}
 
-      {stockMovements &&
-        stockMovements.map((stock) => {
-          return (
-            <div key={stock.id}>
-              {stock.id}
-
-              {stock.quantity}
+      {stockMovements && stockMovements.length > 0 && (
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">
+              Movimientos de Inventario ({stockMovements.length})
+            </h3>
+            <div className="text-sm text-gray-500">
+              Página {currentPage} de {totalPages}
             </div>
-          );
-        })}
+          </div>
+
+          <div className="rounded-md border">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left text-xs font-medium p-3">ID</th>
+                    <th className="text-left text-xs font-medium p-3">
+                      Artículo
+                    </th>
+                    <th className="text-left text-xs font-medium p-3">Tipo</th>
+                    <th className="text-left text-xs font-medium p-3">
+                      Cantidad
+                    </th>
+                    <th className="text-left text-xs font-medium p-3">
+                      Origen
+                    </th>
+                    <th className="text-left text-xs font-medium p-3">
+                      Destino
+                    </th>
+                    <th className="text-left text-xs font-medium p-3">
+                      Estado
+                    </th>
+                    <th className="text-left text-xs font-medium p-3">
+                      Referencia
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentMovements.map((stock) => {
+                    // Find the item name
+                    const item = items.find((item) => item.id === stock.itemId);
+                    const fromWarehouse = warehouses.find(
+                      (w) => w.id === stock.fromWarehouseId
+                    );
+                    const toWarehouse = warehouses.find(
+                      (w) => w.id === stock.toWarehouseId
+                    );
+
+                    return (
+                      <tr key={stock.id} className="border-b hover:bg-muted/25">
+                        <td className="text-xs font-medium p-3">
+                          {stock.id.substring(0, 8)}...
+                        </td>
+                        <td className="text-xs p-3">{item?.name || "N/A"}</td>
+                        <td className="text-xs p-3">
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-white text-xs ${
+                              stock.type === "PURCHASE"
+                                ? "bg-green-600"
+                                : stock.type === "SALE"
+                                ? "bg-blue-600"
+                                : stock.type === "TRANSFER"
+                                ? "bg-purple-600"
+                                : stock.type === "ADJUSTMENT"
+                                ? "bg-orange-600"
+                                : stock.type === "RETURN"
+                                ? "bg-yellow-600"
+                                : stock.type === "DAMAGED"
+                                ? "bg-red-600"
+                                : stock.type === "EXPIRED"
+                                ? "bg-gray-600"
+                                : "bg-gray-500"
+                            }`}
+                          >
+                            {getTypeTranslation(stock.type)}
+                          </span>
+                        </td>
+                        <td className="text-xs font-medium p-3">
+                          <span
+                            className={
+                              stock.quantity >= 0
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {stock.quantity >= 0 ? "+" : ""}
+                            {stock.quantity}
+                          </span>
+                        </td>
+                        <td className="text-xs p-3">
+                          {fromWarehouse?.title || "-"}
+                        </td>
+                        <td className="text-xs p-3">
+                          {toWarehouse?.title || "-"}
+                        </td>
+                        <td className="text-xs p-3">
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-white text-xs ${
+                              stock.status === "COMPLETED"
+                                ? "bg-green-600"
+                                : stock.status === "PENDING"
+                                ? "bg-yellow-600"
+                                : stock.status === "CANCELLED"
+                                ? "bg-red-600"
+                                : stock.status === "REJECTED"
+                                ? "bg-red-700"
+                                : "bg-gray-500"
+                            }`}
+                          >
+                            {getStatusTranslation(stock.status)}
+                          </span>
+                        </td>
+                        <td className="text-xs p-3">
+                          {stock.reference || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {currentMovements.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p className="text-sm">
+                  No hay movimientos de inventario registrados
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                  className="text-xs"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="text-xs"
+                >
+                  Siguiente
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+
+              <div className="text-xs text-gray-500">
+                Mostrando {startIndex + 1} a{" "}
+                {Math.min(endIndex, stockMovements.length)} de{" "}
+                {stockMovements.length} registros
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

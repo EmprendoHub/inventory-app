@@ -398,7 +398,7 @@ export default function OrderView({ order }: { order: FullOderType }) {
           </div>
           <div className="leading-none">
             <p className="text-xs font-semibold text-muted leading-none">
-              Yunuen Company Liquidación de Muebles Americanos
+              Yunuen Company
             </p>
             <span className="text-xs text-muted">
               Blvd. Lazaro Cardenas 380{" "}

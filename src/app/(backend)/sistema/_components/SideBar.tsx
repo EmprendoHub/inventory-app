@@ -306,19 +306,7 @@ export default function SideBar({
                     Generador QR
                   </span>
                 </Link>
-                <Link
-                  className={`flex w-full items-center gap-2  p-1.5  ${
-                    hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                  } ${
-                    path === "/sistema/pos/register" ? "bg-blue-600" : ""
-                  } hover:bg-slate-900 rounded-md`}
-                  href={"/sistema/pos/register"}
-                >
-                  <FaCashRegister size={16} />
-                  <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                    Caja
-                  </span>
-                </Link>
+
                 {["SUPER_ADMIN"].includes(user?.role || "") && (
                   <Link
                     className={`group justify-between flex w-full items-center gap-2  p-1.5  ${
@@ -445,6 +433,19 @@ export default function SideBar({
                     <GiPayMoney size={16} />
                     <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                       Pagos
+                    </span>
+                  </Link>
+                  <Link
+                    className={`flex w-full items-center gap-2  p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                    } ${
+                      path === "/sistema/pos/register" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/pos/register"}
+                  >
+                    <FaCashRegister size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Registradora
                     </span>
                   </Link>
                 </CollapsibleContent>
