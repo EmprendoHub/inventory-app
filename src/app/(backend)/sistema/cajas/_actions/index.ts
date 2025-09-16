@@ -268,6 +268,7 @@ export const createPettyCashAction = async (
     startBalance: parseFloat(formData.get("startBalance") as string),
     endBalance: parseFloat(formData.get("endBalance") as string),
     auditDate: formData.get("auditDate") as string,
+    billBreakdown: formData.get("billBreakdown") as string,
   };
 
   const register = JSON.parse(rawData.register);
@@ -302,12 +303,65 @@ export const createPettyCashAction = async (
         },
       });
 
+      // Get current register to add the new denominations
+      const currentRegister = await prisma.cashRegister.findUnique({
+        where: { userId: user?.id || "" },
+      });
+
+      // Helper function to add cash breakdowns
+      const addCashBreakdowns = (existing: any, incoming: any) => {
+        if (!existing) return incoming;
+        if (!incoming) return existing;
+
+        const result = { ...existing };
+
+        // Add bills
+        if (existing.bills && incoming.bills) {
+          Object.keys(incoming.bills).forEach((key) => {
+            if (result.bills[key] && incoming.bills[key]) {
+              result.bills[key].count =
+                (result.bills[key].count || 0) +
+                (incoming.bills[key].count || 0);
+              result.bills[key].total =
+                result.bills[key].count * result.bills[key].value;
+            }
+          });
+        }
+
+        // Add coins
+        if (existing.coins && incoming.coins) {
+          Object.keys(incoming.coins).forEach((key) => {
+            if (result.coins[key] && incoming.coins[key]) {
+              result.coins[key].count =
+                (result.coins[key].count || 0) +
+                (incoming.coins[key].count || 0);
+              result.coins[key].total =
+                result.coins[key].count * result.coins[key].value;
+            }
+          });
+        }
+
+        // Update total cash
+        result.totalCash =
+          (existing.totalCash || 0) + (incoming.totalCash || 0);
+        return result;
+      };
+
+      // Add the new breakdown to existing breakdown
+      const incomingBreakdown = rawData.billBreakdown
+        ? JSON.parse(rawData.billBreakdown)
+        : null;
+      const updatedBreakdown = incomingBreakdown
+        ? addCashBreakdowns(currentRegister?.billBreakdown, incomingBreakdown)
+        : currentRegister?.billBreakdown;
+
       const updatedRegister = await prisma.cashRegister.update({
         where: { userId: user?.id || "" },
         data: {
           balance: {
-            increment: rawData.endBalance, // deducts cash withdraw to the current balance
+            increment: rawData.endBalance, // adds deposit amount to the current balance
           },
+          billBreakdown: updatedBreakdown, // Update with the combined breakdown
           updatedAt: createdAt,
         },
       });

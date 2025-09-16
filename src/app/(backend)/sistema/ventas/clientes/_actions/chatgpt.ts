@@ -26,7 +26,7 @@ export async function generateChatGPTResponse(
     const messages: ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: `Eres un agente de servicio al cliente muy servicial trabajas para una empresa de venta de muebles al por mayor y al por menor. Se amable, profesional y servicial. Se conciso en tus respuestas. Si no está seguro de los detalles del pedido, solicita una aclaración.`,
+        content: `Eres un agente de servicio al cliente muy servicial trabajas para una empresa de venta de ropa al por mayor y al por menor. Se amable, profesional y servicial. Se conciso en tus respuestas. Si no está seguro de los detalles del pedido, solicita una aclaración.`,
       },
       ...conversationHistory
         .reverse()

@@ -101,7 +101,7 @@ export async function GET(request: Request) {
       "Ocupas un reporte mas detallado? solicítalo a tu administrador.";
     const recipient_email = "emprendomex@gmail.com";
     const sender_email = "invetamexapp@gmail.com";
-    const fromName = "Muebles Americanos - Yunuen Company";
+    const fromName = "YUNUEN COMPANY";
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",

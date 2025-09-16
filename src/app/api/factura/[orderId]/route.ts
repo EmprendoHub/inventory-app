@@ -134,7 +134,7 @@ async function createReceiptCopy(
   pdf.setFontSize(8);
   pdf.setTextColor(100);
   pdf.text(
-    "Los muebles son artículos de liquidación de hoteles y no son nuevos. No aplican garantías. El costo de envío",
+    "Las prendas son artículos son nuevos. No aplican garantías. El costo de envío",
     34,
     termsY + 10
   );
@@ -144,7 +144,7 @@ async function createReceiptCopy(
     termsY + 13
   );
   pdf.text(
-    "envío serán acumulables. Se requiere liquidación total del saldo antes de la descarga de los muebles.",
+    "envío serán acumulables. Se requiere liquidación total del saldo antes de la descarga de las prendas.",
     38,
     termsY + 16
   );

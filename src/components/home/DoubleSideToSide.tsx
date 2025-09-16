@@ -86,7 +86,7 @@ const DoubleSideToSide = () => {
                   className="flex items-center gap-2"
                 >
                   <CiCircleChevDown className="text-black" />{" "}
-                  {"Muebles y electrodomésticos de alta calidad"}
+                  {"Prendas y artículos de alta calidad"}
                 </motion.li>
                 <motion.li
                   initial={{ opacity: 0, scale: 0 }}
@@ -156,7 +156,7 @@ const DoubleSideToSide = () => {
                   className="flex items-center gap-2"
                 >
                   {
-                    "Crea un ambiente acogedor y funcional con nuestros muebles de alta calidad."
+                    "Crea un ambiente acogedor y funcional con nuestros artículos de alta calidad."
                   }
                 </motion.p>
               </div>
@@ -189,9 +189,7 @@ const DoubleSideToSide = () => {
                   className="flex items-center gap-2"
                 >
                   <CiCircleChevDown className="text-black" />{" "}
-                  {
-                    "Muebles de alta calidad: Diseños modernos y funcionales para cada espacio."
-                  }
+                  {"Artículos de alta calidad."}
                 </motion.li>
                 <motion.li
                   initial={{ opacity: 0, scale: 0 }}
@@ -206,7 +204,7 @@ const DoubleSideToSide = () => {
                 >
                   <CiCircleChevDown className="text-black" />{" "}
                   {
-                    "Calidad y diseño: Muebles que combinan estilo y funcionalidad."
+                    "Calidad y diseño: Prendas que combinan estilo y funcionalidad."
                   }
                 </motion.li>
               </ul>

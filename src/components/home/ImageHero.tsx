@@ -36,10 +36,10 @@ const ImageHero = () => {
             className="leading-none mb-3"
           >
             <span className="text-white font-black">
-              {"Muebles y electrodomésticos "}
+              {"Prendas y accesorios"}
             </span>
             <span className="text-primary font-black">
-              {"Remodela tu hogar!"}
+              {"Remodela tu look!"}
             </span>
           </motion.h2>
 

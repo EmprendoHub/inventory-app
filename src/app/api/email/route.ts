@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    const subject = "Pedido de Muebles Yunuen";
+    const subject = "YUNUEN COMPANY - Recordatorio de Pago";
     const body = `Pedido:`;
     const bodyTwo = `Pagos:`;
     const title =

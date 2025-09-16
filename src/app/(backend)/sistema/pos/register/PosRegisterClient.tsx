@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import PosRegister from "../_components/PosRegister";
+import ChangeModal from "../_components/ChangeModal";
 import {
   CartState,
   PaymentType,
@@ -32,6 +33,13 @@ export default function PosRegisterClient({
   discounts,
 }: PosRegisterClientProps) {
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Change modal state
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [changeAmount, setChangeAmount] = useState(0);
+  const [changeBreakdown, setChangeBreakdown] = useState<CashBreakdown | null>(
+    null
+  );
 
   // Print receipt function
   const printReceipt = (receiptData: any) => {
@@ -188,18 +196,38 @@ export default function PosRegisterClient({
         cart,
         paymentType,
         undefined, // customerId
-        billBreakdown // billBreakdown as CashBreakdown object
+        billBreakdown, // billBreakdown as CashBreakdown object
+        cashReceived // Amount of cash received from customer
       );
 
       if (result.success) {
-        // Calculate change for cash payments
-        const changeAmount =
-          paymentType === PaymentType.CASH && cashReceived
-            ? cashReceived - cart.totalAmount
-            : 0;
+        // Handle change modal for cash payments with change
+        if (
+          paymentType === PaymentType.CASH &&
+          result.changeGiven &&
+          result.changeAmount &&
+          result.changeAmount > 0
+        ) {
+          // Show change modal
+          setChangeAmount(result.changeAmount);
+          setChangeBreakdown(result.changeGiven);
+          setShowChangeModal(true);
 
-        // Generate and print receipt for cash payments
+          // Generate receipt but don't show success modal yet
+          if (cashReceived) {
+            generateReceipt(
+              cart,
+              paymentType,
+              cashReceived,
+              result.changeAmount
+            );
+          }
+          return; // Don't show success modal yet, wait for change confirmation
+        }
+
+        // Generate and print receipt for cash payments without change or non-cash payments
         if (paymentType === PaymentType.CASH && cashReceived) {
+          const changeAmount = result.changeAmount || 0;
           generateReceipt(cart, paymentType, cashReceived, changeAmount);
         }
 
@@ -596,6 +624,75 @@ export default function PosRegisterClient({
     }
   };
 
+  // Handle change modal confirmation
+  const handleChangeConfirm = () => {
+    setShowChangeModal(false);
+
+    // Show success modal after change confirmation
+    const successModal = document.createElement("div");
+    successModal.innerHTML = `
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      ">
+        <div style="
+          background: white;
+          padding: 2rem;
+          border-radius: 12px;
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+          text-align: center;
+          max-width: 400px;
+          margin: 1rem;
+        ">
+          <div style="
+            color: #16a34a;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+          ">✅</div>
+          <h2 style="
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 1rem;
+          ">Venta Completada</h2>
+          <p style="
+            font-size: 1.125rem;
+            color: #4b5563;
+            margin-bottom: 1.5rem;
+          ">El cambio ha sido entregado correctamente.</p>
+          <button onclick="this.parentElement.parentElement.remove(); window.location.reload();" style="
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+          " onmouseover="this.style.background='#15803d'" onmouseout="this.style.background='#16a34a'">
+            Continuar
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(successModal);
+  };
+
+  // Handle change modal close
+  const handleChangeClose = () => {
+    setShowChangeModal(false);
+    // Maybe show a warning that the sale was completed but change wasn't confirmed?
+  };
+
   return (
     <div className="min-h-screen bg-card">
       <PosRegister
@@ -611,6 +708,17 @@ export default function PosRegisterClient({
         onApplyDiscount={handleApplyDiscount}
         onUpdateFavorites={handleUpdateFavorites}
       />
+
+      {/* Change Modal */}
+      {changeBreakdown && (
+        <ChangeModal
+          isOpen={showChangeModal}
+          changeAmount={changeAmount}
+          changeBreakdown={changeBreakdown}
+          onClose={handleChangeClose}
+          onConfirm={handleChangeConfirm}
+        />
+      )}
     </div>
   );
 }

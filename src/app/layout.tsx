@@ -19,10 +19,10 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   metadataBase: new URL("https://www.mueblesyuny.com/"),
   title: {
-    default: "MUEBLES YUNY | Muebles modernos restaurados de alta calidad",
-    template: `%s | Mx MUEBLES YUNY`,
+    default: "YUNUEN COMPANY | Punto de Venta",
+    template: `%s | Mx YUNUEN COMPANY`,
   },
-  description: "Muebles modernos restaurados de alta calidad.",
+  description: "Punto de Venta - YUNUEN COMPANY",
 };
 export const viewport = {
   themeColor: "#0e192b",

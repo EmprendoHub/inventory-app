@@ -4,6 +4,10 @@ import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import { CartState, PaymentType, CashBreakdown } from "@/types/pos";
+import {
+  calculateOptimalChange,
+  subtractChangeFromRegister,
+} from "@/lib/changeCalculation";
 import { revalidatePath } from "next/cache";
 import { generateOrderId } from "@/lib/utils";
 
@@ -13,6 +17,8 @@ interface PosOrderResult {
   orderId?: string;
   error?: string;
   isStockError?: boolean;
+  changeGiven?: CashBreakdown;
+  changeAmount?: number;
 }
 
 // Utility function to add two CashBreakdown objects
@@ -107,7 +113,8 @@ export async function createPosOrder(
   cart: CartState,
   paymentMethod: PaymentType,
   customerId?: string,
-  billBreakdown?: CashBreakdown // CashBreakdown object
+  billBreakdown?: CashBreakdown, // CashBreakdown object
+  cashReceived?: number // Amount of cash received from customer
 ): Promise<PosOrderResult> {
   const session = await getServerSession(options);
 
@@ -234,6 +241,10 @@ export async function createPosOrder(
       },
     });
 
+    // Variables to store change information
+    let changeGiven: CashBreakdown | undefined;
+    let changeAmount: number | undefined;
+
     // Handle cash register updates for cash payments
     if (paymentMethod === PaymentType.CASH) {
       // Get the user's cash register
@@ -242,23 +253,57 @@ export async function createPosOrder(
       });
 
       if (cashRegister) {
-        // Parse existing breakdown and combine with incoming
+        // Parse existing breakdown
         let existingBreakdown: CashBreakdown | null = null;
         if (cashRegister.billBreakdown) {
           existingBreakdown = cashRegister.billBreakdown as CashBreakdown;
         }
 
-        // Combine breakdowns if both exist
+        // Add incoming cash breakdown to register
         const updatedBreakdown = billBreakdown
           ? addCashBreakdowns(existingBreakdown, billBreakdown)
           : existingBreakdown;
+
+        // Calculate change if cash received is specified
+        let finalBreakdown = updatedBreakdown;
+
+        if (cashReceived && cashReceived > cart.totalAmount) {
+          changeAmount = cashReceived - cart.totalAmount;
+
+          // Calculate optimal change distribution
+          const changeResult = calculateOptimalChange(
+            changeAmount,
+            updatedBreakdown
+          );
+
+          if (!changeResult.success) {
+            return {
+              success: false,
+              error:
+                changeResult.error ||
+                `No se puede dar cambio de $${changeAmount.toFixed(2)}`,
+              isStockError: false,
+            };
+          }
+
+          // Store change information for return
+          changeGiven = changeResult.changeGiven || undefined;
+
+          // Subtract change denominations from register
+          if (changeResult.changeGiven) {
+            finalBreakdown = subtractChangeFromRegister(
+              updatedBreakdown,
+              changeResult.changeGiven
+            );
+          }
+        }
 
         // Update cash register balance and denominations
         await prisma.cashRegister.update({
           where: { id: cashRegister.id },
           data: {
             balance: cashRegister.balance + cart.totalAmount,
-            billBreakdown: updatedBreakdown,
+            billBreakdown: finalBreakdown,
           },
         });
 
@@ -279,7 +324,12 @@ export async function createPosOrder(
     revalidatePath("/sistema/pos");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/negocio/articulos");
-    return { success: true, orderId: order.id };
+    return {
+      success: true,
+      orderId: order.id,
+      changeGiven,
+      changeAmount,
+    };
   } catch (error) {
     console.error("Error creating POS order:", error);
 

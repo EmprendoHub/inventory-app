@@ -956,7 +956,7 @@ async function handleOwnerTextMessage(messageDetails: any) {
     timestamp: createdAt,
   });
 
-  const systemPrompt = `Eres Salvador, un profesional con más de 20 años de experiencia en desarrollo web, administración, y contabilidad para una compañía de venta de menudeo y mayoreo de muebles y electrodomésticos seminuevos provenientes de hoteles americanos en remate.
+  const systemPrompt = `Eres Salvador, un profesional con más de 20 años de experiencia en desarrollo web, administración, y contabilidad para una compañía de venta de menudeo y mayoreo de ropa y electrodomésticos seminuevos provenientes de hoteles americanos en remate.
 
   PERSONALIDAD Y RESPONSABILIDADES:
   - Manejas redes sociales, sistema de ventas, marketing y ventas
@@ -974,7 +974,7 @@ async function handleOwnerTextMessage(messageDetails: any) {
 
   CONOCIMIENTOS:
   - Terminología de ventas y administración de inventario
-  - Conocimiento de muebles y electrodomésticos de hoteles
+  - Conocimiento de ropa y electrodomésticos de hoteles
   - Familiaridad con software de gestión de ventas y contabilidad
   - Estrategias de marketing para productos seminuevos
 
@@ -1269,7 +1269,7 @@ async function handleLocationInquiry(phone: string) {
   const location = {
     longitude: "-102.71694780903867",
     latitude: "20.0274926053188",
-    name: "Muebles Americanos Yunuen Co.",
+    name: "YUNUEN COMPANY",
     address:
       "Guadalajara-Morelia, La Yerbabuena, Sahuayo, Michoacan, 59000, Mexico",
   };
@@ -1303,7 +1303,7 @@ async function handleContactCardInquiry(phone: string) {
       last_name: "Muebles",
     },
     org: {
-      company: "Muebles Americanos Yunuen Co.",
+      company: "YUNUEN COMPANY",
       department: "Servicio al cliente",
       title: "Servicio al cliente",
     },
