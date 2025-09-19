@@ -382,7 +382,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
             {images.map((item, index) => (
               <div
                 key={index}
-                className="flex flex-col items-center justify-between border print:border-0 p-2 print:p-1 code-container"
+                className="flex flex-col items-center justify-start border print:border-0 p-2 print:p-1 code-container"
               >
                 <Image
                   src={item.code}
@@ -391,7 +391,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
                   height={codeType === "qr" ? 80 : 40}
                   className="mx-auto print:w-[3.8cm] print:h-auto print:max-h-[1.5cm] object-contain"
                 />
-                <div className="text-center mt-1 print:mt-0 flex-grow flex flex-col justify-center">
+                <div className="text-center print:mt-0 flex-grow flex flex-col justify-center">
                   <p
                     className="text-xs font-medium truncate w-full print:text-[6px] print:leading-tight"
                     title={item.title}
