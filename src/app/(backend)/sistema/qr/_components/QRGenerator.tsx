@@ -111,14 +111,11 @@ const QRGenerator = ({ products }: { products: any[] }) => {
           let codeImage = "";
 
           if (codeType === "qr") {
-            const qrText = `${product.id}-${product.name}-${formatCurrency({
-              amount: product.price,
-              currency: "MXN",
-            })}`;
+            const qrText = `${product.sku}`;
             codeImage = await generateQRCode(qrText);
           } else {
             // Use barcode if available, otherwise use SKU or ID
-            const barcodeText = product.barcode || product.sku || product.id;
+            const barcodeText = product.sku;
             codeImage = generateBarcode(barcodeText);
           }
 
