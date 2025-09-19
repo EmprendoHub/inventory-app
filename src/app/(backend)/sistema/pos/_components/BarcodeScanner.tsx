@@ -105,6 +105,8 @@ export default function BarcodeScanner({
 
   // Handle manual barcode input
   const [manualInput, setManualInput] = useState("");
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const manualInputRef = useRef<HTMLInputElement>(null);
 
   const handleManualSubmit = useCallback(() => {
     if (manualInput.trim()) {
@@ -123,6 +125,10 @@ export default function BarcodeScanner({
   useEffect(() => {
     if (isOpen) {
       startScanner();
+      // Focus the manual input field when modal opens
+      setTimeout(() => {
+        manualInputRef.current?.focus();
+      }, 300); // Small delay to ensure modal is fully rendered
     } else {
       stopScanner();
     }
@@ -211,21 +217,48 @@ export default function BarcodeScanner({
           {/* Manual Input */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter barcode manually..."
-                  value={manualInput}
-                  onChange={(e) => setManualInput(e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-lg"
-                  onKeyPress={(e) => e.key === "Enter" && handleManualSubmit()}
-                />
-                <Button
-                  onClick={handleManualSubmit}
-                  disabled={!manualInput.trim()}
-                >
-                  Enviar
-                </Button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-gray-300">
+                  <div
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      isInputFocused ? "bg-green-400" : "bg-gray-400"
+                    }`}
+                  />
+                  <span>
+                    {isInputFocused
+                      ? "Listo para escáner de código de barras"
+                      : "Campo de entrada manual"}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    ref={manualInputRef}
+                    type="text"
+                    placeholder="Enter barcode manually or use scanner device..."
+                    value={manualInput}
+                    onChange={(e) => setManualInput(e.target.value)}
+                    className={`flex-1 px-3 py-2 border rounded-lg bg-input transition-all duration-200 ${
+                      isInputFocused
+                        ? "border-blue-500 ring-2 ring-blue-200 bg-white shadow-md"
+                        : "border-gray-300 hover:border-gray-400"
+                    }`}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && handleManualSubmit()
+                    }
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                  <Button
+                    onClick={handleManualSubmit}
+                    disabled={!manualInput.trim()}
+                  >
+                    Enviar
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
