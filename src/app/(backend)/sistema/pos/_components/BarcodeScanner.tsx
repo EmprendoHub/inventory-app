@@ -239,12 +239,10 @@ export default function BarcodeScanner({
                     onChange={(e) => setManualInput(e.target.value)}
                     className={`flex-1 px-3 py-2 border rounded-lg bg-input transition-all duration-200 ${
                       isInputFocused
-                        ? "border-blue-500 ring-2 ring-blue-200 bg-white shadow-md"
+                        ? "border-blue-500 ring-2 ring-blue-200 bg-background shadow-md"
                         : "border-gray-300 hover:border-gray-400"
                     }`}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && handleManualSubmit()
-                    }
+                    onKeyDown={(e) => e.key === "Enter" && handleManualSubmit()}
                     onFocus={() => setIsInputFocused(true)}
                     onBlur={() => setIsInputFocused(false)}
                     autoComplete="off"
