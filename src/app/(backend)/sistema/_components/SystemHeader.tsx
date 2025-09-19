@@ -26,8 +26,15 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
   const { data: session } = useSession();
   const { setTheme, theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setCurrentDate(getMexicoGlobalUtcDate());
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,8 +58,6 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const createdAt = getMexicoGlobalUtcDate();
-
   return (
     <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxmd:px-4  z-30">
       <div className="flex items-center justify-between w-full">
@@ -64,7 +69,13 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
             <PlusCircleIcon size={20} />
           </Link>
           <div className="flex items-center font-mono justify-center">
-            {createdAt.toLocaleDateString()} - <ClockTime />
+            {isMounted && currentDate ? (
+              <>
+                {currentDate.toLocaleDateString()} - <ClockTime />
+              </>
+            ) : (
+              <span>--</span>
+            )}
           </div>
         </div>
 

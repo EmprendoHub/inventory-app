@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Camera, Flashlight, RotateCcw } from "lucide-react";
+import { X, Camera, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScanResult, ScanMode } from "@/types/pos";
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
 
 interface BarcodeScannerProps {
   isOpen: boolean;
@@ -20,68 +21,87 @@ export default function BarcodeScanner({
   onScanResult,
   scanMode = "item",
 }: BarcodeScannerProps) {
+  // eslint-disable-next-line
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [flashOn, setFlashOn] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerElementRef = useRef<HTMLDivElement>(null);
 
-  // Initialize camera
-  const startCamera = useCallback(async () => {
+  // Initialize scanner
+  const startScanner = useCallback(() => {
+    if (!scannerElementRef.current) return;
+
     try {
       setError(null);
+      setIsScanning(true);
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "environment", // Use back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
+      // Configure supported formats for barcode scanning
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0,
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.CODE_39,
+          Html5QrcodeSupportedFormats.CODE_93,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+        ],
+      };
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setHasPermission(true);
-        setIsScanning(true);
-      }
+      // Success callback
+      const onScanSuccess = (decodedText: string) => {
+        const result: ScanResult = {
+          type: "barcode",
+          data: decodedText,
+          timestamp: new Date(),
+        };
+        onScanResult(result);
+        stopScanner();
+        onClose();
+      };
+
+      // Error callback
+      const onScanError = (errorMessage: string) => {
+        // Don't log every frame error, only actual errors
+        if (
+          !errorMessage.includes(
+            "No MultiFormat Readers were able to detect the code"
+          )
+        ) {
+          console.warn("Scan error:", errorMessage);
+        }
+      };
+
+      scannerRef.current = new Html5QrcodeScanner(
+        "barcode-scanner",
+        config,
+        false
+      );
+
+      scannerRef.current.render(onScanSuccess, onScanError);
+      setHasPermission(true);
     } catch (err) {
-      console.error("Error accessing camera:", err);
-      setError("Unable to access camera. Please check permissions.");
+      console.error("Error starting scanner:", err);
+      setError("Unable to start scanner. Please check camera permissions.");
       setHasPermission(false);
+      setIsScanning(false);
     }
-  }, []);
+    // eslint-disable-next-line
+  }, [onScanResult, onClose]);
 
-  // Stop camera
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
+  // Stop scanner
+  const stopScanner = useCallback(() => {
+    if (scannerRef.current) {
+      scannerRef.current.clear();
+      scannerRef.current = null;
     }
     setIsScanning(false);
   }, []);
-
-  // Toggle flashlight
-  const toggleFlash = useCallback(async () => {
-    if (streamRef.current) {
-      const track = streamRef.current.getVideoTracks()[0];
-      if (track && "torch" in track.getCapabilities()) {
-        try {
-          await track.applyConstraints({
-            // @ts-expect-error - torch is not in the standard type definition yet
-            advanced: [{ torch: !flashOn }],
-          });
-          setFlashOn(!flashOn);
-        } catch (err) {
-          console.error("Flash control not supported:", err);
-        }
-      }
-    }
-  }, [flashOn]);
 
   // Handle manual barcode input
   const [manualInput, setManualInput] = useState("");
@@ -99,18 +119,18 @@ export default function BarcodeScanner({
     }
   }, [manualInput, onScanResult, onClose]);
 
-  // Initialize camera when component opens
-  React.useEffect(() => {
+  // Initialize scanner when component opens
+  useEffect(() => {
     if (isOpen) {
-      startCamera();
+      startScanner();
     } else {
-      stopCamera();
+      stopScanner();
     }
 
     return () => {
-      stopCamera();
+      stopScanner();
     };
-  }, [isOpen, startCamera, stopCamera]);
+  }, [isOpen, startScanner, stopScanner]);
 
   if (!isOpen) return null;
 
@@ -139,16 +159,6 @@ export default function BarcodeScanner({
             <Button
               variant="ghost"
               size="sm"
-              onClick={toggleFlash}
-              className="text-white hover:bg-white/20"
-            >
-              <Flashlight
-                className={`w-5 h-5 ${flashOn ? "fill-yellow-400" : ""}`}
-              />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
               onClick={onClose}
               className="text-white hover:bg-white/20"
             >
@@ -157,86 +167,41 @@ export default function BarcodeScanner({
           </div>
         </div>
 
-        {/* Camera View */}
+        {/* Scanner View */}
         <div className="relative w-full h-full">
-          {isScanning ? (
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full h-full object-cover"
-            />
-          ) : hasPermission === false ? (
-            <div className="flex items-center justify-center h-full bg-gray-900">
+          {/* Scanner Container */}
+          <div
+            id="barcode-scanner"
+            ref={scannerElementRef}
+            className="w-full h-full barcode-scanner-container"
+            style={
+              {
+                "--qr-border-color": "#ffffff",
+                "--qr-scanner-border-color": "#ffffff",
+                "--qr-text-color": "#ffffff",
+              } as React.CSSProperties
+            }
+          />
+
+          {/* Permission / Error States */}
+          {(hasPermission === false || error) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-10">
               <Card className="w-full max-w-md mx-4">
                 <CardContent className="p-6 text-center">
                   <Camera className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                   <h3 className="text-lg font-semibold mb-2">
-                    Acceso a la Cámara Requerido
+                    {error ? "Error de Cámara" : "Acceso a la Cámara Requerido"}
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    Por favor permita el acceso a la cámara para escanear
-                    códigos de barras
+                    {error ||
+                      "Por favor permita el acceso a la cámara para escanear códigos de barras"}
                   </p>
-                  <Button onClick={startCamera} className="w-full">
+                  <Button onClick={startScanner} className="w-full">
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Reintentar
                   </Button>
                 </CardContent>
               </Card>
-            </div>
-          ) : error ? (
-            <div className="flex items-center justify-center h-full bg-gray-900">
-              <Card className="w-full max-w-md mx-4">
-                <CardContent className="p-6 text-center">
-                  <div className="text-red-500 text-4xl mb-4">⚠️</div>
-                  <h3 className="text-lg font-semibold mb-2 text-red-600">
-                    Error
-                  </h3>
-                  <p className="text-gray-600 mb-4">{error}</p>
-                  <Button onClick={startCamera} className="w-full">
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Reintentar
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full bg-gray-900">
-              <div className="text-white">Iniciando Cámara...</div>
-            </div>
-          )}
-
-          {/* Scan Overlay */}
-          {isScanning && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative">
-                {/* Scan Frame */}
-                <div className="w-64 h-64 border-2 border-white/50 rounded-lg relative">
-                  <div className="absolute top-0 left-0 w-8 h-8 border-l-4 border-t-4 border-white rounded-tl-lg"></div>
-                  <div className="absolute top-0 right-0 w-8 h-8 border-r-4 border-t-4 border-white rounded-tr-lg"></div>
-                  <div className="absolute bottom-0 left-0 w-8 h-8 border-l-4 border-b-4 border-white rounded-bl-lg"></div>
-                  <div className="absolute bottom-0 right-0 w-8 h-8 border-r-4 border-b-4 border-white rounded-br-lg"></div>
-
-                  {/* Scanning Line Animation */}
-                  <motion.div
-                    className="absolute inset-x-0 h-0.5 bg-red-500 shadow-lg shadow-red-500/50"
-                    animate={{
-                      y: [0, 256, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-                </div>
-
-                <p className="text-white text-center mt-4">
-                  Alinear el código de barras dentro del marco
-                </p>
-              </div>
             </div>
           )}
         </div>
