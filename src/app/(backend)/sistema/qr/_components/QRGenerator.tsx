@@ -162,12 +162,23 @@ const QRGenerator = ({ products }: { products: any[] }) => {
           break-after: page !important;
           page-break-after: always !important;
           margin: 0 !important;
-          padding: 0cm !important;
+          padding: 0.05cm !important;
           box-sizing: border-box !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
         }
         .code-container img {
-          max-width: 3.5cm !important;
-          max-height: 2.7cm !important;
+          max-width: 3.8cm !important;
+          max-height: 1.5cm !important;
+          flex-shrink: 0 !important;
+        }
+        .code-container .text-center {
+          flex-grow: 1 !important;
+          min-height: 1cm !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: center !important;
         }
         .print-layout {
           display: block !important;
@@ -378,25 +389,20 @@ const QRGenerator = ({ products }: { products: any[] }) => {
                   alt={`${codeType} code`}
                   width={codeType === "qr" ? 80 : 100}
                   height={codeType === "qr" ? 80 : 40}
-                  className="mx-auto print:w-[3.5cm] print:h-auto print:max-h-[2cm] object-contain"
+                  className="mx-auto print:w-[3.8cm] print:h-auto print:max-h-[1.5cm] object-contain"
                 />
                 <div className="text-center mt-1 print:mt-0 flex-grow flex flex-col justify-center">
                   <p
-                    className="text-xs font-medium truncate w-full print:text-[5px] print:leading-none"
+                    className="text-xs font-medium truncate w-full print:text-[6px] print:leading-tight"
                     title={item.title}
                   >
-                    {item.title.length > 8
-                      ? `${item.title.substring(0, 8)}...`
+                    {item.title.length > 12
+                      ? `${item.title.substring(0, 12)}...`
                       : item.title}
                   </p>
-                  <p className="text-xs text-gray-600 print:text-[5px] print:text-black print:leading-none">
+                  <p className="text-xs text-gray-600 print:text-[6px] print:text-black print:leading-tight">
                     {formatCurrency({ amount: item.price, currency: "MXN" })}
                   </p>
-                  {codeType === "barcode" && item.barcode && (
-                    <p className="text-xs text-gray-500 print:text-[4px] print:text-black print:leading-none">
-                      {item.barcode}
-                    </p>
-                  )}
                 </div>
               </div>
             ))}
