@@ -393,14 +393,13 @@ const QRGenerator = ({ products }: { products: any[] }) => {
                 />
                 <div className="text-center print:mt-0 flex-grow flex flex-col justify-center">
                   <p
-                    className="text-xs font-medium truncate w-full print:text-[6px] print:leading-tight"
+                    className="text-xs font-medium truncate w-full print:text-[6px] print:leading-tight uppercase"
                     title={item.title}
                   >
                     {item.title.length > 12
-                      ? `${item.title.substring(0, 12)}...`
+                      ? `${item.title.substring(0, 12)}`
                       : item.title}
-                  </p>
-                  <p className="text-xs text-gray-600 print:text-[6px] print:text-black print:leading-tight">
+                    {" - "}
                     {formatCurrency({ amount: item.price, currency: "MXN" })}
                   </p>
                 </div>
