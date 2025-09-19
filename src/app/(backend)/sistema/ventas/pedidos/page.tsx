@@ -29,11 +29,7 @@ export default async function SalesOrders() {
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">
-      <BusinessHeader
-        title={"Pedidos"}
-        link={`ventas/pedidos/nuevo`}
-        btn="Nuevo"
-      />
+      <BusinessHeader title={"Pedidos"} link={`pos/register`} btn="Nuevo" />
       <OrderList orders={ordersWithItems} />
     </div>
   );

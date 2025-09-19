@@ -40,6 +40,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
   const [codeType, setCodeType] = useState<CodeType>("qr");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [printMode, setPrintMode] = useState<"sheet" | "sticker">("sticker");
+  const [skippedProducts, setSkippedProducts] = useState<string[]>([]);
 
   // Load selected products from sessionStorage on component mount
   useEffect(() => {
@@ -94,6 +95,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
   const generateCodes = useCallback(async () => {
     setIsGenerating(true);
     setImages([]);
+    setSkippedProducts([]);
 
     // Only process selected products, if no products selected, don't generate any
     const productsToProcess =
@@ -102,30 +104,53 @@ const QRGenerator = ({ products }: { products: any[] }) => {
         : [];
 
     const newImages: CodeImage[] = [];
+    const skipped: string[] = [];
 
     for (const product of productsToProcess) {
       if (product.totalAvailableStock > 0) {
+        // Validate that product has a scannable identifier
+        const hasValidIdentifier =
+          (product.barcode && product.barcode.trim()) ||
+          (product.sku && product.sku.trim()) ||
+          product.id;
+
+        if (!hasValidIdentifier) {
+          console.warn(
+            `Skipping product ${product.name} - no valid barcode, SKU, or ID`
+          );
+          skipped.push(product.name);
+          continue;
+        }
+
         // Generate multiple codes based on stock quantity
         for (let i = 0; i < Math.min(product.totalAvailableStock, 50); i++) {
           // Limit to 50 per product
           let codeImage = "";
+          let scanText = "";
 
           if (codeType === "qr") {
-            const qrText = `${product.sku}`;
-            codeImage = await generateQRCode(qrText);
+            // Use barcode if available, otherwise fall back to product ID
+            scanText =
+              product.barcode && product.barcode.trim()
+                ? product.barcode.trim()
+                : product.id;
+            codeImage = await generateQRCode(scanText);
           } else {
             // Use barcode if available, otherwise use SKU or ID
-            const barcodeText = product.sku;
-            codeImage = generateBarcode(barcodeText);
+            scanText =
+              product.barcode && product.barcode.trim()
+                ? product.barcode.trim()
+                : product.sku || product.id;
+            codeImage = generateBarcode(scanText);
           }
 
-          if (codeImage) {
+          if (codeImage && scanText) {
             newImages.push({
               id: `${product.id}-${i}`,
               code: codeImage,
               title: product.name,
               sku: product.sku || "",
-              barcode: product.barcode || "",
+              barcode: scanText, // Store the actual scan text used
               price: product.price,
               stock: product.totalAvailableStock,
             });
@@ -135,6 +160,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
     }
 
     setImages(newImages);
+    setSkippedProducts(skipped);
     setIsGenerating(false);
   }, [codeType, products, selectedProducts]);
 
@@ -241,6 +267,29 @@ const QRGenerator = ({ products }: { products: any[] }) => {
                   <FaTrash size={12} />
                   Limpiar Selección
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Skipped Products Warning */}
+          {skippedProducts.length > 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <div className="text-yellow-600 text-lg">⚠️</div>
+                <div>
+                  <h4 className="text-sm font-medium text-yellow-800 mb-1">
+                    Productos omitidos
+                  </h4>
+                  <p className="text-sm text-yellow-700 mb-2">
+                    Los siguientes productos no tienen código de barras, SKU o
+                    ID válido y fueron omitidos:
+                  </p>
+                  <ul className="text-xs text-yellow-600 list-disc list-inside">
+                    {skippedProducts.map((productName, index) => (
+                      <li key={index}>{productName}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           )}
