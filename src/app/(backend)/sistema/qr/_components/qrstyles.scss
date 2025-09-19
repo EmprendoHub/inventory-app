@@ -59,39 +59,67 @@
   }
 }
 
-/* Print Styles for 3cm x 4cm QR/Barcode Labels */
+/* Print Styles for 4cm x 3cm Sticker Printer Labels - One per page */
 @media print {
   @page {
-    margin: 0.5cm;
+    size: 4cm 3cm;
+    margin: 0;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .code-container {
-    width: 3cm !important;
-    height: 4cm !important;
+    width: 4cm !important;
+    height: 3cm !important;
     box-sizing: border-box !important;
-    page-break-inside: avoid !important;
-    border: 1px solid #ddd !important;
+    break-after: page !important;
+    page-break-after: always !important;
+    border: none !important;
     padding: 0.1cm !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    background: white !important;
   }
 
   .code-container img {
-    max-width: 2.5cm !important;
-    max-height: 2.5cm !important;
+    max-width: 3.5cm !important;
+    max-height: 2cm !important;
     object-fit: contain !important;
+    margin-bottom: 0.1cm !important;
   }
 
   .code-container .text-center {
-    font-size: 6px !important;
-    line-height: 1.1 !important;
+    font-size: 5px !important;
+    line-height: 1 !important;
     text-align: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .code-container .text-center p {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
   }
 
   /* Hide screen-only elements */
   .print\\:hidden {
+    display: none !important;
+  }
+
+  /* Remove grid layout for print - each sticker on its own page */
+  .print\\:block {
+    display: block !important;
+  }
+
+  /* Hide page headers and other elements */
+  h1 {
     display: none !important;
   }
 }

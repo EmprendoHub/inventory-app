@@ -112,14 +112,18 @@ export function getMexicoDate(date: Date | string) {
 }
 
 export function getMexicoGlobalUtcDate() {
-  // Define your desired time zone (e.g., 'America/Mexico_City')
-  const timeZone = "America/Mexico_City";
+  // Simple approach: Just return the current Mexico time as a Date object
+  // The key insight is that when we want to store "Mexico time now" to the database,
+  // we should create a Date object that represents that exact moment in Mexico
 
-  // Get the current date in the specified time zone
   const now = new Date();
-  const zonedDate = toZonedTime(now, timeZone);
 
-  return zonedDate;
+  // Get the current time in Mexico City as an ISO string
+  const mexicoTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "America/Mexico_City" })
+  );
+
+  return mexicoTime;
 }
 
 export function getMexicoGlobalUtcSelectedDate(date: Date | string) {

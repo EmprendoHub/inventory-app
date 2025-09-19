@@ -39,6 +39,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeType, setCodeType] = useState<CodeType>("qr");
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const [printMode, setPrintMode] = useState<"sheet" | "sticker">("sticker");
 
   // Load selected products from sessionStorage on component mount
   useEffect(() => {
@@ -140,18 +141,57 @@ const QRGenerator = ({ products }: { products: any[] }) => {
     setIsGenerating(false);
   }, [codeType, products, selectedProducts]);
 
-  // Print handler with specific settings for label printing
+  // Print handler with specific settings based on print mode
   const handlePrint = useReactToPrint({
     contentRef: ref,
-    pageStyle: `
+    pageStyle:
+      printMode === "sticker"
+        ? `
       @page {
-        margin: 0.5cm;
+        size: 4cm 3cm;
+        margin: 0;
+      }
+      @media print {
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        .code-container {
+          width: 4cm !important;
+          height: 3cm !important;
+          break-after: page !important;
+          page-break-after: always !important;
+          margin: 0 !important;
+          padding: 0.1cm !important;
+          box-sizing: border-box !important;
+        }
+        .code-container img {
+          max-width: 3.5cm !important;
+          max-height: 2cm !important;
+        }
+        .print-layout {
+          display: block !important;
+        }
+      }
+    `
+        : `
+      @page {
+        size: A4;
+        margin: 1cm;
       }
       @media print {
         .code-container {
           width: 3cm !important;
           height: 4cm !important;
           break-inside: avoid !important;
+          margin: 0.2cm !important;
+          padding: 0.1cm !important;
+          border: 1px solid #ddd !important;
+        }
+        .print-layout {
+          display: grid !important;
+          grid-template-columns: repeat(5, 1fr) !important;
+          gap: 0.2cm !important;
         }
       }
     `,
@@ -198,30 +238,65 @@ const QRGenerator = ({ products }: { products: any[] }) => {
           )}
 
           {/* Code Type Selection */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">Tipo de Código:</label>
-            <Select
-              value={codeType}
-              onValueChange={(value) => setCodeType(value as CodeType)}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="qr">
-                  <div className="flex items-center gap-2">
-                    <FaQrcode />
-                    Código QR
-                  </div>
-                </SelectItem>
-                <SelectItem value="barcode">
-                  <div className="flex items-center gap-2">
-                    <BiBarcode />
-                    Código de Barras
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Code Type Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">
+                Tipo de Código:
+              </label>
+              <Select
+                value={codeType}
+                onValueChange={(value: CodeType) => setCodeType(value)}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="qr">
+                    <div className="flex items-center gap-2">
+                      <FaQrcode />
+                      Código QR
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="barcode">
+                    <div className="flex items-center gap-2">
+                      <BiBarcode />
+                      Código de Barras
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">
+                Modo de Impresión:
+              </label>
+              <Select
+                value={printMode}
+                onValueChange={(value: "sheet" | "sticker") =>
+                  setPrintMode(value)
+                }
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sticker">
+                    <div className="flex items-center gap-2">
+                      <FaPrint />
+                      Etiquetas 4x3cm
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="sheet">
+                    <div className="flex items-center gap-2">
+                      <FaPrint />
+                      Hoja A4
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -248,7 +323,9 @@ const QRGenerator = ({ products }: { products: any[] }) => {
               <FaPrint />
               {isGenerating
                 ? "Generando..."
-                : `Imprimir ${images.length} códigos`}
+                : `Imprimir ${images.length} códigos ${
+                    printMode === "sticker" ? "(Etiquetas 4x3cm)" : "(Hoja A4)"
+                  }`}
             </Button>
 
             <Button
@@ -284,33 +361,39 @@ const QRGenerator = ({ products }: { products: any[] }) => {
             {new Date().toLocaleDateString()}
           </h1>
 
-          <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 print:grid-cols-5 gap-4 print:gap-1">
+          <div
+            className={`grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 print-layout ${
+              printMode === "sticker"
+                ? "print:block print:gap-0"
+                : "print:grid print:grid-cols-5 print:gap-1"
+            }`}
+          >
             {images.map((item, index) => (
               <div
                 key={index}
-                className="flex flex-col items-center justify-between border print:border print:border-gray-300 p-2 print:p-1 code-container"
+                className="flex flex-col items-center justify-between border print:border-0 p-2 print:p-1 code-container"
               >
                 <Image
                   src={item.code}
                   alt={`${codeType} code`}
                   width={codeType === "qr" ? 80 : 100}
                   height={codeType === "qr" ? 80 : 40}
-                  className="mx-auto print:w-[2.5cm] print:h-auto print:max-h-[2.5cm] object-contain"
+                  className="mx-auto print:w-[3.5cm] print:h-auto print:max-h-[2cm] object-contain"
                 />
-                <div className="text-center mt-1 print:mt-0 flex-grow flex flex-col justify-end">
+                <div className="text-center mt-1 print:mt-0 flex-grow flex flex-col justify-center">
                   <p
-                    className="text-xs font-medium truncate w-full print:text-[8px] print:leading-tight"
+                    className="text-xs font-medium truncate w-full print:text-[5px] print:leading-none"
                     title={item.title}
                   >
-                    {item.title.length > 12
-                      ? `${item.title.substring(0, 12)}...`
+                    {item.title.length > 8
+                      ? `${item.title.substring(0, 8)}...`
                       : item.title}
                   </p>
-                  <p className="text-xs text-gray-600 print:text-[7px] print:text-black">
+                  <p className="text-xs text-gray-600 print:text-[5px] print:text-black print:leading-none">
                     {formatCurrency({ amount: item.price, currency: "MXN" })}
                   </p>
                   {codeType === "barcode" && item.barcode && (
-                    <p className="text-xs text-gray-500 print:text-[6px] print:text-black">
+                    <p className="text-xs text-gray-500 print:text-[4px] print:text-black print:leading-none">
                       {item.barcode}
                     </p>
                   )}

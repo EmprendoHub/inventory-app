@@ -9,7 +9,7 @@ import {
   subtractChangeFromRegister,
 } from "@/lib/changeCalculation";
 import { revalidatePath } from "next/cache";
-import { generateOrderId } from "@/lib/utils";
+import { generateOrderId, getMexicoGlobalUtcDate } from "@/lib/utils";
 
 // Result interface for POS operations
 interface PosOrderResult {
@@ -177,6 +177,7 @@ export async function createPosOrder(
     const orderNumber = await generateOrderId(prisma);
 
     // Create the order using Order model with status "ENTREGADO"
+    const createdAt = getMexicoGlobalUtcDate();
     const order = await prisma.order.create({
       data: {
         orderNo: orderNumber,
@@ -186,7 +187,9 @@ export async function createPosOrder(
         discount: cart.discountAmount || 0,
         status: "ENTREGADO",
         notes: "Venta POS",
-        dueDate: new Date(),
+        dueDate: createdAt,
+        createdAt,
+        updatedAt: createdAt,
         orderItems: {
           create: orderItems,
         },
@@ -238,6 +241,8 @@ export async function createPosOrder(
         amount: Math.round(cart.totalAmount),
         status: "PAGADO",
         reference: `POS-${Date.now()}`,
+        createdAt,
+        updatedAt: createdAt,
       },
     });
 
@@ -304,6 +309,7 @@ export async function createPosOrder(
           data: {
             balance: cashRegister.balance + cart.totalAmount,
             billBreakdown: finalBreakdown,
+            updatedAt: createdAt,
           },
         });
 
@@ -316,6 +322,8 @@ export async function createPosOrder(
             cashRegisterId: cashRegister.id,
             billBreakdown,
             userId: session.user.id,
+            createdAt,
+            updatedAt: createdAt,
           },
         });
       }

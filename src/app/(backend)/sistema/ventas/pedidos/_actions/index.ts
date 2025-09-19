@@ -85,7 +85,7 @@ export async function createNewOrder(
     const carrier = "YUNUEN COMPANY";
     const deliveryStatus = "PENDIENTE";
 
-    const dueDate = new Date(); // Current date and time
+    const dueDate = getMexicoGlobalUtcDate(); // Current date and time in Mexico timezone
     dueDate.setDate(dueDate.getDate() + 30); // Add 30 days
     const orderNo = await generateOrderId(prisma);
     const session = await getServerSession(options);

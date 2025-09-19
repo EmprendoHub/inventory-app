@@ -19,8 +19,8 @@ import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-// import { getMexicoGlobalUtcDate } from "@/lib/utils";
-// import ClockTime from "@/components/ClockComponent";
+import { getMexicoGlobalUtcDate } from "@/lib/utils";
+import ClockTime from "@/components/ClockComponent";
 
 const SystemHeader = ({ hidden }: { hidden: boolean }) => {
   const { data: session } = useSession();
@@ -51,7 +51,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // const createdAt = getMexicoGlobalUtcDate();
+  const createdAt = getMexicoGlobalUtcDate();
 
   return (
     <div className="fixed w-full bg-primary h-10 flex items-center justify-between pl-4 pr-16 maxmd:px-4  z-30">
@@ -63,9 +63,9 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
           >
             <PlusCircleIcon size={20} />
           </Link>
-          {/* <div className="flex items-center font-mono justify-center">
+          <div className="flex items-center font-mono justify-center">
             {createdAt.toLocaleDateString()} - <ClockTime />
-          </div> */}
+          </div>
         </div>
 
         {/*  User Info  */}
