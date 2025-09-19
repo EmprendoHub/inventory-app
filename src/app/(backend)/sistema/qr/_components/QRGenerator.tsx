@@ -162,12 +162,12 @@ const QRGenerator = ({ products }: { products: any[] }) => {
           break-after: page !important;
           page-break-after: always !important;
           margin: 0 !important;
-          padding: 0.1cm !important;
+          padding: 0cm !important;
           box-sizing: border-box !important;
         }
         .code-container img {
           max-width: 3.5cm !important;
-          max-height: 2cm !important;
+          max-height: 2.7cm !important;
         }
         .print-layout {
           display: block !important;
@@ -181,11 +181,11 @@ const QRGenerator = ({ products }: { products: any[] }) => {
       }
       @media print {
         .code-container {
-          width: 3cm !important;
-          height: 4cm !important;
+          width: 4cm !important;
+          height: 3cm !important;
           break-inside: avoid !important;
-          margin: 0.2cm !important;
-          padding: 0.1cm !important;
+          margin: 0.0cm !important;
+          padding: 0.0cm !important;
           border: 1px solid #ddd !important;
         }
         .print-layout {
