@@ -12,7 +12,7 @@ import {
   Banknote,
   QrCode,
   Tag,
-  PauseCircle,
+  // PauseCircle,
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
@@ -40,6 +40,7 @@ import FavoritesGrid from "./FavoritesGrid";
 import BarcodeScanner from "./BarcodeScanner";
 import DiscountSystem from "./DiscountSystem";
 import Image from "next/image";
+import { GiCash } from "react-icons/gi";
 
 interface PosRegisterProps {
   items: ItemType[];
@@ -66,7 +67,7 @@ export default function PosRegister({
   customers,
   discounts = [],
   onCheckout,
-  onHoldOrder,
+  // onHoldOrder,
   onUpdateFavorites,
   isProcessing,
 }: PosRegisterProps) {
@@ -396,24 +397,23 @@ export default function PosRegister({
     [cart, onCheckout, clearCart]
   );
 
-  // Handle hold order
-  const handleHoldOrder = useCallback(async () => {
-    if (cart.items.length === 0) return;
+  // // Handle hold order
+  // const handleHoldOrder = useCallback(async () => {
+  //   if (cart.items.length === 0) return;
 
-    try {
-      await onHoldOrder(cart);
-      clearCart();
-    } catch (error) {
-      console.error("Hold order error:", error);
-    }
-  }, [cart, onHoldOrder, clearCart]);
+  //   try {
+  //     await onHoldOrder(cart);
+  //     clearCart();
+  //   } catch (error) {
+  //     console.error("Hold order error:", error);
+  //   }
+  // }, [cart, onHoldOrder, clearCart]);
 
   return (
     <div className="min-h-screen bg-card flex flex-col">
       {/* Header */}
-      <header className="bg-background shadow-sm border-b px-4 py-3 flex items-center justify-between">
+      <header className="bg-card shadow-sm border-b px-4 py-3 flex items-center gap-x-14 justify-between fixed top-12 right-10 z-20 ">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-semibold ">CAJA</h1>
           <Badge variant="outline" className="bg-green-50 text-green-700">
             Sesión Activa
           </Badge>
@@ -434,9 +434,9 @@ export default function PosRegister({
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden mt-20">
         {/* Products Section */}
-        <div className="flex-1 p-4 pr-80">
+        <div className="flex-1 p-4 pr-[360px]">
           {/* Search and Categories */}
           <div className="mb-4 space-y-3">
             <div className="relative">
@@ -698,15 +698,15 @@ export default function PosRegister({
               {/* Action Buttons */}
               <div className="space-y-2">
                 <Button
-                  className="w-full py-3 text-base"
+                  className="w-full py-10 text-base bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center text-white min-h-10"
                   onClick={() => setShowPaymentModal(true)}
                   disabled={isProcessing}
                 >
-                  <CreditCard className="w-4 h-4 mr-2" />
+                  <GiCash className="w-4 h-4 mr-2" />
                   Finalizar Venta
                 </Button>
 
-                <div className="grid grid-cols-2 gap-2">
+                {/* <div className="grid grid-cols-2 gap-2">
                   <Button
                     variant="outline"
                     onClick={handleHoldOrder}
@@ -715,11 +715,7 @@ export default function PosRegister({
                     <PauseCircle className="w-4 h-4 mr-1" />
                     Retener
                   </Button>
-                  <Button variant="outline">
-                    <MoreHorizontal className="w-4 h-4 mr-1" />
-                    Más
-                  </Button>
-                </div>
+                </div> */}
               </div>
             </div>
           )}

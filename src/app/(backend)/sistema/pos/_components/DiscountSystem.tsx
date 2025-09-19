@@ -9,14 +9,14 @@ import {
   Plus,
   Minus,
   X,
-  Search,
-  Check,
+  // Search,
+  // Check,
   AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import { Discount, DiscountTypeEnum, CartItemType } from "@/types/pos";
 
 interface DiscountSystemProps {
@@ -36,15 +36,15 @@ interface DiscountSystemProps {
 export default function DiscountSystem({
   isOpen,
   onClose,
-  discounts,
+  // discounts,
   cartItems,
   onApplyDiscount,
 }: DiscountSystemProps) {
   const [activeTab, setActiveTab] = useState<"predefined" | "manual">(
     "predefined"
   );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [discountCode, setDiscountCode] = useState("");
+  // const [searchTerm, setSearchTerm] = useState("");
+  // const [discountCode, setDiscountCode] = useState("");
   const [manualDiscount, setManualDiscount] = useState({
     type: DiscountTypeEnum.PERCENTAGE,
     value: 0,
@@ -54,39 +54,39 @@ export default function DiscountSystem({
   const [error, setError] = useState("");
 
   // Filter predefined discounts
-  const filteredDiscounts = React.useMemo(() => {
-    return discounts.filter(
-      (discount) =>
-        discount.isActive &&
-        (discount.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (discount.code &&
-            discount.code.toLowerCase().includes(searchTerm.toLowerCase())))
-    );
-  }, [discounts, searchTerm]);
+  // const filteredDiscounts = React.useMemo(() => {
+  //   return discounts.filter(
+  //     (discount) =>
+  //       discount.isActive &&
+  //       (discount.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //         (discount.code &&
+  //           discount.code.toLowerCase().includes(searchTerm.toLowerCase())))
+  //   );
+  // }, [discounts, searchTerm]);
 
   // Handle code lookup
-  const handleCodeLookup = useCallback(() => {
-    const discount = discounts.find(
-      (d) =>
-        d.code &&
-        d.code.toLowerCase() === discountCode.toLowerCase() &&
-        d.isActive
-    );
+  // const handleCodeLookup = useCallback(() => {
+  //   const discount = discounts.find(
+  //     (d) =>
+  //       d.code &&
+  //       d.code.toLowerCase() === discountCode.toLowerCase() &&
+  //       d.isActive
+  //   );
 
-    if (discount) {
-      onApplyDiscount("order", discount);
-      setDiscountCode("");
-      setError("");
-      onClose();
-    } else {
-      setError("Invalid or expired discount code");
-    }
-  }, [discountCode, discounts, onApplyDiscount, onClose]);
+  //   if (discount) {
+  //     onApplyDiscount("order", discount);
+  //     setDiscountCode("");
+  //     setError("");
+  //     onClose();
+  //   } else {
+  //     setError("Invalid or expired discount code");
+  //   }
+  // }, [discountCode, discounts, onApplyDiscount, onClose]);
 
   // Handle manual discount application
   const handleManualDiscount = useCallback(() => {
     if (manualDiscount.value <= 0) {
-      setError("Discount value must be greater than 0");
+      setError("El valor del descuento debe ser mayor que 0");
       return;
     }
 
@@ -94,7 +94,7 @@ export default function DiscountSystem({
       manualDiscount.type === DiscountTypeEnum.PERCENTAGE &&
       manualDiscount.value > 100
     ) {
-      setError("Percentage discount cannot exceed 100%");
+      setError("El porcentaje de descuento no puede ser mayor al 100%");
       return;
     }
 
@@ -128,12 +128,12 @@ export default function DiscountSystem({
 
   // Quick discount buttons
   const quickDiscounts = [
-    { name: "5% Off", type: DiscountTypeEnum.PERCENTAGE, value: 5 },
-    { name: "10% Off", type: DiscountTypeEnum.PERCENTAGE, value: 10 },
-    { name: "15% Off", type: DiscountTypeEnum.PERCENTAGE, value: 15 },
-    { name: "20% Off", type: DiscountTypeEnum.PERCENTAGE, value: 20 },
-    { name: "$5 Off", type: DiscountTypeEnum.FIXED_AMOUNT, value: 5 },
-    { name: "$10 Off", type: DiscountTypeEnum.FIXED_AMOUNT, value: 10 },
+    { name: "0%", type: DiscountTypeEnum.PERCENTAGE, value: 0 },
+    { name: "5%", type: DiscountTypeEnum.PERCENTAGE, value: 5 },
+    { name: "10%", type: DiscountTypeEnum.PERCENTAGE, value: 10 },
+    { name: "15%", type: DiscountTypeEnum.PERCENTAGE, value: 15 },
+    { name: "20%", type: DiscountTypeEnum.PERCENTAGE, value: 20 },
+    { name: "25%", type: DiscountTypeEnum.PERCENTAGE, value: 25 },
   ];
 
   if (!isOpen) return null;
@@ -153,10 +153,10 @@ export default function DiscountSystem({
           className="bg-background rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center justify-between p-3 border-b">
             <div className="flex items-center gap-2">
               <Tag className="w-5 h-5 text-green-600" />
-              <h2 className="text-xl font-semibold">Apply Discount</h2>
+              <h2 className="text-xl font-semibold">Aplicar Descuento</h2>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="w-4 h-4" />
@@ -177,26 +177,26 @@ export default function DiscountSystem({
           <div className="flex border-b">
             <Button
               variant={activeTab === "predefined" ? "default" : "ghost"}
-              className="flex-1 rounded-none"
+              className="flex-1 rounded-none text-white"
               onClick={() => setActiveTab("predefined")}
             >
-              Predefined Discounts
+              Descuentos Predefinidos
             </Button>
             <Button
               variant={activeTab === "manual" ? "default" : "ghost"}
-              className="flex-1 rounded-none"
+              className="flex-1 rounded-none text-white"
               onClick={() => setActiveTab("manual")}
             >
-              Manual Discount
+              Descuento Manual
             </Button>
           </div>
 
-          <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
+          <div className="p-3 space-y-6 max-h-96 overflow-y-auto">
             {/* Predefined Discounts Tab */}
             {activeTab === "predefined" && (
               <div className="space-y-4">
                 {/* Code Lookup */}
-                <Card>
+                {/* <Card>
                   <CardHeader>
                     <CardTitle className="text-sm">Discount Code</CardTitle>
                   </CardHeader>
@@ -221,12 +221,12 @@ export default function DiscountSystem({
                       </Button>
                     </div>
                   </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Quick Discounts */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm">Quick Discounts</CardTitle>
+                    <CardTitle className="text-sm">Descuentos Rápido</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-3 gap-2">
@@ -235,7 +235,7 @@ export default function DiscountSystem({
                           key={index}
                           variant="outline"
                           onClick={() => onApplyDiscount("order", discount)}
-                          className="text-sm"
+                          className="text-xl py-10"
                         >
                           {discount.name}
                         </Button>
@@ -245,9 +245,9 @@ export default function DiscountSystem({
                 </Card>
 
                 {/* Search Predefined */}
-                <Card>
+                {/* <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm">Browse Discounts</CardTitle>
+                    <CardTitle className="text-sm">Explorar Descuentos</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="relative">
@@ -315,214 +315,218 @@ export default function DiscountSystem({
                       )}
                     </div>
                   </CardContent>
-                </Card>
+                </Card> */}
               </div>
             )}
 
             {/* Manual Discount Tab */}
             {activeTab === "manual" && (
               <div className="space-y-4">
-                {/* Discount Type */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Discount Type</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant={
-                          manualDiscount.type === DiscountTypeEnum.PERCENTAGE
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() =>
-                          setManualDiscount((prev) => ({
-                            ...prev,
-                            type: DiscountTypeEnum.PERCENTAGE,
-                            value:
-                              prev.type === DiscountTypeEnum.FIXED_AMOUNT
-                                ? 0
-                                : prev.value,
-                          }))
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <Percent className="w-4 h-4" />
-                        Percentage
-                      </Button>
-                      <Button
-                        variant={
-                          manualDiscount.type === DiscountTypeEnum.FIXED_AMOUNT
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() =>
-                          setManualDiscount((prev) => ({
-                            ...prev,
-                            type: DiscountTypeEnum.FIXED_AMOUNT,
-                            value:
-                              prev.type === DiscountTypeEnum.PERCENTAGE
-                                ? 0
-                                : prev.value,
-                          }))
-                        }
-                        className="flex items-center gap-2"
-                      >
-                        <DollarSign className="w-4 h-4" />
-                        Fixed Amount
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="flex flex-row flex-wrap gap-2">
+                  {/* Discount Type */}
+                  <Card className="md:w-fit w-full">
+                    <CardHeader>
+                      <CardTitle className="text-sm">
+                        Tipo de Descuento
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button
+                          variant={
+                            manualDiscount.type === DiscountTypeEnum.PERCENTAGE
+                              ? "default"
+                              : "outline"
+                          }
+                          onClick={() =>
+                            setManualDiscount((prev) => ({
+                              ...prev,
+                              type: DiscountTypeEnum.PERCENTAGE,
+                              value:
+                                prev.type === DiscountTypeEnum.FIXED_AMOUNT
+                                  ? 0
+                                  : prev.value,
+                            }))
+                          }
+                          className="flex items-center gap-2 py-3"
+                        >
+                          <Percent className="w-4 h-4" />
+                          Porcentaje
+                        </Button>
+                        <Button
+                          variant={
+                            manualDiscount.type ===
+                            DiscountTypeEnum.FIXED_AMOUNT
+                              ? "default"
+                              : "outline"
+                          }
+                          onClick={() =>
+                            setManualDiscount((prev) => ({
+                              ...prev,
+                              type: DiscountTypeEnum.FIXED_AMOUNT,
+                              value:
+                                prev.type === DiscountTypeEnum.PERCENTAGE
+                                  ? 0
+                                  : prev.value,
+                            }))
+                          }
+                          className="flex items-center gap-2"
+                        >
+                          <DollarSign className="w-4 h-4" />
+                          Monto Fijo
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                {/* Discount Value */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">
-                      Discount Value
-                      {manualDiscount.type === DiscountTypeEnum.PERCENTAGE &&
-                        " (%)"}
-                      {manualDiscount.type === DiscountTypeEnum.FIXED_AMOUNT &&
-                        " ($)"}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setManualDiscount((prev) => ({
-                            ...prev,
-                            value: Math.max(
-                              0,
-                              prev.value -
+                  {/* Discount Value */}
+                  <Card className="md:w-fit w-full">
+                    <CardHeader>
+                      <CardTitle className="text-sm">
+                        Valor del Descuento
+                        {manualDiscount.type === DiscountTypeEnum.PERCENTAGE &&
+                          " (%)"}
+                        {manualDiscount.type ===
+                          DiscountTypeEnum.FIXED_AMOUNT && " ($)"}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setManualDiscount((prev) => ({
+                              ...prev,
+                              value: Math.max(
+                                0,
+                                prev.value -
+                                  (prev.type === DiscountTypeEnum.PERCENTAGE
+                                    ? 1
+                                    : 1)
+                              ),
+                            }))
+                          }
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={manualDiscount.value}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            setManualDiscount((prev) => ({ ...prev, value }));
+                            setError("");
+                          }}
+                          className="text-center text-2xl w-24"
+                          min="0"
+                          max={
+                            manualDiscount.type === DiscountTypeEnum.PERCENTAGE
+                              ? "100"
+                              : undefined
+                          }
+                          step={
+                            manualDiscount.type === DiscountTypeEnum.PERCENTAGE
+                              ? "1"
+                              : "0.01"
+                          }
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setManualDiscount((prev) => ({
+                              ...prev,
+                              value:
+                                prev.value +
                                 (prev.type === DiscountTypeEnum.PERCENTAGE
                                   ? 1
-                                  : 1)
-                            ),
-                          }))
-                        }
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <Input
-                        type="number"
-                        value={manualDiscount.value}
-                        onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0;
-                          setManualDiscount((prev) => ({ ...prev, value }));
-                          setError("");
-                        }}
-                        className="text-center"
-                        min="0"
-                        max={
-                          manualDiscount.type === DiscountTypeEnum.PERCENTAGE
-                            ? "100"
-                            : undefined
-                        }
-                        step={
-                          manualDiscount.type === DiscountTypeEnum.PERCENTAGE
-                            ? "1"
-                            : "0.01"
-                        }
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setManualDiscount((prev) => ({
-                            ...prev,
-                            value:
-                              prev.value +
-                              (prev.type === DiscountTypeEnum.PERCENTAGE
-                                ? 1
-                                : 1),
-                          }))
-                        }
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Apply To */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Apply To</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant={
-                          manualDiscount.applyTo === "order"
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() =>
-                          setManualDiscount((prev) => ({
-                            ...prev,
-                            applyTo: "order",
-                          }))
-                        }
-                      >
-                        Entire Order
-                      </Button>
-                      <Button
-                        variant={
-                          manualDiscount.applyTo === "item"
-                            ? "default"
-                            : "outline"
-                        }
-                        onClick={() =>
-                          setManualDiscount((prev) => ({
-                            ...prev,
-                            applyTo: "item",
-                          }))
-                        }
-                      >
-                        Specific Item
-                      </Button>
-                    </div>
-
-                    {/* Item Selection */}
-                    {manualDiscount.applyTo === "item" && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Select Item:
-                        </label>
-                        <div className="space-y-1">
-                          {cartItems.map((item) => (
-                            <label
-                              key={item.id}
-                              className="flex items-center gap-2 cursor-pointer"
-                            >
-                              <input
-                                type="radio"
-                                name="selectedItem"
-                                value={item.id}
-                                checked={
-                                  manualDiscount.selectedItemId === item.id
-                                }
-                                onChange={(e) =>
-                                  setManualDiscount((prev) => ({
-                                    ...prev,
-                                    selectedItemId: e.target.value,
-                                  }))
-                                }
-                              />
-                              <span className="text-sm">
-                                {item.name} - $
-                                {(item.price * item.quantity).toFixed(2)}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
+                                  : 1),
+                            }))
+                          }
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                  {/* Apply To */}
+                  <Card className="md:w-fit w-full">
+                    <CardHeader>
+                      <CardTitle className="text-sm">Aplicar a</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 gap-2">
+                        <Button
+                          variant={
+                            manualDiscount.applyTo === "order"
+                              ? "default"
+                              : "outline"
+                          }
+                          onClick={() =>
+                            setManualDiscount((prev) => ({
+                              ...prev,
+                              applyTo: "order",
+                            }))
+                          }
+                        >
+                          Pedido
+                        </Button>
+                        <Button
+                          variant={
+                            manualDiscount.applyTo === "item"
+                              ? "default"
+                              : "outline"
+                          }
+                          onClick={() =>
+                            setManualDiscount((prev) => ({
+                              ...prev,
+                              applyTo: "item",
+                            }))
+                          }
+                        >
+                          Artículo
+                        </Button>
+                      </div>
+
+                      {/* Item Selection */}
+                      {manualDiscount.applyTo === "item" && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">
+                            Seleccionar Artículo:
+                          </label>
+                          <div className="space-y-1">
+                            {cartItems.map((item) => (
+                              <label
+                                key={item.id}
+                                className="flex items-center gap-2 cursor-pointer"
+                              >
+                                <input
+                                  type="radio"
+                                  name="selectedItem"
+                                  value={item.id}
+                                  checked={
+                                    manualDiscount.selectedItemId === item.id
+                                  }
+                                  onChange={(e) =>
+                                    setManualDiscount((prev) => ({
+                                      ...prev,
+                                      selectedItemId: e.target.value,
+                                    }))
+                                  }
+                                />
+                                <span className="text-sm">
+                                  {item.name} - $
+                                  {(item.price * item.quantity).toFixed(2)}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* Apply Manual Discount */}
                 <Button
@@ -534,11 +538,11 @@ export default function DiscountSystem({
                       !manualDiscount.selectedItemId)
                   }
                 >
-                  Apply{" "}
+                  Aplicar{" "}
                   {manualDiscount.type === DiscountTypeEnum.PERCENTAGE
                     ? `${manualDiscount.value}%`
                     : `$${manualDiscount.value}`}{" "}
-                  Discount
+                  Descuento
                 </Button>
               </div>
             )}
