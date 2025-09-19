@@ -40,6 +40,7 @@ import { GiExpense, GiPayMoney } from "react-icons/gi";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import { BsReceiptCutoff } from "react-icons/bs";
 
 export default function SideBar({
   setHidden,
@@ -477,9 +478,9 @@ export default function SideBar({
                 } hover:bg-slate-900 rounded-md`}
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
-                <FaCashRegister size={16} />
+                <BsReceiptCutoff size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Caja
+                  Corte
                 </span>
               </Link>
             </>
@@ -498,9 +499,9 @@ export default function SideBar({
                 } hover:bg-slate-900 rounded-md`}
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
-                <FaCashRegister size={16} />
+                <BsReceiptCutoff size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Caja
+                  Corte
                 </span>
               </Link>
               <Link
@@ -541,7 +542,7 @@ export default function SideBar({
                   } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/cajas/auditoria"}
               >
-                <BanknoteIcon size={16} />
+                <BsReceiptCutoff size={16} />
                 <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                   Cortes
                 </span>

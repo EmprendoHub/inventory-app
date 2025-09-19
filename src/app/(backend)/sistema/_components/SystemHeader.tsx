@@ -63,7 +63,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
           <Link
-            href={"/sistema/ventas/pedidos/nuevo"}
+            href={"/sistema/pos/register"}
             className="bg-muted text-white hover:text-accent p-1 rounded-lg"
           >
             <PlusCircleIcon size={20} />
