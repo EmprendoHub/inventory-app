@@ -75,6 +75,7 @@ export const createAdjustment = async (
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/negocio");
   } else {
     // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);
@@ -97,6 +98,7 @@ export const createAdjustment = async (
       },
       data: {
         quantity: { decrement: validatedAdjustData.data.transAmount },
+        availableQty: { decrement: validatedAdjustData.data.transAmount },
         updatedAt: createdAt,
       },
     });
@@ -121,6 +123,7 @@ export const createAdjustment = async (
         },
         data: {
           quantity: { increment: validatedAdjustData.data.transAmount },
+          availableQty: { increment: validatedAdjustData.data.transAmount },
           updatedAt: createdAt,
         },
       });
@@ -130,6 +133,7 @@ export const createAdjustment = async (
           itemId: validatedAdjustData.data.articulo,
           warehouseId: validatedAdjustData.data.receivingWarehouse,
           quantity: validatedAdjustData.data.transAmount, // Set initial stock amount
+          availableQty: validatedAdjustData.data.transAmount, // Set initial available stock amount
           createdAt,
           updatedAt: createdAt,
         },

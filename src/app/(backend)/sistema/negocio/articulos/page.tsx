@@ -13,8 +13,19 @@ export default async function ItemsPage() {
         },
       });
 
-      // Fetch all stocks
+      // Fetch all stocks with warehouse information
       const stocks = await prisma.stock.findMany({
+        include: {
+          warehouse: {
+            select: {
+              id: true,
+              title: true,
+              code: true,
+              type: true,
+              status: true,
+            },
+          },
+        },
         orderBy: {
           createdAt: "desc", // Latest stock entries
         },

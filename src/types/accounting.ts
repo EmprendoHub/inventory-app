@@ -90,4 +90,5 @@ export type StockMovement = {
   status: MovementStatus;
   createdBy: string;
   approvedBy?: string | null;
+  createdAt: string; // Add this line
 };

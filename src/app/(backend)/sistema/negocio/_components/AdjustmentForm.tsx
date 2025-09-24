@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { useFormState } from "react-dom";
 import { createAdjustment } from "../_actions";
 import SelectInput from "@/components/SelectInput";
@@ -48,6 +48,16 @@ export default function AdjustmentForm({
   const [formType, setFormType] = useState("add");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Clear form when successful
+  React.useEffect(() => {
+    if (state.success) {
+      formRef.current?.reset();
+      // Reset the page to refresh data
+      window.location.reload();
+    }
+  }, [state.success]);
 
   // Translation functions
   const getTypeTranslation = (type: string) => {
@@ -73,12 +83,24 @@ export default function AdjustmentForm({
     return translations[status] || status;
   };
 
-  // Sort and paginate stock movements (most recent first)
+  // Format date function
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Sort stock movements by date (most recent first)
   const sortedStockMovements = useMemo(() => {
     return [...stockMovements].sort((a, b) => {
-      // Assuming there's a createdAt field or we can use id for ordering
-      // If no timestamp, we'll reverse the array to show newest first
-      return stockMovements.indexOf(b) - stockMovements.indexOf(a);
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
     });
   }, [stockMovements]);
 
@@ -128,7 +150,7 @@ export default function AdjustmentForm({
       </ul>
 
       {formType === "add" ? (
-        <form action={formAction} className="space-y-4">
+        <form ref={formRef} action={formAction} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex maxmd:flex-col gap-3 items-start">
             <div className="flex flex-col gap-3 w-full">
@@ -191,7 +213,7 @@ export default function AdjustmentForm({
           )}
         </form>
       ) : (
-        <form action={formAction} className="space-y-4">
+        <form ref={formRef} action={formAction} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
             <div className="flex flex-col gap-3 w-full">
@@ -294,7 +316,7 @@ export default function AdjustmentForm({
               <table className="w-full">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="text-left text-xs font-medium p-3">ID</th>
+                    <th className="text-left text-xs font-medium p-3">Fecha</th>
                     <th className="text-left text-xs font-medium p-3">
                       Artículo
                     </th>
@@ -330,7 +352,7 @@ export default function AdjustmentForm({
                     return (
                       <tr key={stock.id} className="border-b hover:bg-muted/25">
                         <td className="text-xs font-medium p-3">
-                          {stock.id.substring(0, 8)}...
+                          {formatDate(stock.createdAt)}
                         </td>
                         <td className="text-xs p-3">{item?.name || "N/A"}</td>
                         <td className="text-xs p-3">

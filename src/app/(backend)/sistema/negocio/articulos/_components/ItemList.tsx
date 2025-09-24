@@ -1,6 +1,27 @@
 "use client";
 
-import * as React from "react";
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { Edit, MoreHorizontal, Trash2, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { StockModal } from "./StockModal";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -13,29 +34,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Eye, MoreHorizontal, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ArrowUpDown, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ItemType } from "@/types/items";
-import { CheckedState } from "@radix-ui/react-checkbox";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { deleteItemAction, toggleItemStatusAction } from "../_actions";
@@ -43,20 +43,142 @@ import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { verifySupervisorCode } from "@/app/_actions";
 
-export function ProductList({ items }: { items: ItemType[] }) {
+interface Stock {
+  id: string;
+  quantity: number;
+  reservedQty: number;
+  availableQty: number;
+  location?: string | null;
+  warehouseId: string;
+  warehouse?: {
+    id: string;
+    title: string;
+    code: string;
+    type: string;
+    status: string;
+  } | null;
+}
+
+interface Item {
+  id: string;
+  name: string;
+  description: string;
+  sku: string;
+  barcode: string | null;
+  dimensions: string | null;
+  weight: number | null;
+  price: number;
+  cost: number;
+  minStock: number;
+  maxStock: number | null;
+  tax: number;
+  notes: string | null;
+  images: string[];
+  mainImage: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  supplierId: string;
+  categoryId: string;
+  brandId: string;
+  unitId: string;
+  isDigital: boolean;
+  reorderPoint: number | null;
+  stocks: Stock[];
+  totalAvailableStock: number;
+  totalReservedStock: number;
+  totalStock: number;
+}
+
+interface ProductListProps {
+  items: Item[];
+}
+
+export function ProductList({ items: initialItems }: ProductListProps) {
   const { data: session } = useSession();
   const user = session?.user as UserType;
 
   const router = useRouter();
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [items, setItems] = useState<Item[]>(initialItems);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const columns = React.useMemo<ColumnDef<ItemType>[]>(
+  // Function to refresh stock data
+  const refreshStockData = async () => {
+    if (!selectedItem) return;
+
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(`/api/items/${selectedItem.id}/stocks`);
+      if (response.ok) {
+        const updatedStocks = await response.json();
+
+        // Update the selected item with new stock data
+        setSelectedItem((prev) =>
+          prev ? { ...prev, stocks: updatedStocks } : null
+        );
+
+        // Update the items list
+        setItems((prevItems) =>
+          prevItems.map((item) =>
+            item.id === selectedItem.id
+              ? {
+                  ...item,
+                  stocks: updatedStocks,
+                  totalAvailableStock: updatedStocks.reduce(
+                    (sum: number, stock: Stock) => sum + stock.availableQty,
+                    0
+                  ),
+                  totalReservedStock: updatedStocks.reduce(
+                    (sum: number, stock: Stock) => sum + stock.reservedQty,
+                    0
+                  ),
+                  totalStock: updatedStocks.reduce(
+                    (sum: number, stock: Stock) => sum + stock.quantity,
+                    0
+                  ),
+                }
+              : item
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error refreshing stock data:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleStockClick = React.useCallback((item: Item) => {
+    setSelectedItem(item);
+    setIsStockModalOpen(true);
+  }, []);
+
+  const closeStockModal = () => {
+    setIsStockModalOpen(false);
+    setSelectedItem(null);
+  };
+
+  // Listen for storage events to detect when stock is updated
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "stockUpdated") {
+        refreshStockData();
+        localStorage.removeItem("stockUpdated"); // Clean up
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedItem]);
+
+  const columns = React.useMemo<ColumnDef<Item>[]>(
     () => [
       {
         accessorKey: "name",
@@ -66,31 +188,49 @@ export function ProductList({ items }: { items: ItemType[] }) {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="text-xs w-40"
           >
-            ID
+            Nombre
             <ArrowUpDown />
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="uppercase text-xs w-40">{row.getValue("name")}</div>
+          <div className="flex flex-col">
+            <div className="font-semibold text-sm">{row.getValue("name")}</div>
+            <div className="text-xs text-gray-500 truncate max-w-[200px]">
+              {row.original.description}
+            </div>
+          </div>
         ),
       },
-
       {
         accessorKey: "mainImage",
         header: "Img",
         cell: ({ row }) => (
-          <div className="relative w-12 h-12 overflow-hidden rounded-lg">
-            <Image
-              src={row.getValue("mainImage")}
-              alt="img"
-              width={100}
-              height={100}
-              className="capitalize text-xs min-w-10 h-auto object-cover"
-            />
+          <div className="relative w-12 h-12 overflow-hidden rounded-lg bg-gray-100">
+            {row.getValue("mainImage") ? (
+              <Image
+                src={row.getValue("mainImage")}
+                alt="img"
+                width={48}
+                height={48}
+                className="object-cover w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-gray-400">
+                <span className="text-xs">No img</span>
+              </div>
+            )}
           </div>
         ),
       },
-
+      {
+        accessorKey: "sku",
+        header: "SKU",
+        cell: ({ row }) => (
+          <code className="text-sm bg-card px-2 py-1 rounded">
+            {row.getValue("sku")}
+          </code>
+        ),
+      },
       {
         accessorKey: "price",
         header: () => <div className="text-left text-xs">Precio</div>,
@@ -103,25 +243,76 @@ export function ProductList({ items }: { items: ItemType[] }) {
             minimumFractionDigits: 0,
           }).format(amount);
           return (
-            <div className="text-left text-xs font-medium">{formatted}</div>
+            <div className="text-left text-sm font-semibold">{formatted}</div>
           );
         },
       },
       {
         accessorKey: "totalAvailableStock",
-        header: () => (
-          <div className="text-left text-xs  maxmd:hidden">Inventario</div>
-        ),
+        header: () => <div className="text-center text-xs">Inventario</div>,
         cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("totalAvailableStock"));
-
-          // Format the amount as a dollar amount
+          const item = row.original;
+          const stockStatus =
+            item.totalAvailableStock === 0
+              ? "text-red-600"
+              : item.totalAvailableStock <= item.minStock
+              ? "text-yellow-600"
+              : "text-green-600";
 
           return (
-            <div className="text-left text-xs font-medium maxmd:hidden">
-              {amount}
-            </div>
+            <button
+              onClick={() => handleStockClick(item)}
+              className="hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+            >
+              <div className="flex flex-col items-center">
+                <span className={`font-semibold text-sm ${stockStatus}`}>
+                  {item.totalAvailableStock}
+                </span>
+                <span className="text-xs text-gray-500">disponible</span>
+                {item.totalReservedStock > 0 && (
+                  <span className="text-xs text-orange-600">
+                    {item.totalReservedStock} reservado
+                  </span>
+                )}
+              </div>
+            </button>
           );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "Estado",
+        cell: ({ row }) => {
+          const status = row.getValue("status") as string;
+          const statusConfig = {
+            ACTIVE: {
+              label: "Activo",
+              className: "bg-green-100 text-green-800",
+            },
+            INACTIVE: {
+              label: "Inactivo",
+              className: "bg-gray-100 text-gray-800",
+            },
+            DISCONTINUED: {
+              label: "Descontinuado",
+              className: "bg-red-100 text-red-800",
+            },
+            OUT_OF_STOCK: {
+              label: "Sin Stock",
+              className: "bg-red-100 text-red-800",
+            },
+            LOW_STOCK: {
+              label: "Stock Bajo",
+              className: "bg-yellow-100 text-yellow-800",
+            },
+          };
+
+          const config = statusConfig[status as keyof typeof statusConfig] || {
+            label: status,
+            className: "bg-gray-100 text-gray-800",
+          };
+
+          return <Badge className={config.className}>{config.label}</Badge>;
         },
       },
       {
@@ -244,14 +435,14 @@ export function ProductList({ items }: { items: ItemType[] }) {
                   });
                 }
               }
-              // eslint-disable-next-line
-            }, [showModal, router]);
+            }, [showModal]);
 
             const viewItem = React.useCallback(async () => {
               router.push(
                 `/sistema/negocio/articulos/editar/${row.original.id}`
               );
             }, []);
+
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -264,6 +455,13 @@ export function ProductList({ items }: { items: ItemType[] }) {
                   <DropdownMenuLabel className="text-xs">
                     Acciones
                   </DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => handleStockClick(row.original)}
+                    className="text-xs cursor-pointer"
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    Ver Inventario
+                  </DropdownMenuItem>
 
                   {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(
                     user?.role || ""
@@ -273,7 +471,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
                         onClick={viewItem}
                         className="text-xs cursor-pointer"
                       >
-                        <Eye />
+                        <Edit className="mr-2 h-4 w-4" />
                         Editar
                       </DropdownMenuItem>
 
@@ -284,7 +482,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
                     onClick={toggleItemStatus}
                     className="bg-slate-400 text-white focus:bg-slate-700 focus:text-white cursor-pointer text-xs"
                   >
-                    <X />
+                    <X className="mr-2 h-4 w-4" />
                     {row.original.status === "ACTIVE"
                       ? "Desactivar"
                       : "Activar"}
@@ -294,7 +492,7 @@ export function ProductList({ items }: { items: ItemType[] }) {
                       onClick={deleteItem}
                       className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
                     >
-                      <X />
+                      <Trash2 className="mr-2 h-4 w-4" />
                       Eliminar
                     </DropdownMenuItem>
                   )}
@@ -307,11 +505,10 @@ export function ProductList({ items }: { items: ItemType[] }) {
         },
       },
     ],
-    // eslint-disable-next-line
-    []
+    [handleStockClick, user?.role, router]
   );
 
-  const table = useReactTable<ItemType>({
+  const table = useReactTable<Item>({
     data: items,
     columns,
     onSortingChange: setSorting,
@@ -331,115 +528,109 @@ export function ProductList({ items }: { items: ItemType[] }) {
   });
 
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filtrar..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value: CheckedState) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className={`${
-                    row.original.status === "INACTIVE" ? "bg-muted" : ""
-                  }`}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+    <>
+      <div className="w-full">
+        <div className="flex items-center py-4">
+          <Input
+            placeholder="Filtrar por nombre..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Sin resultafos.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} articulo(s) seleccionado(s).
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={`${
+                      row.original.status === "INACTIVE" ? "bg-muted" : ""
+                    }`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    Sin resultados.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previo
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Siguiente
-          </Button>
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} artículo(s)
+            seleccionado(s).
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previo
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Siguiente
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Stock Modal */}
+      {selectedItem && (
+        <StockModal
+          isOpen={isStockModalOpen}
+          onClose={closeStockModal}
+          itemName={selectedItem.name}
+          stocks={selectedItem.stocks}
+          onRefresh={refreshStockData}
+          isRefreshing={isRefreshing}
+        />
+      )}
+    </>
   );
 }

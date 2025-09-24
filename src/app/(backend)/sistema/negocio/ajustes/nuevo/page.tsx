@@ -7,7 +7,12 @@ export default async function newAdjustment() {
   const warehouses = await prisma.warehouse.findMany();
   const items = await prisma.item.findMany();
 
-  const stockMovements = await prisma.stockMovement.findMany({});
+  const stockMovementsRaw = await prisma.stockMovement.findMany({});
+  const stockMovements = stockMovementsRaw.map((movement) => ({
+    ...movement,
+    createdAt: movement.createdAt.toISOString(),
+    updatedAt: movement.updatedAt.toISOString(),
+  }));
 
   return (
     <div>
