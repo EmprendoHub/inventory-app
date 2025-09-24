@@ -159,6 +159,7 @@ export const createItemAction = async (
       revalidatePath("/sistema/negocio/articulos");
       revalidatePath("/sistema/ventas/pedidos/nuevo");
       revalidatePath("/sistema/ventas/pos/register");
+      revalidatePath("/sistema/qr/generador");
       return {
         success: true,
         message: "Producto creado exitosamente!",
@@ -306,6 +307,8 @@ export async function updateItemAction(
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/qr/generador");
 
     return {
       errors: {},
