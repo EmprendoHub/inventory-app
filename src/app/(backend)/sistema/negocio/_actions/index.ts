@@ -76,6 +76,7 @@ export const createAdjustment = async (
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/negocio");
+    revalidatePath("/sistema/qr/generador");
   } else {
     // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);
