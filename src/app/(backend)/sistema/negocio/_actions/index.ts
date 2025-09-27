@@ -1,7 +1,7 @@
 "use server";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
-import { AddInventorySchema, AdjustmentSchema } from "@/lib/schemas";
+import { AddInventorySchema, AdjustmentSchema, RemoveInventorySchema } from "@/lib/schemas";
 import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -28,7 +28,6 @@ export const createAdjustment = async (
   if (rawData.formType === "add") {
     const validatedData = AddInventorySchema.safeParse(rawData);
     if (!validatedData.success) {
-      // Format Zod errors into a field-specific error object
       const errors = validatedData.error.flatten().fieldErrors;
       return {
         errors,
@@ -53,15 +52,14 @@ export const createAdjustment = async (
           },
         });
 
-        // Create a stock movement record for the release
         await prisma.stockMovement.create({
           data: {
             itemId: validatedData.data.articulo,
-            type: "ADJUSTMENT", // Indicates stock is being returned to available
+            type: "ADJUSTMENT",
             quantity: validatedData.data.transAmount,
             reference: `Ajuste de inventario`,
             status: "COMPLETED",
-            createdBy: user.id as string, // Or the user ID who cancelled the order
+            createdBy: user.id as string,
             createdAt,
             updatedAt: createdAt,
           },
@@ -77,11 +75,87 @@ export const createAdjustment = async (
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/negocio");
     revalidatePath("/sistema/qr/generador");
+    
+    return { success: true, message: "Inventario agregado exitosamente!" };
+  } else if (rawData.formType === "remove") {
+    const validatedData = RemoveInventorySchema.safeParse(rawData);
+    if (!validatedData.success) {
+      const errors = validatedData.error.flatten().fieldErrors;
+      return {
+        errors,
+        success: false,
+        message: "Validation failed. Please check the fields.",
+      };
+    }
+    
+    try {
+      const createdAt = getMexicoGlobalUtcDate();
+      await prisma.$transaction(async (prisma) => {
+        const currentStock = await prisma.stock.findUnique({
+          where: {
+            itemId_warehouseId: {
+              itemId: validatedData.data.articulo,
+              warehouseId: validatedData.data.sendingWarehouse,
+            },
+          },
+        });
+
+        if (!currentStock) {
+          throw new Error("Stock record not found for this item in the specified warehouse.");
+        }
+
+        if (currentStock.availableQty < validatedData.data.transAmount) {
+          throw new Error(`Stock insuficiente. Disponible: ${currentStock.availableQty}, Solicitado: ${validatedData.data.transAmount}`);
+        }
+
+        await prisma.stock.update({
+          where: {
+            itemId_warehouseId: {
+              itemId: validatedData.data.articulo,
+              warehouseId: validatedData.data.sendingWarehouse,
+            },
+          },
+          data: {
+            availableQty: { decrement: validatedData.data.transAmount },
+            quantity: { decrement: validatedData.data.transAmount },
+            updatedAt: createdAt,
+          },
+        });
+
+        await prisma.stockMovement.create({
+          data: {
+            itemId: validatedData.data.articulo,
+            type: "ADJUSTMENT",
+            quantity: -validatedData.data.transAmount,
+            reference: `Remoción de inventario: ${validatedData.data.notes || "Sin razón especificada"}`,
+            status: "COMPLETED",
+            createdBy: user.id as string,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return {
+        errors: {},
+        success: false,
+        message: error instanceof Error ? error.message : "Error al remover inventario",
+      };
+    }
+
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/negocio");
+    revalidatePath("/sistema/qr/generador");
+    
+    return { success: true, message: "Inventario removido exitosamente!" };
   } else {
-    // Validate the data using Zod
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);
     if (!validatedAdjustData.success) {
-      // Format Zod errors into a field-specific error object
       const errors = validatedAdjustData.error.flatten().fieldErrors;
       return {
         errors,
@@ -89,58 +163,92 @@ export const createAdjustment = async (
         message: "Validation failed. Please check the fields.",
       };
     }
+    
     const createdAt = getMexicoGlobalUtcDate();
-    await prisma.stock.update({
-      where: {
-        itemId_warehouseId: {
-          itemId: validatedAdjustData.data.articulo,
-          warehouseId: validatedAdjustData.data.sendingWarehouse,
-        },
-      },
-      data: {
-        quantity: { decrement: validatedAdjustData.data.transAmount },
-        availableQty: { decrement: validatedAdjustData.data.transAmount },
-        updatedAt: createdAt,
-      },
-    });
-    // Check if stock exists in the receiving warehouse
-    const existingStock = await prisma.stock.findUnique({
-      where: {
-        itemId_warehouseId: {
-          itemId: validatedAdjustData.data.articulo,
-          warehouseId: validatedAdjustData.data.receivingWarehouse,
-        },
-      },
-    });
-
-    // If stock exists, update it; otherwise, create a new stock entry
-    if (existingStock) {
-      await prisma.stock.update({
-        where: {
-          itemId_warehouseId: {
-            itemId: validatedAdjustData.data.articulo,
-            warehouseId: validatedAdjustData.data.receivingWarehouse,
+    try {
+      await prisma.$transaction(async (prisma) => {
+        await prisma.stock.update({
+          where: {
+            itemId_warehouseId: {
+              itemId: validatedAdjustData.data.articulo,
+              warehouseId: validatedAdjustData.data.sendingWarehouse,
+            },
           },
-        },
-        data: {
-          quantity: { increment: validatedAdjustData.data.transAmount },
-          availableQty: { increment: validatedAdjustData.data.transAmount },
-          updatedAt: createdAt,
-        },
-      });
-    } else {
-      await prisma.stock.create({
-        data: {
-          itemId: validatedAdjustData.data.articulo,
-          warehouseId: validatedAdjustData.data.receivingWarehouse,
-          quantity: validatedAdjustData.data.transAmount, // Set initial stock amount
-          availableQty: validatedAdjustData.data.transAmount, // Set initial available stock amount
-          createdAt,
-          updatedAt: createdAt,
-        },
-      });
-    }
-  }
+          data: {
+            quantity: { decrement: validatedAdjustData.data.transAmount },
+            availableQty: { decrement: validatedAdjustData.data.transAmount },
+            updatedAt: createdAt,
+          },
+        });
+        
+        const existingStock = await prisma.stock.findUnique({
+          where: {
+            itemId_warehouseId: {
+              itemId: validatedAdjustData.data.articulo,
+              warehouseId: validatedAdjustData.data.receivingWarehouse,
+            },
+          },
+        });
 
-  return { success: true, message: "Ajuste de inventario exitoso!" };
+        if (existingStock) {
+          await prisma.stock.update({
+            where: {
+              itemId_warehouseId: {
+                itemId: validatedAdjustData.data.articulo,
+                warehouseId: validatedAdjustData.data.receivingWarehouse,
+              },
+            },
+            data: {
+              quantity: { increment: validatedAdjustData.data.transAmount },
+              availableQty: { increment: validatedAdjustData.data.transAmount },
+              updatedAt: createdAt,
+            },
+          });
+        } else {
+          await prisma.stock.create({
+            data: {
+              itemId: validatedAdjustData.data.articulo,
+              warehouseId: validatedAdjustData.data.receivingWarehouse,
+              quantity: validatedAdjustData.data.transAmount,
+              availableQty: validatedAdjustData.data.transAmount,
+              createdAt,
+              updatedAt: createdAt,
+            },
+          });
+        }
+        
+        await prisma.stockMovement.create({
+          data: {
+            itemId: validatedAdjustData.data.articulo,
+            fromWarehouseId: validatedAdjustData.data.sendingWarehouse,
+            toWarehouseId: validatedAdjustData.data.receivingWarehouse,
+            type: "TRANSFER",
+            quantity: validatedAdjustData.data.transAmount,
+            reference: `Transferencia de inventario: ${validatedAdjustData.data.notes || "Sin notas"}`,
+            status: "COMPLETED",
+            createdBy: user.id as string,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      return {
+        errors: {},
+        success: false,
+        message: "Error al transferir inventario",
+      };
+    }
+    
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/negocio");
+    revalidatePath("/sistema/qr/generador");
+
+    return { success: true, message: "Transferencia de inventario exitosa!" };
+  }
 };

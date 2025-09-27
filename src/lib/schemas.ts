@@ -102,6 +102,16 @@ export const AddInventorySchema = z.object({
   notes: z.string(),
 });
 
+export const RemoveInventorySchema = z.object({
+  articulo: z.string().min(3, "Se require un Producto"),
+  transAmount: z
+    .number()
+    .positive("Cantidad a remover debe tener un numero positivo"),
+  sendingWarehouse: z.string().min(3, "Se require una Ubicación"),
+  formType: z.string(),
+  notes: z.string(),
+});
+
 export const BrandSchema = z.object({
   id: z.string().nullable().optional(),
   name: z.string().min(3, "Se require un Nombre"),

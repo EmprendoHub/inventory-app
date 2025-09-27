@@ -10,6 +10,7 @@ import {
   PlusCircle,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { StockMovement } from "@/types/accounting";
 import { Button } from "@/components/ui/button";
@@ -201,6 +202,19 @@ export default function AdjustmentForm({
             Transferir inventario
           </button>
         </li>
+        <li className="me-2">
+          <button
+            onClick={() => handleFormTypeChange("remove")}
+            className={`inline-flex items-center justify-center p-4 ${
+              formType === "remove"
+                ? "text-blue-600 border-b-2 border-blue-600dark:text-blue-500 dark:border-blue-500"
+                : "hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300"
+            }  rounded-t-lg active  group`}
+          >
+            <Trash2 />
+            Remover inventario
+          </button>
+        </li>
       </ul>
 
       {formType === "add" ? (
@@ -309,7 +323,7 @@ export default function AdjustmentForm({
             </p>
           )}
         </form>
-      ) : (
+      ) : formType === "transfer" ? (
         <form ref={formRef} action={handleSubmit} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
@@ -426,6 +440,120 @@ export default function AdjustmentForm({
               </svg>
             )}
             {isSubmitting ? "Procesando..." : "Ajustar Inventario"}
+          </button>
+
+          {state.message && (
+            <p
+              className={`text-sm ${
+                state.success ? "text-green-700" : "text-red-500"
+              }`}
+            >
+              {state.message}
+            </p>
+          )}
+        </form>
+      ) : (
+        <form ref={formRef} action={handleSubmit} className="space-y-4">
+          <input value={formType} type="hidden" name="formType" id="formType" />
+          <div className="flex maxmd:flex-col gap-3 items-start">
+            <div className="flex flex-col gap-3 w-full">
+              <SearchSelectInput
+                key={selectedItemKey}
+                label="Articulo"
+                name="articulo"
+                state={state}
+                className="w-full"
+                placeholder="Buscar articulo..."
+                value={selectedItem?.id || ""}
+                options={items.map((item) => ({
+                  value: item.id,
+                  name: item.name,
+                  description: `$${item.price.toFixed(2)} - SKU: ${
+                    item.sku
+                  } - ${item.description}`,
+                  price: item.price,
+                  image: item.mainImage,
+                }))}
+                onChange={(value) => {
+                  handleSelectItem(value);
+                }}
+              />
+
+              {/* Show selected item info */}
+              {selectedItem && (
+                <div className="flex gap-2 items-center p-2 bg-card rounded-md">
+                  <div className="flex flex-col">
+                    <h4 className="font-semibold text-sm">
+                      {selectedItem.name}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      ${selectedItem.price.toFixed(2)} -{" "}
+                      {selectedItem.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <NumericInput
+                name="transAmount"
+                label="Cantidad a remover"
+                state={state}
+              />
+            </div>
+
+            <SelectInput
+              className="w-full"
+              name="sendingWarehouse"
+              label="Bodega"
+              options={warehouses.map(
+                (warehouse: {
+                  id: string;
+                  title: string;
+                  description?: string;
+                }) => ({
+                  value: warehouse.id,
+                  name: warehouse.title,
+                  description: warehouse.description || "",
+                })
+              )}
+              state={state}
+            />
+          </div>
+
+          <TextAreaInput
+            state={state}
+            name="notes"
+            label="Notas de Remoción (razón del ajuste)"
+          />
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex justify-center items-center gap-2 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting && (
+              <svg
+                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            )}
+            {isSubmitting ? "Procesando..." : "Remover Inventario"}
           </button>
 
           {state.message && (
