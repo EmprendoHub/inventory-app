@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,6 +15,8 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaTrash,
+  FaMagnifyingGlass,
+  FaXmark,
 } from "react-icons/fa6";
 import { BiBarcode } from "react-icons/bi";
 
@@ -44,14 +47,28 @@ export default function ProductsWithSelection({
     new Set()
   );
   const [currentPage, setCurrentPage] = useState(initialPage);
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Filter products based on search query (defined later but used here for pagination)
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+
+    const query = searchQuery.toLowerCase();
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(query) ||
+        (product.sku && product.sku.toLowerCase().includes(query)) ||
+        (product.barcode && product.barcode.toLowerCase().includes(query))
+    );
+  }, [products, searchQuery]);
+
   // Calculate pagination
-  const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const endIndex = startIndex + PRODUCTS_PER_PAGE;
-  const paginatedProducts = products.slice(startIndex, endIndex);
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
   // Handle page navigation
   const goToPage = (page: number) => {
@@ -102,6 +119,18 @@ export default function ProductsWithSelection({
     router.push("/sistema/qr/generador");
   };
 
+  const clearSearch = () => {
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
+
+  // Reset page when search changes
+  useEffect(() => {
+    if (searchQuery) {
+      setCurrentPage(1);
+    }
+  }, [searchQuery]);
+
   const selectedCount = selectedProducts.size;
   const currentPageIds = paginatedProducts.map((p) => p.id);
   const allCurrentSelected =
@@ -119,6 +148,28 @@ export default function ProductsWithSelection({
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Search input */}
+          <div className="mb-4">
+            <div className="relative">
+              <Input
+                type="text"
+                placeholder="Buscar por nombre, SKU o código de barras..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              <FaMagnifyingGlass className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <FaXmark className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <Button
               onClick={generateQRCodes}
@@ -149,7 +200,8 @@ export default function ProductsWithSelection({
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm text-gray-600">
             <p>
-              Mostrando {paginatedProducts.length} de {totalCount} productos
+              Mostrando {paginatedProducts.length} de {filteredProducts.length}{" "}
+              productos{searchQuery && ` (filtrados de ${totalCount} total)`}
             </p>
             <p className="font-medium">
               {selectedCount > 0 ? (
