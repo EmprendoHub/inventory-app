@@ -160,6 +160,7 @@ export const createItemAction = async (
       revalidatePath("/sistema/ventas/pedidos/nuevo");
       revalidatePath("/sistema/ventas/pos/register");
       revalidatePath("/sistema/qr/generador");
+      revalidatePath("/sistema/negocio/ajustes/nuevo");
       return {
         success: true,
         message: "Producto creado exitosamente!",
@@ -309,7 +310,7 @@ export async function updateItemAction(
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/qr/generador");
-
+revalidatePath("/sistema/negocio/ajustes/nuevo");
     return {
       errors: {},
       success: true,
@@ -370,6 +371,7 @@ export async function deleteItemAction(formData: FormData) {
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/qr/generador");
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
     return {
       errors: {},
       success: true,
@@ -438,6 +440,9 @@ export async function toggleItemStatusAction(formData: FormData) {
 
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/qr/generador");
     return {
       errors: {},
       success: true,
