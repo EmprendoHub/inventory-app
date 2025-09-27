@@ -176,6 +176,8 @@ export function SearchSelectInput({
           </Command>
         </PopoverContent>
       </Popover>
+      {/* Hidden input for form submission */}
+      <input type="hidden" name={name} value={value || ""} />
       {state.errors?.[name] && (
         <p className="text-sm text-red-500">{state.errors[name].join(", ")}</p>
       )}

@@ -107,6 +107,7 @@ export function ProductList({ items: initialItems }: ProductListProps) {
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [items, setItems] = useState<Item[]>(initialItems);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [processingItemId, setProcessingItemId] = useState<string | null>(null);
 
   // Function to refresh stock data
   const refreshStockData = async () => {
@@ -352,6 +353,8 @@ export function ProductList({ items: initialItems }: ProductListProps) {
 
                   if (result.confirmed) {
                     try {
+                      setProcessingItemId(row.original.id);
+
                       const formData = new FormData();
                       formData.set("id", row.original.id);
 
@@ -365,6 +368,14 @@ export function ProductList({ items: initialItems }: ProductListProps) {
                         text: "El articulo ha sido eliminado.",
                         icon: "success",
                       });
+
+                      // Update local state to remove the item immediately
+                      setItems((prevItems) =>
+                        prevItems.filter((item) => item.id !== row.original.id)
+                      );
+
+                      // Also refresh the page to sync with server
+                      router.refresh();
                     } catch (error) {
                       console.log("error from modal", error);
 
@@ -374,6 +385,8 @@ export function ProductList({ items: initialItems }: ProductListProps) {
                         text: "No se pudo eliminar el articulo",
                         icon: "error",
                       });
+                    } finally {
+                      setProcessingItemId(null);
                     }
                   }
                 } else {
@@ -404,6 +417,8 @@ export function ProductList({ items: initialItems }: ProductListProps) {
 
               if (result.confirmed) {
                 try {
+                  setProcessingItemId(row.original.id);
+
                   const formData = new FormData();
                   formData.set("id", row.original.id);
 
@@ -422,8 +437,21 @@ export function ProductList({ items: initialItems }: ProductListProps) {
                     icon: "success",
                   });
 
-                  // Refresh the page or re-fetch data
-                  router.refresh(); // or use a state update to re-fetch data
+                  // Update local state to reflect status change immediately
+                  setItems((prevItems) =>
+                    prevItems.map((item) =>
+                      item.id === row.original.id
+                        ? {
+                            ...item,
+                            status:
+                              item.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                          }
+                        : item
+                    )
+                  );
+
+                  // Also refresh the page to sync with server
+                  router.refresh();
                 } catch (error) {
                   console.log("error from modal", error);
 
@@ -433,6 +461,8 @@ export function ProductList({ items: initialItems }: ProductListProps) {
                     text: "No se pudo cambiar el estado del artículo",
                     icon: "error",
                   });
+                } finally {
+                  setProcessingItemId(null);
                 }
               }
             }, [showModal]);
@@ -446,9 +476,17 @@ export function ProductList({ items: initialItems }: ProductListProps) {
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0"
+                    disabled={processingItemId === row.original.id}
+                  >
                     <span className="sr-only">Abrir menú</span>
-                    <MoreHorizontal className="h-4 w-4" />
+                    {processingItemId === row.original.id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                    ) : (
+                      <MoreHorizontal className="h-4 w-4" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -505,7 +543,7 @@ export function ProductList({ items: initialItems }: ProductListProps) {
         },
       },
     ],
-    [handleStockClick, user?.role, router]
+    [handleStockClick, user?.role, router, processingItemId]
   );
 
   const table = useReactTable<Item>({

@@ -365,8 +365,11 @@ export async function deleteItemAction(formData: FormData) {
       }),
     ]);
 
+    revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/qr/generador");
     return {
       errors: {},
       success: true,
