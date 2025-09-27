@@ -49,6 +49,7 @@ export default function AdjustmentForm({
   const [formType, setFormType] = useState("add");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   // State for selected item and key for SearchSelectInput reset
@@ -56,20 +57,39 @@ export default function AdjustmentForm({
     { id: string; name: string; description: string; price: number } | undefined
   >(undefined);
   const [selectedItemKey, setSelectedItemKey] = useState("");
-  const [selectedItemId, setSelectedItemId] = useState("");
 
   // Clear form when successful
   React.useEffect(() => {
     if (state.success) {
+      setIsSubmitting(false);
       formRef.current?.reset();
       // Reset selected item and generate new key
       setSelectedItem(undefined);
-      setSelectedItemId("");
       setSelectedItemKey(Math.random().toString(36).substring(7));
       // Reset the page to refresh data
       window.location.reload();
     }
   }, [state.success]);
+
+  // Reset loading state when there are errors or messages
+  React.useEffect(() => {
+    if (state.errors && Object.keys(state.errors).length > 0) {
+      setIsSubmitting(false);
+    }
+    if (state.message && !state.success) {
+      setIsSubmitting(false);
+    }
+  }, [state.errors, state.message, state.success]);
+
+  // Handle form submission with loading state
+  const handleSubmit = async (formData: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await formAction(formData);
+    } catch {
+      setIsSubmitting(false);
+    }
+  };
 
   // Translation functions
   const getTypeTranslation = (type: string) => {
@@ -133,7 +153,6 @@ export default function AdjustmentForm({
   const handleFormTypeChange = (newFormType: string) => {
     setFormType(newFormType);
     setSelectedItem(undefined);
-    setSelectedItemId("");
     setSelectedItemKey(Math.random().toString(36).substring(7));
   };
 
@@ -147,7 +166,6 @@ export default function AdjustmentForm({
         description: item.description,
         price: item.price,
       });
-      setSelectedItemId(item.id);
     }
     // Force internal state reset in SearchSelectInput
     setSelectedItemKey(Math.random().toString(36).substring(7));
@@ -186,7 +204,7 @@ export default function AdjustmentForm({
       </ul>
 
       {formType === "add" ? (
-        <form ref={formRef} action={formAction} className="space-y-4">
+        <form ref={formRef} action={handleSubmit} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex maxmd:flex-col gap-3 items-start">
             <div className="flex flex-col gap-3 w-full">
@@ -197,6 +215,7 @@ export default function AdjustmentForm({
                 state={state}
                 className="w-full"
                 placeholder="Buscar articulo..."
+                value={selectedItem?.id || ""}
                 options={items.map((item) => ({
                   value: item.id,
                   name: item.name,
@@ -213,7 +232,7 @@ export default function AdjustmentForm({
 
               {/* Show selected item info */}
               {selectedItem && (
-                <div className="flex gap-2 items-center p-2 bg-blue-50 rounded-md">
+                <div className="flex gap-2 items-center p-2 bg-card rounded-md">
                   <div className="flex flex-col">
                     <h4 className="font-semibold text-sm">
                       {selectedItem.name}
@@ -250,14 +269,34 @@ export default function AdjustmentForm({
 
           <TextAreaInput state={state} name="notes" label="Notas de Ajuste" />
 
-          {/* Hidden field for selected item */}
-          <input type="hidden" name="articulo" value={selectedItemId} />
-
           <button
             type="submit"
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            disabled={isSubmitting}
+            className="inline-flex justify-center items-center gap-2 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Agregar Inventario
+            {isSubmitting && (
+              <svg
+                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            )}
+            {isSubmitting ? "Procesando..." : "Agregar Inventario"}
           </button>
 
           {state.message && (
@@ -271,7 +310,7 @@ export default function AdjustmentForm({
           )}
         </form>
       ) : (
-        <form ref={formRef} action={formAction} className="space-y-4">
+        <form ref={formRef} action={handleSubmit} className="space-y-4">
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
             <div className="flex flex-col gap-3 w-full">
@@ -279,10 +318,11 @@ export default function AdjustmentForm({
               <SearchSelectInput
                 key={selectedItemKey} // This will force re-render and reset internal state
                 label="Articulo"
-                name="productId"
+                name="articulo"
                 state={state}
                 className="w-full"
                 placeholder="Buscar articulo..."
+                value={selectedItem?.id || ""}
                 options={items.map((item) => ({
                   value: item.id,
                   name: item.name,
@@ -298,7 +338,7 @@ export default function AdjustmentForm({
 
               {/* Show selected item info */}
               {selectedItem && (
-                <div className="flex gap-2 items-center p-2 bg-blue-50 rounded-md">
+                <div className="flex gap-2 items-center p-2 bg-card rounded-md">
                   <div className="flex flex-col">
                     <h4 className="font-semibold text-sm">
                       {selectedItem.name}
@@ -358,14 +398,34 @@ export default function AdjustmentForm({
 
           <TextAreaInput state={state} name="notes" label="Notas de Ajuste" />
 
-          {/* Hidden field for selected item */}
-          <input type="hidden" name="articulo" value={selectedItemId} />
-
           <button
             type="submit"
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            disabled={isSubmitting}
+            className="inline-flex justify-center items-center gap-2 py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Ajustar Inventario
+            {isSubmitting && (
+              <svg
+                className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            )}
+            {isSubmitting ? "Procesando..." : "Ajustar Inventario"}
           </button>
 
           {state.message && (
@@ -439,20 +499,20 @@ export default function AdjustmentForm({
                           <span
                             className={`inline-block px-2 py-1 rounded text-white text-xs ${
                               stock.type === "PURCHASE"
-                                ? "bg-green-600"
+                                ? "bg-emerald-700"
                                 : stock.type === "SALE"
-                                ? "bg-blue-600"
+                                ? "bg-blue-700"
                                 : stock.type === "TRANSFER"
-                                ? "bg-purple-600"
+                                ? "bg-purple-700"
                                 : stock.type === "ADJUSTMENT"
-                                ? "bg-orange-600"
+                                ? "bg-orange-700"
                                 : stock.type === "RETURN"
-                                ? "bg-yellow-600"
+                                ? "bg-yellow-700"
                                 : stock.type === "DAMAGED"
-                                ? "bg-red-600"
+                                ? "bg-red-700"
                                 : stock.type === "EXPIRED"
-                                ? "bg-gray-600"
-                                : "bg-gray-500"
+                                ? "bg-gray-700"
+                                : "bg-gray-700"
                             }`}
                           >
                             {getTypeTranslation(stock.type)}
@@ -462,8 +522,8 @@ export default function AdjustmentForm({
                           <span
                             className={
                               stock.quantity >= 0
-                                ? "text-green-600"
-                                : "text-red-600"
+                                ? "text-emerald-700"
+                                : "text-red-700"
                             }
                           >
                             {stock.quantity >= 0 ? "+" : ""}
@@ -480,14 +540,14 @@ export default function AdjustmentForm({
                           <span
                             className={`inline-block px-2 py-1 rounded text-white text-xs ${
                               stock.status === "COMPLETED"
-                                ? "bg-green-600"
+                                ? "bg-emerald-700"
                                 : stock.status === "PENDING"
-                                ? "bg-yellow-600"
+                                ? "bg-yellow-700"
                                 : stock.status === "CANCELLED"
-                                ? "bg-red-600"
+                                ? "bg-red-700"
                                 : stock.status === "REJECTED"
                                 ? "bg-red-700"
-                                : "bg-gray-500"
+                                : "bg-gray-700"
                             }`}
                           >
                             {getStatusTranslation(stock.status)}
