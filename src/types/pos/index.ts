@@ -18,6 +18,7 @@ export enum PosOrderStatus {
 export enum PaymentType {
   CASH = "CASH",
   CARD = "CARD",
+  TRANSFER = "TRANSFER",
   MIXED = "MIXED",
   ACCOUNT = "ACCOUNT",
 }

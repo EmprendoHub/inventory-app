@@ -51,7 +51,8 @@ interface PosRegisterProps {
     cart: CartState,
     paymentType: PaymentType,
     billBreakdown?: CashBreakdown,
-    cashReceived?: number
+    cashReceived?: number,
+    referenceNumber?: string
   ) => Promise<void>;
   onHoldOrder: (cart: CartState) => Promise<void>;
   onScanBarcode?: () => void;
@@ -82,6 +83,7 @@ export default function PosRegister({
   });
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [customerSearchKey, setCustomerSearchKey] = useState("");
 
   // Form state for SearchSelectInput (even though we don't use it for validation)
   const [formState] = useState({
@@ -93,10 +95,14 @@ export default function PosRegister({
   const [showCashCalculator, setShowCashCalculator] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [showReferenceModal, setShowReferenceModal] = useState(false);
   const [isManagingFavorites, setIsManagingFavorites] = useState(false);
   const [activeView, setActiveView] = useState<
     "favorites" | "search" | "categories"
   >("favorites");
+  const [selectedPaymentType, setSelectedPaymentType] =
+    useState<PaymentType | null>(null);
+  const [referenceNumber, setReferenceNumber] = useState("");
 
   // Calculate cart totals
   const calculateTotals = useCallback(
@@ -202,6 +208,8 @@ export default function PosRegister({
       totalAmount: 0,
       customer: undefined,
     });
+    // Reset customer selection by generating new key
+    setCustomerSearchKey(Math.random().toString(36).substring(7));
   }, []);
 
   // Handle cash payment completion
@@ -381,6 +389,27 @@ export default function PosRegister({
     });
   }, [items, searchTerm]);
 
+  // Handle checkout with reference number
+  const handleCheckoutWithReference = useCallback(
+    async (paymentType: PaymentType, reference?: string) => {
+      if (cart.items.length === 0) return;
+
+      try {
+        // For now, we'll modify onCheckout to accept the reference
+        // This will need to be handled in the parent component
+        await onCheckout(cart, paymentType, undefined, undefined, reference);
+        clearCart();
+        setShowPaymentModal(false);
+        setShowReferenceModal(false);
+        setReferenceNumber("");
+        setSelectedPaymentType(null);
+      } catch (error) {
+        console.error("Checkout error:", error);
+      }
+    },
+    [cart, onCheckout, clearCart]
+  );
+
   // Handle checkout
   const handleCheckout = useCallback(
     async (paymentType: PaymentType, billBreakdown?: CashBreakdown) => {
@@ -397,17 +426,22 @@ export default function PosRegister({
     [cart, onCheckout, clearCart]
   );
 
-  // // Handle hold order
-  // const handleHoldOrder = useCallback(async () => {
-  //   if (cart.items.length === 0) return;
-
-  //   try {
-  //     await onHoldOrder(cart);
-  //     clearCart();
-  //   } catch (error) {
-  //     console.error("Hold order error:", error);
-  //   }
-  // }, [cart, onHoldOrder, clearCart]);
+  // Prepare customer options with enhanced search capability
+  const customerOptions = React.useMemo(() => {
+    return [
+      {
+        value: "",
+        name: "Cliente Ocasional",
+        description: "",
+      },
+      ...customers.map((customer) => ({
+        value: customer.id,
+        // Combine name and phone in the name field for searchability
+        name: `${customer.name}${customer.phone ? ` - ${customer.phone}` : ""}`,
+        description: customer.phone || "",
+      })),
+    ];
+  }, [customers]);
 
   return (
     <div className="min-h-screen bg-card flex flex-col">
@@ -428,9 +462,6 @@ export default function PosRegister({
             <QrCode className="w-4 h-4 mr-2" />
             Scanner
           </Button>
-          {/* <Button variant="outline" size="sm">
-            <Settings className="w-4 h-4" />
-          </Button> */}
         </div>
       </header>
 
@@ -558,21 +589,15 @@ export default function PosRegister({
               )}
             </div>
 
-            {/* Customer Selection */}
+            {/* Enhanced Customer Selection */}
             <SearchSelectInput
+              key={customerSearchKey} // Force re-render when cart is cleared
               label="Cliente"
               name="customer"
               state={formState}
               className="w-full"
-              placeholder="Seleccionar Cliente"
-              options={[
-                { value: "", name: "Cliente Ocasional" },
-                ...customers.map((customer) => ({
-                  value: customer.id,
-                  name: customer.name,
-                  description: customer.phone,
-                })),
-              ]}
+              placeholder="Buscar por nombre o teléfono..."
+              options={customerOptions}
               onChange={(value) => {
                 const customer = customers.find((c) => c.id === value);
                 setCart((prev) => ({
@@ -595,9 +620,19 @@ export default function PosRegister({
                   className="bg-card rounded-lg p-3"
                 >
                   <div className="flex items-start justify-between mb-2">
+                    <Image
+                      src={
+                        item.image ||
+                        "https://via.placeholder.com/150?text=No+Image"
+                      }
+                      alt={item.name}
+                      width={50}
+                      height={50}
+                      className="w-6 h-6 object-cover rounded-md mb-1 pr-3"
+                    />
                     <div className="flex-1">
                       <h4 className="font-medium text-sm leading-tight">
-                        {item.name}
+                        {item.name.substring(0, 20)}...
                       </h4>
                       <p className="text-xs text-gray-500">
                         ${item.price.toFixed(2)} each
@@ -705,17 +740,6 @@ export default function PosRegister({
                   <GiCash className="w-4 h-4 mr-2" />
                   Finalizar Venta
                 </Button>
-
-                {/* <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleHoldOrder}
-                    disabled={isProcessing}
-                  >
-                    <PauseCircle className="w-4 h-4 mr-1" />
-                    Retener
-                  </Button>
-                </div> */}
               </div>
             </div>
           )}
@@ -771,11 +795,35 @@ export default function PosRegister({
                 <Button
                   variant="outline"
                   className="w-full py-3 text-base"
-                  onClick={() => handleCheckout(PaymentType.CARD)}
+                  onClick={() => {
+                    setSelectedPaymentType(PaymentType.CARD);
+                    setShowPaymentModal(false);
+                    setShowReferenceModal(true);
+                  }}
                   disabled={isProcessing}
                 >
                   <CreditCard className="w-5 h-5 mr-2" />
                   Pago con Tarjeta
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full py-3 text-base"
+                  onClick={() => {
+                    setSelectedPaymentType(PaymentType.TRANSFER);
+                    setShowPaymentModal(false);
+                    setShowReferenceModal(true);
+                  }}
+                  disabled={isProcessing}
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                  </svg>
+                  Transferencia
                 </Button>
 
                 <Button
@@ -823,6 +871,106 @@ export default function PosRegister({
           onApplyDiscount={handleApplyDiscount}
         />
       )}
+
+      {/* Reference Number Modal */}
+      <AnimatePresence>
+        {showReferenceModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-background rounded-lg p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  {selectedPaymentType === PaymentType.CARD
+                    ? "Número de Referencia - Tarjeta"
+                    : "Número de Referencia - Transferencia"}
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowReferenceModal(false);
+                    setReferenceNumber("");
+                    setSelectedPaymentType(null);
+                    setShowPaymentModal(true);
+                  }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <p className="text-2xl font-bold">
+                    ${cart.totalAmount.toFixed(2)}
+                  </p>
+                  <p className="text-gray-500">Total a pagar</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="referenceNumber"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Número de Referencia *
+                  </label>
+                  <Input
+                    id="referenceNumber"
+                    type="text"
+                    placeholder="Ingrese el número de referencia"
+                    value={referenceNumber}
+                    onChange={(e) => setReferenceNumber(e.target.value)}
+                    className="w-full"
+                    autoFocus
+                  />
+                  <p className="text-xs text-gray-500">
+                    {selectedPaymentType === PaymentType.CARD
+                      ? "Ingrese el número de autorización de la tarjeta"
+                      : "Ingrese el número de referencia de la transferencia"}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setShowReferenceModal(false);
+                      setReferenceNumber("");
+                      setSelectedPaymentType(null);
+                      setShowPaymentModal(true);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => {
+                      if (selectedPaymentType && referenceNumber.trim()) {
+                        handleCheckoutWithReference(
+                          selectedPaymentType,
+                          referenceNumber.trim()
+                        );
+                      }
+                    }}
+                    disabled={!referenceNumber.trim() || isProcessing}
+                  >
+                    {isProcessing ? "Procesando..." : "Procesar Pago"}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

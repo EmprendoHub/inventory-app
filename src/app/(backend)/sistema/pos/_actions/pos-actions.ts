@@ -114,7 +114,8 @@ export async function createPosOrder(
   paymentMethod: PaymentType,
   customerId?: string,
   billBreakdown?: CashBreakdown, // CashBreakdown object
-  cashReceived?: number // Amount of cash received from customer
+  cashReceived?: number, // Amount of cash received from customer
+  referenceNumber?: string // Payment reference number for cards/transfers
 ): Promise<PosOrderResult> {
   const session = await getServerSession(options);
 
@@ -229,6 +230,7 @@ export async function createPosOrder(
     const paymentMethodMap = {
       [PaymentType.CASH]: "EFECTIVO",
       [PaymentType.CARD]: "TARJETA",
+      [PaymentType.TRANSFER]: "TRANSFERENCIA",
       [PaymentType.MIXED]: "MIXTO",
       [PaymentType.ACCOUNT]: "CUENTA",
     };
@@ -240,7 +242,7 @@ export async function createPosOrder(
         method: paymentMethodMap[paymentMethod],
         amount: Math.round(cart.totalAmount),
         status: "PAGADO",
-        reference: `POS-${Date.now()}`,
+        reference: referenceNumber || `POS-${Date.now()}`,
         createdAt,
         updatedAt: createdAt,
       },

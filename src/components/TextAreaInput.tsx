@@ -4,6 +4,7 @@ type TextType = {
   label: string;
   name: string;
   value?: string;
+  defaultValue?: string;
   className?: string;
   state: { errors?: { [key: string]: string[] } };
   onChange?: (name: string, value: string) => void;
@@ -14,9 +15,14 @@ export default function TextAreaInput({
   name,
   state,
   value,
+  defaultValue,
   onChange,
   className = "col-span-1 maxmd:col-span-2 w-full",
 }: TextType) {
+  // Use controlled component if value is provided, otherwise uncontrolled with defaultValue
+  const inputProps =
+    value !== undefined ? { value: value } : { defaultValue: defaultValue };
+
   return (
     <div className={className}>
       {/* <label htmlFor={name} className="block text-sm font-medium text-muted">
@@ -25,7 +31,7 @@ export default function TextAreaInput({
       <textarea
         name={name}
         id={name}
-        value={value}
+        {...inputProps}
         placeholder={`Ingrese ${label.toLowerCase()}...`}
         onChange={(e) => onChange && onChange(name, e.target.value)}
         rows={2}

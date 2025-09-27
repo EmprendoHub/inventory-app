@@ -144,7 +144,7 @@ export function SearchSelectInput({
                         height={150}
                         src={option.image}
                         alt={option.name}
-                        className="w-32 h-32 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded"
                       />
                     )}
                     <div className="flex flex-col">

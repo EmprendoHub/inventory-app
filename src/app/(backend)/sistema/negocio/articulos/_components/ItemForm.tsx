@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
 import SelectInput from "@/components/SelectInput";
 import TextInput from "@/components/TextInput";
@@ -7,6 +7,7 @@ import { useDropzone } from "react-dropzone";
 import Image from "next/image";
 import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
+import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { CloudUpload } from "lucide-react";
 import { ItemFormState, ItemCompoundType } from "@/types/items";
 import { useModal } from "@/app/context/ModalContext";
@@ -42,34 +43,124 @@ export default function ProductForm({
   );
   const [fileData, setFileData] = useState<File | null>(null);
 
+  // State for controlled inputs
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+    dimensions: "1",
+    cost: 50,
+    price: 0,
+    stock: 0,
+    minStock: 10,
+    tax: 0,
+  });
+
+  // State to track if description was manually edited
+  const [isDescriptionManuallyEdited, setIsDescriptionManuallyEdited] =
+    useState(false);
+  const [categorySearchKey, setCategorySearchKey] = useState("");
+
+  // Auto-sync description with name (title) unless manually edited
+  useEffect(() => {
+    if (!isDescriptionManuallyEdited && formData.name) {
+      setFormData((prev) => ({
+        ...prev,
+        description: formData.name,
+      }));
+    }
+  }, [formData.name, isDescriptionManuallyEdited]);
+
+  // Handle input changes for all inputs
+  const handleInputChange = (
+    name: string,
+    value:
+      | string
+      | number
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    // Extract the actual value - handle event objects, strings, and numbers
+    let actualValue: string | number;
+
+    if (typeof value === "string" || typeof value === "number") {
+      actualValue = value;
+    } else {
+      actualValue = value.target.value;
+    }
+
+    if (name === "description") {
+      setIsDescriptionManuallyEdited(true);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: actualValue,
+    }));
+  };
+
+  // Handle text input changes (for TextInput and TextAreaInput components)
+  const handleTextInputChange = (name: string, value: string) => {
+    if (name === "description") {
+      setIsDescriptionManuallyEdited(true);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      description: "",
+      dimensions: "1",
+      cost: 50,
+      price: 0,
+      stock: 0,
+      minStock: 10,
+      tax: 0,
+    });
+    setIsDescriptionManuallyEdited(false);
+    setProductImage("/images/item_placeholder.png");
+    setFileData(null);
+    setCategorySearchKey(Math.random().toString(36).substring(7));
+  };
+
   // Custom submit handler to handle the file upload
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (submitFormData: FormData) => {
     setSending((prev) => !prev);
     if (fileData) {
-      formData.set("image", fileData); // Replace the empty file input with our stored file
+      submitFormData.set("image", fileData);
     }
-    formData.set("userId", user.id);
+    submitFormData.set("userId", user.id);
+
+    // Set the controlled values to FormData, converting numbers to strings
+    Object.entries(formData).forEach(([key, value]) => {
+      submitFormData.set(key, value.toString());
+    });
+
     // Call the form action
-    const result = await createItemAction(state, formData);
+    const result = await createItemAction(state, submitFormData);
     setSending((prev) => !prev);
 
     // Check if the product was created successfully
     if (result.success) {
-      // Reset the form fields
       await showModal({
         title: "Articulo Creado!",
         type: "delete",
         text: "El articulo ha sido creado exitosamente.",
         icon: "success",
       });
+
+      // Reset the form
       const formElement = document.getElementById(
         "product-form"
       ) as HTMLFormElement;
-      formElement.reset();
+      formElement?.reset();
 
-      // Reset the image
-      setProductImage("/images/item_placeholder.png");
-      setFileData(null);
+      // Reset controlled state
+      resetForm();
     }
   };
 
@@ -81,7 +172,7 @@ export default function ProductForm({
     accept: { "image/*": [] },
     onDrop: (acceptedFiles) => {
       const file = acceptedFiles[0];
-      setFileData(file); // Store the file for later use
+      setFileData(file);
 
       // Create preview
       const reader = new FileReader();
@@ -108,7 +199,7 @@ export default function ProductForm({
         className="space-y-4 flex flex-col gap-4"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            e.preventDefault(); // Prevent form submission
+            e.preventDefault();
           }
         }}
       >
@@ -158,12 +249,21 @@ export default function ProductForm({
             )}
           </div>
           <div className="w-full flex items-center flex-col gap-3">
-            <TextInput name="name" label="Nombre" state={state} />
+            <TextInput
+              name="name"
+              label="Nombre"
+              state={state}
+              value={formData.name}
+              onChange={handleTextInputChange}
+            />
             <TextAreaInput
               name="description"
               label="Description"
               state={state}
+              value={formData.description}
+              onChange={handleTextInputChange}
             />
+
             <div className="w-full flex maxmd:flex-col gap-3">
               <SelectInput
                 label="Bodega"
@@ -181,9 +281,15 @@ export default function ProductForm({
                 )}
                 state={state}
               />
-              <SelectInput
+
+              {/* Changed to SearchSelectInput */}
+              <SearchSelectInput
+                key={categorySearchKey}
                 label="Categoría"
                 name="category"
+                state={state}
+                className="w-full"
+                placeholder="Buscar categoría..."
                 options={categories.map(
                   (category: {
                     id: string;
@@ -195,7 +301,9 @@ export default function ProductForm({
                     description: category.description,
                   })
                 )}
-                state={state}
+                onChange={() => {
+                  // This will be handled by the SearchSelectInput internally
+                }}
               />
             </div>
           </div>
@@ -231,20 +339,56 @@ export default function ProductForm({
               state={state}
             />
           </div>
-          <TextInput name="dimensions" label="Unidad" state={state} />
+          <TextInput
+            name="dimensions"
+            label="Unidad de Medida (Ej: 1, 0.5, etc)"
+            state={state}
+            value={formData.dimensions}
+            onChange={handleTextInputChange}
+          />
         </div>
 
-        {/* Numeric inputs */}
+        {/* Numeric inputs with controllable values */}
         <div className="flex maxmd:flex-col gap-3">
-          <NumericInput name="cost" label="Costo de Compra" state={state} />
-          <NumericInput name="price" label="Precio de Venta" state={state} />
+          <NumericInput
+            name="cost"
+            label="Costo de Compra"
+            state={state}
+            value={formData.cost}
+            onChange={(value) => handleInputChange("cost", value)}
+          />
+          <NumericInput
+            name="price"
+            label="Precio de Venta"
+            state={state}
+            value={formData.price}
+            onChange={(value) => handleInputChange("price", value)}
+          />
         </div>
         <div className="flex maxmd:flex-col gap-3">
-          <NumericInput name="stock" label="Stock" state={state} />
-          <NumericInput name="minStock" label="Stock Minio" state={state} />
+          <NumericInput
+            name="stock"
+            label="Stock"
+            state={state}
+            value={formData.stock}
+            onChange={(value) => handleInputChange("stock", value)}
+          />
+          <NumericInput
+            name="minStock"
+            label="Stock Mínimo"
+            state={state}
+            value={formData.minStock}
+            onChange={(value) => handleInputChange("minStock", value)}
+          />
         </div>
         <div className="flex maxmd:flex-col gap-3">
-          <NumericInput name="tax" label="Impuesto" state={state} />
+          <NumericInput
+            name="tax"
+            label="Impuesto"
+            state={state}
+            value={formData.tax}
+            onChange={(value) => handleInputChange("tax", value)}
+          />
           <SelectInput
             label="Proveedor"
             name="supplier"
@@ -259,6 +403,7 @@ export default function ProductForm({
           />
         </div>
         <TextAreaInput name="notes" label="Notas" state={state} />
+
         <button
           type="submit"
           disabled={sending}

@@ -406,7 +406,7 @@ export default function OrderForm({
                     width={150}
                     height={150}
                     alt="img"
-                    className="w-32 h-32 object-cover rounded-md"
+                    className="w-12 h-12 object-cover rounded-md"
                   />
                 </TableCell>
                 <TableCell className="font-medium">

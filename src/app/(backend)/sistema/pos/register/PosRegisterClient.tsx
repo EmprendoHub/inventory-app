@@ -188,7 +188,8 @@ export default function PosRegisterClient({
     cart: CartState,
     paymentType: PaymentType,
     billBreakdown?: CashBreakdown,
-    cashReceived?: number
+    cashReceived?: number,
+    referenceNumber?: string
   ) => {
     setIsProcessing(true);
     try {
@@ -197,7 +198,8 @@ export default function PosRegisterClient({
         paymentType,
         undefined, // customerId
         billBreakdown, // billBreakdown as CashBreakdown object
-        cashReceived // Amount of cash received from customer
+        cashReceived, // Amount of cash received from customer
+        referenceNumber // Payment reference number for cards/transfers
       );
 
       if (result.success) {

@@ -136,8 +136,8 @@ export default function FavoritesGrid({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Star className="w-5 h-5 text-yellow-500" />
-          <h3 className="text-lg font-semibold">Favorites</h3>
-          <Badge variant="outline">{favorites.length} items</Badge>
+          <h3 className="text-lg font-semibold">Favoritos</h3>
+          <Badge variant="outline">{favorites.length} productos</Badge>
         </div>
 
         {onToggleManageMode && (
@@ -149,7 +149,7 @@ export default function FavoritesGrid({
               disabled={isManageMode}
             >
               <Plus className="w-4 h-4 mr-1" />
-              Add
+              Añadir
             </Button>
             <Button
               variant={isManageMode ? "default" : "outline"}
@@ -157,7 +157,7 @@ export default function FavoritesGrid({
               onClick={onToggleManageMode}
             >
               <Settings className="w-4 h-4 mr-1" />
-              {isManageMode ? "Done" : "Manage"}
+              {isManageMode ? "Finalizar" : "Ajustar"}
             </Button>
           </div>
         )}
@@ -188,6 +188,11 @@ export default function FavoritesGrid({
                       ? "border-dashed border-2 border-blue-300 bg-blue-50"
                       : "hover:shadow-md hover:scale-105"
                   }`}
+                  onClick={() => {
+                    if (!isManageMode) {
+                      onAddToCart(favorite.itemId);
+                    }
+                  }}
                 >
                   <CardContent className="p-3 text-center relative">
                     {/* Manage Mode Controls */}
@@ -197,7 +202,10 @@ export default function FavoritesGrid({
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleRemoveFavorite(favorite.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveFavorite(favorite.id);
+                            }}
                             className="p-1 h-6 w-6"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -207,7 +215,10 @@ export default function FavoritesGrid({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => startEditing(favorite)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditing(favorite);
+                            }}
                             className="p-1 h-6 w-6"
                           >
                             <Edit3 className="w-3 h-3" />
@@ -244,6 +255,7 @@ export default function FavoritesGrid({
                           onChange={(e) => setNewName(e.target.value)}
                           className="text-xs"
                           autoFocus
+                          onClick={(e) => e.stopPropagation()}
                           onKeyPress={(e) => {
                             if (e.key === "Enter") {
                               handleEditName(favorite.id, newName);
@@ -253,7 +265,10 @@ export default function FavoritesGrid({
                         <div className="flex gap-1">
                           <Button
                             size="sm"
-                            onClick={() => handleEditName(favorite.id, newName)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditName(favorite.id, newName);
+                            }}
                             className="flex-1 p-1 h-6"
                           >
                             <Check className="w-3 h-3" />
@@ -261,7 +276,10 @@ export default function FavoritesGrid({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setEditingFavorite(null)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingFavorite(null);
+                            }}
                             className="flex-1 p-1 h-6"
                           >
                             <X className="w-3 h-3" />
@@ -277,15 +295,11 @@ export default function FavoritesGrid({
                           ${favorite.price.toFixed(2)}
                         </p>
 
-                        {/* Add to Cart Button */}
+                        {/* Add to Cart Button - Remove individual click since card is clickable */}
                         {!isManageMode && (
                           <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddToCart(favorite.itemId);
-                            }}
                             size="sm"
-                            className="w-full mt-2"
+                            className="w-full mt-2 pointer-events-none"
                           >
                             <Plus className="w-4 h-4" />
                           </Button>
@@ -303,9 +317,9 @@ export default function FavoritesGrid({
         {favorites.length === 0 && (
           <div className="col-span-full text-center py-8 text-gray-500">
             <Star className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>No favorite items yet</p>
+            <p>No hay productos favoritos aún</p>
             <p className="text-sm">
-              Add frequently sold products for quick access
+              Agrega productos de venta frecuente para un acceso rápido
             </p>
             {onUpdateFavorites && (
               <Button
@@ -314,7 +328,7 @@ export default function FavoritesGrid({
                 className="mt-3"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add First Favorite
+                Agregar Primer Favorito
               </Button>
             )}
           </div>
@@ -337,7 +351,7 @@ export default function FavoritesGrid({
               className="bg-background rounded-lg p-6 w-full max-w-2xl max-h-96 overflow-hidden"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Add to Favorites</h3>
+                <h3 className="text-lg font-semibold">Agregar a Favoritos</h3>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -353,7 +367,7 @@ export default function FavoritesGrid({
               {/* Search */}
               <div className="mb-4">
                 <Input
-                  placeholder="Search products..."
+                  placeholder="Buscar productos..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -397,9 +411,9 @@ export default function FavoritesGrid({
 
                 {availableItems.length === 0 && (
                   <div className="text-center py-8 text-gray-500">
-                    <p>No items available to add</p>
+                    <p>No hay productos disponibles para agregar</p>
                     {searchTerm && (
-                      <p className="text-sm">Try adjusting your search</p>
+                      <p className="text-sm">Intenta ajustar tu búsqueda</p>
                     )}
                   </div>
                 )}

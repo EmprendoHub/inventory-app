@@ -3,26 +3,32 @@ import React from "react";
 type NumericInputType = {
   label?: string | null;
   name: string;
+  value?: number;
   defaultValue?: number;
   className?: string;
   state?: { errors?: { [key: string]: string[] } };
-  onChange?: (value: number) => void; // Add onChange prop
+  onChange?: (value: number) => void;
 };
 
 export default function NumericInput({
   label,
   name,
+  value,
   defaultValue,
   state,
   className,
   onChange,
 }: NumericInputType) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value); // Parse the input value to a number
+    const numericValue = parseFloat(e.target.value) || 0;
     if (onChange) {
-      onChange(value); // Pass the numeric value to the parent component
+      onChange(numericValue);
     }
   };
+
+  // Use controlled component if value is provided, otherwise uncontrolled with defaultValue
+  const inputProps =
+    value !== undefined ? { value: value } : { defaultValue: defaultValue };
 
   return (
     <div className={`${className ? className : "w-full"}`}>
@@ -35,10 +41,10 @@ export default function NumericInput({
       <input
         type="number"
         id={name}
-        value={defaultValue}
         name={name}
+        {...inputProps}
         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-        onChange={handleChange} // Attach the onChange handler
+        onChange={handleChange}
         min={0}
       />
       {state?.errors?.[`${name}`] && (

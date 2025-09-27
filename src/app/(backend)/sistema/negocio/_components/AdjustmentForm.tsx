@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { StockMovement } from "@/types/accounting";
 import { Button } from "@/components/ui/button";
+import { SearchSelectInput } from "@/components/SearchSelectInput";
 
 type AdjustType = {
   items: {
@@ -28,7 +29,7 @@ type AdjustType = {
     tax: number;
     supplierId: string;
     notes: string | null;
-    image?: string;
+    mainImage?: string;
   }[];
   warehouses: { id: string; title: string; description?: string }[];
   stockMovements: StockMovement[];
@@ -50,10 +51,21 @@ export default function AdjustmentForm({
   const itemsPerPage = 10;
   const formRef = useRef<HTMLFormElement>(null);
 
+  // State for selected item and key for SearchSelectInput reset
+  const [selectedItem, setSelectedItem] = useState<
+    { id: string; name: string; description: string; price: number } | undefined
+  >(undefined);
+  const [selectedItemKey, setSelectedItemKey] = useState("");
+  const [selectedItemId, setSelectedItemId] = useState("");
+
   // Clear form when successful
   React.useEffect(() => {
     if (state.success) {
       formRef.current?.reset();
+      // Reset selected item and generate new key
+      setSelectedItem(undefined);
+      setSelectedItemId("");
+      setSelectedItemKey(Math.random().toString(36).substring(7));
       // Reset the page to refresh data
       window.location.reload();
     }
@@ -117,12 +129,36 @@ export default function AdjustmentForm({
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
+  // Handle form type change - reset selected item
+  const handleFormTypeChange = (newFormType: string) => {
+    setFormType(newFormType);
+    setSelectedItem(undefined);
+    setSelectedItemId("");
+    setSelectedItemKey(Math.random().toString(36).substring(7));
+  };
+
+  // Handle item selection (similar to OrderForm)
+  const handleSelectItem = (selectedId: string) => {
+    const item = items.find((i) => i.id === selectedId);
+    if (item) {
+      setSelectedItem({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+      });
+      setSelectedItemId(item.id);
+    }
+    // Force internal state reset in SearchSelectInput
+    setSelectedItemKey(Math.random().toString(36).substring(7));
+  };
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
       <ul className="flex flex-wrap mb-2 text-sm font-medium text-center text-gray-500 dark:text-gray-400">
         <li className="me-2">
           <button
-            onClick={() => setFormType("add")}
+            onClick={() => handleFormTypeChange("add")}
             className={`inline-flex items-center justify-center p-4  ${
               formType === "add"
                 ? "text-blue-600 border-b-2 border-blue-600dark:text-blue-500 dark:border-blue-500"
@@ -135,7 +171,7 @@ export default function AdjustmentForm({
         </li>
         <li className="me-2">
           <button
-            onClick={() => setFormType("transfer")}
+            onClick={() => handleFormTypeChange("transfer")}
             className={`inline-flex items-center justify-center p-4 ${
               formType === "transfer"
                 ? "text-blue-600 border-b-2 border-blue-600dark:text-blue-500 dark:border-blue-500"
@@ -154,30 +190,49 @@ export default function AdjustmentForm({
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex maxmd:flex-col gap-3 items-start">
             <div className="flex flex-col gap-3 w-full">
-              <SelectInput
-                className="w-full"
-                name="articulo"
+              <SearchSelectInput
+                key={selectedItemKey}
                 label="Articulo"
-                options={items.map(
-                  (item: {
-                    id: string;
-                    name: string;
-                    description: string;
-                  }) => ({
-                    value: item.id,
-                    name: item.name,
-                    description: item.description,
-                  })
-                )}
+                name="articulo"
                 state={state}
+                className="w-full"
+                placeholder="Buscar articulo..."
+                options={items.map((item) => ({
+                  value: item.id,
+                  name: item.name,
+                  description: `$${item.price.toFixed(2)} - SKU: ${
+                    item.sku
+                  } - ${item.description}`,
+                  price: item.price,
+                  image: item.mainImage, // Use the correct property name for the image URL
+                }))}
+                onChange={(value) => {
+                  handleSelectItem(value);
+                }}
               />
+
+              {/* Show selected item info */}
+              {selectedItem && (
+                <div className="flex gap-2 items-center p-2 bg-blue-50 rounded-md">
+                  <div className="flex flex-col">
+                    <h4 className="font-semibold text-sm">
+                      {selectedItem.name}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      ${selectedItem.price.toFixed(2)} -{" "}
+                      {selectedItem.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <NumericInput name="transAmount" label="Cantidad" state={state} />
             </div>
 
             <SelectInput
               className="w-full"
               name="sendingWarehouse"
-              label="Bodega"
+              label=""
               options={warehouses.map(
                 (warehouse: {
                   id: string;
@@ -194,6 +249,9 @@ export default function AdjustmentForm({
           </div>
 
           <TextAreaInput state={state} name="notes" label="Notas de Ajuste" />
+
+          {/* Hidden field for selected item */}
+          <input type="hidden" name="articulo" value={selectedItemId} />
 
           <button
             type="submit"
@@ -217,23 +275,42 @@ export default function AdjustmentForm({
           <input value={formType} type="hidden" name="formType" id="formType" />
           <div className="flex gap-3 items-center">
             <div className="flex flex-col gap-3 w-full">
-              <SelectInput
-                className="w-full"
-                name="articulo"
+              {/* Item Selection with SearchSelectInput */}
+              <SearchSelectInput
+                key={selectedItemKey} // This will force re-render and reset internal state
                 label="Articulo"
-                options={items.map(
-                  (item: {
-                    id: string;
-                    name: string;
-                    description: string;
-                  }) => ({
-                    value: item.id,
-                    name: item.name,
-                    description: item.description,
-                  })
-                )}
+                name="productId"
                 state={state}
+                className="w-full"
+                placeholder="Buscar articulo..."
+                options={items.map((item) => ({
+                  value: item.id,
+                  name: item.name,
+                  description: `$${item.price.toFixed(2)} - SKU: ${
+                    item.sku
+                  } - ${item.description}`,
+                  price: item.price,
+                }))}
+                onChange={(value) => {
+                  handleSelectItem(value);
+                }}
               />
+
+              {/* Show selected item info */}
+              {selectedItem && (
+                <div className="flex gap-2 items-center p-2 bg-blue-50 rounded-md">
+                  <div className="flex flex-col">
+                    <h4 className="font-semibold text-sm">
+                      {selectedItem.name}
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      ${selectedItem.price.toFixed(2)} -{" "}
+                      {selectedItem.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <NumericInput
                 name="transAmount"
                 label="Cantidad a transferir"
@@ -280,6 +357,9 @@ export default function AdjustmentForm({
           </div>
 
           <TextAreaInput state={state} name="notes" label="Notas de Ajuste" />
+
+          {/* Hidden field for selected item */}
+          <input type="hidden" name="articulo" value={selectedItemId} />
 
           <button
             type="submit"
