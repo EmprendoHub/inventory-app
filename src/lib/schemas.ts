@@ -26,12 +26,13 @@ export const ProductSchema = z.object({
   tax: z.number(),
   notes: z.string(),
   image: z
-    .object({
-      size: z.number(),
-      type: z.string(),
-      name: z.string(),
-      lastModified: z.number(),
-    })
+    .instanceof(File)
+    .refine((file) => !file || file.size > 0, "Image file must have content")
+    .refine((file) => !file || file.size <= 10 * 1024 * 1024, "File size must be less than 10MB")
+    .refine(
+      (file) => !file || ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff"].includes(file.type),
+      "Only JPEG, PNG, GIF, WebP, BMP, and TIFF images are allowed"
+    )
     .nullable()
     .optional(),
 });

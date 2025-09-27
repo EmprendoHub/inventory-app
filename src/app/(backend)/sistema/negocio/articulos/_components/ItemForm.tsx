@@ -190,7 +190,15 @@ export default function ProductForm({
 
       // Add file if present
       if (fileData) {
+        console.log("Adding file to form data:", {
+          name: fileData.name,
+          size: fileData.size,
+          type: fileData.type,
+          lastModified: fileData.lastModified
+        });
         submitFormData.set("image", fileData);
+      } else {
+        console.log("No file data available");
       }
 
       // Add user ID
@@ -206,7 +214,11 @@ export default function ProductForm({
       // Debug: Log form data
       console.log("Form data being submitted:");
       submitFormData.forEach((value, key) => {
-        console.log(key, value);
+        if (key === "image") {
+          console.log(key, value instanceof File ? `File: ${value.name} (${value.size} bytes)` : value);
+        } else {
+          console.log(key, value);
+        }
       });
 
       // Call the form action with the correct parameters
@@ -298,18 +310,47 @@ export default function ProductForm({
     getInputProps: getProductInputProps,
     isDragActive: isProductDragActive,
   } = useDropzone({
-    accept: { "image/*": [] },
-    onDrop: (acceptedFiles) => {
-      const file = acceptedFiles[0];
-      setFileData(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProductImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    accept: { 
+      "image/*": [".jpeg", ".jpg", ".png", ".gif", ".webp", ".bmp", ".tiff"]
     },
+    maxFiles: 1,
+    maxSize: 10 * 1024 * 1024, // 10MB limit
+    onDrop: (acceptedFiles, rejectedFiles) => {
+      console.log("Accepted files:", acceptedFiles);
+      console.log("Rejected files:", rejectedFiles);
+      
+      if (rejectedFiles.length > 0) {
+        console.error("File rejected:", rejectedFiles[0].errors);
+        return;
+      }
+
+      const file = acceptedFiles[0];
+      if (file) {
+        console.log("File details:", {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          lastModified: file.lastModified
+        });
+
+        setFileData(file);
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          console.log("File read successfully, preview created");
+          setProductImage(result);
+        };
+        reader.onerror = () => {
+          console.error("Error reading file");
+        };
+        reader.readAsDataURL(file);
+      }
+    },
+    onError: (error) => {
+      console.error("Dropzone error:", error);
+    }
   });
 
   // Add validation for required data after all hooks
@@ -357,14 +398,18 @@ export default function ProductForm({
                   : "border-gray-300 bg-gray-50"
               }`}
             >
-              <input {...getProductInputProps()} />
+              <input 
+                {...getProductInputProps()} 
+                capture="environment"
+                accept="image/*"
+              />
               {isProductDragActive ? (
                 <p>Drop the image here...</p>
               ) : (
                 <div className="flex flex-col items-center justify-center gap-3">
                   <CloudUpload size={40} className="text-white" />
                   <p>
-                    Drag & drop a product image here, or click to select one.
+                    Drag & drop a product image here, or click to select/take a photo.
                   </p>
                 </div>
               )}
@@ -377,11 +422,50 @@ export default function ProductForm({
               />
             </div>
             {fileData && (
-              <p className="mt-2 text-xs text-muted">
-                Selected file: {fileData.name} (
-                {Math.round(fileData.size / 1024)} KB)
-              </p>
+              <div className="mt-2 text-xs text-muted">
+                <p>Selected file: {fileData.name} ({Math.round(fileData.size / 1024)} KB)</p>
+                <p>Type: {fileData.type}</p>
+                <p>Last Modified: {new Date(fileData.lastModified).toLocaleString()}</p>
+                <p>Size in bytes: {fileData.size}</p>
+              </div>
             )}
+            
+            {/* Alternative file input for mobile users */}
+            <div className="mt-2">
+              <label className="text-sm text-gray-600">Or use file input:</label>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    console.log("File selected via input:", {
+                      name: file.name,
+                      size: file.size,
+                      type: file.type,
+                      lastModified: file.lastModified
+                    });
+                    
+                    setFileData(file);
+                    
+                    // Create preview
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      const result = reader.result as string;
+                      console.log("File read successfully via input, preview created");
+                      setProductImage(result);
+                    };
+                    reader.onerror = () => {
+                      console.error("Error reading file via input");
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            </div>
+            
             {state.errors?.image && (
               <p className="text-sm text-red-500">
                 {state.errors?.image.join(", ")}

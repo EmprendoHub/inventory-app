@@ -63,9 +63,19 @@ export const createItemAction = async (
     rawData.image instanceof File &&
     rawData.image.size > 0
   ) {
+    console.log("Processing image file:", {
+      name: rawData.image.name,
+      size: rawData.image.size,
+      type: rawData.image.type,
+      lastModified: rawData.image.lastModified
+    });
+
     // Convert the image file to ArrayBuffer
     const arrayBuffer = await rawData.image.arrayBuffer();
+    console.log("ArrayBuffer created, size:", arrayBuffer.byteLength);
+    
     const buffer = Buffer.from(arrayBuffer);
+    console.log("Buffer created, length:", buffer.length);
 
     // Optimize the image using sharp
     const optimizedImageBuffer = await sharp(buffer)
@@ -75,12 +85,14 @@ export const createItemAction = async (
         withoutEnlargement: true, // Don't enlarge images smaller than 800x800
       })
       .png({
-        // Convert to WebP format
+        // Convert to PNG format
         quality: 80, // Adjust quality (0-100)
         compressionLevel: 9, // Compression level (0-9, 9 being the highest compression)
         adaptiveFiltering: true, // Use adaptive filtering for better compression
       })
       .toBuffer();
+    
+    console.log("Image optimized, new size:", optimizedImageBuffer.length);
 
     // Generate a unique filename
     const newFilename = `${Date.now()}-${Math.random()
@@ -90,9 +102,12 @@ export const createItemAction = async (
 
     // Save the optimized image to a temporary file
     await writeFile(path, optimizedImageBuffer);
+    console.log("Image saved to temp file:", path);
 
     // Upload the optimized image to Minio
     await uploadToBucket("inventario", "products/" + newFilename, path);
+    console.log("Image uploaded to Minio");
+    
     const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
     const generatedBarcode = await generateUniqueBarcode();
     const generatedSku = await generateUniqueSKU();
@@ -170,10 +185,84 @@ export const createItemAction = async (
       return { success: false, message: "Error al crear producto." };
     }
   } else {
-    return {
-      success: false,
-      message: "Falto una imagen!",
-    };
+    // No image provided, use placeholder
+    console.log("No image provided, using placeholder");
+    const savedImageUrl = "/images/item_placeholder.png";
+    const generatedBarcode = await generateUniqueBarcode();
+    const generatedSku = await generateUniqueSKU();
+    
+    try {
+      const createdAt = getMexicoGlobalUtcDate();
+      await prisma.$transaction(async (prisma: any) => {
+        // Step 1: Create Product
+        const newProduct = await prisma.item.create({
+          data: {
+            name: validatedData.data.name,
+            description: validatedData.data.description,
+            categoryId: validatedData.data.category,
+            brandId: validatedData.data.brand,
+            unitId: validatedData.data.unit,
+            dimensions: validatedData.data.dimensions,
+            sku: generatedSku,
+            barcode: generatedBarcode,
+            cost: validatedData.data.cost,
+            price: validatedData.data.price,
+            minStock: validatedData.data.minStock,
+            tax: validatedData.data.tax,
+            supplierId: validatedData.data.supplier,
+            notes: validatedData.data.notes,
+            mainImage: savedImageUrl,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+
+        // Step 2: Create Stock Entry for the Warehouse
+        await prisma.stock.create({
+          data: {
+            itemId: newProduct.id,
+            warehouseId: validatedData.data.warehouse,
+            quantity: validatedData.data.stock || 0,
+            availableQty: validatedData.data.stock || 0,
+            reservedQty: 0,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+
+        // Step 3: Create Stock Movement Record
+        await prisma.stockMovement.create({
+          data: {
+            itemId: newProduct.id,
+            type: "PURCHASE",
+            quantity: validatedData.data.stock || 0,
+            toWarehouseId: validatedData.data.warehouse,
+            reference: `Existencia inicial al crear producto`,
+            status: "COMPLETED",
+            createdBy: validatedData.data.userId ?? "",
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+
+        return newProduct;
+      });
+
+      revalidatePath("/sistema/negocio/articulos/nuevo");
+      revalidatePath("/sistema/negocio/articulos");
+      revalidatePath("/sistema/ventas/pedidos/nuevo");
+      revalidatePath("/sistema/ventas/pos/register");
+      revalidatePath("/sistema/qr/generador");
+      revalidatePath("/sistema/negocio/ajustes/nuevo");
+      
+      return {
+        success: true,
+        message: "Producto creado exitosamente!",
+      };
+    } catch (error) {
+      console.error("Error creating product:", error);
+      return { success: false, message: "Error al crear producto." };
+    }
   }
 };
 
