@@ -327,7 +327,7 @@ export default function ProductForm({
     <section>
       {sending && (
         <div
-          className={`fixed top-0 left-0 z-50 flex flex-col items-center justify-center w-screen h-screen bg-black/50`}
+          className={`fixed top-0 left-0 z-50 flex  flex-col items-center justify-center w-screen h-screen bg-black/50`}
         >
           <h3>Generado producto...</h3>
           <span className="loader" />
