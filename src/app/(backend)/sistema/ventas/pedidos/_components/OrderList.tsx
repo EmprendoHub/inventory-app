@@ -229,11 +229,6 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
               sessionStatus === "authenticated" &&
               ["SUPER_ADMIN", "GERENTE"].includes(user?.role || "");
 
-            const isAdminRole =
-              mounted &&
-              sessionStatus === "authenticated" &&
-              ["SUPER_ADMIN", "ADMIN"].includes(user?.role || "");
-
             const deleteOrder = React.useCallback(async () => {
               // First, prompt for supervisor code
               const supervisorCodeResult = await showModal({
@@ -439,18 +434,14 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                             <GiCheckMark /> Entregar
                           </DropdownMenuItem>
                         )}
-                      {isAdminRole && (
-                        <>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={deleteOrder}
-                            className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
-                          >
-                            <X />
-                            Cancelar
-                          </DropdownMenuItem>
-                        </>
-                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={deleteOrder}
+                        className="bg-red-600 text-white focus:bg-red-700 focus:text-white cursor-pointer text-xs"
+                      >
+                        <X />
+                        Cancelar
+                      </DropdownMenuItem>
                     </>
                   )}
                 </DropdownMenuContent>

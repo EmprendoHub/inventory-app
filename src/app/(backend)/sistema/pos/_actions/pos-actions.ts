@@ -11,6 +11,51 @@ import {
 import { revalidatePath } from "next/cache";
 import { generateOrderId, getMexicoGlobalUtcDate } from "@/lib/utils";
 
+// Interface for stock availability in other warehouses
+interface WarehouseStockInfo {
+  warehouseId: string;
+  warehouseName: string;
+  warehouseCode: string;
+  availableStock: number;
+}
+
+// Check stock availability in other warehouses
+async function checkStockInOtherWarehouses(
+  itemId: string,
+  currentWarehouseId: string | null,
+  requiredQuantity: number
+): Promise<WarehouseStockInfo[]> {
+  const warehouseStocks = await prisma.stock.findMany({
+    where: {
+      itemId,
+      quantity: { gt: 0 },
+      ...(currentWarehouseId && {
+        warehouseId: { not: currentWarehouseId },
+      }),
+    },
+    include: {
+      warehouse: {
+        select: {
+          id: true,
+          title: true,
+          code: true,
+          status: true,
+        },
+      },
+    },
+  });
+
+  return warehouseStocks
+    .filter((stock) => stock.warehouse.status === "ACTIVE")
+    .map((stock) => ({
+      warehouseId: stock.warehouse.id,
+      warehouseName: stock.warehouse.title,
+      warehouseCode: stock.warehouse.code,
+      availableStock: stock.quantity,
+    }))
+    .filter((info) => info.availableStock >= requiredQuantity);
+}
+
 // Result interface for POS operations
 interface PosOrderResult {
   success: boolean;
@@ -19,6 +64,13 @@ interface PosOrderResult {
   isStockError?: boolean;
   changeGiven?: CashBreakdown;
   changeAmount?: number;
+  stockSuggestions?: {
+    itemName: string;
+    itemId: string;
+    requiredQuantity: number;
+    availableLocally: number;
+    availableWarehouses: WarehouseStockInfo[];
+  }[];
 }
 
 // Utility function to add two CashBreakdown objects
@@ -143,25 +195,118 @@ export async function createPosOrder(
       finalCustomerId = publicClient.id;
     }
 
+    // Get user's current warehouse
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { warehouse: true },
+    });
+
+    const currentWarehouseId = user?.warehouseId;
+
     // Use the same stock update logic as sistema/ventas/pedidos/nuevo
     const orderItems = [];
+    const stockSuggestions = [];
+
     for (const cartItem of cart.items) {
-      // Check stock availability
-      const stocks = await prisma.stock.findMany({
-        where: { itemId: cartItem.itemId },
+      console.log("🔍 DEBUG: Checking stock for item:", {
+        itemName: cartItem.name,
+        itemId: cartItem.itemId,
+        requestedQty: cartItem.quantity,
+        userWarehouseId: currentWarehouseId,
       });
+
+      // Check stock availability in current warehouse or all warehouses if no specific warehouse
+      const stocks = await prisma.stock.findMany({
+        where: {
+          itemId: cartItem.itemId,
+          ...(currentWarehouseId && { warehouseId: currentWarehouseId }),
+        },
+        include: {
+          warehouse: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      });
+
+      console.log(
+        "📊 DEBUG: Found stocks:",
+        stocks.map((s) => ({
+          warehouseId: s.warehouseId,
+          warehouseName: s.warehouse.title,
+          quantity: s.quantity,
+        }))
+      );
 
       const totalAvailable = stocks.reduce(
         (sum, stock) => sum + stock.quantity,
         0
       );
 
-      if (totalAvailable < cartItem.quantity) {
-        return {
-          success: false,
-          error: `Stock insuficiente para ${cartItem.name}. Disponible: ${totalAvailable}, Solicitado: ${cartItem.quantity}`,
-          isStockError: true,
-        };
+      // If user has no warehouse assigned, we need to handle this differently
+      let localStock = 0;
+      if (currentWarehouseId) {
+        // User has warehouse - count only local stock
+        localStock = stocks
+          .filter((s) => s.warehouseId === currentWarehouseId)
+          .reduce((sum, stock) => sum + stock.quantity, 0);
+      } else {
+        // User has no warehouse - treat all stock as local (this might be the issue)
+        localStock = totalAvailable;
+      }
+
+      console.log("📈 DEBUG: Stock calculation:", {
+        localStock,
+        totalAvailable,
+        requestedQty: cartItem.quantity,
+        needsCrossWarehouse: localStock < cartItem.quantity,
+      });
+
+      if (localStock < cartItem.quantity) {
+        // Check if stock is available in other warehouses
+        const availableWarehouses = await checkStockInOtherWarehouses(
+          cartItem.itemId,
+          currentWarehouseId || null,
+          cartItem.quantity - localStock // Only need the deficit from LOCAL stock
+        );
+
+        console.log("🏭 DEBUG: Cross-warehouse check result:", {
+          deficit: cartItem.quantity - localStock,
+          availableWarehouses: availableWarehouses.length,
+          warehouses: availableWarehouses.map((w) => ({
+            name: w.warehouseName,
+            stock: w.availableStock,
+          })),
+        });
+
+        if (availableWarehouses.length > 0) {
+          // Stock available in other warehouses - allow sale but mark for notification
+          stockSuggestions.push({
+            itemName: cartItem.name,
+            itemId: cartItem.itemId,
+            requiredQuantity: cartItem.quantity - localStock, // Only the deficit from LOCAL stock
+            availableLocally: localStock, // Use LOCAL stock, not total
+            availableWarehouses,
+          });
+
+          console.log("📦 DEBUG: Item needs cross-warehouse fulfillment:", {
+            item: cartItem.name,
+            localStock: localStock,
+            requiredQty: cartItem.quantity,
+            deficit: cartItem.quantity - localStock,
+            availableWarehouses: availableWarehouses.length,
+          });
+        } else {
+          // No stock available anywhere - fail the transaction
+          return {
+            success: false,
+            error: `Stock insuficiente para ${cartItem.name}. Disponible localmente: ${localStock}, Solicitado: ${cartItem.quantity}. No hay stock en otras sucursales.`,
+            isStockError: true,
+            stockSuggestions: undefined,
+          };
+        }
       }
 
       orderItems.push({
@@ -334,11 +479,25 @@ export async function createPosOrder(
     revalidatePath("/sistema/pos");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/negocio/articulos");
+
+    console.log(
+      "✅ DEBUG: POS Order completed successfully with stock suggestions:",
+      {
+        orderId: order.id,
+        stockSuggestions:
+          stockSuggestions.length > 0 ? stockSuggestions : "none",
+        stockSuggestionsCount: stockSuggestions.length,
+        stockSuggestionsDetails: stockSuggestions,
+      }
+    );
+
     return {
       success: true,
       orderId: order.id,
       changeGiven,
       changeAmount,
+      stockSuggestions:
+        stockSuggestions.length > 0 ? stockSuggestions : undefined,
     };
   } catch (error) {
     console.error("Error creating POS order:", error);
@@ -407,36 +566,172 @@ export async function createHeldOrder(cart: CartState, customerId?: string) {
 }
 
 export async function updateFavorites(favorites: any[]) {
-  const session = await getServerSession(options);
-
-  if (!session?.user?.id) {
-    throw new Error("Usuario no autenticado");
-  }
-
   try {
-    // Since favorites are global in this system, we'll update the favorites table directly
-    // First, clear existing favorites and then recreate them
+    // Clear existing favorites
     await prisma.favorite.deleteMany({});
 
-    // Create new favorites
-    for (const favorite of favorites) {
+    // Add new favorites
+    for (let i = 0; i < favorites.length; i++) {
+      const favorite = favorites[i];
       await prisma.favorite.create({
         data: {
           itemId: favorite.itemId,
           name: favorite.name,
           price: favorite.price,
           image: favorite.image,
-          position: favorite.position,
-          isActive: favorite.isActive,
+          position: i + 1,
         },
       });
     }
 
-    revalidatePath("/sistema/pos");
+    revalidatePath("/sistema/pos/register");
     return { success: true };
   } catch (error) {
     console.error("Error updating favorites:", error);
-    throw new Error("Error al actualizar favoritos");
+    return { success: false, error: "Failed to update favorites" };
+  }
+}
+
+// Create branch notification from POS for stock request
+export async function createBranchNotificationFromPos(
+  itemId: string,
+  itemName: string,
+  requiredQuantity: number,
+  targetWarehouseId: string,
+  customerId?: string,
+  deliveryMethod:
+    | "PICKUP"
+    | "DELIVERY"
+    | "CUSTOMER_PICKUP"
+    | "DIRECT_DELIVERY" = "CUSTOMER_PICKUP",
+  notes?: string
+): Promise<{ success: boolean; notificationId?: string; error?: string }> {
+  console.log("🔍 DEBUG: createBranchNotificationFromPos called with:", {
+    itemId,
+    itemName,
+    requiredQuantity,
+    targetWarehouseId,
+    customerId,
+    deliveryMethod,
+    notes,
+  });
+
+  const session = await getServerSession(options);
+
+  if (!session?.user?.id) {
+    console.log("❌ DEBUG: No authenticated user session");
+    return { success: false, error: "Usuario no autenticado" };
+  }
+
+  console.log("✅ DEBUG: User authenticated:", session.user.id);
+
+  try {
+    // Get user's current warehouse
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: { warehouse: true },
+    });
+
+    console.log("🏢 DEBUG: User data:", {
+      userId: user?.id,
+      warehouseId: user?.warehouseId,
+      warehouseName: user?.warehouse?.title,
+    });
+
+    if (!user?.warehouseId) {
+      console.log("❌ DEBUG: User has no assigned warehouse");
+      return { success: false, error: "Usuario sin almacén asignado" };
+    }
+
+    // Generate notification number
+    const notificationCount = await prisma.branchNotification.count();
+    const notificationNo = `BN${(notificationCount + 1)
+      .toString()
+      .padStart(6, "0")}`;
+
+    console.log(
+      "🔢 DEBUG: Generated notification number:",
+      notificationNo,
+      "based on count:",
+      notificationCount
+    );
+
+    // Get customer info if provided
+    let customerInfo = null;
+    if (customerId) {
+      const customer = await prisma.client.findUnique({
+        where: { id: customerId },
+      });
+      if (customer) {
+        customerInfo = {
+          id: customer.id,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+        };
+      }
+      console.log("👤 DEBUG: Customer info:", customerInfo);
+    }
+
+    const createdAt = getMexicoGlobalUtcDate();
+
+    console.log("📝 DEBUG: About to create notification with data:", {
+      notificationNo,
+      type: "STOCK_REQUEST",
+      priority: "HIGH",
+      title: `Solicitud de stock - ${itemName}`,
+      fromWarehouseId: user.warehouseId,
+      toWarehouseId: targetWarehouseId,
+      itemId,
+      requestedQty: requiredQuantity,
+      deliveryMethod,
+      createdBy: session.user.id,
+    });
+
+    // Create branch notification
+    const notification = await prisma.branchNotification.create({
+      data: {
+        notificationNo,
+        type: "STOCK_REQUEST",
+        priority: "HIGH",
+        title: `Solicitud de stock - ${itemName}`,
+        message: `Se requiere ${requiredQuantity} unidades de ${itemName} para completar una venta en POS.`,
+        fromWarehouseId: user.warehouseId,
+        toWarehouseId: targetWarehouseId,
+        itemId,
+        requestedQty: requiredQuantity,
+        status: "PENDING",
+        deliveryMethod,
+        createdBy: session.user.id,
+        customerInfo,
+        notes,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+
+    console.log("✅ DEBUG: Notification created successfully:", {
+      id: notification.id,
+      notificationNo: notification.notificationNo,
+      type: notification.type,
+    });
+
+    revalidatePath("/sistema/notifications");
+
+    return {
+      success: true,
+      notificationId: notification.id,
+    };
+  } catch (error) {
+    console.error("❌ DEBUG: Error creating branch notification:", error);
+    console.error(
+      "Full error details:",
+      JSON.stringify(error, Object.getOwnPropertyNames(error))
+    );
+    return {
+      success: false,
+      error: "Error al crear notificación entre sucursales",
+    };
   }
 }
 
@@ -478,5 +773,152 @@ export async function getItems() {
   } catch (error) {
     console.error("Error fetching items:", error);
     return [];
+  }
+}
+
+// Function to handle stock confirmation and transfer between warehouses
+export async function confirmAndTransferStock(
+  notificationId: string,
+  itemId: string,
+  quantity: number,
+  fromWarehouseId: string,
+  toWarehouseId: string,
+  notes?: string
+): Promise<{ success: boolean; error?: string; transferId?: string }> {
+  const session = await getServerSession(options);
+
+  if (!session?.user?.id) {
+    return { success: false, error: "Usuario no autenticado" };
+  }
+
+  try {
+    console.log("🔄 DEBUG: Starting stock transfer:", {
+      notificationId,
+      itemId,
+      quantity,
+      fromWarehouseId,
+      toWarehouseId,
+    });
+
+    // Check if notification exists and is still pending
+    const notification = await prisma.branchNotification.findUnique({
+      where: { id: notificationId },
+    });
+
+    if (!notification) {
+      return { success: false, error: "Notificación no encontrada" };
+    }
+
+    if (notification.status !== "PENDING") {
+      return { success: false, error: "La notificación ya fue procesada" };
+    }
+
+    // Check available stock in source warehouse
+    const sourceStocks = await prisma.stock.findMany({
+      where: {
+        itemId,
+        warehouseId: fromWarehouseId,
+        quantity: { gt: 0 },
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const totalAvailable = sourceStocks.reduce(
+      (sum, stock) => sum + stock.quantity,
+      0
+    );
+
+    if (totalAvailable < quantity) {
+      return {
+        success: false,
+        error: `Stock insuficiente en almacén origen. Disponible: ${totalAvailable}, Solicitado: ${quantity}`,
+      };
+    }
+
+    // Create transfer record
+    const transferCount = await prisma.branchStockTransfer.count();
+    const transferNo = `BT${(transferCount + 1).toString().padStart(6, "0")}`;
+
+    const createdAt = getMexicoGlobalUtcDate();
+
+    const transfer = await prisma.branchStockTransfer.create({
+      data: {
+        transferNo,
+        notificationId,
+        fromWarehouseId,
+        toWarehouseId,
+        itemId,
+        requestedQty: quantity,
+        transferredQty: quantity,
+        method: notification.deliveryMethod,
+        status: "RECEIVED", // Use correct enum value
+        createdBy: session.user.id, // Add required field
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+
+    // Update source warehouse stock (deduct)
+    let remainingToDeduct = quantity;
+    for (const stock of sourceStocks) {
+      if (remainingToDeduct <= 0) break;
+
+      const deductAmount = Math.min(stock.quantity, remainingToDeduct);
+
+      await prisma.stock.update({
+        where: { id: stock.id },
+        data: {
+          quantity: stock.quantity - deductAmount,
+          availableQty: stock.availableQty - deductAmount,
+        },
+      });
+
+      remainingToDeduct -= deductAmount;
+    }
+
+    // Add stock to destination warehouse
+    await prisma.stock.create({
+      data: {
+        itemId,
+        warehouseId: toWarehouseId,
+        quantity,
+        availableQty: quantity,
+        createdAt,
+        updatedAt: createdAt,
+      },
+    });
+
+    // Update notification status
+    await prisma.branchNotification.update({
+      where: { id: notificationId },
+      data: {
+        status: "COMPLETED",
+        fulfilledQty: quantity,
+        completedAt: createdAt,
+        responseNotes: notes || "Stock transferido exitosamente",
+        respondedBy: session.user.id,
+        respondedAt: createdAt,
+        updatedAt: createdAt,
+      },
+    });
+
+    console.log("✅ DEBUG: Stock transfer completed:", {
+      transferId: transfer.id,
+      transferNo: transfer.transferNo,
+    });
+
+    revalidatePath("/sistema/notifications");
+    revalidatePath("/sistema/negocio/articulos");
+
+    return {
+      success: true,
+      transferId: transfer.id,
+    };
+  } catch (error) {
+    console.error("❌ DEBUG: Error in stock transfer:", error);
+    return {
+      success: false,
+      error: "Error al transferir stock entre almacenes",
+    };
   }
 }

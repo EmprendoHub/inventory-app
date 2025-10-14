@@ -19,6 +19,14 @@ type userType = {
   loginAttempts: number;
   points: number | null;
   role: string;
+  warehouseId?: string | null;
+  warehouse?: {
+    id: string;
+    title: string;
+    code: string;
+    type: string;
+    status: string;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -92,6 +100,18 @@ export const options = {
 
           const user = await prisma.user.findFirst({
             where: { email: email },
+            // TODO: Enable after migration
+            // include: {
+            //   warehouse: {
+            //     select: {
+            //       id: true,
+            //       title: true,
+            //       code: true,
+            //       type: true,
+            //       status: true,
+            //     },
+            //   },
+            // },
           });
 
           if (!user || !user.password) {
@@ -205,6 +225,8 @@ export const options = {
             name: user.name,
             email: user.email,
             role: existinguser.role,
+            // TODO: Enable after migration
+            // warehouseId: existinguser.warehouseId || null,
           };
         }
       } else if (account?.provider == "credentials") {
@@ -214,6 +236,8 @@ export const options = {
             name: user.name,
             email: user.email,
             role: user.role,
+            // TODO: Enable after migration
+            // warehouseId: user.warehouseId || null,
           };
         }
       }
@@ -227,6 +251,8 @@ export const options = {
           name: token.user.name,
           email: token.user.email,
           role: token.user.role,
+          // TODO: Enable after migration
+          // warehouseId: token.user.warehouseId,
         };
       }
       return session;

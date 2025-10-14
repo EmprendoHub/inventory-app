@@ -21,6 +21,14 @@ export type UserType = {
   loginAttempts: number;
   points: number | null;
   role: string | null;
+  warehouseId: string | null;
+  warehouse?: {
+    id: string;
+    title: string;
+    code: string;
+    type: string;
+    status: string;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
   cashRegister?: CashTransactionResponse | null;

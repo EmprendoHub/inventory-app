@@ -159,6 +159,11 @@ export const roles = [
     label: "ADMIN",
   },
   {
+    name: "SUPER_ADMIN",
+    value: "SUPER_ADMIN",
+    label: "SUPER_ADMIN",
+  },
+  {
     name: "GERENTE",
     value: "GERENTE",
     label: "GERENTE",

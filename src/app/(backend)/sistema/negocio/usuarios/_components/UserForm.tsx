@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useFormState } from "react-dom";
 import SelectInput from "@/components/SelectInput";
 import TextInput from "@/components/TextInput";
@@ -32,18 +32,44 @@ export default function UserForm({ roles }: UserGroupType) {
     authCode: "",
     password: "",
     role: "",
+    warehouseId: "",
     avatar: "",
     active: false, // Add a new field for the toggle
     updatedAt: new Date(),
   });
 
   const [sending, setSending] = useState(false);
+  const [warehouses, setWarehouses] = useState<{name: string; value: string; label: string}[]>([]);
   const { showModal } = useModal();
 
   const [userImage, setUserImage] = useState<string>(
     "/images/avatar_placeholder.jpg"
   );
   const [fileData, setFileData] = useState<File | null>(null);
+
+  // Fetch warehouses on component mount
+  useEffect(() => {
+    const fetchWarehouses = async () => {
+      try {
+        const response = await fetch('/api/warehouses');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && Array.isArray(data.data)) {
+            const warehouseOptions = data.data.map((warehouse: any) => ({
+              name: warehouse.title,
+              value: warehouse.id,
+              label: `${warehouse.title} (${warehouse.code})`,
+            }));
+            setWarehouses(warehouseOptions);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching warehouses:', error);
+      }
+    };
+
+    fetchWarehouses();
+  }, []);
 
   const handleToggle = () => {
     setFormData((prev) => ({
@@ -191,6 +217,13 @@ export default function UserForm({ roles }: UserGroupType) {
             label="Rol"
             name="role"
             options={roles}
+            state={state}
+          />
+          <SelectInput
+            isSelected={formData.warehouseId}
+            label="Almacén"
+            name="warehouseId"
+            options={warehouses}
             state={state}
           />
           <div className="flex items-center gap-2">

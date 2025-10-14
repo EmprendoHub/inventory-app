@@ -34,6 +34,9 @@ model User {
   loginAttempts      Int       @default(0)
   points             Int?
   role               Role    @default(CLIENTE)
+  // Warehouse assignment
+  warehouseId        String?  @db.ObjectId  // User's assigned warehouse
+  warehouse          Warehouse? @relation(fields: [warehouseId], references: [id])
   // POS authentication
   posPin             String?   // PIN for POS access
   posPinSetAt        DateTime? // When PIN was set
@@ -369,8 +372,14 @@ model Warehouse {
   status        WarehouseStatus @default(ACTIVE)
   capacity      Float?    // Storage capacity in cubic meters or similar
   stocks        Stock[]
+  users         User[]    // Users assigned to this warehouse
   incomingMovements StockMovement[] @relation("ToWarehouse")
   outgoingMovements StockMovement[] @relation("FromWarehouse")
+  // Branch notification relations
+  notificationsFrom BranchNotification[] @relation("NotificationFrom")
+  notificationsTo   BranchNotification[] @relation("NotificationTo")
+  transfersFrom     BranchStockTransfer[] @relation("TransferFrom")
+  transfersTo       BranchStockTransfer[] @relation("TransferTo")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -833,6 +842,143 @@ model Feedback {
   feedback  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+// ******************* BRANCH NOTIFICATION SYSTEM ****************** //
+
+model BranchNotification {
+  id              String                 @id @default(auto()) @map("_id") @db.ObjectId
+  notificationNo  String                 @unique // Format: "BN000001"
+  type            NotificationType
+  priority        NotificationPriority   @default(NORMAL)
+  title           String
+  message         String
+  // Source branch (where the request originates)
+  fromWarehouseId String                 @db.ObjectId
+  fromWarehouse   Warehouse             @relation("NotificationFrom", fields: [fromWarehouseId], references: [id])
+  // Target branch (where the item is available)
+  toWarehouseId   String                 @db.ObjectId  
+  toWarehouse     Warehouse             @relation("NotificationTo", fields: [toWarehouseId], references: [id])
+  // Related entities
+  itemId          String                 @db.ObjectId
+  orderId         String?                @db.ObjectId
+  posOrderId      String?                @db.ObjectId
+  requestedQty    Int
+  availableQty    Int                    @default(0)
+  fulfilledQty    Int                    @default(0)
+  // Status and workflow
+  status          NotificationStatus     @default(PENDING)
+  urgency         Boolean                @default(false) // Critical stock-out situation
+  estimatedTime   DateTime?              // When pickup/delivery is expected
+  actualTime      DateTime?              // When pickup/delivery actually happened
+  // User tracking
+  createdBy       String                 @db.ObjectId   // User who created the notification
+  assignedTo      String?                @db.ObjectId   // User assigned to handle this
+  respondedBy     String?                @db.ObjectId   // User who responded
+  // Additional data
+  customerInfo    Json?                  // Customer details for context
+  deliveryMethod  BranchDeliveryMethod   @default(PICKUP)
+  notes           String?
+  responseNotes   String?
+  // Timestamps
+  createdAt       DateTime               @default(now())
+  respondedAt     DateTime?
+  completedAt     DateTime?
+  updatedAt       DateTime               @updatedAt
+  // Relations
+  responses       BranchNotificationResponse[]
+  transfers       BranchStockTransfer[]
+}
+
+model BranchNotificationResponse {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  notification     BranchNotification @relation(fields: [notificationId], references: [id])
+  notificationId   String            @db.ObjectId
+  responseType     ResponseType
+  message          String?
+  confirmedQty     Int?              // Quantity they can fulfill
+  estimatedTime    DateTime?         // When they can have it ready
+  actualQty        Int?              // Actual quantity provided
+  respondedBy      String            @db.ObjectId // User who responded
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model BranchStockTransfer {
+  id               String                    @id @default(auto()) @map("_id") @db.ObjectId
+  transferNo       String                    @unique // Format: "BT000001"
+  notificationId   String                    @db.ObjectId
+  notification     BranchNotification        @relation(fields: [notificationId], references: [id])
+  fromWarehouseId  String                    @db.ObjectId
+  fromWarehouse    Warehouse                 @relation("TransferFrom", fields: [fromWarehouseId], references: [id])
+  toWarehouseId    String                    @db.ObjectId
+  toWarehouse      Warehouse                 @relation("TransferTo", fields: [toWarehouseId], references: [id])
+  itemId           String                    @db.ObjectId
+  requestedQty     Int
+  transferredQty   Int
+  method           BranchDeliveryMethod
+  status           TransferStatus            @default(PENDING)
+  trackingInfo     String?                   // Tracking number or delivery details
+  deliveryAddress  String?                   // If delivery to customer directly
+  customerInfo     Json?                     // Customer contact for direct delivery
+  notes            String?
+  createdBy        String                    @db.ObjectId
+  handedBy         String?                   @db.ObjectId  // Who handed over the items
+  receivedBy       String?                   @db.ObjectId  // Who received the items
+  createdAt        DateTime                  @default(now())
+  transferredAt    DateTime?
+  receivedAt       DateTime?
+  updatedAt        DateTime                  @updatedAt
+}
+
+enum NotificationType {
+  STOCK_REQUEST      // Request for stock from another branch
+  URGENT_RESTOCK     // Critical stock shortage
+  CUSTOMER_PICKUP    // Customer will pick up from another branch
+  INTER_BRANCH_DELIVERY  // Delivery between branches
+  STOCK_AVAILABILITY // Notification about stock availability
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL  
+  HIGH
+  CRITICAL
+}
+
+enum NotificationStatus {
+  PENDING         // Just created, waiting for response
+  ACKNOWLEDGED    // Target branch has seen the notification
+  ACCEPTED        // Target branch accepted to fulfill
+  REJECTED        // Target branch cannot fulfill
+  IN_PROGRESS     // Items being prepared/transferred
+  READY           // Items ready for pickup
+  COMPLETED       // Transfer completed successfully
+  CANCELLED       // Request cancelled
+  EXPIRED         // Request expired without response
+}
+
+enum ResponseType {
+  ACCEPT          // Can fulfill the request
+  PARTIAL_ACCEPT  // Can fulfill partially
+  REJECT          // Cannot fulfill
+  COUNTER_OFFER   // Different quantity or terms
+  REQUEST_INFO    // Need more information
+}
+
+enum BranchDeliveryMethod {
+  PICKUP          // Requesting branch picks up
+  DELIVERY        // Source branch delivers
+  CUSTOMER_PICKUP // Customer picks up from source branch
+  DIRECT_DELIVERY // Source branch delivers directly to customer
+}
+
+enum TransferStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  RECEIVED
+  CANCELLED
 }
 
 // ******************* POS SYSTEM ****************** //

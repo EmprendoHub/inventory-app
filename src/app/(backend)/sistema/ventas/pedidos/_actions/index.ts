@@ -1028,10 +1028,13 @@ export async function deleteOrderAction(formData: FormData) {
     revalidatePath("/sistema/cajas/personal");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/ventas/pagos");
+    revalidatePath("/sistema/pos/register");
+    revalidatePath(`/sistema/ventas/pedidos/ver/${validatedData.data.id}`);
+    revalidatePath("/sistema/negocio/articulos");
     return {
       errors: {},
       success: true,
-      message: "Order deleted successfully!",
+      message: "El Pedido se eliminó correctamente!",
     };
   } catch (error) {
     console.error("Error deleting order:", error);

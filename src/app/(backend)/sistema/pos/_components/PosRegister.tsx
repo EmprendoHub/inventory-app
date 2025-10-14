@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+// import { useSession } from "next-auth/react"; // Commented out - not currently used
 import {
   ShoppingCart,
   Plus,
@@ -72,6 +73,7 @@ export default function PosRegister({
   onUpdateFavorites,
   isProcessing,
 }: PosRegisterProps) {
+  // const { data: session } = useSession(); // Commented out - not currently used
   const [cart, setCart] = useState<CartState>({
     items: [],
     subtotal: 0,
@@ -212,16 +214,20 @@ export default function PosRegister({
     setCustomerSearchKey(Math.random().toString(36).substring(7));
   }, []);
 
-  // Handle cash payment completion
-  const handleCashPayment = useCallback(
-    async (cashReceived: number, breakdown: CashBreakdown) => {
-      console.log("handleCashPayment called with:", {
-        cashReceived,
-        breakdown,
-      });
+  // Stock check state for notifications
+  const [showStockAlert, setShowStockAlert] = useState(false);
+  const [stockAlerts, setStockAlerts] = useState<any[]>([]);
+  const [stockMessages, setStockMessages] = useState<string[]>([]);
+  // const [canProceedWithSale, setCanProceedWithSale] = useState(true); // Commented out - not currently used
+  const [pendingCashPayment, setPendingCashPayment] = useState<{
+    cashReceived: number;
+    breakdown: CashBreakdown;
+  } | null>(null);
 
+  // Process cash payment (separated from stock check)
+  const processCashPayment = useCallback(
+    async (cashReceived: number, breakdown: CashBreakdown) => {
       if (cart.items.length === 0) {
-        console.log("No items in cart, returning");
         return;
       }
 
@@ -243,6 +249,117 @@ export default function PosRegister({
     },
     [cart, onCheckout]
   );
+
+  // Check stock before proceeding with cash payment
+  const checkStockBeforeCashPayment = useCallback(
+    async (cashReceived: number, breakdown: CashBreakdown) => {
+      console.log("Checking stock before cash payment...");
+
+      if (cart.items.length === 0) {
+        console.log("No items in cart, returning");
+        return;
+      }
+
+      try {
+        // TODO: Implement proper warehouse/register ID detection before enabling notifications
+        // For now, skip stock checking to avoid ObjectId errors
+        console.log(
+          "Stock checking temporarily disabled - warehouse ID detection needed"
+        );
+
+        // Proceed directly with cash payment without stock checking
+        await processCashPayment(cashReceived, breakdown);
+        return;
+
+        /* DISABLED UNTIL PROPER IMPLEMENTATION
+        // Check stock availability and create notifications if needed
+        const stockCheckData = {
+          sessionId: "current_session", // This should be dynamic
+          cashRegisterId: "current_register", // This should be dynamic
+          customerId: cart.customer?.id,
+          items: cart.items.map((item) => ({
+            itemId: item.itemId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+          paymentType: "CASH",
+          totalAmount: cart.totalAmount,
+          userId: (session?.user as any)?.id || "current_user",
+        };
+
+        const response = await fetch("/api/notifications/pos-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(stockCheckData),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          const { canProceed, stockAlerts: alerts, messages } = result.data;
+
+          if (alerts.length > 0) {
+            // Show stock alert modal
+            setStockAlerts(alerts);
+            setStockMessages(messages);
+            setCanProceedWithSale(canProceed);
+            setShowStockAlert(true);
+            setPendingCashPayment({ cashReceived, breakdown });
+            return;
+          }
+        }
+        */
+
+        // If no stock issues or API failed, proceed directly
+        await processCashPayment(cashReceived, breakdown);
+      } catch (error) {
+        console.error("Stock check error:", error);
+        // Proceed with payment if stock check fails
+        await processCashPayment(cashReceived, breakdown);
+      }
+    },
+    [cart, processCashPayment]
+  );
+
+  // Handle cash payment completion
+  const handleCashPayment = useCallback(
+    async (cashReceived: number, breakdown: CashBreakdown) => {
+      console.log("handleCashPayment called with:", {
+        cashReceived,
+        breakdown,
+      });
+
+      // First check stock, then proceed with payment
+      await checkStockBeforeCashPayment(cashReceived, breakdown);
+    },
+    [checkStockBeforeCashPayment]
+  );
+
+  // Handle proceeding with sale after stock alert
+  const handleProceedAfterStockAlert = useCallback(async () => {
+    setShowStockAlert(false);
+
+    if (pendingCashPayment) {
+      await processCashPayment(
+        pendingCashPayment.cashReceived,
+        pendingCashPayment.breakdown
+      );
+      setPendingCashPayment(null);
+    }
+
+    setStockAlerts([]);
+    setStockMessages([]);
+  }, [pendingCashPayment, processCashPayment]);
+
+  // Handle canceling sale after stock alert
+  const handleCancelAfterStockAlert = useCallback(() => {
+    setShowStockAlert(false);
+    setPendingCashPayment(null);
+    setStockAlerts([]);
+    setStockMessages([]);
+    setShowCashCalculator(false);
+    setShowPaymentModal(true);
+  }, []);
 
   // Handle barcode scan result
   const handleScanResult = useCallback(
@@ -965,6 +1082,153 @@ export default function PosRegister({
                   >
                     {isProcessing ? "Procesando..." : "Procesar Pago"}
                   </Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Stock Alert Modal */}
+      <AnimatePresence>
+        {showStockAlert && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-background rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-orange-600">
+                  📦 Verificación de Stock
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelAfterStockAlert}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Messages */}
+                {stockMessages.length > 0 && (
+                  <div className="space-y-2">
+                    {stockMessages.map((message, index) => (
+                      <div
+                        key={index}
+                        className={`p-3 rounded-lg text-sm ${
+                          message.includes("❌")
+                            ? "bg-red-50 text-red-800 border border-red-200"
+                            : message.includes("✅")
+                            ? "bg-green-50 text-green-800 border border-green-200"
+                            : "bg-blue-50 text-blue-800 border border-blue-200"
+                        }`}
+                      >
+                        {message}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Stock Alerts Details */}
+                {stockAlerts.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Detalles de Stock:</h4>
+                    {stockAlerts.map((alert, index) => (
+                      <div key={index} className="border rounded-lg p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h5 className="font-medium">{alert.itemName}</h5>
+                            <p className="text-sm text-gray-600">
+                              Necesario: {alert.requestedQty} | Disponible:{" "}
+                              {alert.availableQty} | Faltante: {alert.shortfall}
+                            </p>
+                          </div>
+                          {alert.notificationCreated && (
+                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                              Solicitud Enviada
+                            </span>
+                          )}
+                        </div>
+
+                        {alert.branchesWithStock.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-1">
+                              Disponible en otras sucursales:
+                            </p>
+                            <div className="space-y-1">
+                              {alert.branchesWithStock.map(
+                                (branch: any, branchIndex: number) => (
+                                  <div
+                                    key={branchIndex}
+                                    className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded"
+                                  >
+                                    {branch.warehouseName}:{" "}
+                                    {branch.availableQty} unidades
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Total Amount */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-center">
+                    <p className="text-lg font-bold">
+                      Total: ${cart.totalAmount.toFixed(2)}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Puede proceder con la venta usando el stock disponible
+                    </p>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleCancelAfterStockAlert}
+                  >
+                    Cancelar Venta
+                  </Button>
+                  <Button
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    onClick={handleProceedAfterStockAlert}
+                    disabled={isProcessing}
+                  >
+                    {isProcessing ? "Procesando..." : "Continuar con Venta"}
+                  </Button>
+                </div>
+
+                {/* Information */}
+                <div className="bg-blue-50 p-3 rounded text-sm text-blue-800">
+                  <p className="font-medium mb-1">ℹ️ Información:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>
+                      Las solicitudes de stock se envían automáticamente a otras
+                      sucursales
+                    </li>
+                    <li>
+                      Puede continuar con la venta usando el stock disponible
+                    </li>
+                    <li>
+                      Las sucursales responderán a las solicitudes por separado
+                    </li>
+                  </ul>
                 </div>
               </div>
             </motion.div>

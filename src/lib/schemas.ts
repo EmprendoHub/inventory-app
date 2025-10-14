@@ -28,9 +28,22 @@ export const ProductSchema = z.object({
   image: z
     .instanceof(File)
     .refine((file) => !file || file.size > 0, "Image file must have content")
-    .refine((file) => !file || file.size <= 10 * 1024 * 1024, "File size must be less than 10MB")
     .refine(
-      (file) => !file || ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff"].includes(file.type),
+      (file) => !file || file.size <= 10 * 1024 * 1024,
+      "File size must be less than 10MB"
+    )
+    .refine(
+      (file) =>
+        !file ||
+        [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/tiff",
+        ].includes(file.type),
       "Only JPEG, PNG, GIF, WebP, BMP, and TIFF images are allowed"
     )
     .nullable()
@@ -152,6 +165,7 @@ export const UserSchema = z.object({
   active: z.boolean(),
   password: z.string(),
   role: z.string(),
+  warehouseId: z.string().optional().nullable(),
   avatar: z
     .object({
       size: z.number(),

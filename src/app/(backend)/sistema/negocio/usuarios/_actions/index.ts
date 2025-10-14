@@ -24,6 +24,7 @@ export const createUserAction = async (
     phone: formData.get("phone"),
     authCode: formData.get("authCode"),
     role: formData.get("role"),
+    warehouseId: (formData.get("warehouseId") as string) || null,
     avatar: formData.get("avatar") as File,
   };
   const validatedData = UserSchema.safeParse(rawData);
@@ -85,6 +86,7 @@ export const createUserAction = async (
         password: hashedPassword,
         authCode: validatedData.data.authCode,
         role: validatedData.data.role as Role,
+        warehouseId: validatedData.data.warehouseId || null,
         verificationToken,
         avatar: savedImageUrl,
         createdAt,
@@ -130,6 +132,7 @@ export async function updateUserAction(
     password: formData.get("password") as string,
     active: formData.get("active") === "true" ? true : false,
     role: formData.get("role") as string,
+    warehouseId: (formData.get("warehouseId") as string) || null,
     avatar: formData.get("avatar") as File,
   };
 
@@ -192,6 +195,7 @@ export async function updateUserAction(
           active: validatedData.data.active,
           password: hashedPassword,
           role: validatedData.data.role as Role,
+          warehouseId: validatedData.data.warehouseId || null,
           avatar: savedImageUrl,
           updatedAt: createdAt,
         },
@@ -209,6 +213,7 @@ export async function updateUserAction(
           active: validatedData.data.active,
           password: hashedPassword,
           role: validatedData.data.role as Role,
+          warehouseId: validatedData.data.warehouseId || null,
           updatedAt: createdAt,
         },
       });
