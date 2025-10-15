@@ -843,7 +843,7 @@ export default function PosRegister({
                       alt={item.name}
                       width={50}
                       height={50}
-                      className="w-6 h-6 object-cover rounded-md mb-1 pr-3"
+                      className="w-12 h-6 object-cover mb-1 pr-3"
                     />
                     <div className="flex-1">
                       <h4 className="font-medium text-sm leading-tight">
