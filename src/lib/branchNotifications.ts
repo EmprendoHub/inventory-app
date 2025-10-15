@@ -162,7 +162,7 @@ export async function createBranchNotification(
           data: {
             notificationNo: await generateNotificationNumber(),
             type: NotificationType.STOCK_REQUEST,
-            priority: NotificationPriority.HIGH,
+            priority: NotificationPriority.ALTA,
             title: `Backup Stock Request: ${data.requestedQty} units needed`,
             message: `Backup request for ${data.requestedQty} units. Available: ${backupBranch.availableQty} units.`,
             fromWarehouseId: data.fromWarehouseId,
@@ -502,7 +502,7 @@ export async function getNotificationsForWarehouse(
       where.status = { in: status };
     }
 
-    return await db.branchNotification.findMany({
+    const notifications = await db.branchNotification.findMany({
       where,
       include: {
         fromWarehouse: true,
@@ -514,6 +514,8 @@ export async function getNotificationsForWarehouse(
       },
       orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
     });
+
+    return notifications;
   } catch (error) {
     console.error("Error getting notifications for warehouse:", error);
     throw error;

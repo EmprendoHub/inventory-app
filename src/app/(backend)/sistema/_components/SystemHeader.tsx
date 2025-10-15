@@ -24,14 +24,23 @@ import ClockTime from "@/components/ClockComponent";
 
 interface BranchNotification {
   id: string;
+  notificationNo: string;
   title: string;
   message: string;
   status: string;
   priority: string;
   urgency: boolean;
+  requestedQty: number;
+  itemId: string;
+  deliveryMethod: string;
+  customerInfo?: {
+    id: string;
+    name: string;
+    phone: string;
+  };
   createdAt: string;
-  fromWarehouse: { title: string };
-  toWarehouse: { title: string };
+  fromWarehouse: { id: string; title: string };
+  toWarehouse: { id: string; title: string };
 }
 
 const SystemHeader = ({ hidden }: { hidden: boolean }) => {
@@ -43,6 +52,9 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
   const [notifications, setNotifications] = useState<BranchNotification[]>([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<BranchNotification | null>(null);
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -59,58 +71,43 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
         // Get warehouse ID from user session
         const userWarehouseId = (session?.user as any)?.warehouseId;
 
-        let warehouseId: string;
-
+        // Only proceed if user has a warehouse assigned
         if (!userWarehouseId) {
           console.log(
-            "User has no assigned warehouse, using fallback warehouse selection"
+            "User has no assigned warehouse, cannot show notifications"
           );
-
-          // Fallback: Get warehouses from API and use first active one
-          const warehousesResponse = await fetch("/api/warehouses");
-          if (!warehousesResponse.ok) {
-            console.log("No warehouses found, skipping notification fetch");
-            return;
-          }
-
-          const warehousesData = await warehousesResponse.json();
-          const warehouses = warehousesData.data || [];
-
-          if (warehouses.length === 0) {
-            console.log("No warehouses available, skipping notification fetch");
-            return;
-          }
-
-          // Use the first active warehouse as fallback
-          const activeWarehouse =
-            warehouses.find((w: any) => w.status === "ACTIVE") || warehouses[0];
-          warehouseId = activeWarehouse.id;
-        } else {
-          warehouseId = userWarehouseId;
+          setNotifications([]);
+          setNotificationCount(0);
+          return;
         }
 
         // Validate that we have a proper MongoDB ObjectId (24 characters, hexadecimal)
         if (
-          !warehouseId ||
-          warehouseId.length !== 24 ||
-          !/^[0-9a-fA-F]{24}$/.test(warehouseId)
+          !userWarehouseId ||
+          userWarehouseId.length !== 24 ||
+          !/^[0-9a-fA-F]{24}$/.test(userWarehouseId)
         ) {
-          console.log(
-            "Invalid warehouse ID format, skipping notification fetch"
-          );
+          console.log("Invalid warehouse ID format, cannot show notifications");
+          setNotifications([]);
+          setNotificationCount(0);
           return;
         }
 
+        // Fetch notifications specifically for this user's warehouse (receiving warehouse)
         const response = await fetch(
-          `/api/notifications?warehouseId=${warehouseId}&type=incoming&status=PENDING,ACKNOWLEDGED`
+          `/api/notifications?toWarehouseId=${userWarehouseId}&status=PENDING,ACKNOWLEDGED`
         );
 
         if (response.ok) {
           const data = await response.json();
+
           setNotifications(data.data || []);
           setNotificationCount(data.data?.length || 0);
         } else {
-          console.log("Failed to fetch notifications, response not ok");
+          await response.text();
+
+          setNotifications([]);
+          setNotificationCount(0);
         }
       } catch (error) {
         console.error("Error fetching notifications:", error);
@@ -149,6 +146,40 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNotificationClick = (notification: BranchNotification) => {
+    setSelectedNotification(notification);
+    setShowNotificationPopup(true);
+    setShowNotifications(false); // Close the dropdown
+  };
+
+  const handleAcceptNotification = async (notificationId: string) => {
+    try {
+      const response = await fetch(
+        `/api/notifications/${notificationId}/accept`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Remove the notification from the list
+        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+        setNotificationCount((prev) => Math.max(0, prev - 1));
+        setShowNotificationPopup(false);
+        setSelectedNotification(null);
+      } else {
+        console.error("Failed to accept notification");
+        alert("Error al aceptar la notificación");
+      }
+    } catch (error) {
+      console.error("Error accepting notification:", error);
+      alert("Error al aceptar la notificación");
+    }
   };
 
   return (
@@ -261,14 +292,15 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className="p-3 hover:bg-muted/50"
+                      className="p-3 hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => handleNotificationClick(notification)}
                     >
                       <div className="flex items-start gap-2">
                         <div
                           className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
                             notification.urgency
                               ? "bg-red-500"
-                              : notification.priority === "HIGH"
+                              : notification.priority === "ALTA"
                               ? "bg-orange-500"
                               : "bg-blue-500"
                           }`}
@@ -277,10 +309,13 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
                           <p className="text-sm font-medium leading-tight">
                             {notification.title}
                           </p>
-                          <p className="text-xs text-gray-600 mt-1">
+                          <p className="text-xs text-gray-300 mt-1">
                             De: {notification.fromWarehouse.title}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-300 mt-1">
+                            Cantidad: {notification.requestedQty} unidades
+                          </p>
+                          <p className="text-xs text-gray-300 mt-1">
                             {new Date(notification.createdAt).toLocaleString()}
                           </p>
                         </div>
@@ -357,6 +392,148 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
                 <span className="text-xs">Cerrar sesión</span>
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notification Detail Popup */}
+      <AnimatePresence>
+        {showNotificationPopup && selectedNotification && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
+            onClick={() => setShowNotificationPopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-background rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Solicitud de Stock</h2>
+                <button
+                  onClick={() => setShowNotificationPopup(false)}
+                  className="p-1 hover:bg-muted rounded"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Título:</p>
+                  <p className="text-sm">{selectedNotification.title}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Mensaje:</p>
+                  <p className="text-sm">{selectedNotification.message}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">De:</p>
+                    <p className="text-sm">
+                      {selectedNotification.fromWarehouse.title}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Para:</p>
+                    <p className="text-sm">
+                      {selectedNotification.toWarehouse.title}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Cantidad:
+                    </p>
+                    <p className="text-sm font-semibold text-blue-600">
+                      {selectedNotification.requestedQty} unidades
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Método:</p>
+                    <p className="text-sm">
+                      {selectedNotification.deliveryMethod === "CUSTOMER_PICKUP"
+                        ? "Cliente Recoge"
+                        : selectedNotification.deliveryMethod === "DELIVERY"
+                        ? "Entrega"
+                        : selectedNotification.deliveryMethod ===
+                          "DIRECT_DELIVERY"
+                        ? "Entrega Directa"
+                        : selectedNotification.deliveryMethod}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedNotification.customerInfo && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Cliente:
+                    </p>
+                    <p className="text-sm">
+                      {selectedNotification.customerInfo.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {selectedNotification.customerInfo.phone}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Prioridad:
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        selectedNotification.urgency
+                          ? "bg-red-500"
+                          : selectedNotification.priority === "ALTA"
+                          ? "bg-orange-500"
+                          : "bg-blue-500"
+                      }`}
+                    />
+                    <span className="text-sm">
+                      {selectedNotification.urgency
+                        ? "Urgente"
+                        : selectedNotification.priority}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Fecha:</p>
+                  <p className="text-sm">
+                    {new Date(selectedNotification.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowNotificationPopup(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() =>
+                    handleAcceptNotification(selectedNotification.id)
+                  }
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Aceptar Solicitud
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

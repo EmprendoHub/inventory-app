@@ -16,6 +16,7 @@ import {
   // PauseCircle,
   MoreHorizontal,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,6 +106,19 @@ export default function PosRegister({
   const [selectedPaymentType, setSelectedPaymentType] =
     useState<PaymentType | null>(null);
   const [referenceNumber, setReferenceNumber] = useState("");
+
+  // Customer modal state
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [customerError, setCustomerError] = useState("");
+  const [sending, setSending] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [internalProcessing, setInternalProcessing] = useState(false);
+
+  // Combined processing state
+  const isCurrentlyProcessing = isProcessing || internalProcessing;
 
   // Calculate cart totals
   const calculateTotals = useCallback(
@@ -214,6 +228,112 @@ export default function PosRegister({
     setCustomerSearchKey(Math.random().toString(36).substring(7));
   }, []);
 
+  // Customer modal functions
+  const handleCustomerNameChange = (name: string) => {
+    setCustomerName(name);
+    if (name.trim()) {
+      // Remove spaces and special characters, convert to lowercase
+      const cleanName = name.replace(/\s+/g, "").toLowerCase();
+      // Add timestamp (current date and time as number)
+      const timestamp = Date.now();
+      // Generate email
+      const generatedEmail = `${cleanName}${timestamp}@yunuencompany.com`;
+      setEmail(generatedEmail);
+    } else {
+      setEmail("");
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputPhone = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+    let formattedPhone = "";
+
+    if (inputPhone.length <= 10) {
+      formattedPhone = inputPhone.replace(
+        /(\d{3})(\d{0,3})(\d{0,4})/,
+        "$1$2$3"
+      );
+    } else {
+      // If the phone number exceeds 10 digits, truncate it
+      formattedPhone = inputPhone
+        .slice(0, 10)
+        .replace(/(\d{3})(\d{0,3})(\d{0,4})/, "$1$2$3");
+    }
+
+    setPhone(formattedPhone);
+  };
+
+  const handleClientSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSending(true);
+    setCustomerError("");
+
+    try {
+      // Import the createClient action
+      const { createClient } = await import(
+        "../../ventas/clientes/_actions/clientActions"
+      );
+
+      const formData = new FormData();
+      formData.append("name", customerName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("address", "Sin Dirección");
+
+      const result = await createClient(
+        { errors: {}, success: false, message: "" },
+        formData
+      );
+
+      if (result.success) {
+        // Reset form and close modal
+        setCustomerName("");
+        setEmail("");
+        setPhone("");
+        setCustomerError("");
+        setShowClientModal(false);
+
+        // Show success modal and auto-close after 2 seconds
+        setShowSuccessModal(true);
+        setTimeout(() => {
+          setShowSuccessModal(false);
+        }, 2000);
+      } else {
+        // Handle errors
+        let errorMessage = "Error desconocido";
+
+        if (
+          result.errors &&
+          result.errors.email &&
+          result.errors.email.length > 0
+        ) {
+          errorMessage = result.errors.email[0];
+        } else if (
+          result.errors &&
+          result.errors.phone &&
+          result.errors.phone.length > 0
+        ) {
+          errorMessage = result.errors.phone[0];
+        } else if (
+          result.errors &&
+          result.errors.name &&
+          result.errors.name.length > 0
+        ) {
+          errorMessage = result.errors.name[0];
+        } else if (result.message) {
+          errorMessage = result.message;
+        }
+
+        setCustomerError(errorMessage);
+      }
+    } catch (error) {
+      console.error("Error creating client:", error);
+      setCustomerError("Error al crear el cliente");
+    } finally {
+      setSending(false);
+    }
+  };
+
   // Stock check state for notifications
   const [showStockAlert, setShowStockAlert] = useState(false);
   const [stockAlerts, setStockAlerts] = useState<any[]>([]);
@@ -236,6 +356,7 @@ export default function PosRegister({
 
       try {
         // Process the checkout with bill breakdown
+
         await onCheckout(cart, PaymentType.CASH, breakdown, cashReceived);
 
         // Only clear cart and print receipt if checkout was successful
@@ -253,65 +374,15 @@ export default function PosRegister({
   // Check stock before proceeding with cash payment
   const checkStockBeforeCashPayment = useCallback(
     async (cashReceived: number, breakdown: CashBreakdown) => {
-      console.log("Checking stock before cash payment...");
-
       if (cart.items.length === 0) {
         console.log("No items in cart, returning");
         return;
       }
 
       try {
-        // TODO: Implement proper warehouse/register ID detection before enabling notifications
-        // For now, skip stock checking to avoid ObjectId errors
-        console.log(
-          "Stock checking temporarily disabled - warehouse ID detection needed"
-        );
-
         // Proceed directly with cash payment without stock checking
         await processCashPayment(cashReceived, breakdown);
         return;
-
-        /* DISABLED UNTIL PROPER IMPLEMENTATION
-        // Check stock availability and create notifications if needed
-        const stockCheckData = {
-          sessionId: "current_session", // This should be dynamic
-          cashRegisterId: "current_register", // This should be dynamic
-          customerId: cart.customer?.id,
-          items: cart.items.map((item) => ({
-            itemId: item.itemId,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-          paymentType: "CASH",
-          totalAmount: cart.totalAmount,
-          userId: (session?.user as any)?.id || "current_user",
-        };
-
-        const response = await fetch("/api/notifications/pos-checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(stockCheckData),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          const { canProceed, stockAlerts: alerts, messages } = result.data;
-
-          if (alerts.length > 0) {
-            // Show stock alert modal
-            setStockAlerts(alerts);
-            setStockMessages(messages);
-            setCanProceedWithSale(canProceed);
-            setShowStockAlert(true);
-            setPendingCashPayment({ cashReceived, breakdown });
-            return;
-          }
-        }
-        */
-
-        // If no stock issues or API failed, proceed directly
-        await processCashPayment(cashReceived, breakdown);
       } catch (error) {
         console.error("Stock check error:", error);
         // Proceed with payment if stock check fails
@@ -329,8 +400,16 @@ export default function PosRegister({
         breakdown,
       });
 
-      // First check stock, then proceed with payment
-      await checkStockBeforeCashPayment(cashReceived, breakdown);
+      setInternalProcessing(true);
+      try {
+        // First check stock, then proceed with payment
+        await checkStockBeforeCashPayment(cashReceived, breakdown);
+      } catch (error) {
+        console.error("Cash payment error:", error);
+      } finally {
+        setInternalProcessing(false);
+        setShowCashCalculator(false);
+      }
     },
     [checkStockBeforeCashPayment]
   );
@@ -582,7 +661,7 @@ export default function PosRegister({
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden mt-20">
+      <div className="flex flex-1 overflow-hidden mt-5">
         {/* Products Section */}
         <div className="flex-1 p-4 pr-[360px]">
           {/* Search and Categories */}
@@ -639,9 +718,13 @@ export default function PosRegister({
                 {filteredItems.map((item) => (
                   <motion.div
                     key={item.id}
-                    whileTap={{ scale: 0.95 }}
-                    className="cursor-pointer"
-                    onClick={() => addToCart(item)}
+                    whileTap={{ scale: isCurrentlyProcessing ? 1 : 0.95 }}
+                    className={`cursor-pointer ${
+                      isCurrentlyProcessing
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }`}
+                    onClick={() => !isCurrentlyProcessing && addToCart(item)}
                   >
                     <Card className="h-full hover:shadow-md transition-shadow">
                       <CardContent className="p-3 text-center">
@@ -674,10 +757,13 @@ export default function PosRegister({
                         <Button
                           onClick={(e) => {
                             e.stopPropagation();
-                            addToCart(item);
+                            if (!isCurrentlyProcessing) {
+                              addToCart(item);
+                            }
                           }}
                           size="sm"
                           className="w-full mt-2"
+                          disabled={isCurrentlyProcessing}
                         >
                           <Plus className="w-4 h-4" />
                         </Button>
@@ -707,22 +793,34 @@ export default function PosRegister({
             </div>
 
             {/* Enhanced Customer Selection */}
-            <SearchSelectInput
-              key={customerSearchKey} // Force re-render when cart is cleared
-              label="Cliente"
-              name="customer"
-              state={formState}
-              className="w-full"
-              placeholder="Buscar por nombre o teléfono..."
-              options={customerOptions}
-              onChange={(value) => {
-                const customer = customers.find((c) => c.id === value);
-                setCart((prev) => ({
-                  ...prev,
-                  customer: customer || undefined,
-                }));
-              }}
-            />
+            <div className="space-y-2">
+              <SearchSelectInput
+                key={customerSearchKey} // Force re-render when cart is cleared
+                label="Cliente"
+                name="customer"
+                state={formState}
+                className="w-full"
+                placeholder="Buscar por nombre o teléfono..."
+                options={customerOptions}
+                onChange={(value) => {
+                  const customer = customers.find((c) => c.id === value);
+                  setCart((prev) => ({
+                    ...prev,
+                    customer: customer || undefined,
+                  }));
+                }}
+              />
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowClientModal(true)}
+                className="w-full text-xs"
+              >
+                + Agregar nuevo cliente
+              </Button>
+            </div>
           </div>
 
           {/* Cart Items */}
@@ -852,10 +950,10 @@ export default function PosRegister({
                 <Button
                   className="w-full py-10 text-base bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center text-white min-h-10"
                   onClick={() => setShowPaymentModal(true)}
-                  disabled={isProcessing}
+                  disabled={isCurrentlyProcessing}
                 >
                   <GiCash className="w-4 h-4 mr-2" />
-                  Finalizar Venta
+                  {isCurrentlyProcessing ? "Procesando..." : "Finalizar Venta"}
                 </Button>
               </div>
             </div>
@@ -1235,6 +1333,183 @@ export default function PosRegister({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Customer Creation Modal */}
+      {showClientModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Agregar Nuevo Cliente
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowClientModal(false);
+                  setCustomerName("");
+                  setEmail("");
+                  setPhone("");
+                  setCustomerError("");
+                }}
+                className="p-1"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            <form onSubmit={handleClientSubmit} className="space-y-4">
+              {/* Name Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Nombre completo *
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => handleCustomerNameChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ingrese el nombre del cliente"
+                  required
+                />
+              </div>
+
+              {/* Phone Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Teléfono *
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Número de teléfono"
+                  maxLength={10}
+                  required
+                />
+              </div>
+
+              {/* Email Input (Auto-generated) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email (generado automáticamente)
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600"
+                  placeholder="Se generará automáticamente"
+                />
+              </div>
+
+              {/* Error Message */}
+              {customerError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{customerError}</p>
+                </div>
+              )}
+
+              {/* Form Actions */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowClientModal(false);
+                    setCustomerName("");
+                    setEmail("");
+                    setPhone("");
+                    setCustomerError("");
+                  }}
+                  disabled={sending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={sending || !customerName.trim() || !phone.trim()}
+                >
+                  {sending ? "Creando..." : "Crear Cliente"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4"
+          >
+            <div className="text-center">
+              {/* Success Icon */}
+              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg
+                  className="h-8 w-8 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+
+              {/* Success Message */}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                ¡Cliente creado exitosamente!
+              </h3>
+              <p className="text-sm text-gray-600">
+                El cliente ha sido agregado al sistema
+              </p>
+
+              {/* Auto-close indicator */}
+              <div className="mt-4">
+                <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: "100%" }}
+                    animate={{ width: "0%" }}
+                    transition={{ duration: 2, ease: "linear" }}
+                    className="h-full bg-green-500"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Se cerrará automáticamente
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Processing Overlay */}
+      {isCurrentlyProcessing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+          <div className="bg-white rounded-lg shadow-xl p-8 text-center">
+            <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Procesando Pago
+            </h3>
+            <p className="text-sm text-gray-600">
+              Por favor espere mientras procesamos su transacción...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

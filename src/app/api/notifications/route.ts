@@ -13,19 +13,26 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const warehouseId = searchParams.get("warehouseId");
+    const toWarehouseId = searchParams.get("toWarehouseId");
     const type = searchParams.get("type") as "incoming" | "outgoing" | "all";
     const status = searchParams.get("status")?.split(",");
 
-    if (!warehouseId) {
+    // Support both old warehouseId and new toWarehouseId parameters
+    const targetWarehouseId = toWarehouseId || warehouseId;
+
+    if (!targetWarehouseId) {
       return NextResponse.json(
-        { error: "warehouseId is required" },
+        { error: "warehouseId or toWarehouseId is required" },
         { status: 400 }
       );
     }
 
+    // If toWarehouseId is specified, only show incoming notifications
+    const notificationType = toWarehouseId ? "incoming" : type || "all";
+
     const notifications = await getNotificationsForWarehouse(
-      warehouseId,
-      type || "all",
+      targetWarehouseId,
+      notificationType,
       status as any
     );
 

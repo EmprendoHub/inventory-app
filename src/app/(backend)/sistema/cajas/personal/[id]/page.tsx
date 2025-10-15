@@ -1,6 +1,6 @@
 import prisma from "@/lib/db";
 import { CashTransactionList } from "../../_components/CashTransactionList";
-import SingleCashAuditForm from "../../_components/SingleCashAudit";
+import SingleCashAuditWrapper from "../../_components/SingleCashAuditWrapper";
 import SingleCashDeposit from "../../_components/SingleCashDeposit";
 
 export default async function CashRegisterDetailsPage({
@@ -45,7 +45,7 @@ export default async function CashRegisterDetailsPage({
             <SingleCashDeposit cashRegister={cashRegister} />
           </div>
         </div>
-        <SingleCashAuditForm cashRegister={cashRegister} />
+        <SingleCashAuditWrapper cashRegister={cashRegister} />
       </div>
       <CashTransactionList transactions={cashRegister.transactions} />
     </div>

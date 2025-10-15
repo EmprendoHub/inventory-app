@@ -203,12 +203,6 @@ export default function ProductForm({
         submitFormData.set(key, value.toString());
       });
 
-      // Debug: Log form data
-      console.log("Form data being submitted:");
-      submitFormData.forEach((value, key) => {
-        console.log(key, value);
-      });
-
       // Call the form action with the correct parameters
       const result = await createItemAction(
         {

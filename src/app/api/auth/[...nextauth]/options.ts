@@ -100,18 +100,17 @@ export const options = {
 
           const user = await prisma.user.findFirst({
             where: { email: email },
-            // TODO: Enable after migration
-            // include: {
-            //   warehouse: {
-            //     select: {
-            //       id: true,
-            //       title: true,
-            //       code: true,
-            //       type: true,
-            //       status: true,
-            //     },
-            //   },
-            // },
+            include: {
+              warehouse: {
+                select: {
+                  id: true,
+                  title: true,
+                  code: true,
+                  type: true,
+                  status: true,
+                },
+              },
+            },
           });
 
           if (!user || !user.password) {
@@ -225,8 +224,7 @@ export const options = {
             name: user.name,
             email: user.email,
             role: existinguser.role,
-            // TODO: Enable after migration
-            // warehouseId: existinguser.warehouseId || null,
+            warehouseId: existinguser.warehouseId || null,
           };
         }
       } else if (account?.provider == "credentials") {
@@ -236,8 +234,7 @@ export const options = {
             name: user.name,
             email: user.email,
             role: user.role,
-            // TODO: Enable after migration
-            // warehouseId: user.warehouseId || null,
+            warehouseId: user.warehouseId || null,
           };
         }
       }
@@ -251,11 +248,22 @@ export const options = {
           name: token.user.name,
           email: token.user.email,
           role: token.user.role,
-          // TODO: Enable after migration
-          // warehouseId: token.user.warehouseId,
+          warehouseId: token.user.warehouseId,
         };
       }
       return session;
+    },
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Always redirect to /sistema/home after login
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/sistema/home`;
+      }
+      // Allow callback URLs within the same origin
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      // Redirect to /sistema/home for external URLs
+      return `${baseUrl}/sistema/home`;
     },
   },
   pages: {

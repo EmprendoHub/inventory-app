@@ -17,7 +17,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
 
   useEffect(() => {
     if (session?.status === "authenticated") {
-      router.replace("/");
+      router.replace("/sistema/home");
     }
   }, [session, router]);
 
@@ -60,7 +60,7 @@ const LoginComponent = ({ cookie }: { cookie: any }) => {
         if (res.ok) {
           console.log("Iniciar ");
           setTimeout(() => {
-            router.push("/tienda");
+            router.push("/sistema/home");
           }, 200);
           return;
         }

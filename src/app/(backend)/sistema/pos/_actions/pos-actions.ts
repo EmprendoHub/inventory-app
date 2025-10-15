@@ -208,13 +208,6 @@ export async function createPosOrder(
     const stockSuggestions = [];
 
     for (const cartItem of cart.items) {
-      console.log("🔍 DEBUG: Checking stock for item:", {
-        itemName: cartItem.name,
-        itemId: cartItem.itemId,
-        requestedQty: cartItem.quantity,
-        userWarehouseId: currentWarehouseId,
-      });
-
       // Check stock availability in current warehouse or all warehouses if no specific warehouse
       const stocks = await prisma.stock.findMany({
         where: {
@@ -230,15 +223,6 @@ export async function createPosOrder(
           },
         },
       });
-
-      console.log(
-        "📊 DEBUG: Found stocks:",
-        stocks.map((s) => ({
-          warehouseId: s.warehouseId,
-          warehouseName: s.warehouse.title,
-          quantity: s.quantity,
-        }))
-      );
 
       const totalAvailable = stocks.reduce(
         (sum, stock) => sum + stock.quantity,
@@ -257,13 +241,6 @@ export async function createPosOrder(
         localStock = totalAvailable;
       }
 
-      console.log("📈 DEBUG: Stock calculation:", {
-        localStock,
-        totalAvailable,
-        requestedQty: cartItem.quantity,
-        needsCrossWarehouse: localStock < cartItem.quantity,
-      });
-
       if (localStock < cartItem.quantity) {
         // Check if stock is available in other warehouses
         const availableWarehouses = await checkStockInOtherWarehouses(
@@ -271,15 +248,6 @@ export async function createPosOrder(
           currentWarehouseId || null,
           cartItem.quantity - localStock // Only need the deficit from LOCAL stock
         );
-
-        console.log("🏭 DEBUG: Cross-warehouse check result:", {
-          deficit: cartItem.quantity - localStock,
-          availableWarehouses: availableWarehouses.length,
-          warehouses: availableWarehouses.map((w) => ({
-            name: w.warehouseName,
-            stock: w.availableStock,
-          })),
-        });
 
         if (availableWarehouses.length > 0) {
           // Stock available in other warehouses - allow sale but mark for notification
@@ -289,14 +257,6 @@ export async function createPosOrder(
             requiredQuantity: cartItem.quantity - localStock, // Only the deficit from LOCAL stock
             availableLocally: localStock, // Use LOCAL stock, not total
             availableWarehouses,
-          });
-
-          console.log("📦 DEBUG: Item needs cross-warehouse fulfillment:", {
-            item: cartItem.name,
-            localStock: localStock,
-            requiredQty: cartItem.quantity,
-            deficit: cartItem.quantity - localStock,
-            availableWarehouses: availableWarehouses.length,
           });
         } else {
           // No stock available anywhere - fail the transaction
@@ -480,17 +440,6 @@ export async function createPosOrder(
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/negocio/articulos");
 
-    console.log(
-      "✅ DEBUG: POS Order completed successfully with stock suggestions:",
-      {
-        orderId: order.id,
-        stockSuggestions:
-          stockSuggestions.length > 0 ? stockSuggestions : "none",
-        stockSuggestionsCount: stockSuggestions.length,
-        stockSuggestionsDetails: stockSuggestions,
-      }
-    );
-
     return {
       success: true,
       orderId: order.id,
@@ -606,24 +555,11 @@ export async function createBranchNotificationFromPos(
     | "DIRECT_DELIVERY" = "CUSTOMER_PICKUP",
   notes?: string
 ): Promise<{ success: boolean; notificationId?: string; error?: string }> {
-  console.log("🔍 DEBUG: createBranchNotificationFromPos called with:", {
-    itemId,
-    itemName,
-    requiredQuantity,
-    targetWarehouseId,
-    customerId,
-    deliveryMethod,
-    notes,
-  });
-
   const session = await getServerSession(options);
 
   if (!session?.user?.id) {
-    console.log("❌ DEBUG: No authenticated user session");
     return { success: false, error: "Usuario no autenticado" };
   }
-
-  console.log("✅ DEBUG: User authenticated:", session.user.id);
 
   try {
     // Get user's current warehouse
@@ -632,14 +568,7 @@ export async function createBranchNotificationFromPos(
       include: { warehouse: true },
     });
 
-    console.log("🏢 DEBUG: User data:", {
-      userId: user?.id,
-      warehouseId: user?.warehouseId,
-      warehouseName: user?.warehouse?.title,
-    });
-
     if (!user?.warehouseId) {
-      console.log("❌ DEBUG: User has no assigned warehouse");
       return { success: false, error: "Usuario sin almacén asignado" };
     }
 
@@ -648,13 +577,6 @@ export async function createBranchNotificationFromPos(
     const notificationNo = `BN${(notificationCount + 1)
       .toString()
       .padStart(6, "0")}`;
-
-    console.log(
-      "🔢 DEBUG: Generated notification number:",
-      notificationNo,
-      "based on count:",
-      notificationCount
-    );
 
     // Get customer info if provided
     let customerInfo = null;
@@ -670,32 +592,18 @@ export async function createBranchNotificationFromPos(
           email: customer.email,
         };
       }
-      console.log("👤 DEBUG: Customer info:", customerInfo);
     }
 
     const createdAt = getMexicoGlobalUtcDate();
-
-    console.log("📝 DEBUG: About to create notification with data:", {
-      notificationNo,
-      type: "STOCK_REQUEST",
-      priority: "HIGH",
-      title: `Solicitud de stock - ${itemName}`,
-      fromWarehouseId: user.warehouseId,
-      toWarehouseId: targetWarehouseId,
-      itemId,
-      requestedQty: requiredQuantity,
-      deliveryMethod,
-      createdBy: session.user.id,
-    });
 
     // Create branch notification
     const notification = await prisma.branchNotification.create({
       data: {
         notificationNo,
         type: "STOCK_REQUEST",
-        priority: "HIGH",
+        priority: "ALTA",
         title: `Solicitud de stock - ${itemName}`,
-        message: `Se requiere ${requiredQuantity} unidades de ${itemName} para completar una venta en POS.`,
+        message: `Se requiere ${requiredQuantity} unidades de ${itemName} para completar una venta en ${user.warehouse?.title}.`,
         fromWarehouseId: user.warehouseId,
         toWarehouseId: targetWarehouseId,
         itemId,
@@ -710,12 +618,6 @@ export async function createBranchNotificationFromPos(
       },
     });
 
-    console.log("✅ DEBUG: Notification created successfully:", {
-      id: notification.id,
-      notificationNo: notification.notificationNo,
-      type: notification.type,
-    });
-
     revalidatePath("/sistema/notifications");
 
     return {
@@ -723,7 +625,6 @@ export async function createBranchNotificationFromPos(
       notificationId: notification.id,
     };
   } catch (error) {
-    console.error("❌ DEBUG: Error creating branch notification:", error);
     console.error(
       "Full error details:",
       JSON.stringify(error, Object.getOwnPropertyNames(error))
@@ -792,14 +693,6 @@ export async function confirmAndTransferStock(
   }
 
   try {
-    console.log("🔄 DEBUG: Starting stock transfer:", {
-      notificationId,
-      itemId,
-      quantity,
-      fromWarehouseId,
-      toWarehouseId,
-    });
-
     // Check if notification exists and is still pending
     const notification = await prisma.branchNotification.findUnique({
       where: { id: notificationId },
@@ -900,11 +793,6 @@ export async function confirmAndTransferStock(
         respondedAt: createdAt,
         updatedAt: createdAt,
       },
-    });
-
-    console.log("✅ DEBUG: Stock transfer completed:", {
-      transferId: transfer.id,
-      transferNo: transfer.transferNo,
     });
 
     revalidatePath("/sistema/notifications");

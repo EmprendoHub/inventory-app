@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { BanknoteIcon } from "lucide-react";
-import SingleCashDepositModal from "./SingleCashDepositModal";
+import SingleCashAuditModal from "./SingleCashAuditModal";
 
-export default function SingleCashDeposit({
+export default function SingleCashAudit({
   cashRegister,
 }: {
   cashRegister: CashRegisterResponse;
@@ -32,17 +32,19 @@ export default function SingleCashDeposit({
 
   return (
     <div className="flex flex-col items-end">
-      {user?.role === "GERENTE" && (
+      <div className="flex gap-2">
         <button
           onClick={handleOpenModal}
-          className="flex items-center gap-2 bg-slate-900 text-white text-xs px-6 py-1 rounded-md mt-2 leading-none hover:bg-slate-800 transition-colors touch-manipulation"
+          className="flex items-center gap-2 bg-purple-800 text-white text-xs px-6 py-1 rounded-md mt-2 leading-none hover:bg-purple-700 transition-colors touch-manipulation"
         >
           <BanknoteIcon size={18} className="text-2xl" />
-          <span className="text-[12px]">AGREGAR FONDO</span>
+          <span className="text-[12px]">
+            {user?.role === "CHOFER" ? "ENTREGAR" : "CORTE DE CAJA"}
+          </span>
         </button>
-      )}
+      </div>
 
-      <SingleCashDepositModal
+      <SingleCashAuditModal
         cashRegister={cashRegister}
         isOpen={isModalOpen}
         onClose={handleCloseModal}

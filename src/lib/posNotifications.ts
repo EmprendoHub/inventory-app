@@ -139,7 +139,7 @@ export async function checkStockAndCreateNotifications(
                 : undefined,
               deliveryMethod: BranchDeliveryMethod.PICKUP, // Default, can be changed
               priority: isUrgent
-                ? NotificationPriority.HIGH
+                ? NotificationPriority.ALTA
                 : NotificationPriority.NORMAL,
               urgency: isUrgent,
               notes: `POS checkout request - Customer needs ${checkoutItem.quantity} units, only ${stockCheck.availableQty} available locally.`,

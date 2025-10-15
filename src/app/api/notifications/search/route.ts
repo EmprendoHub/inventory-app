@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
           filters: {
             status: ["PENDING"],
             urgentOnly: true,
-            priority: ["HIGH", "CRITICAL"],
+            priority: ["ALTA", "CRÍTICA"],
           },
         },
         {

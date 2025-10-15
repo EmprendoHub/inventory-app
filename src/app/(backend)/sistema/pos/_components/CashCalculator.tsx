@@ -20,7 +20,7 @@ export default function CashCalculator({
 }: CashCalculatorProps) {
   // Available denominations based on user requirements
   const billDenominations = [1000, 500, 200, 100, 50, 20];
-  const coinDenominations = [10, 5, 1, 0.5];
+  const coinDenominations = [10, 5, 2, 1, 0.5];
 
   const [selectedDenominations, setSelectedDenominations] = useState<{
     [key: number]: number;
@@ -112,7 +112,11 @@ export default function CashCalculator({
             count: selectedDenominations[5] || 0,
             total: (selectedDenominations[5] || 0) * 5,
           },
-          peso2: { value: 2, count: 0, total: 0 }, // Not in our system
+          peso2: {
+            value: 2,
+            count: selectedDenominations[2] || 0,
+            total: (selectedDenominations[2] || 0) * 2,
+          },
           peso1: {
             value: 1,
             count: selectedDenominations[1] || 0,
@@ -132,6 +136,7 @@ export default function CashCalculator({
       // Log for debugging
       console.log("Confirming payment:", { totalReceived, breakdown });
 
+      // Call the payment handler
       onCashReceived(totalReceived, breakdown);
 
       // Close the calculator after confirming payment
@@ -178,9 +183,9 @@ export default function CashCalculator({
           </Button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 mt-5">
           {/* Quick Entry Section */}
-          <Card>
+          <Card className="pt-5">
             <CardContent className="space-y-3">
               {/* Bills Section */}
               <div>
@@ -190,7 +195,7 @@ export default function CashCalculator({
                       <Button
                         variant="outline"
                         onClick={() => addDenomination(denomination)}
-                        className="w-full text-lg py-4 h-auto mb-2"
+                        className="w-full text-xl font-bold py-8 h-auto mb-2 bg-blue-700 text-white hover:bg-blue-800"
                       >
                         ${denomination}
                       </Button>
@@ -230,7 +235,7 @@ export default function CashCalculator({
                       <Button
                         variant="outline"
                         onClick={() => addDenomination(denomination)}
-                        className="w-full text-lg py-4 h-auto mb-2"
+                        className="w-full text-xl font-bold py-8 h-auto mb-2 bg-blue-700 text-white hover:bg-blue-800"
                       >
                         ${denomination === 0.5 ? "0.50" : denomination}
                       </Button>

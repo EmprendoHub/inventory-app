@@ -107,13 +107,13 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toLowerCase()) {
-      case "critical":
+      case "crítica":
         return "bg-red-500";
-      case "high":
+      case "alta":
         return "bg-orange-500";
       case "normal":
         return "bg-blue-500";
-      case "low":
+      case "baja":
         return "bg-gray-500";
       default:
         return "bg-gray-500";

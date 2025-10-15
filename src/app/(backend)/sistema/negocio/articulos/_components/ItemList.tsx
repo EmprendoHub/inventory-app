@@ -117,7 +117,9 @@ export function ProductList({ items: initialItems }: ProductListProps) {
     try {
       const response = await fetch(`/api/items/${selectedItem.id}/stocks`);
       if (response.ok) {
-        const updatedStocks = await response.json();
+        const stockData = await response.json();
+        // Extract the allStocks array from the API response
+        const updatedStocks = stockData.allStocks || [];
 
         // Update the selected item with new stock data
         setSelectedItem((prev) =>
@@ -147,9 +149,20 @@ export function ProductList({ items: initialItems }: ProductListProps) {
               : item
           )
         );
+      } else {
+        console.error(
+          "Failed to fetch stock data:",
+          response.status,
+          response.statusText
+        );
       }
     } catch (error) {
       console.error("Error refreshing stock data:", error);
+      // More detailed error logging
+      if (error instanceof Error) {
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
     } finally {
       setIsRefreshing(false);
     }

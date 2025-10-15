@@ -940,10 +940,10 @@ enum NotificationType {
 }
 
 enum NotificationPriority {
-  LOW
+  BAJA
   NORMAL  
-  HIGH
-  CRITICAL
+  ALTA
+  CRÍTICA
 }
 
 enum NotificationStatus {
