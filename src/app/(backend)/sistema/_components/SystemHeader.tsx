@@ -3,7 +3,7 @@ import {
   LogOut,
   Moon,
   PlusCircleIcon,
-  Settings,
+  // Settings,
   Sun,
   X,
 } from "lucide-react";
@@ -374,15 +374,11 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
                 )}
               </button>
               {/*  Config  */}
-              <div className="flex items-center w-full text-sm gap gap-2">
+              {/* <div className="flex items-center w-full text-sm gap gap-2">
                 <Settings size={18} />
                 <span>Configuración</span>
-              </div>
-              {/*  Config  */}
-              <div className="flex items-center w-full text-sm gap gap-2">
-                <Bell size={18} />
-                <span>Notificaciones</span>
-              </div>
+              </div> */}
+
               <hr className="rounded" />
               <button
                 onClick={() => signOut()}
