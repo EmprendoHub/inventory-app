@@ -70,12 +70,6 @@ export async function POST(
       },
     });
 
-    console.log("✅ Notification accepted:", {
-      notificationId,
-      acceptedBy: session.user.id,
-      status: updatedNotification.status,
-    });
-
     return NextResponse.json({
       success: true,
       notification: updatedNotification,

@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Edit2, Eye, MoreHorizontal, X } from "lucide-react";
+import { Edit2, Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +55,11 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const handleRefresh = () => {
+    // Force a full page reload to get fresh data from the database
+    window.location.reload();
+  };
 
   const columns = React.useMemo<ColumnDef<paymentType>[]>(
     () => [
@@ -285,14 +290,23 @@ export function PaymentList({ payments }: { payments: paymentType[] }) {
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
-        <Input
-          placeholder="Filtrar..."
-          value={(table.getColumn("orderNo")?.getFilterValue() as string) ?? ""}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-            table.getColumn("orderNo")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
+        <div className="flex items-center justify-between w-full">
+          <Input
+            placeholder="Filtrar..."
+            value={
+              (table.getColumn("orderNo")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+              table.getColumn("orderNo")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
+          />
+          {/* Add the refresh button */}
+          <Button onClick={handleRefresh} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refrescar
+          </Button>
+        </div>
         <DropdownMenu>
           <DropdownMenuContent align="end">
             {table
