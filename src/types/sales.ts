@@ -138,6 +138,16 @@ export type ordersAndItem = {
   client: clientType;
   delivery: DeliveryType | null;
   payments: paymentType[];
+  user?: {
+    id: string;
+    name: string;
+    warehouseId: string | null;
+    warehouse?: {
+      id: string;
+      title: string;
+      code: string;
+    } | null;
+  } | null;
 };
 
 export type OrderType = {

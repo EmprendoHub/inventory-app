@@ -281,7 +281,7 @@ export default function SingleCashDepositModal({
     category: "bills" | "coins";
     denominationKey: string;
   }) => (
-    <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border">
+    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-lg border">
       <span className="text-lg font-semibold text-gray-700 min-w-[80px]">
         {label}
       </span>
@@ -307,10 +307,9 @@ export default function SingleCashDepositModal({
                 parseInt(e.target.value, 10) || 0
               )
             }
-            className="w-20 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg text-gray-800 bg-white focus:border-blue-500 focus:outline-none"
+            className="w-20 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg text-gray-800 bg-white focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             style={{ fontSize: "18px" }}
           />
-          <span className="text-sm text-gray-600 mt-1">cantidad</span>
         </div>
 
         <button
@@ -335,7 +334,7 @@ export default function SingleCashDepositModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-green-50">
+        <div className="flex items-center justify-between px-6 py-2 border-b border-gray-200 bg-green-50">
           <div className="flex items-center gap-3">
             <BanknoteIcon size={28} className="text-green-700" />
             <h2 className="text-2xl font-bold text-green-800">Agregar Fondo</h2>
@@ -349,104 +348,106 @@ export default function SingleCashDepositModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Bills Section */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">
-              💵 Billetes
-            </h3>
-            <div className="space-y-4">
-              <DenominationRow
-                label="$1000"
-                count={cashBreakdown.bills.thousands.count}
-                total={cashBreakdown.bills.thousands.total}
-                category="bills"
-                denominationKey="thousands"
-              />
-              <DenominationRow
-                label="$500"
-                count={cashBreakdown.bills.fiveHundreds.count}
-                total={cashBreakdown.bills.fiveHundreds.total}
-                category="bills"
-                denominationKey="fiveHundreds"
-              />
-              <DenominationRow
-                label="$200"
-                count={cashBreakdown.bills.twoHundreds.count}
-                total={cashBreakdown.bills.twoHundreds.total}
-                category="bills"
-                denominationKey="twoHundreds"
-              />
-              <DenominationRow
-                label="$100"
-                count={cashBreakdown.bills.hundreds.count}
-                total={cashBreakdown.bills.hundreds.total}
-                category="bills"
-                denominationKey="hundreds"
-              />
-              <DenominationRow
-                label="$50"
-                count={cashBreakdown.bills.fifties.count}
-                total={cashBreakdown.bills.fifties.total}
-                category="bills"
-                denominationKey="fifties"
-              />
-              <DenominationRow
-                label="$20"
-                count={cashBreakdown.bills.twenties.count}
-                total={cashBreakdown.bills.twenties.total}
-                category="bills"
-                denominationKey="twenties"
-              />
+        <div className="p-3 space-y-2">
+          <div className="flex items-start justify-between maxmd:flex-wrap gap-1">
+            {/* Bills Section */}
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-blue-200 pb-2">
+                💵 Billetes
+              </h3>
+              <div className="space-y-4">
+                <DenominationRow
+                  label="$1000"
+                  count={cashBreakdown.bills.thousands.count}
+                  total={cashBreakdown.bills.thousands.total}
+                  category="bills"
+                  denominationKey="thousands"
+                />
+                <DenominationRow
+                  label="$500"
+                  count={cashBreakdown.bills.fiveHundreds.count}
+                  total={cashBreakdown.bills.fiveHundreds.total}
+                  category="bills"
+                  denominationKey="fiveHundreds"
+                />
+                <DenominationRow
+                  label="$200"
+                  count={cashBreakdown.bills.twoHundreds.count}
+                  total={cashBreakdown.bills.twoHundreds.total}
+                  category="bills"
+                  denominationKey="twoHundreds"
+                />
+                <DenominationRow
+                  label="$100"
+                  count={cashBreakdown.bills.hundreds.count}
+                  total={cashBreakdown.bills.hundreds.total}
+                  category="bills"
+                  denominationKey="hundreds"
+                />
+                <DenominationRow
+                  label="$50"
+                  count={cashBreakdown.bills.fifties.count}
+                  total={cashBreakdown.bills.fifties.total}
+                  category="bills"
+                  denominationKey="fifties"
+                />
+                <DenominationRow
+                  label="$20"
+                  count={cashBreakdown.bills.twenties.count}
+                  total={cashBreakdown.bills.twenties.total}
+                  category="bills"
+                  denominationKey="twenties"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Coins Section */}
-          <div>
-            <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-yellow-200 pb-2">
-              🪙 Monedas
-            </h3>
-            <div className="space-y-4">
-              <DenominationRow
-                label="$10"
-                count={cashBreakdown.coins.peso10.count}
-                total={cashBreakdown.coins.peso10.total}
-                category="coins"
-                denominationKey="peso10"
-              />
-              <DenominationRow
-                label="$5"
-                count={cashBreakdown.coins.peso5.count}
-                total={cashBreakdown.coins.peso5.total}
-                category="coins"
-                denominationKey="peso5"
-              />
-              <DenominationRow
-                label="$2"
-                count={cashBreakdown.coins.peso2.count}
-                total={cashBreakdown.coins.peso2.total}
-                category="coins"
-                denominationKey="peso2"
-              />
-              <DenominationRow
-                label="$1"
-                count={cashBreakdown.coins.peso1.count}
-                total={cashBreakdown.coins.peso1.total}
-                category="coins"
-                denominationKey="peso1"
-              />
-              <DenominationRow
-                label="$0.50"
-                count={cashBreakdown.coins.centavos50.count}
-                total={cashBreakdown.coins.centavos50.total}
-                category="coins"
-                denominationKey="centavos50"
-              />
+            {/* Coins Section */}
+            <div>
+              <h3 className="text-xl font-bold text-gray-800 mb-4 border-b-2 border-yellow-200 pb-2">
+                🪙 Monedas
+              </h3>
+              <div className="space-y-4">
+                <DenominationRow
+                  label="$10"
+                  count={cashBreakdown.coins.peso10.count}
+                  total={cashBreakdown.coins.peso10.total}
+                  category="coins"
+                  denominationKey="peso10"
+                />
+                <DenominationRow
+                  label="$5"
+                  count={cashBreakdown.coins.peso5.count}
+                  total={cashBreakdown.coins.peso5.total}
+                  category="coins"
+                  denominationKey="peso5"
+                />
+                <DenominationRow
+                  label="$2"
+                  count={cashBreakdown.coins.peso2.count}
+                  total={cashBreakdown.coins.peso2.total}
+                  category="coins"
+                  denominationKey="peso2"
+                />
+                <DenominationRow
+                  label="$1"
+                  count={cashBreakdown.coins.peso1.count}
+                  total={cashBreakdown.coins.peso1.total}
+                  category="coins"
+                  denominationKey="peso1"
+                />
+                <DenominationRow
+                  label="$0.50"
+                  count={cashBreakdown.coins.centavos50.count}
+                  total={cashBreakdown.coins.centavos50.total}
+                  category="coins"
+                  denominationKey="centavos50"
+                />
+              </div>
             </div>
           </div>
 
           {/* Total Section */}
-          <div className="bg-green-100 p-6 rounded-lg border-2 border-green-300">
+          <div className="bg-green-100 px-6 py-1 rounded-lg border-2 border-green-300">
             <div className="flex justify-between items-center">
               <span className="text-2xl font-bold text-green-800">
                 Total a Agregar:

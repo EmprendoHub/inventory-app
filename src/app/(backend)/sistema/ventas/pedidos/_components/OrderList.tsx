@@ -110,6 +110,24 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
         },
       },
       {
+        accessorKey: "user",
+        header: () => (
+          <div className="text-center text-xs w-24 flex">Bodega</div>
+        ),
+        cell: ({ row }) => {
+          const user = row.getValue("user") as ordersAndItem["user"];
+          const warehouseName =
+            user?.warehouse?.title || user?.warehouse?.code || "N/A";
+          return (
+            <div
+              className={`uppercase py-1 flex justify-center items-center text-[10px] text-center text-white rounded-md w-24 px-1 bg-purple-700 leading-none`}
+            >
+              {warehouseName}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "status",
         header: () => (
           <div className="text-left text-[10px]  w-auto">Estado</div>
