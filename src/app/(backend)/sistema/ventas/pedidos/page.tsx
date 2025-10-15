@@ -15,13 +15,20 @@ export default async function SalesOrders() {
   const whereClause: any = {};
 
   // If user has a specific warehouse, only show orders from that warehouse
+  // Super admins and admins can see all orders
   if (
     user?.warehouseId &&
-    user.role &&
-    !["SUPER_ADMIN", "ADMIN"].includes(user.role)
+    !["SUPER_ADMIN", "ADMIN"].includes(user?.role || "")
   ) {
-    whereClause.user = {
-      warehouseId: user.warehouseId,
+    // Get all users from the same warehouse
+    const warehouseUsers = await prisma.user.findMany({
+      where: { warehouseId: user.warehouseId },
+      select: { id: true },
+    });
+
+    // Filter orders by users from the same warehouse
+    whereClause.userId = {
+      in: warehouseUsers.map((u) => u.id),
     };
   }
 

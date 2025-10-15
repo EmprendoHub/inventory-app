@@ -14,7 +14,7 @@ import {
   QrCode,
   Tag,
   // PauseCircle,
-  MoreHorizontal,
+  // MoreHorizontal,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -607,20 +607,20 @@ export default function PosRegister({
   );
 
   // Handle checkout
-  const handleCheckout = useCallback(
-    async (paymentType: PaymentType, billBreakdown?: CashBreakdown) => {
-      if (cart.items.length === 0) return;
+  // const handleCheckout = useCallback(
+  //   async (paymentType: PaymentType, billBreakdown?: CashBreakdown) => {
+  //     if (cart.items.length === 0) return;
 
-      try {
-        await onCheckout(cart, paymentType, billBreakdown);
-        clearCart();
-        setShowPaymentModal(false);
-      } catch (error) {
-        console.error("Checkout error:", error);
-      }
-    },
-    [cart, onCheckout, clearCart]
-  );
+  //     try {
+  //       await onCheckout(cart, paymentType, billBreakdown);
+  //       clearCart();
+  //       setShowPaymentModal(false);
+  //     } catch (error) {
+  //       console.error("Checkout error:", error);
+  //     }
+  //   },
+  //   [cart, onCheckout, clearCart]
+  // );
 
   // Prepare customer options with enhanced search capability
   const customerOptions = React.useMemo(() => {
@@ -996,20 +996,19 @@ export default function PosRegister({
                 </div>
 
                 <Button
-                  className="w-full py-3 text-base"
+                  className="w-full h-16 py-4 text-lg font-bold bg-green-700 hover:bg-green-800 active:bg-green-900 text-white transition-colors touch-manipulation"
                   onClick={() => {
                     setShowPaymentModal(false);
                     setShowCashCalculator(true);
                   }}
                   disabled={isProcessing}
                 >
-                  <Banknote className="w-5 h-5 mr-2" />
+                  <Banknote className="w-6 h-6 mr-3" />
                   Pago en Efectivo
                 </Button>
 
                 <Button
-                  variant="outline"
-                  className="w-full py-3 text-base"
+                  className="w-full h-16 py-4 text-lg font-bold bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-800 text-white transition-colors touch-manipulation"
                   onClick={() => {
                     setSelectedPaymentType(PaymentType.CARD);
                     setShowPaymentModal(false);
@@ -1017,13 +1016,12 @@ export default function PosRegister({
                   }}
                   disabled={isProcessing}
                 >
-                  <CreditCard className="w-5 h-5 mr-2" />
+                  <CreditCard className="w-6 h-6 mr-3" />
                   Pago con Tarjeta
                 </Button>
 
                 <Button
-                  variant="outline"
-                  className="w-full py-3 text-base"
+                  className="w-full h-16 py-4 text-lg font-bold bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white transition-colors touch-manipulation"
                   onClick={() => {
                     setSelectedPaymentType(PaymentType.TRANSFER);
                     setShowPaymentModal(false);
@@ -1032,7 +1030,7 @@ export default function PosRegister({
                   disabled={isProcessing}
                 >
                   <svg
-                    className="w-5 h-5 mr-2"
+                    className="w-6 h-6 mr-3"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -1041,14 +1039,14 @@ export default function PosRegister({
                   Transferencia
                 </Button>
 
-                <Button
+                {/* <Button
                   variant="outline"
                   className="w-full py-3 text-base"
                   onClick={() => handleCheckout(PaymentType.MIXED)}
                 >
                   <MoreHorizontal className="w-5 h-5 mr-2" />
                   Pago Fraccionado
-                </Button>
+                </Button> */}
               </div>
             </motion.div>
           </motion.div>

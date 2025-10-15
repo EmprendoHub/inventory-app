@@ -513,8 +513,8 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
   });
 
   const handleRefresh = () => {
-    // Refresh the page
-    router.refresh();
+    // Force a full page reload to get fresh data from the database
+    window.location.reload();
   };
 
   return (
