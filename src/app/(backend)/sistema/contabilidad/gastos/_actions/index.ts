@@ -23,6 +23,8 @@ export const createExpenseAction = async (
     driver: formData.get("driver") as string,
     truck: formData.get("truck") as string,
     supplier: formData.get("supplier") as string,
+    paymentMethod: formData.get("paymentMethod") as string,
+    cashBreakdown: formData.get("cashBreakdown") as string,
   };
   if (!rawData.type || !rawData.amount || !rawData.status) {
     return {
@@ -102,15 +104,175 @@ export const createExpenseAction = async (
         });
       } else {
         // If the cash register has enough balance, update the cash register balance
+        let updateData: any = {
+          balance: {
+            decrement: rawData.amount, // deducts cash withdraw to the current balance
+          },
+          updatedAt: createdAt,
+        };
+
+        // If payment method is CASH and we have cash breakdown, update the bill breakdown
+        if (rawData.paymentMethod === "CASH" && rawData.cashBreakdown) {
+          try {
+            const breakdown = JSON.parse(rawData.cashBreakdown);
+
+            // Get the current cash register to get existing breakdown
+            const currentRegister = await prisma.cashRegister.findFirst({
+              where: { userId: user.id || "" },
+            });
+
+            if (currentRegister?.billBreakdown) {
+              const currentBreakdown = currentRegister.billBreakdown as any;
+
+              // Subtract the used denominations from the current breakdown
+              const updatedBreakdown = {
+                bills: {
+                  thousands: {
+                    value: 1000,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.bills?.thousands?.count || 0) -
+                        (breakdown.bills?.thousands?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  fiveHundreds: {
+                    value: 500,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.bills?.fiveHundreds?.count || 0) -
+                        (breakdown.bills?.fiveHundreds?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  twoHundreds: {
+                    value: 200,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.bills?.twoHundreds?.count || 0) -
+                        (breakdown.bills?.twoHundreds?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  hundreds: {
+                    value: 100,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.bills?.hundreds?.count || 0) -
+                        (breakdown.bills?.hundreds?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  fifties: {
+                    value: 50,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.bills?.fifties?.count || 0) -
+                        (breakdown.bills?.fifties?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  twenties: {
+                    value: 20,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.bills?.twenties?.count || 0) -
+                        (breakdown.bills?.twenties?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  tens: { value: 10, count: 0, total: 0 },
+                  fives: { value: 5, count: 0, total: 0 },
+                  ones: { value: 1, count: 0, total: 0 },
+                },
+                coins: {
+                  peso20: { value: 20, count: 0, total: 0 },
+                  peso10: {
+                    value: 10,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.coins?.peso10?.count || 0) -
+                        (breakdown.coins?.peso10?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  peso5: {
+                    value: 5,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.coins?.peso5?.count || 0) -
+                        (breakdown.coins?.peso5?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  peso2: {
+                    value: 2,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.coins?.peso2?.count || 0) -
+                        (breakdown.coins?.peso2?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  peso1: {
+                    value: 1,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.coins?.peso1?.count || 0) -
+                        (breakdown.coins?.peso1?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  centavos50: {
+                    value: 0.5,
+                    count: Math.max(
+                      0,
+                      (currentBreakdown.coins?.centavos50?.count || 0) -
+                        (breakdown.coins?.centavos50?.count || 0)
+                    ),
+                    total: 0,
+                  },
+                  centavos20: { value: 0.2, count: 0, total: 0 },
+                  centavos10: { value: 0.1, count: 0, total: 0 },
+                },
+                totalCash: 0,
+              };
+
+              // Calculate totals for each denomination
+              Object.entries(updatedBreakdown.bills).forEach(([key, bill]) => {
+                (updatedBreakdown.bills as any)[key].total =
+                  bill.value * bill.count;
+              });
+              Object.entries(updatedBreakdown.coins).forEach(([key, coin]) => {
+                (updatedBreakdown.coins as any)[key].total =
+                  coin.value * coin.count;
+              });
+
+              // Calculate total cash
+              const billTotal = Object.values(updatedBreakdown.bills).reduce(
+                (sum, bill) => sum + bill.total,
+                0
+              );
+              const coinTotal = Object.values(updatedBreakdown.coins).reduce(
+                (sum, coin) => sum + coin.total,
+                0
+              );
+              updatedBreakdown.totalCash = billTotal + coinTotal;
+
+              updateData = {
+                ...updateData,
+                billBreakdown: updatedBreakdown,
+              };
+            }
+          } catch (error) {
+            console.error("Error parsing cash breakdown:", error);
+            // Continue without updating breakdown if parsing fails
+          }
+        }
 
         const updatedRegister = await prisma.cashRegister.update({
           where: { userId: user.id || "" },
-          data: {
-            balance: {
-              decrement: rawData.amount, // deducts cash withdraw to the current balance
-            },
-            updatedAt: createdAt,
-          },
+          data: updateData,
         });
 
         await prisma.cashTransaction.create({

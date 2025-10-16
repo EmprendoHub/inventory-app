@@ -70,13 +70,28 @@ export function CashTransactionList({
       {
         accessorKey: "description",
         header: () => <div className="flex text-left text-xs w-36">Ref</div>,
-        cell: ({ row }) => (
-          <div
-            className={`flex uppercase text-[12px] text-center text-white  w-36 rounded-md  px-2 leading-none`}
-          >
-            {row.getValue("description")}
-          </div>
-        ),
+        cell: ({ row }) => {
+          const description = row.getValue("description") as string;
+          const hasDenominations =
+            description?.includes("CANCELACIÓN DE PEDIDO") &&
+            description?.includes("RETIRAR:");
+
+          return (
+            <div
+              className={`flex uppercase text-[12px] text-center text-white w-36 rounded-md px-2 leading-none ${
+                hasDenominations ? "bg-orange-600" : "bg-gray-600"
+              }`}
+              title={
+                hasDenominations
+                  ? "💰 Incluye desglose específico de denominaciones"
+                  : ""
+              }
+            >
+              {hasDenominations && "💰 "}
+              {description}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "amount",

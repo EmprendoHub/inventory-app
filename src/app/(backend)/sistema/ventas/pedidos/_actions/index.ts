@@ -14,6 +14,188 @@ import { OrderStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 
+// Helper functions for cash denomination management
+type CashBreakdown = {
+  bills: {
+    thousands: { value: number; count: number; total: number };
+    fiveHundreds: { value: number; count: number; total: number };
+    twoHundreds: { value: number; count: number; total: number };
+    hundreds: { value: number; count: number; total: number };
+    fifties: { value: number; count: number; total: number };
+    twenties: { value: number; count: number; total: number };
+    tens: { value: number; count: number; total: number };
+    fives: { value: number; count: number; total: number };
+    ones: { value: number; count: number; total: number };
+  };
+  coins: {
+    peso20: { value: number; count: number; total: number };
+    peso10: { value: number; count: number; total: number };
+    peso5: { value: number; count: number; total: number };
+    peso2: { value: number; count: number; total: number };
+    peso1: { value: number; count: number; total: number };
+    centavos50: { value: number; count: number; total: number };
+    centavos20: { value: number; count: number; total: number };
+    centavos10: { value: number; count: number; total: number };
+  };
+  totalCash: number;
+};
+
+function calculateDenominationsToRemove(
+  amount: number,
+  currentBreakdown: any
+): CashBreakdown | null {
+  if (!currentBreakdown || amount <= 0) return null;
+
+  // Initialize the result breakdown
+  const toRemove: CashBreakdown = {
+    bills: {
+      thousands: { value: 1000, count: 0, total: 0 },
+      fiveHundreds: { value: 500, count: 0, total: 0 },
+      twoHundreds: { value: 200, count: 0, total: 0 },
+      hundreds: { value: 100, count: 0, total: 0 },
+      fifties: { value: 50, count: 0, total: 0 },
+      twenties: { value: 20, count: 0, total: 0 },
+      tens: { value: 10, count: 0, total: 0 },
+      fives: { value: 5, count: 0, total: 0 },
+      ones: { value: 1, count: 0, total: 0 },
+    },
+    coins: {
+      peso20: { value: 20, count: 0, total: 0 },
+      peso10: { value: 10, count: 0, total: 0 },
+      peso5: { value: 5, count: 0, total: 0 },
+      peso2: { value: 2, count: 0, total: 0 },
+      peso1: { value: 1, count: 0, total: 0 },
+      centavos50: { value: 0.5, count: 0, total: 0 },
+      centavos20: { value: 0.2, count: 0, total: 0 },
+      centavos10: { value: 0.1, count: 0, total: 0 },
+    },
+    totalCash: 0,
+  };
+
+  let remaining = Math.round(amount * 100) / 100; // Handle floating point precision
+
+  // Define denomination order (largest to smallest)
+  const denominations = [
+    { section: "bills" as const, key: "thousands" as const, value: 1000 },
+    { section: "bills" as const, key: "fiveHundreds" as const, value: 500 },
+    { section: "bills" as const, key: "twoHundreds" as const, value: 200 },
+    { section: "bills" as const, key: "hundreds" as const, value: 100 },
+    { section: "bills" as const, key: "fifties" as const, value: 50 },
+    { section: "bills" as const, key: "twenties" as const, value: 20 },
+    { section: "bills" as const, key: "tens" as const, value: 10 },
+    { section: "bills" as const, key: "fives" as const, value: 5 },
+    { section: "bills" as const, key: "ones" as const, value: 1 },
+    { section: "coins" as const, key: "peso20" as const, value: 20 },
+    { section: "coins" as const, key: "peso10" as const, value: 10 },
+    { section: "coins" as const, key: "peso5" as const, value: 5 },
+    { section: "coins" as const, key: "peso2" as const, value: 2 },
+    { section: "coins" as const, key: "peso1" as const, value: 1 },
+    { section: "coins" as const, key: "centavos50" as const, value: 0.5 },
+    { section: "coins" as const, key: "centavos20" as const, value: 0.2 },
+    { section: "coins" as const, key: "centavos10" as const, value: 0.1 },
+  ];
+
+  // Calculate how many of each denomination to remove
+  for (const denom of denominations) {
+    const available = currentBreakdown[denom.section]?.[denom.key]?.count || 0;
+    const needed = Math.floor(remaining / denom.value);
+    const toTake = Math.min(available, needed);
+
+    if (toTake > 0) {
+      // Type-safe assignment
+      if (denom.section === "bills") {
+        (toRemove.bills as any)[denom.key].count = toTake;
+        (toRemove.bills as any)[denom.key].total = toTake * denom.value;
+      } else {
+        (toRemove.coins as any)[denom.key].count = toTake;
+        (toRemove.coins as any)[denom.key].total = toTake * denom.value;
+      }
+      remaining = Math.round((remaining - toTake * denom.value) * 100) / 100;
+    }
+  }
+
+  // Calculate total
+  toRemove.totalCash = amount - remaining;
+
+  return toRemove;
+}
+
+function subtractDenominations(
+  currentBreakdown: any,
+  toRemove: CashBreakdown
+): any {
+  if (!currentBreakdown || !toRemove) return currentBreakdown;
+
+  const updated = JSON.parse(JSON.stringify(currentBreakdown));
+
+  // Subtract bills
+  Object.keys(toRemove.bills).forEach((key) => {
+    if (
+      updated.bills?.[key] &&
+      toRemove.bills[key as keyof typeof toRemove.bills].count > 0
+    ) {
+      updated.bills[key].count = Math.max(
+        0,
+        updated.bills[key].count -
+          toRemove.bills[key as keyof typeof toRemove.bills].count
+      );
+      updated.bills[key].total =
+        updated.bills[key].count * updated.bills[key].value;
+    }
+  });
+
+  // Subtract coins
+  Object.keys(toRemove.coins).forEach((key) => {
+    if (
+      updated.coins?.[key] &&
+      toRemove.coins[key as keyof typeof toRemove.coins].count > 0
+    ) {
+      updated.coins[key].count = Math.max(
+        0,
+        updated.coins[key].count -
+          toRemove.coins[key as keyof typeof toRemove.coins].count
+      );
+      updated.coins[key].total =
+        updated.coins[key].count * updated.coins[key].value;
+    }
+  });
+
+  // Recalculate total
+  const billsTotal = Object.values(updated.bills || {}).reduce(
+    (sum: number, bill: any) => sum + (bill.total || 0),
+    0
+  );
+  const coinsTotal = Object.values(updated.coins || {}).reduce(
+    (sum: number, coin: any) => sum + (coin.total || 0),
+    0
+  );
+  updated.totalCash = billsTotal + coinsTotal;
+
+  return updated;
+}
+
+function formatDenominationBreakdown(breakdown: CashBreakdown): string {
+  const parts: string[] = [];
+
+  // Format bills
+  Object.entries(breakdown.bills).forEach(([, denom]) => {
+    if (denom.count > 0) {
+      parts.push(`${denom.count}x$${denom.value}`);
+    }
+  });
+
+  // Format coins
+  Object.entries(breakdown.coins).forEach(([, denom]) => {
+    if (denom.count > 0) {
+      const valueStr =
+        denom.value < 1 ? `$${denom.value.toFixed(2)}` : `$${denom.value}`;
+      parts.push(`${denom.count}x${valueStr}`);
+    }
+  });
+
+  return parts.length > 0 ? parts.join(", ") : "Sin denominaciones específicas";
+}
+
 export async function createNewOrder(
   state: {
     errors?: Record<string, string[]>;
@@ -903,6 +1085,9 @@ export async function deleteOrderAction(formData: FormData) {
     }
     const createdAt = getMexicoGlobalUtcDate();
 
+    // Variable to store denomination details for response
+    let denominationsRemovedForResponse = null;
+
     // Start a transaction to ensure atomicity
     await prisma.$transaction(async (prisma) => {
       // Release reserved stock for each item in the order
@@ -978,27 +1163,98 @@ export async function deleteOrderAction(formData: FormData) {
         0
       );
 
-      const updatedRegister = await prisma.cashRegister.update({
-        where: { userId: validatedData.data.userId || "" },
-        data: {
-          balance: {
-            decrement: previousPayments, // Adds paymentAmount to the current balance
-          },
-          updatedAt: createdAt,
-        },
-      });
+      // Check for cash payments that need denomination handling
+      const cashPayments = updatedOrder.payments.filter(
+        (payment) => payment.method === "EFECTIVO"
+      );
+      const cashAmount = cashPayments.reduce(
+        (sum, payment) => sum + payment.amount,
+        0
+      );
 
-      await prisma.cashTransaction.create({
-        data: {
-          type: "RETIRO",
-          amount: Math.round(previousPayments),
-          description: `CANCELACIÓN DE PEDIDO: ${order.orderNo}`,
-          cashRegisterId: updatedRegister.id,
-          userId: validatedData.data.userId,
-          createdAt,
-          updatedAt: createdAt,
-        },
-      });
+      if (cashPayments.length > 0 && cashAmount > 0) {
+        // Get current cash register with breakdown before updating
+        const currentRegister = await prisma.cashRegister.findUnique({
+          where: { userId: validatedData.data.userId || "" },
+        });
+
+        // Calculate optimal denominations to remove
+        const denominationsToRemove = calculateDenominationsToRemove(
+          cashAmount,
+          currentRegister?.billBreakdown
+        );
+
+        // Update cash register breakdown by removing the calculated denominations
+        let updatedBreakdown = currentRegister?.billBreakdown;
+        if (updatedBreakdown && denominationsToRemove) {
+          updatedBreakdown = subtractDenominations(
+            updatedBreakdown,
+            denominationsToRemove
+          );
+        }
+
+        // Update balance and breakdown
+        const updatedRegister = await prisma.cashRegister.update({
+          where: { userId: validatedData.data.userId || "" },
+          data: {
+            balance: {
+              decrement: previousPayments,
+            },
+            billBreakdown: updatedBreakdown,
+            updatedAt: createdAt,
+          },
+        });
+
+        // Create detailed transaction description with denomination breakdown
+        const denominationDetails = denominationsToRemove
+          ? formatDenominationBreakdown(denominationsToRemove)
+          : "Sin desglose de denominaciones disponible";
+
+        // Store for response
+        denominationsRemovedForResponse = denominationDetails;
+
+        await prisma.cashTransaction.create({
+          data: {
+            type: "RETIRO",
+            amount: Math.round(previousPayments),
+            description: `CANCELACIÓN DE PEDIDO: ${order.orderNo} - RETIRAR: ${denominationDetails}`,
+            cashRegisterId: updatedRegister.id,
+            billBreakdown: denominationsToRemove,
+            userId: validatedData.data.userId,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+
+        // Log detailed information for tracking
+        console.log(`🔄 ORDEN CANCELADA: ${order.orderNo}`);
+        console.log(`💰 Pagos en efectivo cancelados: $${cashAmount}`);
+        console.log(`📝 Denominaciones a retirar:`, denominationDetails);
+        console.log(`🏦 Balance actualizado: $${updatedRegister.balance}`);
+      } else {
+        // No cash payments, just update balance normally
+        const updatedRegister = await prisma.cashRegister.update({
+          where: { userId: validatedData.data.userId || "" },
+          data: {
+            balance: {
+              decrement: previousPayments,
+            },
+            updatedAt: createdAt,
+          },
+        });
+
+        await prisma.cashTransaction.create({
+          data: {
+            type: "RETIRO",
+            amount: Math.round(previousPayments),
+            description: `CANCELACIÓN DE PEDIDO: ${order.orderNo}`,
+            cashRegisterId: updatedRegister.id,
+            userId: validatedData.data.userId,
+            createdAt,
+            updatedAt: createdAt,
+          },
+        });
+      }
 
       // Update payments status to cancelled
       await prisma.payment.updateMany({
@@ -1035,6 +1291,7 @@ export async function deleteOrderAction(formData: FormData) {
       errors: {},
       success: true,
       message: "El Pedido se eliminó correctamente!",
+      denominationsRemoved: denominationsRemovedForResponse,
     };
   } catch (error) {
     console.error("Error deleting order:", error);

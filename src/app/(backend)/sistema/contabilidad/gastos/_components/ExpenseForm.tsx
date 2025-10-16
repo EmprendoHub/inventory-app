@@ -11,18 +11,13 @@ import { useModal } from "@/app/context/ModalContext";
 import { TruckType } from "@/types/truck";
 import { supplierType } from "@/types/categories";
 import { UserType } from "@/types/users";
-import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { useRouter } from "next/navigation";
+import { CashBreakdown } from "@/types/pos";
+import CashCalculator from "../../../pos/_components/CashCalculator";
+import { Button } from "@/components/ui/button";
+import { Calculator } from "lucide-react";
 
-export default function ExpenseForm({
-  drivers,
-  trucks,
-  suppliers,
-}: {
-  drivers: UserType[];
-  trucks: TruckType[];
-  suppliers: supplierType[];
-}) {
+export default function ExpenseForm() {
   // eslint-disable-next-line
   const [state, formAction] = useFormState<ExpenseFormState, FormData>(
     createExpenseAction,
@@ -43,6 +38,7 @@ export default function ExpenseForm({
   );
   const [selectedSupplier, setSelectedSupplier] =
     React.useState<supplierType | null>(null);
+  // eslint-disable-next-line
   const [selectedExpenseType, setSelectedExpenseType] = React.useState<
     string | null
   >(null);
@@ -50,11 +46,46 @@ export default function ExpenseForm({
   const [sending, setSending] = useState(false);
   const { showModal } = useModal();
 
+  // Cash calculator state
+  const [showCashCalculator, setShowCashCalculator] = useState(false);
+  const [expenseAmount, setExpenseAmount] = useState(0);
+  const [cashBreakdown, setCashBreakdown] = useState<CashBreakdown | null>(
+    null
+  );
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "OTHER">("OTHER");
+
   const handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = event.target.value;
     setSelectedExpenseType(selectedValue);
-
     setDescription(selectedValue);
+  };
+
+  // Handle cash payment from calculator
+  const handleCashPayment = (amount: number, breakdown: CashBreakdown) => {
+    setExpenseAmount(amount);
+    setCashBreakdown(breakdown);
+    setShowCashCalculator(false);
+  };
+
+  // Handle opening cash calculator
+  const handleOpenCashCalculator = () => {
+    const amountInput = document.querySelector(
+      'input[name="amount"]'
+    ) as HTMLInputElement;
+    const currentAmount = parseFloat(amountInput?.value || "0");
+
+    if (currentAmount <= 0) {
+      showModal({
+        title: "Monto requerido",
+        type: "delete",
+        text: "Por favor ingrese el monto del gasto antes de usar la calculadora.",
+        icon: "warning",
+      });
+      return;
+    }
+
+    setExpenseAmount(currentAmount);
+    setShowCashCalculator(true);
   };
 
   // Custom form submission handler
@@ -66,6 +97,13 @@ export default function ExpenseForm({
     formData.set("truck", JSON.stringify(selectedTruck));
     formData.set("status", "PAID");
     formData.set("description", JSON.stringify(description));
+    formData.set("paymentMethod", paymentMethod);
+
+    // Add cash breakdown if paying with cash
+    if (paymentMethod === "CASH" && cashBreakdown) {
+      formData.set("cashBreakdown", JSON.stringify(cashBreakdown));
+    }
+
     const result = await createExpenseAction(state, formData);
 
     if (result.success) {
@@ -84,6 +122,8 @@ export default function ExpenseForm({
     setSelectedDriver(null);
     setSelectedTruck(null);
     setSelectedSupplier(null);
+    setCashBreakdown(null);
+    setPaymentMethod("OTHER");
     setSending(false);
     router.push(`/sistema/contabilidad/gastos`);
   };
@@ -117,6 +157,7 @@ export default function ExpenseForm({
               { value: "", name: "Seleccionar..." },
               { value: "GASOLINA", name: "GASOLINA" },
               { value: "PROVEEDOR", name: "PROVEEDOR" },
+              { value: "NOMINA", name: "NOMINA" },
               { value: "MANTENIMIENTO", name: "MANTENIMIENTO" },
               { value: "OFICINA", name: "OFICINA" },
               { value: "OTRO", name: "OTRO" },
@@ -141,57 +182,45 @@ export default function ExpenseForm({
             defaultValue={new Date()}
           />
         </div>
+
+        {/* Payment Method Selection */}
         <div className="flex items-center gap-4">
-          {selectedExpenseType === "GASOLINA" && (
-            <SearchSelectInput
-              label="Seleccionar Chofer:"
-              name="driver"
-              state={state}
-              className="flex-1 mb-4"
-              options={drivers.map((item) => ({
-                value: item.id,
-                name: item.name,
-              }))}
-              onChange={(value) => {
-                const driver = drivers.find((d) => d.id === value);
-                setSelectedDriver(driver || null);
-                setDescription((prev) => prev + "-" + driver?.name);
-              }}
-            />
-          )}
-          {selectedExpenseType === "MANTENIMIENTO" && (
-            <SearchSelectInput
-              label="Seleccionar Camioneta:"
-              name="truck"
-              state={state}
-              className="flex-1 mb-4"
-              options={trucks.map((item) => ({
-                value: item.id,
-                name: item.name,
-              }))}
-              onChange={(value) => {
-                const truck = trucks.find((t) => t.id === value);
-                setSelectedTruck(truck || null);
-                setDescription((prev) => prev + "-" + truck?.name);
-              }}
-            />
-          )}
-          {selectedExpenseType === "PROVEEDOR" && (
-            <SearchSelectInput
-              label="Seleccionar Proveedor:"
-              name="supplier"
-              state={state}
-              className="flex-1 mb-4"
-              options={suppliers.map((item) => ({
-                value: item.id,
-                name: item.name,
-              }))}
-              onChange={(value) => {
-                const supplier = suppliers.find((s) => s.id === value);
-                setSelectedSupplier(supplier || null);
-                setDescription((prev) => prev + "-" + supplier?.name);
-              }}
-            />
+          <SelectInput
+            label="Método de Pago"
+            name="paymentMethod"
+            options={[
+              { value: "OTHER", name: "Transferencia/Tarjeta" },
+              { value: "CASH", name: "Efectivo" },
+            ]}
+            state={state}
+            onChange={(e) =>
+              setPaymentMethod(e.target.value as "CASH" | "OTHER")
+            }
+          />
+
+          {/* Cash Calculator Button */}
+          {paymentMethod === "CASH" && (
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Calculadora de Denominaciones
+              </label>
+              <Button
+                type="button"
+                onClick={handleOpenCashCalculator}
+                variant="outline"
+                className="w-full h-12 text-base"
+              >
+                <Calculator className="w-5 h-5 mr-2" />
+                {cashBreakdown
+                  ? "Denominaciones Seleccionadas"
+                  : "Calcular Denominaciones"}
+              </Button>
+              {cashBreakdown && (
+                <p className="text-sm text-green-600 mt-1">
+                  Total contado: ${(cashBreakdown.totalCash || 0).toFixed(2)}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
@@ -220,6 +249,15 @@ export default function ExpenseForm({
           </p>
         )}
       </form>
+
+      {/* Cash Calculator Modal */}
+      {showCashCalculator && (
+        <CashCalculator
+          totalAmount={expenseAmount}
+          onCashReceived={handleCashPayment}
+          onClose={() => setShowCashCalculator(false)}
+        />
+      )}
     </section>
   );
 }

@@ -264,10 +264,29 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                 );
 
                 if (isAuthorized.success) {
+                  // Check if there are cash payments
+                  const cashPayments =
+                    row.original.payments?.filter(
+                      (payment) => payment.method === "EFECTIVO"
+                    ) || [];
+                  const cashAmount = cashPayments.reduce(
+                    (sum, payment) => sum + payment.amount,
+                    0
+                  );
+
+                  let confirmationText =
+                    "Al cancelar este pedido se cancelará cualquier pago asociado.";
+
+                  if (cashPayments.length > 0 && cashAmount > 0) {
+                    confirmationText += `\n\n💰 Pagos en efectivo: $${cashAmount.toFixed(
+                      2
+                    )}\n📝 Las denominaciones específicas a retirar se calcularán automáticamente y se mostrarán en la transacción de caja.`;
+                  }
+
                   const result = await showModal({
                     title: "¿Estás seguro?, ¡No podrás revertir esto!",
                     type: "delete",
-                    text: "Al cancelara este pedido se cancelara cualquier pago asociado.",
+                    text: confirmationText,
                     icon: "warning",
                     showCancelButton: true,
                     confirmButtonText: "Sí, cancelar",
@@ -279,13 +298,28 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                       const formData = new FormData();
                       formData.set("id", row.original.id);
                       formData.set("userId", user.id);
-                      const response = await deleteOrderAction(formData);
+                      const response = (await deleteOrderAction(formData)) as {
+                        success: boolean;
+                        message: string;
+                        errors: any;
+                        denominationsRemoved?: string | null;
+                      };
                       if (!response.success)
                         throw new Error("Error al cancelado");
+
+                      let successMessage = "El pedido ha sido cancelado.";
+                      if (cashPayments.length > 0 && cashAmount > 0) {
+                        if (response.denominationsRemoved) {
+                          successMessage += `\n\n💰 Denominaciones a retirar:\n${response.denominationsRemoved}`;
+                        } else {
+                          successMessage += `\n\n📋 Revisa las transacciones de caja para ver las denominaciones específicas que fueron retiradas automáticamente.`;
+                        }
+                      }
+
                       await showModal({
                         title: "¡Cancelado!",
                         type: "delete",
-                        text: "El pedido ha sido cancelado.",
+                        text: successMessage,
                         icon: "success",
                       });
                       router.refresh();
