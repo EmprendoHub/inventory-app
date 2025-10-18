@@ -103,7 +103,6 @@ export default function PosRegister({
     isMountedRef.current = true;
 
     return () => {
-      console.log("PosRegister component unmounting, cleaning up...");
       isMountedRef.current = false;
 
       // Cancel any pending async operations or timeouts
@@ -413,13 +412,13 @@ export default function PosRegister({
 
   // Process cash payment (separated from stock check)
   const processCashPayment = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async (cashReceived: number, breakdown: CashBreakdown) => {
       if (!isMountedRef.current || cart.items.length === 0) {
         return;
       }
 
       // Log breakdown for future use (can be sent to backend)
-      console.log("Cash breakdown:", breakdown);
 
       try {
         // Process the checkout without bill breakdown (simplified)
@@ -442,7 +441,6 @@ export default function PosRegister({
   const checkStockBeforeCashPayment = useCallback(
     async (cashReceived: number, breakdown: CashBreakdown) => {
       if (cart.items.length === 0) {
-        console.log("No items in cart, returning");
         return;
       }
 
@@ -462,11 +460,6 @@ export default function PosRegister({
   // Handle cash payment completion
   const handleCashPayment = useCallback(
     async (cashReceived: number, breakdown: CashBreakdown) => {
-      console.log("handleCashPayment called with:", {
-        cashReceived,
-        breakdown,
-      });
-
       if (isCurrentlyProcessing) {
         console.warn("Payment already in progress, ignoring duplicate request");
         return;
@@ -518,8 +511,6 @@ export default function PosRegister({
     }
 
     try {
-      console.log("Starting proceed after stock alert...");
-
       // Batch state updates to prevent race conditions
       React.startTransition(() => {
         if (isMountedRef.current) {
@@ -562,8 +553,6 @@ export default function PosRegister({
           setStockMessages([]);
         });
       }
-
-      console.log("Proceed after stock alert completed successfully");
     } catch (error) {
       console.error("Error in handleProceedAfterStockAlert:", error);
       // Reset modal states in case of error and if component is still mounted
@@ -596,16 +585,12 @@ export default function PosRegister({
 
   // Handle canceling sale after stock alert
   const handleCancelAfterStockAlert = useCallback(() => {
-    console.log("handleCancelAfterStockAlert called");
-
     if (!isMountedRef.current) {
       console.warn("Component unmounted, aborting cancel operation");
       return;
     }
 
     try {
-      console.log("Starting batch state cleanup...");
-
       // Batch all state updates in a single React.startTransition to prevent race conditions
       React.startTransition(() => {
         if (isMountedRef.current) {
@@ -617,19 +602,14 @@ export default function PosRegister({
           setShowCashCalculator(false);
           setInternalProcessing(false);
 
-          console.log("Stock alert states cleared");
-
           // Use a requestAnimationFrame to ensure DOM has updated before showing payment modal
           requestAnimationFrame(() => {
             if (isMountedRef.current) {
               setShowPaymentModal(true);
-              console.log("Payment modal reopened");
             }
           });
         }
       });
-
-      console.log("State cleanup completed successfully");
     } catch (error) {
       console.error("Error in handleCancelAfterStockAlert:", error);
 
@@ -642,7 +622,6 @@ export default function PosRegister({
           setPendingCashPayment(null);
           setStockAlerts([]);
           setStockMessages([]);
-          console.log("Emergency cleanup completed");
         } catch (innerError) {
           console.error("Critical error in emergency cleanup:", innerError);
           // If all else fails, just close the stock alert to prevent infinite loops
@@ -1469,7 +1448,6 @@ export default function PosRegister({
                   size="sm"
                   onClick={() => {
                     try {
-                      console.log("Close button clicked");
                       if (!isCurrentlyProcessing && isMountedRef.current) {
                         handleCancelAfterStockAlert();
                       } else {
@@ -1585,7 +1563,6 @@ export default function PosRegister({
                     className="flex-1"
                     onClick={() => {
                       try {
-                        console.log("Cancel button clicked");
                         if (!isCurrentlyProcessing && isMountedRef.current) {
                           handleCancelAfterStockAlert();
                         } else {
@@ -1609,7 +1586,6 @@ export default function PosRegister({
                     className="flex-1 bg-green-600 hover:bg-green-700"
                     onClick={async () => {
                       try {
-                        console.log("Continue button clicked");
                         if (!isCurrentlyProcessing && isMountedRef.current) {
                           await handleProceedAfterStockAlert();
                         } else {
