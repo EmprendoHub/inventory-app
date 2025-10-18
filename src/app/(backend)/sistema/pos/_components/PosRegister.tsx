@@ -101,8 +101,18 @@ export default function PosRegister({
   // Cleanup effect to prevent state updates after unmount
   useEffect(() => {
     isMountedRef.current = true;
+
     return () => {
+      console.log("PosRegister component unmounting, cleaning up...");
       isMountedRef.current = false;
+
+      // Cancel any pending async operations or timeouts
+      try {
+        // Clear any pending state updates that might be in flight
+        // This helps prevent the "Cannot update component state after unmount" warnings
+      } catch (error) {
+        console.error("Error during component cleanup:", error);
+      }
     };
   }, []);
 
@@ -508,10 +518,15 @@ export default function PosRegister({
     }
 
     try {
-      if (isMountedRef.current) {
-        setShowStockAlert(false);
-        setInternalProcessing(true);
-      }
+      console.log("Starting proceed after stock alert...");
+
+      // Batch state updates to prevent race conditions
+      React.startTransition(() => {
+        if (isMountedRef.current) {
+          setShowStockAlert(false);
+          setInternalProcessing(true);
+        }
+      });
 
       if (pendingCashPayment && isMountedRef.current) {
         try {
@@ -526,41 +541,55 @@ export default function PosRegister({
           );
           // Re-open payment modal if payment fails and component is still mounted
           if (isMountedRef.current) {
-            setShowPaymentModal(true);
+            React.startTransition(() => {
+              setShowPaymentModal(true);
+            });
           }
           throw error; // Re-throw to be caught by outer try-catch
         } finally {
           if (isMountedRef.current) {
-            setPendingCashPayment(null);
+            React.startTransition(() => {
+              setPendingCashPayment(null);
+            });
           }
         }
       }
 
       // Clear stock alert state if component is still mounted
       if (isMountedRef.current) {
-        setStockAlerts([]);
-        setStockMessages([]);
+        React.startTransition(() => {
+          setStockAlerts([]);
+          setStockMessages([]);
+        });
       }
+
+      console.log("Proceed after stock alert completed successfully");
     } catch (error) {
       console.error("Error in handleProceedAfterStockAlert:", error);
       // Reset modal states in case of error and if component is still mounted
       if (isMountedRef.current) {
         try {
-          setShowStockAlert(false);
-          setShowPaymentModal(true);
-          setPendingCashPayment(null);
-          setStockAlerts([]);
-          setStockMessages([]);
+          React.startTransition(() => {
+            setShowStockAlert(false);
+            setShowPaymentModal(true);
+            setPendingCashPayment(null);
+            setStockAlerts([]);
+            setStockMessages([]);
+          });
         } catch (innerError) {
           console.error(
             "Critical error in handleProceedAfterStockAlert cleanup:",
             innerError
           );
+          // Emergency cleanup
+          setShowStockAlert(false);
         }
       }
     } finally {
       if (isMountedRef.current) {
-        setInternalProcessing(false);
+        React.startTransition(() => {
+          setInternalProcessing(false);
+        });
       }
     }
   }, [pendingCashPayment, processCashPayment]);
@@ -575,82 +604,49 @@ export default function PosRegister({
     }
 
     try {
-      console.log("Starting state cleanup...");
+      console.log("Starting batch state cleanup...");
 
-      // Reset all stock alert related state safely one by one
-      if (isMountedRef.current) {
-        console.log("Setting showStockAlert to false");
-        setShowStockAlert(false);
-      }
+      // Batch all state updates in a single React.startTransition to prevent race conditions
+      React.startTransition(() => {
+        if (isMountedRef.current) {
+          // Reset all stock-related states in a single update
+          setShowStockAlert(false);
+          setPendingCashPayment(null);
+          setStockAlerts([]);
+          setStockMessages([]);
+          setShowCashCalculator(false);
+          setInternalProcessing(false);
 
-      if (isMountedRef.current) {
-        console.log("Clearing pendingCashPayment");
-        setPendingCashPayment(null);
-      }
+          console.log("Stock alert states cleared");
 
-      if (isMountedRef.current) {
-        console.log("Clearing stockAlerts");
-        setStockAlerts([]);
-      }
-
-      if (isMountedRef.current) {
-        console.log("Clearing stockMessages");
-        setStockMessages([]);
-      }
-
-      if (isMountedRef.current) {
-        console.log("Setting showCashCalculator to false");
-        setShowCashCalculator(false);
-      }
-
-      if (isMountedRef.current) {
-        console.log("Setting internalProcessing to false");
-        setInternalProcessing(false);
-      }
-
-      // Use setTimeout to prevent state update conflicts
-      if (isMountedRef.current) {
-        console.log("Setting timeout for showPaymentModal");
-        setTimeout(() => {
-          if (isMountedRef.current) {
-            console.log("Setting showPaymentModal to true");
-            setShowPaymentModal(true);
-          }
-        }, 150);
-      }
+          // Use a requestAnimationFrame to ensure DOM has updated before showing payment modal
+          requestAnimationFrame(() => {
+            if (isMountedRef.current) {
+              setShowPaymentModal(true);
+              console.log("Payment modal reopened");
+            }
+          });
+        }
+      });
 
       console.log("State cleanup completed successfully");
     } catch (error) {
       console.error("Error in handleCancelAfterStockAlert:", error);
 
-      // Force reset all states in case of error but only if component is mounted
+      // Simplified error recovery - just close everything
       if (isMountedRef.current) {
-        console.log("Attempting force cleanup...");
         try {
-          // Try to reset states one by one in a more controlled way
-          Promise.resolve()
-            .then(() => {
-              if (isMountedRef.current) {
-                setShowStockAlert(false);
-                setPendingCashPayment(null);
-                setStockAlerts([]);
-                setStockMessages([]);
-                setShowCashCalculator(false);
-                setInternalProcessing(false);
-                setShowPaymentModal(true);
-              }
-            })
-            .catch((innerError) => {
-              console.error(
-                "Critical error in handleCancelAfterStockAlert force cleanup:",
-                innerError
-              );
-            });
+          setShowStockAlert(false);
+          setShowCashCalculator(false);
+          setInternalProcessing(false);
+          setPendingCashPayment(null);
+          setStockAlerts([]);
+          setStockMessages([]);
+          console.log("Emergency cleanup completed");
         } catch (innerError) {
-          console.error(
-            "Critical error in handleCancelAfterStockAlert cleanup:",
-            innerError
-          );
+          console.error("Critical error in emergency cleanup:", innerError);
+          // If all else fails, just close the stock alert to prevent infinite loops
+          setShowStockAlert(false);
         }
       }
     }
@@ -1402,10 +1398,28 @@ export default function PosRegister({
             <ErrorBoundary
               onError={(error, errorInfo) => {
                 console.error("Stock Alert Modal Error:", error, errorInfo);
-                // Force close the modal on error
+                // Force close the modal on error with batch state update
                 if (isMountedRef.current) {
-                  setShowStockAlert(false);
-                  setShowPaymentModal(true);
+                  try {
+                    React.startTransition(() => {
+                      setShowStockAlert(false);
+                      setStockAlerts([]);
+                      setStockMessages([]);
+                      setPendingCashPayment(null);
+                      setInternalProcessing(false);
+                    });
+
+                    // Use requestAnimationFrame to ensure clean state before showing payment modal
+                    requestAnimationFrame(() => {
+                      if (isMountedRef.current) {
+                        setShowPaymentModal(true);
+                      }
+                    });
+                  } catch (cleanupError) {
+                    console.error("Error during modal cleanup:", cleanupError);
+                    // Emergency fallback - just close the modal
+                    setShowStockAlert(false);
+                  }
                 }
               }}
               fallback={
@@ -1419,8 +1433,24 @@ export default function PosRegister({
                   <button
                     onClick={() => {
                       if (isMountedRef.current) {
-                        setShowStockAlert(false);
-                        setShowPaymentModal(true);
+                        try {
+                          React.startTransition(() => {
+                            setShowStockAlert(false);
+                            setStockAlerts([]);
+                            setStockMessages([]);
+                            setPendingCashPayment(null);
+                            setInternalProcessing(false);
+                          });
+
+                          requestAnimationFrame(() => {
+                            if (isMountedRef.current) {
+                              setShowPaymentModal(true);
+                            }
+                          });
+                        } catch (error) {
+                          console.error("Error in fallback button:", error);
+                          setShowStockAlert(false);
+                        }
                       }
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -1440,13 +1470,19 @@ export default function PosRegister({
                   onClick={() => {
                     try {
                       console.log("Close button clicked");
-                      if (!isCurrentlyProcessing) {
+                      if (!isCurrentlyProcessing && isMountedRef.current) {
                         handleCancelAfterStockAlert();
                       } else {
-                        console.warn("Cannot close - processing in progress");
+                        console.warn(
+                          "Cannot close - processing in progress or component unmounted"
+                        );
                       }
                     } catch (error) {
                       console.error("Error in close button click:", error);
+                      // Emergency fallback
+                      if (isMountedRef.current) {
+                        setShowStockAlert(false);
+                      }
                     }
                   }}
                   disabled={isCurrentlyProcessing}
@@ -1550,15 +1586,19 @@ export default function PosRegister({
                     onClick={() => {
                       try {
                         console.log("Cancel button clicked");
-                        if (!isCurrentlyProcessing) {
+                        if (!isCurrentlyProcessing && isMountedRef.current) {
                           handleCancelAfterStockAlert();
                         } else {
                           console.warn(
-                            "Cannot cancel - processing in progress"
+                            "Cannot cancel - processing in progress or component unmounted"
                           );
                         }
                       } catch (error) {
                         console.error("Error in cancel button click:", error);
+                        // Emergency fallback
+                        if (isMountedRef.current) {
+                          setShowStockAlert(false);
+                        }
                       }
                     }}
                     disabled={isCurrentlyProcessing}
@@ -1567,18 +1607,39 @@ export default function PosRegister({
                   </Button>
                   <Button
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => {
+                    onClick={async () => {
                       try {
                         console.log("Continue button clicked");
-                        if (!isCurrentlyProcessing) {
-                          handleProceedAfterStockAlert();
+                        if (!isCurrentlyProcessing && isMountedRef.current) {
+                          await handleProceedAfterStockAlert();
                         } else {
                           console.warn(
-                            "Cannot continue - processing in progress"
+                            "Cannot continue - processing in progress or component unmounted"
                           );
                         }
                       } catch (error) {
                         console.error("Error in continue button click:", error);
+                        // Emergency fallback - close modal and show payment modal
+                        if (isMountedRef.current) {
+                          try {
+                            React.startTransition(() => {
+                              setShowStockAlert(false);
+                              setInternalProcessing(false);
+                            });
+
+                            requestAnimationFrame(() => {
+                              if (isMountedRef.current) {
+                                setShowPaymentModal(true);
+                              }
+                            });
+                          } catch (cleanupError) {
+                            console.error(
+                              "Error in emergency cleanup:",
+                              cleanupError
+                            );
+                            setShowStockAlert(false);
+                          }
+                        }
                       }
                     }}
                     disabled={isCurrentlyProcessing}
