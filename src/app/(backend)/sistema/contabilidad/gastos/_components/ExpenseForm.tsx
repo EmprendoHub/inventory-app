@@ -12,10 +12,6 @@ import { TruckType } from "@/types/truck";
 import { supplierType } from "@/types/categories";
 import { UserType } from "@/types/users";
 import { useRouter } from "next/navigation";
-import { CashBreakdown } from "@/types/pos";
-import CashCalculator from "../../../pos/_components/CashCalculator";
-import { Button } from "@/components/ui/button";
-import { Calculator } from "lucide-react";
 
 export default function ExpenseForm() {
   // eslint-disable-next-line
@@ -46,46 +42,10 @@ export default function ExpenseForm() {
   const [sending, setSending] = useState(false);
   const { showModal } = useModal();
 
-  // Cash calculator state
-  const [showCashCalculator, setShowCashCalculator] = useState(false);
-  const [expenseAmount, setExpenseAmount] = useState(0);
-  const [cashBreakdown, setCashBreakdown] = useState<CashBreakdown | null>(
-    null
-  );
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "OTHER">("OTHER");
-
   const handleTypeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedValue = event.target.value;
     setSelectedExpenseType(selectedValue);
     setDescription(selectedValue);
-  };
-
-  // Handle cash payment from calculator
-  const handleCashPayment = (amount: number, breakdown: CashBreakdown) => {
-    setExpenseAmount(amount);
-    setCashBreakdown(breakdown);
-    setShowCashCalculator(false);
-  };
-
-  // Handle opening cash calculator
-  const handleOpenCashCalculator = () => {
-    const amountInput = document.querySelector(
-      'input[name="amount"]'
-    ) as HTMLInputElement;
-    const currentAmount = parseFloat(amountInput?.value || "0");
-
-    if (currentAmount <= 0) {
-      showModal({
-        title: "Monto requerido",
-        type: "delete",
-        text: "Por favor ingrese el monto del gasto antes de usar la calculadora.",
-        icon: "warning",
-      });
-      return;
-    }
-
-    setExpenseAmount(currentAmount);
-    setShowCashCalculator(true);
   };
 
   // Custom form submission handler
@@ -97,12 +57,6 @@ export default function ExpenseForm() {
     formData.set("truck", JSON.stringify(selectedTruck));
     formData.set("status", "PAID");
     formData.set("description", JSON.stringify(description));
-    formData.set("paymentMethod", paymentMethod);
-
-    // Add cash breakdown if paying with cash
-    if (paymentMethod === "CASH" && cashBreakdown) {
-      formData.set("cashBreakdown", JSON.stringify(cashBreakdown));
-    }
 
     const result = await createExpenseAction(state, formData);
 
@@ -122,8 +76,6 @@ export default function ExpenseForm() {
     setSelectedDriver(null);
     setSelectedTruck(null);
     setSelectedSupplier(null);
-    setCashBreakdown(null);
-    setPaymentMethod("OTHER");
     setSending(false);
     router.push(`/sistema/contabilidad/gastos`);
   };
@@ -183,47 +135,6 @@ export default function ExpenseForm() {
           />
         </div>
 
-        {/* Payment Method Selection */}
-        <div className="flex items-center gap-4">
-          <SelectInput
-            label="Método de Pago"
-            name="paymentMethod"
-            options={[
-              { value: "OTHER", name: "Transferencia/Tarjeta" },
-              { value: "CASH", name: "Efectivo" },
-            ]}
-            state={state}
-            onChange={(e) =>
-              setPaymentMethod(e.target.value as "CASH" | "OTHER")
-            }
-          />
-
-          {/* Cash Calculator Button */}
-          {paymentMethod === "CASH" && (
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Calculadora de Denominaciones
-              </label>
-              <Button
-                type="button"
-                onClick={handleOpenCashCalculator}
-                variant="outline"
-                className="w-full h-12 text-base"
-              >
-                <Calculator className="w-5 h-5 mr-2" />
-                {cashBreakdown
-                  ? "Denominaciones Seleccionadas"
-                  : "Calcular Denominaciones"}
-              </Button>
-              {cashBreakdown && (
-                <p className="text-sm text-green-600 mt-1">
-                  Total contado: ${(cashBreakdown.totalCash || 0).toFixed(2)}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -249,15 +160,6 @@ export default function ExpenseForm() {
           </p>
         )}
       </form>
-
-      {/* Cash Calculator Modal */}
-      {showCashCalculator && (
-        <CashCalculator
-          totalAmount={expenseAmount}
-          onCashReceived={handleCashPayment}
-          onClose={() => setShowCashCalculator(false)}
-        />
-      )}
     </section>
   );
 }
