@@ -462,56 +462,56 @@ export async function createPosOrder(
   }
 }
 
-export async function createHeldOrder(cart: CartState, customerId?: string) {
-  const session = await getServerSession(options);
+// export async function createHeldOrder(cart: CartState, customerId?: string) {
+//   const session = await getServerSession(options);
 
-  if (!session?.user?.id) {
-    throw new Error("Usuario no autenticado");
-  }
+//   if (!session?.user?.id) {
+//     throw new Error("Usuario no autenticado");
+//   }
 
-  try {
-    // Get the user's cash register
-    const cashRegister = await prisma.cashRegister.findFirst({
-      where: { userId: session.user.id },
-    });
+//   try {
+//     // Get the user's cash register
+//     const cashRegister = await prisma.cashRegister.findFirst({
+//       where: { userId: session.user.id },
+//     });
 
-    if (!cashRegister) {
-      throw new Error("No se encontró caja registradora para el usuario");
-    }
+//     if (!cashRegister) {
+//       throw new Error("No se encontró caja registradora para el usuario");
+//     }
 
-    // Create held order with items as JSON string (as per schema)
-    const heldOrder = await prisma.heldOrder.create({
-      data: {
-        holdNumber: `HELD-${Date.now()}`,
-        cashRegisterId: cashRegister.id,
-        customerId: customerId || undefined,
-        heldBy: session.user.id,
-        status: "HELD",
-        items: JSON.stringify(
-          cart.items.map((item) => ({
-            itemId: item.itemId,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            discount: item.discount,
-            totalPrice: item.price * item.quantity - (item.discount || 0),
-          }))
-        ),
-        subtotal: cart.subtotal,
-        discountAmount: cart.discountAmount || 0,
-        notes: "Orden suspendida",
-      },
-    });
+//     // Create held order with items as JSON string (as per schema)
+//     // const heldOrder = await prisma.heldOrder.create({
+//     //   data: {
+//     //     holdNumber: `HELD-${Date.now()}`,
+//     //     cashRegisterId: cashRegister.id,
+//     //     customerId: customerId || undefined,
+//     //     heldBy: session.user.id,
+//     //     status: "HELD",
+//     //     items: JSON.stringify(
+//     //       cart.items.map((item) => ({
+//     //         itemId: item.itemId,
+//     //         name: item.name,
+//     //         price: item.price,
+//     //         quantity: item.quantity,
+//     //         discount: item.discount,
+//     //         totalPrice: item.price * item.quantity - (item.discount || 0),
+//     //       }))
+//     //     ),
+//     //     subtotal: cart.subtotal,
+//     //     discountAmount: cart.discountAmount || 0,
+//     //     notes: "Orden suspendida",
+//     //   },
+//     // });
 
-    revalidatePath("/sistema/pos");
-    revalidatePath("/sistema/ventas/pedidos");
+//     revalidatePath("/sistema/pos");
+//     revalidatePath("/sistema/ventas/pedidos");
 
-    return { success: true, heldOrderId: heldOrder.id };
-  } catch (error) {
-    console.error("Error creating held order:", error);
-    throw new Error("Error al suspender la orden");
-  }
-}
+//     return { success: true, heldOrderId: heldOrder.id };
+//   } catch (error) {
+//     console.error("Error creating held order:", error);
+//     throw new Error("Error al suspender la orden");
+//   }
+// }
 
 export async function updateFavorites(favorites: any[]) {
   try {
