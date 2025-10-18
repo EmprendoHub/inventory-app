@@ -3,7 +3,7 @@
 import { useFormState } from "react-dom";
 import { createPettyCashAction } from "../_actions";
 import { CashRegisterResponse } from "@/types/accounting";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
@@ -11,7 +11,6 @@ import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
 import { BanknoteIcon, X, Plus, Minus } from "lucide-react";
 import { CashBreakdown } from "@/types/pos";
-import { calculateOptimalChange } from "@/lib/changeCalculation";
 import dayjs from "dayjs";
 
 interface SingleCashDepositModalProps {
@@ -42,9 +41,6 @@ export default function SingleCashDepositModal({
 
   const [selectedRegister, setSelectedRegister] =
     useState<CashRegisterResponse | null>(cashRegister);
-
-  // State for change calculation warnings
-  const [changeWarnings, setChangeWarnings] = useState<string[]>([]);
 
   // State for cash breakdown
   const [cashBreakdown, setCashBreakdown] = useState<CashBreakdown>({
@@ -123,74 +119,6 @@ export default function SingleCashDepositModal({
     updateDenomination(category, key, Math.max(0, currentCount - 1));
   };
 
-  // Check change-making capability for common amounts
-  const checkChangeCapability = useCallback(() => {
-    // Get current register breakdown plus what we're adding
-    let currentBreakdown = selectedRegister?.billBreakdown as CashBreakdown;
-
-    if (!currentBreakdown) {
-      // If no existing breakdown, use only what we're adding
-      currentBreakdown = cashBreakdown;
-    } else {
-      // Combine existing with what we're adding
-      const combined: CashBreakdown = JSON.parse(
-        JSON.stringify(currentBreakdown)
-      );
-
-      // Add bills
-      Object.keys(cashBreakdown.bills).forEach((key) => {
-        if ((combined.bills as any)[key] && (cashBreakdown.bills as any)[key]) {
-          (combined.bills as any)[key].count += (cashBreakdown.bills as any)[
-            key
-          ].count;
-          (combined.bills as any)[key].total =
-            (combined.bills as any)[key].count *
-            (combined.bills as any)[key].value;
-        }
-      });
-
-      // Add coins
-      Object.keys(cashBreakdown.coins).forEach((key) => {
-        if ((combined.coins as any)[key] && (cashBreakdown.coins as any)[key]) {
-          (combined.coins as any)[key].count += (cashBreakdown.coins as any)[
-            key
-          ].count;
-          (combined.coins as any)[key].total =
-            (combined.coins as any)[key].count *
-            (combined.coins as any)[key].value;
-        }
-      });
-
-      // Update total
-      combined.totalCash = calculateTotal(combined);
-      currentBreakdown = combined;
-    }
-
-    // Test common change amounts
-    const commonChangeAmounts = [50, 100, 150, 200, 250, 300, 500];
-    const warnings: string[] = [];
-
-    for (const amount of commonChangeAmounts) {
-      const result = calculateOptimalChange(amount, currentBreakdown);
-      if (!result.success) {
-        warnings.push(
-          `Cambio de $${amount}: ${result.error || "No disponible"}`
-        );
-      }
-    }
-
-    setChangeWarnings(warnings);
-  }, [cashBreakdown, selectedRegister, calculateTotal]);
-
-  // Check change capability when breakdown changes
-  useEffect(() => {
-    if (cashBreakdown.totalCash > 0) {
-      checkChangeCapability();
-    } else {
-      setChangeWarnings([]);
-    }
-  }, [cashBreakdown, checkChangeCapability]);
-
   const handleSubmit = async () => {
     setSending(true);
 
@@ -219,7 +147,6 @@ export default function SingleCashDepositModal({
           "startBalance",
           selectedRegister?.balance?.toString() || ""
         );
-        formData.set("billBreakdown", JSON.stringify(cashBreakdown));
         formData.set("auditDate", formattedDate);
 
         const result = await createPettyCashAction(state, formData);
@@ -457,49 +384,6 @@ export default function SingleCashDepositModal({
               </span>
             </div>
           </div>
-
-          {/* Change Capability Warnings */}
-          {changeWarnings.length > 0 && (
-            <div className="bg-yellow-50 border-2 border-yellow-300 p-4 rounded-lg">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-6 w-6 text-yellow-600"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-bold text-yellow-800">
-                    ⚠️ Advertencia de Cambio Insuficiente
-                  </h3>
-                  <div className="mt-2 text-base text-yellow-700">
-                    <p className="mb-2 font-semibold">
-                      Después de agregar este fondo, la caja NO podrá dar cambio
-                      para:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1">
-                      {changeWarnings.map((warning, index) => (
-                        <li key={index} className="font-medium text-base">
-                          {warning}
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="mt-3 text-base font-bold bg-yellow-200 p-3 rounded">
-                      💡 Considera agregar billetes más pequeños para poder dar
-                      cambio correctamente.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {state.message && (
             <p className="text-base text-red-600 bg-red-50 p-3 rounded">

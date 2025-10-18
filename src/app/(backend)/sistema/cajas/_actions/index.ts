@@ -93,18 +93,35 @@ export const createCashTransactionAction = async (
 
   try {
     const createdAt = getMexicoGlobalUtcDate();
-    await prisma.cashTransaction.create({
-      data: {
-        type: rawData.type as "DEPOSITO" | "RETIRO",
-        amount: rawData.amount,
-        description: rawData.description,
-        cashRegisterId: rawData.cashRegisterId,
-        createdAt,
-        updatedAt: createdAt,
-      },
+
+    await prisma.$transaction(async (prisma) => {
+      // Create the cash transaction record
+      await prisma.cashTransaction.create({
+        data: {
+          type: rawData.type as "DEPOSITO" | "RETIRO",
+          amount: rawData.amount,
+          description: rawData.description,
+          cashRegisterId: rawData.cashRegisterId,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      // Update cash register balance directly without denomination calculations
+      await prisma.cashRegister.update({
+        where: { id: rawData.cashRegisterId },
+        data: {
+          balance: {
+            [rawData.type === "DEPOSITO" ? "increment" : "decrement"]:
+              rawData.amount,
+          },
+          updatedAt: createdAt,
+        },
+      });
     });
 
-    revalidatePath("/sistema/caja");
+    revalidatePath("/sistema/cajas");
+    revalidatePath("/sistema/cajas/personal");
     return {
       success: true,
       message: "Transaction created successfully!",
@@ -155,6 +172,7 @@ export const createCashAuditAction = async (
   try {
     const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
+      // Create audit record with bill breakdown for documentation
       await prisma.cashAudit.create({
         data: {
           cashRegisterId: register.id,
@@ -171,15 +189,15 @@ export const createCashAuditAction = async (
         },
       });
 
+      // Update register balance directly - subtract the withdrawn amount
       const updatedRegister = await prisma.cashRegister.update({
         where: { userId: user?.id || "" },
         data: {
           balance: {
             decrement: rawData.endBalance, // deducts cash withdraw to the current balance
           },
-          billBreakdown: rawData.billBreakdown
-            ? JSON.parse(rawData.billBreakdown)
-            : null, // Update the billBreakdown with remaining amounts
+          // Keep bill breakdown for documentation purposes only (not for calculations)
+          // Remove billBreakdown storage for regular balance operations
           updatedAt: createdAt,
         },
       });
@@ -268,7 +286,6 @@ export const createPettyCashAction = async (
     startBalance: parseFloat(formData.get("startBalance") as string),
     endBalance: parseFloat(formData.get("endBalance") as string),
     auditDate: formData.get("auditDate") as string,
-    billBreakdown: formData.get("billBreakdown") as string,
   };
 
   const register = JSON.parse(rawData.register);
@@ -290,6 +307,7 @@ export const createPettyCashAction = async (
   try {
     const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
+      // Create audit record for documentation
       await prisma.cashAudit.create({
         data: {
           cashRegisterId: register.id,
@@ -303,65 +321,13 @@ export const createPettyCashAction = async (
         },
       });
 
-      // Get current register to add the new denominations
-      const currentRegister = await prisma.cashRegister.findUnique({
-        where: { userId: user?.id || "" },
-      });
-
-      // Helper function to add cash breakdowns
-      const addCashBreakdowns = (existing: any, incoming: any) => {
-        if (!existing) return incoming;
-        if (!incoming) return existing;
-
-        const result = { ...existing };
-
-        // Add bills
-        if (existing.bills && incoming.bills) {
-          Object.keys(incoming.bills).forEach((key) => {
-            if (result.bills[key] && incoming.bills[key]) {
-              result.bills[key].count =
-                (result.bills[key].count || 0) +
-                (incoming.bills[key].count || 0);
-              result.bills[key].total =
-                result.bills[key].count * result.bills[key].value;
-            }
-          });
-        }
-
-        // Add coins
-        if (existing.coins && incoming.coins) {
-          Object.keys(incoming.coins).forEach((key) => {
-            if (result.coins[key] && incoming.coins[key]) {
-              result.coins[key].count =
-                (result.coins[key].count || 0) +
-                (incoming.coins[key].count || 0);
-              result.coins[key].total =
-                result.coins[key].count * result.coins[key].value;
-            }
-          });
-        }
-
-        // Update total cash
-        result.totalCash =
-          (existing.totalCash || 0) + (incoming.totalCash || 0);
-        return result;
-      };
-
-      // Add the new breakdown to existing breakdown
-      const incomingBreakdown = rawData.billBreakdown
-        ? JSON.parse(rawData.billBreakdown)
-        : null;
-      const updatedBreakdown = incomingBreakdown
-        ? addCashBreakdowns(currentRegister?.billBreakdown, incomingBreakdown)
-        : currentRegister?.billBreakdown;
-
+      // Update register balance directly - add the deposit amount
       const updatedRegister = await prisma.cashRegister.update({
         where: { userId: user?.id || "" },
         data: {
           balance: {
             increment: rawData.endBalance, // adds deposit amount to the current balance
           },
-          billBreakdown: updatedBreakdown, // Update with the combined breakdown
           updatedAt: createdAt,
         },
       });
@@ -420,14 +386,14 @@ export const createPettyCashAction = async (
     return {
       errors: {},
       success: true,
-      message: "Cash Audit created successfully!",
+      message: "Cash Fund added successfully!",
     };
   } catch (error) {
-    console.error("Error creating cash audit:", error);
+    console.error("Error adding cash fund:", error);
     return {
       errors: {},
       success: false,
-      message: "Error al crear auditoría de caja.",
+      message: "Error al agregar fondo de caja.",
     };
   }
 };
@@ -450,7 +416,6 @@ export const createCashHandoffAction = async (
     startBalance: parseFloat(formData.get("startBalance") as string),
     endBalance: parseFloat(formData.get("endBalance") as string),
     auditDate: formData.get("auditDate") as string,
-    billBreakdown: formData.get("billBreakdown") as string,
   };
 
   const register = JSON.parse(rawData.register);
@@ -467,197 +432,93 @@ export const createCashHandoffAction = async (
       message: "Missing required fields.",
     };
   }
+
   const session = await getServerSession(options);
   const user = session?.user;
+
   const manager = await prisma.user.findFirst({
     where: {
       id: rawData.managerId,
     },
   });
+
+  if (!manager) {
+    return {
+      errors: {},
+      success: false,
+      message: "Manager not found.",
+    };
+  }
+
   try {
     const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
+      // Update driver register - subtract the handed off amount
       const driverRegister = await prisma.cashRegister.update({
         where: { userId: user?.id || "" },
         data: {
           balance: {
-            decrement: rawData.endBalance, // deducts cash withdraw to the current balance
+            decrement: rawData.endBalance,
           },
-          billBreakdown: rawData.billBreakdown
-            ? JSON.parse(rawData.billBreakdown)
-            : null, // Update the driver's register with remaining amounts after handoff
           updatedAt: createdAt,
         },
       });
 
-      // Get current manager register to add the delivered cash breakdown
-      const currentManagerRegister = await prisma.cashRegister.findUnique({
-        where: { userId: manager?.id },
-      });
-
-      // Helper function to add cash breakdowns
-      const addCashBreakdowns = (existing: any, incoming: any) => {
-        if (!existing) return incoming;
-        if (!incoming) return existing;
-
-        const result = { ...existing };
-
-        // Add bills
-        if (existing.bills && incoming.bills) {
-          Object.keys(incoming.bills).forEach((key) => {
-            if (result.bills[key] && incoming.bills[key]) {
-              result.bills[key].count =
-                (result.bills[key].count || 0) +
-                (incoming.bills[key].count || 0);
-              result.bills[key].total =
-                (result.bills[key].total || 0) +
-                (incoming.bills[key].total || 0);
-            }
-          });
-        }
-
-        // Add coins
-        if (existing.coins && incoming.coins) {
-          Object.keys(incoming.coins).forEach((key) => {
-            if (result.coins[key] && incoming.coins[key]) {
-              result.coins[key].count =
-                (result.coins[key].count || 0) +
-                (incoming.coins[key].count || 0);
-              result.coins[key].total =
-                (result.coins[key].total || 0) +
-                (incoming.coins[key].total || 0);
-            }
-          });
-        }
-
-        // Update total cash
-        result.totalCash =
-          (existing.totalCash || 0) + (incoming.totalCash || 0);
-        return result;
-      };
-
-      // Calculate the delivered breakdown (original breakdown minus remaining breakdown)
-      const originalBreakdown = register.billBreakdown;
-      const remainingBreakdown = rawData.billBreakdown
-        ? JSON.parse(rawData.billBreakdown)
-        : null;
-
-      let deliveredBreakdown: any = null;
-      if (originalBreakdown && remainingBreakdown) {
-        deliveredBreakdown = { ...originalBreakdown };
-
-        // Subtract remaining from original to get delivered amounts
-        if (originalBreakdown.bills && remainingBreakdown.bills) {
-          Object.keys(originalBreakdown.bills).forEach((key) => {
-            if (
-              deliveredBreakdown.bills[key] &&
-              remainingBreakdown.bills[key]
-            ) {
-              deliveredBreakdown.bills[key].count = Math.max(
-                0,
-                (originalBreakdown.bills[key].count || 0) -
-                  (remainingBreakdown.bills[key].count || 0)
-              );
-              deliveredBreakdown.bills[key].total = Math.max(
-                0,
-                (originalBreakdown.bills[key].total || 0) -
-                  (remainingBreakdown.bills[key].total || 0)
-              );
-            }
-          });
-        }
-
-        if (originalBreakdown.coins && remainingBreakdown.coins) {
-          Object.keys(originalBreakdown.coins).forEach((key) => {
-            if (
-              deliveredBreakdown.coins[key] &&
-              remainingBreakdown.coins[key]
-            ) {
-              deliveredBreakdown.coins[key].count = Math.max(
-                0,
-                (originalBreakdown.coins[key].count || 0) -
-                  (remainingBreakdown.coins[key].count || 0)
-              );
-              deliveredBreakdown.coins[key].total = Math.max(
-                0,
-                (originalBreakdown.coins[key].total || 0) -
-                  (remainingBreakdown.coins[key].total || 0)
-              );
-            }
-          });
-        }
-
-        deliveredBreakdown.totalCash = Math.max(
-          0,
-          (originalBreakdown.totalCash || 0) -
-            (remainingBreakdown.totalCash || 0)
-        );
-      }
-
-      // Add delivered breakdown to manager's register
-      const updatedManagerBreakdown = deliveredBreakdown
-        ? addCashBreakdowns(
-            currentManagerRegister?.billBreakdown,
-            deliveredBreakdown
-          )
-        : currentManagerRegister?.billBreakdown;
-
+      // Update manager register - add the received amount
       const branchRegister = await prisma.cashRegister.update({
-        where: { userId: manager?.id },
+        where: { userId: manager.id },
         data: {
           balance: {
-            increment: rawData.endBalance, // adds cash withdraw to the current balance
+            increment: rawData.endBalance,
           },
-          billBreakdown: updatedManagerBreakdown,
           updatedAt: createdAt,
         },
       });
 
-      await prisma.user.findFirst({
-        where: {
-          id: rawData.managerId,
-        },
-      });
-
+      // Create transaction record for driver (withdrawal)
       await prisma.cashTransaction.create({
         data: {
           type: "RETIRO",
           amount: Math.round(rawData.endBalance),
-          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager?.name})`,
+          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager.name})`,
           cashRegisterId: driverRegister.id,
           userId: user?.id,
           createdAt,
           updatedAt: createdAt,
         },
       });
+
+      // Create transaction record for manager (deposit)
       await prisma.cashTransaction.create({
         data: {
           type: "DEPOSITO",
           amount: Math.round(rawData.endBalance),
-          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager?.name})`,
+          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager.name})`,
           cashRegisterId: branchRegister.id,
-          userId: manager?.id,
+          userId: manager.id,
           createdAt,
           updatedAt: createdAt,
         },
       });
     });
+
     revalidatePath("/sistema/contabilidad/transacciones");
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/cajas/auditoria");
     revalidatePath(`/sistema/cajas/personal/${user?.id}`);
-    revalidatePath(`/sistema/cajas/personal/${manager?.id}`);
+    revalidatePath(`/sistema/cajas/personal/${manager.id}`);
+
     return {
       errors: {},
       success: true,
-      message: "Cash Audit created successfully!",
+      message: "Cash handoff completed successfully!",
     };
   } catch (error) {
-    console.error("Error creating cash audit:", error);
+    console.error("Error creating cash handoff:", error);
     return {
       errors: {},
       success: false,
-      message: "Error al crear auditoría de caja.",
+      message: "Error al realizar entrega de efectivo.",
     };
   }
 };
