@@ -52,11 +52,10 @@ interface PosRegisterProps {
   onCheckout: (
     cart: CartState,
     paymentType: PaymentType,
-    billBreakdown?: CashBreakdown,
     cashReceived?: number,
     referenceNumber?: string
   ) => Promise<void>;
-  onHoldOrder: (cart: CartState) => Promise<void>;
+  onHoldOrder?: (cart: CartState) => Promise<void>;
   onScanBarcode?: () => void;
   onScanResult?: (scanResult: ScanResult) => void;
   onApplyDiscount?: (discount: Discount) => void;
@@ -355,9 +354,8 @@ export default function PosRegister({
       console.log("Cash breakdown:", breakdown);
 
       try {
-        // Process the checkout with bill breakdown
-
-        await onCheckout(cart, PaymentType.CASH, breakdown, cashReceived);
+        // Process the checkout without bill breakdown (simplified)
+        await onCheckout(cart, PaymentType.CASH, cashReceived);
 
         // Only clear cart and print receipt if checkout was successful
         // The success handling will be done by PosRegisterClient
@@ -593,7 +591,7 @@ export default function PosRegister({
       try {
         // For now, we'll modify onCheckout to accept the reference
         // This will need to be handled in the parent component
-        await onCheckout(cart, paymentType, undefined, undefined, reference);
+        await onCheckout(cart, paymentType, undefined, reference);
         clearCart();
         setShowPaymentModal(false);
         setShowReferenceModal(false);
@@ -1038,15 +1036,6 @@ export default function PosRegister({
                   </svg>
                   Transferencia
                 </Button>
-
-                {/* <Button
-                  variant="outline"
-                  className="w-full py-3 text-base"
-                  onClick={() => handleCheckout(PaymentType.MIXED)}
-                >
-                  <MoreHorizontal className="w-5 h-5 mr-2" />
-                  Pago Fraccionado
-                </Button> */}
               </div>
             </motion.div>
           </motion.div>

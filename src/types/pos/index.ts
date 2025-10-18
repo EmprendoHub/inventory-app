@@ -19,7 +19,6 @@ export enum PaymentType {
   CASH = "CASH",
   CARD = "CARD",
   TRANSFER = "TRANSFER",
-  MIXED = "MIXED",
   ACCOUNT = "ACCOUNT",
 }
 
@@ -27,12 +26,6 @@ export enum CashCountTypeEnum {
   OPENING = "OPENING",
   CLOSING = "CLOSING",
   MID_SHIFT = "MID_SHIFT",
-}
-
-export enum HeldOrderStatus {
-  HELD = "HELD",
-  RETRIEVED = "RETRIEVED",
-  EXPIRED = "EXPIRED",
 }
 
 export enum DiscountTypeEnum {
@@ -88,7 +81,6 @@ export type CashRegisterType = {
   managerId?: string;
   status?: CashRegisterStatus;
   location?: string;
-  posPin?: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -176,30 +168,6 @@ export type CashCount = {
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-};
-
-// ====================== HELD ORDER ======================
-export type HeldOrderType = {
-  id: string;
-  holdNumber: string;
-  cashRegisterId: string;
-  customerId?: string;
-  items: string; // JSON string
-  subtotal: number;
-  discountAmount: number;
-  notes?: string;
-  heldBy: string;
-  retrievedBy?: string;
-  status: HeldOrderStatus;
-  heldAt: Date;
-  retrievedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type HeldOrderWithDetails = HeldOrderType & {
-  customer?: clientType;
-  parsedItems: CartItemType[];
 };
 
 // ====================== FAVORITES ======================
@@ -343,13 +311,6 @@ export type PaymentMethodType = {
   enabled: boolean;
 };
 
-export type PaymentSplit = {
-  id: string;
-  type: PaymentType;
-  amount: number;
-  reference?: string;
-};
-
 // ====================== REPORTS ======================
 export type PosReportFilter = {
   startDate?: Date;
@@ -369,7 +330,6 @@ export type PosSalesReport = {
   paymentBreakdown: {
     cash: number;
     card: number;
-    mixed: number;
     account: number;
   };
   topItems: {

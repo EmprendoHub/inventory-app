@@ -3,7 +3,11 @@
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
-import { CartState, PaymentType } from "@/types/pos";
+import { CartState, PaymentType, CashBreakdown } from "@/types/pos";
+import {
+  calculateOptimalChange,
+  subtractChangeFromRegister,
+} from "@/lib/changeCalculation";
 import { revalidatePath } from "next/cache";
 import { generateOrderId, getMexicoGlobalUtcDate } from "@/lib/utils";
 
@@ -56,9 +60,9 @@ async function checkStockInOtherWarehouses(
 interface PosOrderResult {
   success: boolean;
   orderId?: string;
-  orderNumber?: string;
   error?: string;
   isStockError?: boolean;
+  changeGiven?: CashBreakdown;
   changeAmount?: number;
   stockSuggestions?: {
     itemName: string;
@@ -69,10 +73,99 @@ interface PosOrderResult {
   }[];
 }
 
+// Utility function to add two CashBreakdown objects
+function addCashBreakdowns(
+  existing: CashBreakdown | null,
+  incoming: CashBreakdown
+): CashBreakdown {
+  if (!existing) return incoming;
+
+  // Helper function to safely get denomination values
+  const safeDenomination = (
+    existingDenom: any,
+    incomingDenom: any,
+    value: number
+  ) => ({
+    value,
+    count: (existingDenom?.count || 0) + (incomingDenom?.count || 0),
+    total: (existingDenom?.total || 0) + (incomingDenom?.total || 0),
+  });
+
+  return {
+    bills: {
+      thousands: safeDenomination(
+        existing.bills?.thousands,
+        incoming.bills?.thousands,
+        1000
+      ),
+      fiveHundreds: safeDenomination(
+        existing.bills?.fiveHundreds,
+        incoming.bills?.fiveHundreds,
+        500
+      ),
+      twoHundreds: safeDenomination(
+        existing.bills?.twoHundreds,
+        incoming.bills?.twoHundreds,
+        200
+      ),
+      hundreds: safeDenomination(
+        existing.bills?.hundreds,
+        incoming.bills?.hundreds,
+        100
+      ),
+      fifties: safeDenomination(
+        existing.bills?.fifties,
+        incoming.bills?.fifties,
+        50
+      ),
+      twenties: safeDenomination(
+        existing.bills?.twenties,
+        incoming.bills?.twenties,
+        20
+      ),
+      tens: safeDenomination(existing.bills?.tens, incoming.bills?.tens, 10),
+      fives: safeDenomination(existing.bills?.fives, incoming.bills?.fives, 5),
+      ones: safeDenomination(existing.bills?.ones, incoming.bills?.ones, 1),
+    },
+    coins: {
+      peso20: safeDenomination(
+        existing.coins?.peso20,
+        incoming.coins?.peso20,
+        20
+      ),
+      peso10: safeDenomination(
+        existing.coins?.peso10,
+        incoming.coins?.peso10,
+        10
+      ),
+      peso5: safeDenomination(existing.coins?.peso5, incoming.coins?.peso5, 5),
+      peso2: safeDenomination(existing.coins?.peso2, incoming.coins?.peso2, 2),
+      peso1: safeDenomination(existing.coins?.peso1, incoming.coins?.peso1, 1),
+      centavos50: safeDenomination(
+        existing.coins?.centavos50,
+        incoming.coins?.centavos50,
+        0.5
+      ),
+      centavos20: safeDenomination(
+        existing.coins?.centavos20,
+        incoming.coins?.centavos20,
+        0.2
+      ),
+      centavos10: safeDenomination(
+        existing.coins?.centavos10,
+        incoming.coins?.centavos10,
+        0.1
+      ),
+    },
+    totalCash: (existing?.totalCash || 0) + (incoming?.totalCash || 0),
+  };
+}
+
 export async function createPosOrder(
   cart: CartState,
   paymentMethod: PaymentType,
   customerId?: string,
+  billBreakdown?: CashBreakdown, // CashBreakdown object
   cashReceived?: number, // Amount of cash received from customer
   referenceNumber?: string // Payment reference number for cards/transfers
 ): Promise<PosOrderResult> {
@@ -260,6 +353,7 @@ export async function createPosOrder(
     });
 
     // Variables to store change information
+    let changeGiven: CashBreakdown | undefined;
     let changeAmount: number | undefined;
 
     // Handle cash register updates for cash payments
@@ -270,16 +364,57 @@ export async function createPosOrder(
       });
 
       if (cashRegister) {
-        // Calculate simple change for receipt display
-        if (cashReceived && cashReceived > cart.totalAmount) {
-          changeAmount = cashReceived - cart.totalAmount;
+        // Parse existing breakdown
+        let existingBreakdown: CashBreakdown | null = null;
+        if (cashRegister.billBreakdown) {
+          existingBreakdown = cashRegister.billBreakdown as CashBreakdown;
         }
 
-        // Update cash register balance only (no denominations tracking)
+        // Add incoming cash breakdown to register
+        const updatedBreakdown = billBreakdown
+          ? addCashBreakdowns(existingBreakdown, billBreakdown)
+          : existingBreakdown;
+
+        // Calculate change if cash received is specified
+        let finalBreakdown = updatedBreakdown;
+
+        if (cashReceived && cashReceived > cart.totalAmount) {
+          changeAmount = cashReceived - cart.totalAmount;
+
+          // Calculate optimal change distribution
+          const changeResult = calculateOptimalChange(
+            changeAmount,
+            updatedBreakdown
+          );
+
+          if (!changeResult.success) {
+            return {
+              success: false,
+              error:
+                changeResult.error ||
+                `No se puede dar cambio de $${changeAmount.toFixed(2)}`,
+              isStockError: false,
+            };
+          }
+
+          // Store change information for return
+          changeGiven = changeResult.changeGiven || undefined;
+
+          // Subtract change denominations from register
+          if (changeResult.changeGiven) {
+            finalBreakdown = subtractChangeFromRegister(
+              updatedBreakdown,
+              changeResult.changeGiven
+            );
+          }
+        }
+
+        // Update cash register balance and denominations
         await prisma.cashRegister.update({
           where: { id: cashRegister.id },
           data: {
             balance: cashRegister.balance + cart.totalAmount,
+            billBreakdown: finalBreakdown,
             updatedAt: createdAt,
           },
         });
@@ -291,6 +426,7 @@ export async function createPosOrder(
             amount: cart.totalAmount,
             description: `Venta POS - ${order.orderNo}`,
             cashRegisterId: cashRegister.id,
+            billBreakdown,
             userId: session.user.id,
             createdAt,
             updatedAt: createdAt,
@@ -306,7 +442,7 @@ export async function createPosOrder(
     return {
       success: true,
       orderId: order.id,
-      orderNumber: order.orderNo,
+      changeGiven,
       changeAmount,
       stockSuggestions:
         stockSuggestions.length > 0 ? stockSuggestions : undefined,
@@ -323,6 +459,57 @@ export async function createPosOrder(
       error: errorMessage,
       isStockError: errorMessage.includes("Stock insuficiente"),
     };
+  }
+}
+
+export async function createHeldOrder(cart: CartState, customerId?: string) {
+  const session = await getServerSession(options);
+
+  if (!session?.user?.id) {
+    throw new Error("Usuario no autenticado");
+  }
+
+  try {
+    // Get the user's cash register
+    const cashRegister = await prisma.cashRegister.findFirst({
+      where: { userId: session.user.id },
+    });
+
+    if (!cashRegister) {
+      throw new Error("No se encontró caja registradora para el usuario");
+    }
+
+    // Create held order with items as JSON string (as per schema)
+    const heldOrder = await prisma.heldOrder.create({
+      data: {
+        holdNumber: `HELD-${Date.now()}`,
+        cashRegisterId: cashRegister.id,
+        customerId: customerId || undefined,
+        heldBy: session.user.id,
+        status: "HELD",
+        items: JSON.stringify(
+          cart.items.map((item) => ({
+            itemId: item.itemId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            discount: item.discount,
+            totalPrice: item.price * item.quantity - (item.discount || 0),
+          }))
+        ),
+        subtotal: cart.subtotal,
+        discountAmount: cart.discountAmount || 0,
+        notes: "Orden suspendida",
+      },
+    });
+
+    revalidatePath("/sistema/pos");
+    revalidatePath("/sistema/ventas/pedidos");
+
+    return { success: true, heldOrderId: heldOrder.id };
+  } catch (error) {
+    console.error("Error creating held order:", error);
+    throw new Error("Error al suspender la orden");
   }
 }
 

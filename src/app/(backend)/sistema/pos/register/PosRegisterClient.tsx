@@ -2,20 +2,12 @@
 
 import { useState } from "react";
 import PosRegister from "../_components/PosRegister";
-import ChangeModal from "../_components/ChangeModal";
-import {
-  CartState,
-  PaymentType,
-  Discount,
-  ScanResult,
-  CashBreakdown,
-} from "@/types/pos";
+import { CartState, PaymentType, Discount, ScanResult } from "@/types/pos";
 import { ItemType } from "@/types/items";
 import { clientType } from "@/types/sales";
 import { FavoriteType } from "@/types/pos";
 import {
   createPosOrder,
-  createHeldOrder,
   updateFavorites,
   createBranchNotificationFromPos,
 } from "../_actions/pos-actions";
@@ -37,129 +29,188 @@ export default function PosRegisterClient({
 }: PosRegisterClientProps) {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Change modal state
-  const [showChangeModal, setShowChangeModal] = useState(false);
-  const [changeAmount, setChangeAmount] = useState(0);
-  const [changeBreakdown, setChangeBreakdown] = useState<CashBreakdown | null>(
-    null
-  );
-
-  // Cross-warehouse notification state
-  const [pendingCrossWarehouseNeeds, setPendingCrossWarehouseNeeds] = useState<
-    any[]
-  >([]);
-
-  // Print receipt function
+  // Print receipt function - Direct to printer without popup
   const printReceipt = (receiptData: any) => {
-    const receiptWindow = window.open("", "_blank");
-    if (receiptWindow) {
-      receiptWindow.document.write(`
-        <html>
-          <head>
-            <title>Recibo de Venta</title>
-            <style>
-              body { font-family: Arial, sans-serif; width: 300px; margin: 0 auto; }
-              .header { text-align: center; margin-bottom: 20px; }
-              .item { display: flex; justify-content: space-between; margin-bottom: 5px; }
-              .total { font-weight: bold; border-top: 2px solid black; padding-top: 10px; }
-              .center { text-align: center; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h2>RECIBO DE VENTA</h2>
-              <p>Orden: ${receiptData.orderNumber}</p>
-              <p>Fecha: ${receiptData.date}</p>
-              <p>Cliente: ${receiptData.customer}</p>
-            </div>
-            
-            <div>
-              ${receiptData.items
-                .map(
-                  (item: any) => `
-                <div class="item">
-                  <span>${item.name} x ${item.quantity}</span>
-                  <span>$${(item.price * item.quantity).toFixed(2)}</span>
-                </div>
-              `
-                )
-                .join("")}
-            </div>
-            
-            <div class="total">
-              <div class="item">
-                <span>Subtotal:</span>
-                <span>$${receiptData.subtotal.toFixed(2)}</span>
+    try {
+      // Create a hidden div with the receipt content
+      const receiptHtml = `
+        <div id="receipt-print" style="
+          position: absolute;
+          left: -9999px;
+          width: 302px;
+          font-family: Arial, sans-serif;
+          font-size: 12px;
+          line-height: 1.4;
+          color: black;
+          background: white;
+          padding: 10px;
+          box-sizing: border-box;
+        ">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 16px; font-weight: bold;">RECIBO DE VENTA</h2>
+            <p style="margin: 5px 0;">Orden: ${receiptData.orderNumber}</p>
+            <p style="margin: 5px 0;">Fecha: ${receiptData.date}</p>
+            <p style="margin: 5px 0;">Cliente: ${receiptData.customer}</p>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            ${receiptData.items
+              .map(
+                (item: any) => `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>${item.name} x ${item.quantity}</span>
+                <span>$${(item.price * item.quantity).toFixed(2)}</span>
               </div>
-              ${
-                receiptData.tax > 0
-                  ? `
-                <div class="item">
-                  <span>IVA (16%):</span>
-                  <span>$${receiptData.tax.toFixed(2)}</span>
-                </div>
-              `
-                  : ""
-              }
-              ${
-                receiptData.discount > 0
-                  ? `
-                <div class="item">
-                  <span>Descuento:</span>
-                  <span>-$${receiptData.discount.toFixed(2)}</span>
-                </div>
-              `
-                  : ""
-              }
-              ${
-                receiptData.tip > 0
-                  ? `
-                <div class="item">
-                  <span>Propina:</span>
-                  <span>$${receiptData.tip.toFixed(2)}</span>
-                </div>
-              `
-                  : ""
-              }
-              <div class="item">
-                <span><strong>TOTAL:</strong></span>
-                <span><strong>$${receiptData.total.toFixed(2)}</strong></span>
-              </div>
-              ${
-                receiptData.paymentType === PaymentType.CASH &&
-                receiptData.cashReceived
-                  ? `
-                <div class="item">
-                  <span>Efectivo recibido:</span>
-                  <span>$${receiptData.cashReceived.toFixed(2)}</span>
-                </div>
-                <div class="item">
-                  <span>Cambio:</span>
-                  <span>$${
-                    receiptData.changeAmount?.toFixed(2) || "0.00"
-                  }</span>
-                </div>
-              `
-                  : ""
-              }
+            `
+              )
+              .join("")}
+          </div>
+          
+          <div style="border-top: 2px solid black; padding-top: 10px; font-weight: bold;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Subtotal:</span>
+              <span>$${receiptData.subtotal.toFixed(2)}</span>
             </div>
-            
-            <div class="center" style="margin-top: 20px;">
-              <p>¡Gracias por su compra!</p>
+            ${
+              receiptData.tax > 0
+                ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>IVA (16%):</span>
+              <span>$${receiptData.tax.toFixed(2)}</span>
             </div>
-            
-            <script>
-              window.onload = function() {
-                window.print();
-                window.onafterprint = function() {
-                  window.close();
-                };
-              };
-            </script>
-          </body>
-        </html>
-      `);
-      receiptWindow.document.close();
+            `
+                : ""
+            }
+            ${
+              receiptData.discount > 0
+                ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Descuento:</span>
+              <span>-$${receiptData.discount.toFixed(2)}</span>
+            </div>
+            `
+                : ""
+            }
+            ${
+              receiptData.tip > 0
+                ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Propina:</span>
+              <span>$${receiptData.tip.toFixed(2)}</span>
+            </div>
+            `
+                : ""
+            }
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
+              <span><strong>TOTAL:</strong></span>
+              <span><strong>$${receiptData.total.toFixed(2)}</strong></span>
+            </div>
+            ${
+              receiptData.paymentType === PaymentType.CASH &&
+              receiptData.cashReceived
+                ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Efectivo recibido:</span>
+              <span>$${receiptData.cashReceived.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Cambio:</span>
+              <span>$${receiptData.changeAmount?.toFixed(2) || "0.00"}</span>
+            </div>
+            `
+                : ""
+            }
+            ${
+              (receiptData.paymentType === PaymentType.CARD ||
+                receiptData.paymentType === PaymentType.TRANSFER) &&
+              receiptData.referenceNumber
+                ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Método de pago:</span>
+              <span>${
+                receiptData.paymentType === PaymentType.CARD
+                  ? "Tarjeta"
+                  : "Transferencia"
+              }</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Referencia:</span>
+              <span>${receiptData.referenceNumber}</span>
+            </div>
+            `
+                : ""
+            }
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px;">
+            <p style="margin: 0;">¡Gracias por su compra!</p>
+          </div>
+        </div>
+      `;
+
+      // Remove any existing receipt div
+      const existingReceipt = document.getElementById("receipt-print");
+      if (existingReceipt) {
+        existingReceipt.remove();
+      }
+
+      // Add the receipt HTML to the page
+      document.body.insertAdjacentHTML("beforeend", receiptHtml);
+
+      // Create print styles for the receipt
+      const printStyle = document.createElement("style");
+      printStyle.innerHTML = `
+        @media print {
+          body > *:not(#receipt-print) {
+            display: none !important;
+          }
+          
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          
+          #receipt-print {
+            display: block !important;
+            position: static !important;
+            left: auto !important;
+            width: 100% !important;
+            max-width: 302px !important;
+            margin: 0 auto !important;
+            padding: 10px !important;
+            background: white !important;
+            color: black !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+          }
+          
+          @page {
+            size: 80mm auto;
+            margin: 3mm;
+          }
+        }
+      `;
+      document.head.appendChild(printStyle);
+
+      // Print immediately
+      window.print();
+
+      // Clean up after printing
+      setTimeout(() => {
+        const receiptDiv = document.getElementById("receipt-print");
+        if (receiptDiv) {
+          receiptDiv.remove();
+        }
+        if (printStyle && printStyle.parentNode) {
+          printStyle.parentNode.removeChild(printStyle);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Error printing receipt:", error);
+      // Simple fallback - just trigger browser print
+      window.print();
     }
   };
 
@@ -670,10 +721,12 @@ export default function PosRegisterClient({
     cartData: CartState,
     paymentType: PaymentType,
     cashReceived?: number,
-    changeAmount?: number
+    changeAmount?: number,
+    referenceNumber?: string,
+    orderNumber?: string
   ) => {
     const receiptData = {
-      orderNumber: `POS-${Date.now()}`,
+      orderNumber: orderNumber || `POS-${Date.now()}`,
       date: new Date().toLocaleString("es-ES"),
       items: cartData.items,
       subtotal: cartData.subtotal,
@@ -684,6 +737,7 @@ export default function PosRegisterClient({
       paymentType,
       cashReceived,
       changeAmount,
+      referenceNumber,
       customer: cartData.customer?.name || "Cliente General",
     };
 
@@ -697,7 +751,6 @@ export default function PosRegisterClient({
   const handleCheckout = async (
     cart: CartState,
     paymentType: PaymentType,
-    billBreakdown?: CashBreakdown,
     cashReceived?: number,
     referenceNumber?: string
   ) => {
@@ -712,52 +765,81 @@ export default function PosRegisterClient({
         cart,
         paymentType,
         cart.customer?.id, // Pass the selected customer ID from cart
-        billBreakdown, // billBreakdown as CashBreakdown object
         cashReceived, // Amount of cash received from customer
         referenceNumber // Payment reference number for cards/transfers
       );
 
       if (result.success) {
-        // Handle change modal for cash payments with change
-        if (
-          paymentType === PaymentType.CASH &&
-          result.changeGiven &&
-          result.changeAmount &&
-          result.changeAmount > 0
-        ) {
-          // Store cross-warehouse needs and cart data for later use
-          const crossWarehouseNeeds = result.stockSuggestions || [];
-
-          setPendingCrossWarehouseNeeds(crossWarehouseNeeds);
-
-          // Show change modal
-          setChangeAmount(result.changeAmount);
-          setChangeBreakdown(result.changeGiven);
-          setShowChangeModal(true);
-
-          // Generate receipt but don't show success modal yet
-          if (cashReceived) {
-            generateReceipt(
-              cart,
-              paymentType,
-              cashReceived,
-              result.changeAmount
-            );
-          }
-          return; // Don't show success modal yet, wait for change confirmation
-        }
-
-        // Generate and print receipt for cash payments without change or non-cash payments
+        // Generate and print receipt for all payments FIRST
         if (paymentType === PaymentType.CASH && cashReceived) {
           const changeAmount = result.changeAmount || 0;
-          generateReceipt(cart, paymentType, cashReceived, changeAmount);
+          generateReceipt(
+            cart,
+            paymentType,
+            cashReceived,
+            changeAmount,
+            undefined,
+            result.orderNumber
+          );
+        } else {
+          // Generate receipt for card, transfer, and account payments
+          generateReceipt(
+            cart,
+            paymentType,
+            undefined,
+            undefined,
+            referenceNumber,
+            result.orderNumber
+          );
         }
 
         // Use stock suggestions from order result instead of checking again
         const crossWarehouseNeeds = result.stockSuggestions || [];
 
-        // Show success message with optional cross-warehouse notifications
-        showSuccessModalWithNotifications(crossWarehouseNeeds);
+        // Show a brief "Printing receipt..." message, then show success modal
+        const printingModal = document.createElement("div");
+        printingModal.innerHTML = `
+          <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+          ">
+            <div style="
+              background: white;
+              padding: 2rem;
+              border-radius: 12px;
+              box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+              text-align: center;
+              max-width: 300px;
+            ">
+              <div style="color: #3b82f6; font-size: 2rem; margin-bottom: 1rem;">🖨️</div>
+              <h3 style="
+                font-size: 1.125rem;
+                font-weight: bold;
+                color: #1f2937;
+                margin-bottom: 0.5rem;
+              ">Imprimiendo recibo...</h3>
+              <p style="
+                font-size: 0.875rem;
+                color: #6b7280;
+              ">Por favor espere</p>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(printingModal);
+
+        // Wait for receipt to print, then show success modal
+        setTimeout(() => {
+          printingModal.remove();
+          showSuccessModalWithNotifications(crossWarehouseNeeds);
+        }, 1000); // 1 second delay (shorter since no popup window needed)
 
         // AUTO-CREATE NOTIFICATIONS for items needing cross-warehouse fulfillment
         if (crossWarehouseNeeds.length > 0) {
@@ -1568,139 +1650,6 @@ export default function PosRegisterClient({
     }
   };
 
-  const handleHoldOrder = async (cart: CartState) => {
-    setIsProcessing(true);
-    try {
-      const result = await createHeldOrder(cart);
-
-      if (result.success) {
-        // Show success message
-        const successModal = document.createElement("div");
-        successModal.innerHTML = `
-          <div style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-          ">
-            <div style="
-              background: white;
-              padding: 2rem;
-              border-radius: 12px;
-              box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-              text-align: center;
-              max-width: 400px;
-              margin: 1rem;
-            ">
-              <div style="
-                color: #f59e0b;
-                font-size: 3rem;
-                margin-bottom: 1rem;
-              ">⏸️</div>
-              <h2 style="
-                font-size: 1.5rem;
-                font-weight: bold;
-                color: #1f2937;
-                margin-bottom: 1rem;
-              ">Orden Suspendida</h2>
-              <p style="
-                font-size: 1.125rem;
-                color: #4b5563;
-                margin-bottom: 1.5rem;
-              ">La orden se suspendió correctamente. ID: ${result.heldOrderId}</p>
-              <button onclick="this.parentElement.parentElement.remove(); window.location.reload();" style="
-                background: #f59e0b;
-                color: white;
-                border: none;
-                padding: 0.75rem 1.5rem;
-                border-radius: 8px;
-                font-size: 1rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-              " onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
-                Continuar
-              </button>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(successModal);
-      }
-    } catch (error) {
-      console.error("Hold order error:", error);
-
-      // Show error message
-      const errorModal = document.createElement("div");
-      errorModal.innerHTML = `
-        <div style="
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 10000;
-        ">
-          <div style="
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            text-align: center;
-            max-width: 400px;
-            margin: 1rem;
-          ">
-            <div style="
-              color: #dc2626;
-              font-size: 3rem;
-              margin-bottom: 1rem;
-            ">⚠</div>
-            <h2 style="
-              font-size: 1.5rem;
-              font-weight: bold;
-              color: #1f2937;
-              margin-bottom: 1rem;
-            ">Error al Suspender</h2>
-            <p style="
-              font-size: 1.125rem;
-              color: #4b5563;
-              margin-bottom: 1.5rem;
-            ">${
-              error instanceof Error
-                ? error.message
-                : "No se pudo suspender la orden."
-            }</p>
-            <button onclick="this.parentElement.parentElement.remove()" style="
-              background: #dc2626;
-              color: white;
-              border: none;
-              padding: 0.75rem 1.5rem;
-              border-radius: 8px;
-              font-size: 1rem;
-              font-weight: 600;
-              cursor: pointer;
-              transition: all 0.2s;
-            " onmouseover="this.style.background='#b91c1c'" onmouseout="this.style.background='#dc2626'">
-              Cerrar
-            </button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(errorModal);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleScanBarcode = () => {
     console.log("Barcode scan initiated");
     // In a real app, this would open camera or barcode scanner
@@ -1730,23 +1679,6 @@ export default function PosRegisterClient({
     }
   };
 
-  // Handle change modal confirmation
-  const handleChangeConfirm = () => {
-    setShowChangeModal(false);
-
-    // Use stored cross-warehouse needs and cart data to show appropriate success modal
-    showSuccessModalWithNotifications(pendingCrossWarehouseNeeds);
-
-    // Clear the stored data
-    setPendingCrossWarehouseNeeds([]);
-  };
-
-  // Handle change modal close
-  const handleChangeClose = () => {
-    setShowChangeModal(false);
-    // Maybe show a warning that the sale was completed but change wasn't confirmed?
-  };
-
   return (
     <div className="min-h-screen bg-card">
       <PosRegister
@@ -1754,7 +1686,6 @@ export default function PosRegisterClient({
         favorites={favorites}
         customers={customers}
         onCheckout={handleCheckout}
-        onHoldOrder={handleHoldOrder}
         onScanBarcode={handleScanBarcode}
         isProcessing={isProcessing}
         discounts={discounts}
@@ -1762,17 +1693,6 @@ export default function PosRegisterClient({
         onApplyDiscount={handleApplyDiscount}
         onUpdateFavorites={handleUpdateFavorites}
       />
-
-      {/* Change Modal */}
-      {changeBreakdown && (
-        <ChangeModal
-          isOpen={showChangeModal}
-          changeAmount={changeAmount}
-          changeBreakdown={changeBreakdown}
-          onClose={handleChangeClose}
-          onConfirm={handleChangeConfirm}
-        />
-      )}
     </div>
   );
 }

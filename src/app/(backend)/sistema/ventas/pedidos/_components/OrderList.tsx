@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { CheckIcon, Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
+import { Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,10 +46,10 @@ import { useRouter } from "next/navigation";
 import { verifySupervisorCode } from "@/app/_actions";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
-import { DeliveryType } from "@/types/delivery";
+// import { DeliveryType } from "@/types/delivery";
 import { GiCheckMark } from "react-icons/gi";
 import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
-import { FaTruckFast } from "react-icons/fa6";
+// import { FaTruckFast } from "react-icons/fa6";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
   const total = payments.reduce((sum, item) => sum + item.amount, 0);
@@ -164,35 +164,35 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           );
         },
       },
-      {
-        accessorKey: "delivery",
-        header: () => (
-          <div className="text-left text-xs w-auto">
-            <FaTruckFast size={16} />
-          </div>
-        ),
-        cell: ({ row }) => {
-          const delivery = row.getValue("delivery") as DeliveryType;
-          const amount = delivery?.price || 0;
-          // const formatted = new Intl.NumberFormat("en-US", {
-          //   style: "currency",
-          //   currency: "USD",
-          // }).format(amount);
-          return (
-            <div
-              className={`flex items-center py-1.5 justify-center text-left text-xs font-medium rounded-full w-auto ${
-                amount > 0 ? "bg-emerald-700" : "bg-gray-500"
-              }`}
-            >
-              {amount > 0 ? (
-                <CheckIcon size={14} className="text-white text-xs" />
-              ) : (
-                <X size={14} className="text-white text-xs" />
-              )}
-            </div>
-          );
-        },
-      },
+      // {
+      //   accessorKey: "delivery",
+      //   header: () => (
+      //     <div className="text-left text-xs w-auto">
+      //       <FaTruckFast size={16} />
+      //     </div>
+      //   ),
+      //   cell: ({ row }) => {
+      //     const delivery = row.getValue("delivery") as DeliveryType;
+      //     const amount = delivery?.price || 0;
+      //     // const formatted = new Intl.NumberFormat("en-US", {
+      //     //   style: "currency",
+      //     //   currency: "USD",
+      //     // }).format(amount);
+      //     return (
+      //       <div
+      //         className={`flex items-center py-1.5 justify-center text-left text-xs font-medium rounded-full w-auto ${
+      //           amount > 0 ? "bg-emerald-700" : "bg-gray-500"
+      //         }`}
+      //       >
+      //         {amount > 0 ? (
+      //           <CheckIcon size={14} className="text-white text-xs" />
+      //         ) : (
+      //           <X size={14} className="text-white text-xs" />
+      //         )}
+      //       </div>
+      //     );
+      //   },
+      // },
       {
         accessorKey: "totalAmount",
         header: () => <div className="text-left text-xs">Total</div>,
@@ -200,7 +200,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
           const amount = parseFloat(row.getValue("totalAmount"));
           const order = row.getAllCells()[0].row.original;
           const totalAmount =
-            amount + (order.delivery?.price ?? 0) - (order.discount ?? 0);
+            amount + (order.delivery?.price || 0) - (order.discount || 0);
           const formatted = new Intl.NumberFormat("en-US", {
             style: "currency",
             currency: "USD",

@@ -37,9 +37,6 @@ model User {
   // Warehouse assignment
   warehouseId        String?  @db.ObjectId  // User's assigned warehouse
   warehouse          Warehouse? @relation(fields: [warehouseId], references: [id])
-  // POS authentication
-  posPin             String?   // PIN for POS access
-  posPinSetAt        DateTime? // When PIN was set
   createdAt          DateTime  @default(now()) @map("createdAt")
   updatedAt          DateTime  @updatedAt @map("updatedAt")
   orders             Order[]
@@ -67,7 +64,6 @@ model Client {
   orders    Order[]
   whatsAppMessages      WhatsAppMessage[]
   posOrders PosOrder[]
-  heldOrders HeldOrder[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([phone, email]) // Index on phone and email
@@ -612,9 +608,7 @@ model CashRegister {
   status     CashRegisterStatus? @default(ACTIVA)
   // POS specific fields
   location      String?  // Physical location
-  posPin        String?  // PIN for POS access
   posSessions   PosSession[]
-  heldOrders    HeldOrder[]
 }
 
 enum CashRegisterStatus {
@@ -1046,9 +1040,9 @@ enum PosOrderStatus {
 }
 
 enum PaymentType {
+  TRANSFER
   CASH
   CARD
-  MIXED
   ACCOUNT
 }
 
@@ -1115,32 +1109,6 @@ enum CashCountType {
   OPENING
   CLOSING
   MID_SHIFT
-}
-
-model HeldOrder {
-  id               String         @id @default(auto()) @map("_id") @db.ObjectId
-  holdNumber       String         @unique // Format: "H000001"
-  cashRegisterId   String         @db.ObjectId
-  cashRegister     CashRegister   @relation(fields: [cashRegisterId], references: [id])
-  customerId       String?        @db.ObjectId
-  customer         Client?        @relation(fields: [customerId], references: [id])
-  items            String         // JSON string of cart items
-  subtotal         Float
-  discountAmount   Float          @default(0)
-  notes            String?
-  heldBy           String         @db.ObjectId // User who held the order
-  retrievedBy      String?        @db.ObjectId // User who retrieved the order
-  status           HeldOrderStatus @default(HELD)
-  heldAt           DateTime       @default(now())
-  retrievedAt      DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-}
-
-enum HeldOrderStatus {
-  HELD
-  RETRIEVED
-  EXPIRED
 }
 
 model Favorite {
