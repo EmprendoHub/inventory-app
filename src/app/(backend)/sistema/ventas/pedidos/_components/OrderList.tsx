@@ -193,25 +193,25 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
       //     );
       //   },
       // },
-      {
-        accessorKey: "totalAmount",
-        header: () => <div className="text-left text-xs">Total</div>,
-        cell: ({ row }) => {
-          const amount = parseFloat(row.getValue("totalAmount"));
-          const order = row.getAllCells()[0].row.original;
-          const totalAmount =
-            amount + (order.delivery?.price || 0) - (order.discount || 0);
-          const formatted = new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: "USD",
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0,
-          }).format(totalAmount);
-          return (
-            <div className="text-left text-xs font-medium">{formatted}</div>
-          );
-        },
-      },
+      // {
+      //   accessorKey: "totalAmount",
+      //   header: () => <div className="text-left text-xs">Total</div>,
+      //   cell: ({ row }) => {
+      //     const amount = parseFloat(row.getValue("totalAmount"));
+      //     const order = row.getAllCells()[0].row.original;
+      //     const totalAmount =
+      //       amount + (order.delivery?.price || 0) - (order.discount || 0);
+      //     const formatted = new Intl.NumberFormat("en-US", {
+      //       style: "currency",
+      //       currency: "USD",
+      //       maximumFractionDigits: 0,
+      //       minimumFractionDigits: 0,
+      //     }).format(totalAmount);
+      //     return (
+      //       <div className="text-left text-xs font-medium">{formatted}</div>
+      //     );
+      //   },
+      // },
       {
         accessorKey: "createdAt",
         header: () => <div className="text-left text-xs">Fecha</div>,

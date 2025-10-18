@@ -120,9 +120,11 @@ export default function ClientForm() {
               KB)
             </p>
           )}
-          {state.errors?.image && (
+          {state.errors && "image" in state.errors && state.errors.image && (
             <p className="text-sm text-red-500">
-              {state.errors?.image.join(", ")}
+              {Array.isArray(state.errors.image)
+                ? state.errors.image.join(", ")
+                : state.errors.image}
             </p>
           )}
         </div>

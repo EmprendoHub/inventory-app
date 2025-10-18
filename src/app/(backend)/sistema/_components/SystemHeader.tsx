@@ -19,8 +19,8 @@ import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { getMexicoGlobalUtcDate } from "@/lib/utils";
-import ClockTime from "@/components/ClockComponent";
+// import { getMexicoGlobalUtcDate } from "@/lib/utils";
+// import ClockTime from "@/components/ClockComponent";
 
 interface BranchNotification {
   id: string;
@@ -48,7 +48,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
   const { setTheme, theme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+  // const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const [notifications, setNotifications] = useState<BranchNotification[]>([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -61,7 +61,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
 
   useEffect(() => {
     setIsMounted(true);
-    setCurrentDate(getMexicoGlobalUtcDate());
+    // setCurrentDate(getMexicoGlobalUtcDate());
   }, []);
 
   // Fetch notifications for current warehouse
@@ -73,9 +73,6 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
 
         // Only proceed if user has a warehouse assigned
         if (!userWarehouseId) {
-          console.log(
-            "User has no assigned warehouse, cannot show notifications"
-          );
           setNotifications([]);
           setNotificationCount(0);
           return;
@@ -87,13 +84,13 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
           userWarehouseId.length !== 24 ||
           !/^[0-9a-fA-F]{24}$/.test(userWarehouseId)
         ) {
-          console.log("Invalid warehouse ID format, cannot show notifications");
           setNotifications([]);
           setNotificationCount(0);
           return;
         }
 
         // Fetch notifications specifically for this user's warehouse (receiving warehouse)
+
         const response = await fetch(
           `/api/notifications?toWarehouseId=${userWarehouseId}&status=PENDING,ACKNOWLEDGED`
         );
@@ -104,7 +101,12 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
           setNotifications(data.data || []);
           setNotificationCount(data.data?.length || 0);
         } else {
-          await response.text();
+          const errorText = await response.text();
+          console.error(
+            "❌ Failed to fetch notifications:",
+            response.status,
+            errorText
+          );
 
           setNotifications([]);
           setNotificationCount(0);
@@ -168,16 +170,25 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
 
       if (response.ok) {
         // Remove the notification from the list
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+        setNotifications((prev) => {
+          const filtered = prev.filter((n) => n.id !== notificationId);
+
+          return filtered;
+        });
         setNotificationCount((prev) => Math.max(0, prev - 1));
         setShowNotificationPopup(false);
         setSelectedNotification(null);
       } else {
-        console.error("Failed to accept notification");
-        alert("Error al aceptar la notificación");
+        const errorData = await response.text();
+        console.error(
+          "❌ Failed to accept notification:",
+          response.status,
+          errorData
+        );
+        alert("Error al aceptar la notificación: " + response.status);
       }
     } catch (error) {
-      console.error("Error accepting notification:", error);
+      console.error("💥 Error accepting notification:", error);
       alert("Error al aceptar la notificación");
     }
   };
@@ -192,7 +203,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
           >
             <PlusCircleIcon size={20} />
           </Link>
-          <div className="flex items-center font-mono justify-center">
+          {/* <div className="flex items-center font-mono justify-center">
             {isMounted && currentDate ? (
               <>
                 {currentDate.toLocaleDateString()} - <ClockTime />
@@ -200,7 +211,7 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
             ) : (
               <span>--</span>
             )}
-          </div>
+          </div> */}
         </div>
 
         <div className="flex items-center gap-4">
@@ -521,9 +532,9 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
                   Cancelar
                 </button>
                 <button
-                  onClick={() =>
-                    handleAcceptNotification(selectedNotification.id)
-                  }
+                  onClick={() => {
+                    handleAcceptNotification(selectedNotification.id);
+                  }}
                   className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   Aceptar Solicitud

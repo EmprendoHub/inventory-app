@@ -148,19 +148,25 @@ export default function OrderForm({
 
       if (
         result.errors &&
-        result.errors.email &&
+        typeof result.errors === "object" &&
+        "email" in result.errors &&
+        Array.isArray(result.errors.email) &&
         result.errors.email.length > 0
       ) {
         errorMessage = result.errors.email[0];
       } else if (
         result.errors &&
-        result.errors.phone &&
+        typeof result.errors === "object" &&
+        "phone" in result.errors &&
+        Array.isArray(result.errors.phone) &&
         result.errors.phone.length > 0
       ) {
         errorMessage = result.errors.phone[0];
       } else if (
         result.errors &&
-        result.errors.name &&
+        typeof result.errors === "object" &&
+        "name" in result.errors &&
+        Array.isArray(result.errors.name) &&
         result.errors.name.length > 0
       ) {
         errorMessage = result.errors.name[0];

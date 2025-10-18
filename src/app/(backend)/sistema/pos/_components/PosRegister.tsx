@@ -41,6 +41,7 @@ import CashCalculator from "./CashCalculator";
 import FavoritesGrid from "./FavoritesGrid";
 import BarcodeScanner from "./BarcodeScanner";
 import DiscountSystem from "./DiscountSystem";
+import ErrorBoundary from "./ErrorBoundary";
 import Image from "next/image";
 import { GiCash } from "react-icons/gi";
 
@@ -86,6 +87,33 @@ export default function PosRegister({
 
   const [searchTerm, setSearchTerm] = useState("");
   const [customerSearchKey, setCustomerSearchKey] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+
+  // Local state for customers to allow adding new ones
+  const [localCustomers, setLocalCustomers] = useState<clientType[]>(customers);
+
+  // Sync local customers with prop changes
+  useEffect(() => {
+    setLocalCustomers(customers);
+    // No need to handle temporary customers anymore since we create real ones directly
+  }, [customers]);
+
+  // Cleanup effect to prevent state updates after unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Sync selectedCustomerId with cart.customer
+  useEffect(() => {
+    if (cart.customer && cart.customer.id !== selectedCustomerId) {
+      setSelectedCustomerId(cart.customer.id);
+    } else if (!cart.customer && selectedCustomerId) {
+      setSelectedCustomerId("");
+    }
+  }, [cart.customer, selectedCustomerId]);
 
   // Form state for SearchSelectInput (even though we don't use it for validation)
   const [formState] = useState({
@@ -115,6 +143,9 @@ export default function PosRegister({
   const [sending, setSending] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [internalProcessing, setInternalProcessing] = useState(false);
+
+  // Ref to track if component is mounted to prevent state updates after unmount
+  const isMountedRef = React.useRef(true);
 
   // Combined processing state
   const isCurrentlyProcessing = isProcessing || internalProcessing;
@@ -223,8 +254,9 @@ export default function PosRegister({
       totalAmount: 0,
       customer: undefined,
     });
-    // Reset customer selection by generating new key
+    // Reset customer selection by generating new key and clearing selected ID
     setCustomerSearchKey(Math.random().toString(36).substring(7));
+    setSelectedCustomerId("");
   }, []);
 
   // Customer modal functions
@@ -285,6 +317,26 @@ export default function PosRegister({
       );
 
       if (result.success) {
+        // Use the actual client data returned from the database
+        const newClient: clientType = result.data!;
+
+        // Add the real client to local state
+        setLocalCustomers((prev) => {
+          const updatedCustomers = [...prev, newClient];
+
+          // Set the new customer in the cart and selection after state update
+          setCart((prevCart) => ({
+            ...prevCart,
+            customer: newClient,
+          }));
+          setSelectedCustomerId(newClient.id);
+
+          // Force re-render of SearchSelectInput with new client selected
+          setCustomerSearchKey(Math.random().toString(36).substring(7));
+
+          return updatedCustomers;
+        });
+
         // Reset form and close modal
         setCustomerName("");
         setEmail("");
@@ -303,19 +355,25 @@ export default function PosRegister({
 
         if (
           result.errors &&
-          result.errors.email &&
+          typeof result.errors === "object" &&
+          "email" in result.errors &&
+          Array.isArray(result.errors.email) &&
           result.errors.email.length > 0
         ) {
           errorMessage = result.errors.email[0];
         } else if (
           result.errors &&
-          result.errors.phone &&
+          typeof result.errors === "object" &&
+          "phone" in result.errors &&
+          Array.isArray(result.errors.phone) &&
           result.errors.phone.length > 0
         ) {
           errorMessage = result.errors.phone[0];
         } else if (
           result.errors &&
-          result.errors.name &&
+          typeof result.errors === "object" &&
+          "name" in result.errors &&
+          Array.isArray(result.errors.name) &&
           result.errors.name.length > 0
         ) {
           errorMessage = result.errors.name[0];
@@ -346,7 +404,7 @@ export default function PosRegister({
   // Process cash payment (separated from stock check)
   const processCashPayment = useCallback(
     async (cashReceived: number, breakdown: CashBreakdown) => {
-      if (cart.items.length === 0) {
+      if (!isMountedRef.current || cart.items.length === 0) {
         return;
       }
 
@@ -355,6 +413,7 @@ export default function PosRegister({
 
       try {
         // Process the checkout without bill breakdown (simplified)
+        // No need to sanitize cart since we're using real customer IDs now
         await onCheckout(cart, PaymentType.CASH, cashReceived);
 
         // Only clear cart and print receipt if checkout was successful
@@ -398,44 +457,203 @@ export default function PosRegister({
         breakdown,
       });
 
+      if (isCurrentlyProcessing) {
+        console.warn("Payment already in progress, ignoring duplicate request");
+        return;
+      }
+
+      if (!isMountedRef.current) {
+        console.warn("Component unmounted, aborting payment");
+        return;
+      }
+
       setInternalProcessing(true);
+
+      // Set a timeout to prevent infinite processing state
+      const processingTimeout = setTimeout(() => {
+        if (isMountedRef.current) {
+          console.warn("Payment processing timeout, resetting states");
+          setInternalProcessing(false);
+          setShowCashCalculator(false);
+          setShowPaymentModal(true);
+        }
+      }, 30000); // 30 second timeout
+
       try {
         // First check stock, then proceed with payment
         await checkStockBeforeCashPayment(cashReceived, breakdown);
+        clearTimeout(processingTimeout);
       } catch (error) {
         console.error("Cash payment error:", error);
+        clearTimeout(processingTimeout);
+        // Ensure we reset states even if payment fails
+        if (isMountedRef.current) {
+          setShowCashCalculator(false);
+          setShowPaymentModal(true);
+        }
       } finally {
-        setInternalProcessing(false);
-        setShowCashCalculator(false);
+        if (isMountedRef.current) {
+          setInternalProcessing(false);
+        }
       }
     },
-    [checkStockBeforeCashPayment]
+    [checkStockBeforeCashPayment, isCurrentlyProcessing]
   );
 
   // Handle proceeding with sale after stock alert
   const handleProceedAfterStockAlert = useCallback(async () => {
-    setShowStockAlert(false);
-
-    if (pendingCashPayment) {
-      await processCashPayment(
-        pendingCashPayment.cashReceived,
-        pendingCashPayment.breakdown
-      );
-      setPendingCashPayment(null);
+    if (!isMountedRef.current) {
+      console.warn("Component unmounted, aborting proceed operation");
+      return;
     }
 
-    setStockAlerts([]);
-    setStockMessages([]);
+    try {
+      if (isMountedRef.current) {
+        setShowStockAlert(false);
+        setInternalProcessing(true);
+      }
+
+      if (pendingCashPayment && isMountedRef.current) {
+        try {
+          await processCashPayment(
+            pendingCashPayment.cashReceived,
+            pendingCashPayment.breakdown
+          );
+        } catch (error) {
+          console.error(
+            "Error processing cash payment after stock alert:",
+            error
+          );
+          // Re-open payment modal if payment fails and component is still mounted
+          if (isMountedRef.current) {
+            setShowPaymentModal(true);
+          }
+          throw error; // Re-throw to be caught by outer try-catch
+        } finally {
+          if (isMountedRef.current) {
+            setPendingCashPayment(null);
+          }
+        }
+      }
+
+      // Clear stock alert state if component is still mounted
+      if (isMountedRef.current) {
+        setStockAlerts([]);
+        setStockMessages([]);
+      }
+    } catch (error) {
+      console.error("Error in handleProceedAfterStockAlert:", error);
+      // Reset modal states in case of error and if component is still mounted
+      if (isMountedRef.current) {
+        try {
+          setShowStockAlert(false);
+          setShowPaymentModal(true);
+          setPendingCashPayment(null);
+          setStockAlerts([]);
+          setStockMessages([]);
+        } catch (innerError) {
+          console.error(
+            "Critical error in handleProceedAfterStockAlert cleanup:",
+            innerError
+          );
+        }
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setInternalProcessing(false);
+      }
+    }
   }, [pendingCashPayment, processCashPayment]);
 
   // Handle canceling sale after stock alert
   const handleCancelAfterStockAlert = useCallback(() => {
-    setShowStockAlert(false);
-    setPendingCashPayment(null);
-    setStockAlerts([]);
-    setStockMessages([]);
-    setShowCashCalculator(false);
-    setShowPaymentModal(true);
+    console.log("handleCancelAfterStockAlert called");
+
+    if (!isMountedRef.current) {
+      console.warn("Component unmounted, aborting cancel operation");
+      return;
+    }
+
+    try {
+      console.log("Starting state cleanup...");
+
+      // Reset all stock alert related state safely one by one
+      if (isMountedRef.current) {
+        console.log("Setting showStockAlert to false");
+        setShowStockAlert(false);
+      }
+
+      if (isMountedRef.current) {
+        console.log("Clearing pendingCashPayment");
+        setPendingCashPayment(null);
+      }
+
+      if (isMountedRef.current) {
+        console.log("Clearing stockAlerts");
+        setStockAlerts([]);
+      }
+
+      if (isMountedRef.current) {
+        console.log("Clearing stockMessages");
+        setStockMessages([]);
+      }
+
+      if (isMountedRef.current) {
+        console.log("Setting showCashCalculator to false");
+        setShowCashCalculator(false);
+      }
+
+      if (isMountedRef.current) {
+        console.log("Setting internalProcessing to false");
+        setInternalProcessing(false);
+      }
+
+      // Use setTimeout to prevent state update conflicts
+      if (isMountedRef.current) {
+        console.log("Setting timeout for showPaymentModal");
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            console.log("Setting showPaymentModal to true");
+            setShowPaymentModal(true);
+          }
+        }, 150);
+      }
+
+      console.log("State cleanup completed successfully");
+    } catch (error) {
+      console.error("Error in handleCancelAfterStockAlert:", error);
+
+      // Force reset all states in case of error but only if component is mounted
+      if (isMountedRef.current) {
+        console.log("Attempting force cleanup...");
+        try {
+          // Try to reset states one by one in a more controlled way
+          Promise.resolve()
+            .then(() => {
+              if (isMountedRef.current) {
+                setShowStockAlert(false);
+                setPendingCashPayment(null);
+                setStockAlerts([]);
+                setStockMessages([]);
+                setShowCashCalculator(false);
+                setInternalProcessing(false);
+                setShowPaymentModal(true);
+              }
+            })
+            .catch((innerError) => {
+              console.error(
+                "Critical error in handleCancelAfterStockAlert force cleanup:",
+                innerError
+              );
+            });
+        } catch (innerError) {
+          console.error(
+            "Critical error in handleCancelAfterStockAlert cleanup:",
+            innerError
+          );
+        }
+      }
+    }
   }, []);
 
   // Handle barcode scan result
@@ -589,6 +807,7 @@ export default function PosRegister({
       if (cart.items.length === 0) return;
 
       try {
+        // No need to sanitize cart since we're using real customer IDs now
         // For now, we'll modify onCheckout to accept the reference
         // This will need to be handled in the parent component
         await onCheckout(cart, paymentType, undefined, reference);
@@ -628,14 +847,14 @@ export default function PosRegister({
         name: "Cliente Ocasional",
         description: "",
       },
-      ...customers.map((customer) => ({
+      ...localCustomers.map((customer) => ({
         value: customer.id,
         // Combine name and phone in the name field for searchability
         name: `${customer.name}${customer.phone ? ` - ${customer.phone}` : ""}`,
         description: customer.phone || "",
       })),
     ];
-  }, [customers]);
+  }, [localCustomers]);
 
   return (
     <div className="min-h-screen bg-card flex flex-col">
@@ -800,8 +1019,10 @@ export default function PosRegister({
                 className="w-full"
                 placeholder="Buscar por nombre o teléfono..."
                 options={customerOptions}
+                value={selectedCustomerId}
                 onChange={(value) => {
-                  const customer = customers.find((c) => c.id === value);
+                  setSelectedCustomerId(value);
+                  const customer = localCustomers.find((c) => c.id === value);
                   setCart((prev) => ({
                     ...prev,
                     customer: customer || undefined,
@@ -1174,20 +1395,40 @@ export default function PosRegister({
         )}
       </AnimatePresence>
 
-      {/* Stock Alert Modal */}
-      <AnimatePresence>
-        {showStockAlert && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-background rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+      {/* Stock Alert Modal - Simplified without AnimatePresence */}
+      {showStockAlert && isMountedRef.current && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-background rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <ErrorBoundary
+              onError={(error, errorInfo) => {
+                console.error("Stock Alert Modal Error:", error, errorInfo);
+                // Force close the modal on error
+                if (isMountedRef.current) {
+                  setShowStockAlert(false);
+                  setShowPaymentModal(true);
+                }
+              }}
+              fallback={
+                <div className="p-4 text-center">
+                  <h3 className="text-lg font-semibold text-red-600 mb-2">
+                    Error en Stock Alert
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Ha ocurrido un error al mostrar la información de stock.
+                  </p>
+                  <button
+                    onClick={() => {
+                      if (isMountedRef.current) {
+                        setShowStockAlert(false);
+                        setShowPaymentModal(true);
+                      }
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              }
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-orange-600">
@@ -1196,7 +1437,19 @@ export default function PosRegister({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleCancelAfterStockAlert}
+                  onClick={() => {
+                    try {
+                      console.log("Close button clicked");
+                      if (!isCurrentlyProcessing) {
+                        handleCancelAfterStockAlert();
+                      } else {
+                        console.warn("Cannot close - processing in progress");
+                      }
+                    } catch (error) {
+                      console.error("Error in close button click:", error);
+                    }
+                  }}
+                  disabled={isCurrentlyProcessing}
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -1204,11 +1457,11 @@ export default function PosRegister({
 
               <div className="space-y-4">
                 {/* Messages */}
-                {stockMessages.length > 0 && (
+                {Array.isArray(stockMessages) && stockMessages.length > 0 && (
                   <div className="space-y-2">
                     {stockMessages.map((message, index) => (
                       <div
-                        key={index}
+                        key={`message-${index}`}
                         className={`p-3 rounded-lg text-sm ${
                           message.includes("❌")
                             ? "bg-red-50 text-red-800 border border-red-200"
@@ -1224,46 +1477,54 @@ export default function PosRegister({
                 )}
 
                 {/* Stock Alerts Details */}
-                {stockAlerts.length > 0 && (
+                {Array.isArray(stockAlerts) && stockAlerts.length > 0 && (
                   <div className="space-y-3">
                     <h4 className="font-medium">Detalles de Stock:</h4>
                     {stockAlerts.map((alert, index) => (
-                      <div key={index} className="border rounded-lg p-3">
+                      <div
+                        key={`alert-${index}`}
+                        className="border rounded-lg p-3"
+                      >
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <h5 className="font-medium">{alert.itemName}</h5>
+                            <h5 className="font-medium">
+                              {alert?.itemName || "Producto desconocido"}
+                            </h5>
                             <p className="text-sm text-gray-600">
-                              Necesario: {alert.requestedQty} | Disponible:{" "}
-                              {alert.availableQty} | Faltante: {alert.shortfall}
+                              Necesario: {alert?.requestedQty || 0} |
+                              Disponible: {alert?.availableQty || 0} | Faltante:{" "}
+                              {alert?.shortfall || 0}
                             </p>
                           </div>
-                          {alert.notificationCreated && (
+                          {alert?.notificationCreated && (
                             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                               Solicitud Enviada
                             </span>
                           )}
                         </div>
 
-                        {alert.branchesWithStock.length > 0 && (
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-1">
-                              Disponible en otras sucursales:
-                            </p>
-                            <div className="space-y-1">
-                              {alert.branchesWithStock.map(
-                                (branch: any, branchIndex: number) => (
-                                  <div
-                                    key={branchIndex}
-                                    className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded"
-                                  >
-                                    {branch.warehouseName}:{" "}
-                                    {branch.availableQty} unidades
-                                  </div>
-                                )
-                              )}
+                        {Array.isArray(alert.branchesWithStock) &&
+                          alert.branchesWithStock.length > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 mb-1">
+                                Disponible en otras sucursales:
+                              </p>
+                              <div className="space-y-1">
+                                {alert.branchesWithStock.map(
+                                  (branch: any, branchIndex: number) => (
+                                    <div
+                                      key={`branch-${branchIndex}`}
+                                      className="text-sm text-gray-600 bg-gray-50 px-2 py-1 rounded"
+                                    >
+                                      {branch?.warehouseName ||
+                                        "Sucursal desconocida"}
+                                      : {branch?.availableQty || 0} unidades
+                                    </div>
+                                  )
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
                       </div>
                     ))}
                   </div>
@@ -1286,16 +1547,45 @@ export default function PosRegister({
                   <Button
                     variant="outline"
                     className="flex-1"
-                    onClick={handleCancelAfterStockAlert}
+                    onClick={() => {
+                      try {
+                        console.log("Cancel button clicked");
+                        if (!isCurrentlyProcessing) {
+                          handleCancelAfterStockAlert();
+                        } else {
+                          console.warn(
+                            "Cannot cancel - processing in progress"
+                          );
+                        }
+                      } catch (error) {
+                        console.error("Error in cancel button click:", error);
+                      }
+                    }}
+                    disabled={isCurrentlyProcessing}
                   >
                     Cancelar Venta
                   </Button>
                   <Button
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={handleProceedAfterStockAlert}
-                    disabled={isProcessing}
+                    onClick={() => {
+                      try {
+                        console.log("Continue button clicked");
+                        if (!isCurrentlyProcessing) {
+                          handleProceedAfterStockAlert();
+                        } else {
+                          console.warn(
+                            "Cannot continue - processing in progress"
+                          );
+                        }
+                      } catch (error) {
+                        console.error("Error in continue button click:", error);
+                      }
+                    }}
+                    disabled={isCurrentlyProcessing}
                   >
-                    {isProcessing ? "Procesando..." : "Continuar con Venta"}
+                    {isCurrentlyProcessing
+                      ? "Procesando..."
+                      : "Continuar con Venta"}
                   </Button>
                 </div>
 
@@ -1316,10 +1606,10 @@ export default function PosRegister({
                   </ul>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </ErrorBoundary>
+          </div>
+        </div>
+      )}
 
       {/* Customer Creation Modal */}
       {showClientModal && (

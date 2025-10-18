@@ -58,7 +58,6 @@ export async function POST(
 
     const updatedAt = getMexicoGlobalUtcDate();
 
-    // Update notification status to ACCEPTED
     const updatedNotification = await prisma.branchNotification.update({
       where: { id: notificationId },
       data: {

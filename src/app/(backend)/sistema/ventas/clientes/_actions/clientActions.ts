@@ -73,7 +73,7 @@ export async function createClient(
   }
   const createdAt = getMexicoGlobalUtcDate();
   try {
-    await prisma.client.create({
+    const newClient = await prisma.client.create({
       data: {
         name,
         email,
@@ -93,6 +93,7 @@ export async function createClient(
       errors: {},
       success: true,
       message: "Client created successfully!",
+      data: newClient, // Return the created client data
     };
   } catch (error) {
     console.error("Error creating client:", error);
