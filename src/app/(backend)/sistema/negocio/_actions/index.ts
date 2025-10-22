@@ -1,7 +1,11 @@
 "use server";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import prisma from "@/lib/db";
-import { AddInventorySchema, AdjustmentSchema, RemoveInventorySchema } from "@/lib/schemas";
+import {
+  AddInventorySchema,
+  AdjustmentSchema,
+  RemoveInventorySchema,
+} from "@/lib/schemas";
 import { getMexicoGlobalUtcDate } from "@/lib/utils";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
@@ -74,8 +78,10 @@ export const createAdjustment = async (
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/negocio");
+    revalidatePath("/sistema/qr/productos");
+
     revalidatePath("/sistema/qr/generador");
-    
+
     return { success: true, message: "Inventario agregado exitosamente!" };
   } else if (rawData.formType === "remove") {
     const validatedData = RemoveInventorySchema.safeParse(rawData);
@@ -87,7 +93,7 @@ export const createAdjustment = async (
         message: "Validation failed. Please check the fields.",
       };
     }
-    
+
     try {
       const createdAt = getMexicoGlobalUtcDate();
       await prisma.$transaction(async (prisma) => {
@@ -101,11 +107,15 @@ export const createAdjustment = async (
         });
 
         if (!currentStock) {
-          throw new Error("Stock record not found for this item in the specified warehouse.");
+          throw new Error(
+            "Stock record not found for this item in the specified warehouse."
+          );
         }
 
         if (currentStock.availableQty < validatedData.data.transAmount) {
-          throw new Error(`Stock insuficiente. Disponible: ${currentStock.availableQty}, Solicitado: ${validatedData.data.transAmount}`);
+          throw new Error(
+            `Stock insuficiente. Disponible: ${currentStock.availableQty}, Solicitado: ${validatedData.data.transAmount}`
+          );
         }
 
         await prisma.stock.update({
@@ -127,7 +137,9 @@ export const createAdjustment = async (
             itemId: validatedData.data.articulo,
             type: "ADJUSTMENT",
             quantity: -validatedData.data.transAmount,
-            reference: `Remoción de inventario: ${validatedData.data.notes || "Sin razón especificada"}`,
+            reference: `Remoción de inventario: ${
+              validatedData.data.notes || "Sin razón especificada"
+            }`,
             status: "COMPLETED",
             createdBy: user.id as string,
             createdAt,
@@ -140,7 +152,10 @@ export const createAdjustment = async (
       return {
         errors: {},
         success: false,
-        message: error instanceof Error ? error.message : "Error al remover inventario",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Error al remover inventario",
       };
     }
 
@@ -151,7 +166,8 @@ export const createAdjustment = async (
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/negocio");
     revalidatePath("/sistema/qr/generador");
-    
+    revalidatePath("/sistema/qr/productos");
+
     return { success: true, message: "Inventario removido exitosamente!" };
   } else {
     const validatedAdjustData = AdjustmentSchema.safeParse(rawData);
@@ -163,7 +179,7 @@ export const createAdjustment = async (
         message: "Validation failed. Please check the fields.",
       };
     }
-    
+
     const createdAt = getMexicoGlobalUtcDate();
     try {
       await prisma.$transaction(async (prisma) => {
@@ -180,7 +196,7 @@ export const createAdjustment = async (
             updatedAt: createdAt,
           },
         });
-        
+
         const existingStock = await prisma.stock.findUnique({
           where: {
             itemId_warehouseId: {
@@ -216,7 +232,7 @@ export const createAdjustment = async (
             },
           });
         }
-        
+
         await prisma.stockMovement.create({
           data: {
             itemId: validatedAdjustData.data.articulo,
@@ -224,7 +240,9 @@ export const createAdjustment = async (
             toWarehouseId: validatedAdjustData.data.receivingWarehouse,
             type: "TRANSFER",
             quantity: validatedAdjustData.data.transAmount,
-            reference: `Transferencia de inventario: ${validatedAdjustData.data.notes || "Sin notas"}`,
+            reference: `Transferencia de inventario: ${
+              validatedAdjustData.data.notes || "Sin notas"
+            }`,
             status: "COMPLETED",
             createdBy: user.id as string,
             createdAt,
@@ -240,7 +258,7 @@ export const createAdjustment = async (
         message: "Error al transferir inventario",
       };
     }
-    
+
     revalidatePath("/sistema/negocio/ajustes/nuevo");
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
@@ -248,6 +266,7 @@ export const createAdjustment = async (
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/negocio");
     revalidatePath("/sistema/qr/generador");
+    revalidatePath("/sistema/qr/productos");
 
     return { success: true, message: "Transferencia de inventario exitosa!" };
   }

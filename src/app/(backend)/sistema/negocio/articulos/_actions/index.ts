@@ -160,6 +160,7 @@ export const createItemAction = async (
       revalidatePath("/sistema/ventas/pedidos/nuevo");
       revalidatePath("/sistema/ventas/pos/register");
       revalidatePath("/sistema/qr/generador");
+      revalidatePath("/sistema/qr/productos");
       revalidatePath("/sistema/negocio/ajustes/nuevo");
       return {
         success: true,
@@ -310,7 +311,8 @@ export async function updateItemAction(
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/qr/generador");
-revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/qr/productos");
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
     return {
       errors: {},
       success: true,
@@ -371,6 +373,7 @@ export async function deleteItemAction(formData: FormData) {
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/ventas/pos/register");
     revalidatePath("/sistema/qr/generador");
+    revalidatePath("/sistema/qr/productos");
     revalidatePath("/sistema/negocio/ajustes/nuevo");
     return {
       errors: {},
@@ -441,6 +444,8 @@ export async function toggleItemStatusAction(formData: FormData) {
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
     revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/qr/productos");
+    revalidatePath("/sistema/qr/generador");
     revalidatePath("/sistema/ventas/pos/register");
     return {
       errors: {},
@@ -540,6 +545,10 @@ export async function createItemGroup(
 
     revalidatePath("/sistema/negocio/articulos/conjuntos");
     revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/qr/productos");
+    revalidatePath("/sistema/qr/generador");
+    revalidatePath("/sistema/ventas/pos/register");
     return {
       errors: {},
       success: true,
