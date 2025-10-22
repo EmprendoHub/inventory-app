@@ -1,4 +1,5 @@
 "use server";
+import { unstable_noStore as noStore } from "next/cache";
 import sharp from "sharp";
 import prisma from "@/lib/db";
 import { mc } from "@/lib/minio";
@@ -776,6 +777,9 @@ export async function sendRecentOrdersInteractiveMessage(
 }
 
 export async function getAllPOSProductNoFilter() {
+  // Disable caching to ensure fresh product data
+  noStore();
+
   try {
     // Get all items with their stock information
     const items = await prisma.item.findMany({
