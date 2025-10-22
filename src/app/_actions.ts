@@ -815,6 +815,7 @@ export async function getAllPOSProductNoFilter() {
         (sum, stock) => sum + stock.availableQty,
         0
       );
+      console.log(totalAvailableStock, "TotalAvailableStock");
 
       return {
         id: item.id,

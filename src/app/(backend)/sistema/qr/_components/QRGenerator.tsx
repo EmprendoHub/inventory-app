@@ -123,8 +123,7 @@ const QRGenerator = ({ products }: { products: any[] }) => {
         }
 
         // Generate multiple codes based on stock quantity
-        for (let i = 0; i < Math.min(product.totalAvailableStock, 50); i++) {
-          // Limit to 50 per product
+        for (let i = 0; i < product.totalAvailableStock; i++) {
           let codeImage = "";
           let scanText = "";
 
