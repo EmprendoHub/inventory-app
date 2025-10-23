@@ -7,7 +7,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
-import { BanknoteIcon, X, Plus, Minus } from "lucide-react";
+import { BanknoteIcon, X, Plus, Minus, Printer } from "lucide-react";
 import dayjs from "dayjs";
 import { CashBreakdown } from "@/types/pos";
 
@@ -176,62 +176,156 @@ export default function SingleCashAuditModal({
     </div>
   );
 
-  // Handle form submission
-  // const handleFormSubmit = async (formData: FormData) => {
-  //   setSending(true);
-  //   try {
-  //     // First, prompt for supervisor code
-  //     const supervisorCodeResult = await showModal({
-  //       title: "Verificación de Supervisor",
-  //       type: "supervisorCode",
-  //       text: "Por favor, ingrese el código de supervisor para completar la auditoría.",
-  //       icon: "warning",
-  //       showCancelButton: true,
-  //       confirmButtonText: "Verificar",
-  //       cancelButtonText: "Cancelar",
-  //     });
+  // Print cash audit receipt
+  const printCashAuditReceipt = useCallback(() => {
+    try {
+      const receiptHtml = `
+        <div id="cash-audit-receipt" style="
+          position: absolute;
+          left: -9999px;
+          width: 302px;
+          font-family: Arial, sans-serif;
+          font-size: 12px;
+          line-height: 1.4;
+          color: black;
+          background: white;
+          padding: 10px;
+          box-sizing: border-box;
+        ">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="margin: 0; font-size: 16px; font-weight: bold;">CORTE DE CAJA</h2>
+            <p style="margin: 5px 0;">Caja: ${selectedRegister?.name}</p>
+            <p style="margin: 5px 0;">Fecha: ${dayjs().format(
+              "DD/MM/YYYY HH:mm"
+            )}</p>
+          </div>
 
-  //     if (supervisorCodeResult.confirmed) {
-  //       const supervisorVerification = await verifySupervisorCode(
-  //         supervisorCodeResult.data?.code
-  //       );
+          <div style="border-top: 2px solid black; padding-top: 10px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span style="font-weight: bold;">Balance Inicial:</span>
+              <span>$${selectedRegister?.balance?.toFixed(2) || "0.00"}</span>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <h3 style="margin: 10px 0 5px 0; font-size: 13px; font-weight: bold; border-bottom: 1px solid black; padding-bottom: 3px;">BILLETES</h3>
+            ${Object.entries(cashBreakdown.bills)
+              .filter(([, bill]) => bill.count > 0)
+              .map(
+                ([, bill]) => `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span>$${bill.value.toFixed(0)} x ${bill.count}</span>
+                <span>$${bill.total.toFixed(2)}</span>
+              </div>
+            `
+              )
+              .join("")}
+            
+            <h3 style="margin: 10px 0 5px 0; font-size: 13px; font-weight: bold; border-bottom: 1px solid black; padding-bottom: 3px;">MONEDAS</h3>
+            ${Object.entries(cashBreakdown.coins)
+              .filter(([, coin]) => coin.count > 0)
+              .map(
+                ([, coin]) => `
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                <span>$${
+                  coin.value >= 1
+                    ? coin.value.toFixed(0)
+                    : coin.value.toFixed(2)
+                } x ${coin.count}</span>
+                <span>$${coin.total.toFixed(2)}</span>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+          
+          <div style="border-top: 2px solid black; padding-top: 10px; font-weight: bold;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
+              <span><strong>TOTAL CONTADO:</strong></span>
+              <span><strong>$${cashBreakdown.totalCash.toFixed(
+                2
+              )}</strong></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+              <span>Diferencia:</span>
+              <span>$${(
+                cashBreakdown.totalCash - (selectedRegister?.balance || 0)
+              ).toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px; border-top: 1px dashed black; padding-top: 10px;">
+            <p style="margin: 0; font-size: 11px;">Sistema de Gestion</p>
+            <p style="margin: 0; font-size: 11px;">Auditoria de Caja</p>
+          </div>
+        </div>
+      `;
 
-  //       if (supervisorVerification.success) {
-  //         // Add required parameters for createCashAuditAction
-  //         formData.append("register", JSON.stringify(selectedRegister));
-  //         formData.append("managerId", supervisorVerification.authUserId); // Use verified supervisor as manager
-  //         formData.append(
-  //           "startBalance",
-  //           selectedRegister?.balance?.toString() || "0"
-  //         );
-  //         formData.append("endBalance", cashBreakdown.totalCash.toString());
-  //         formData.append("auditDate", formattedDate);
-  //         formData.append("billBreakdown", JSON.stringify(cashBreakdown));
+      // Remove any existing receipt div
+      const existingReceipt = document.getElementById("cash-audit-receipt");
+      if (existingReceipt) {
+        existingReceipt.remove();
+      }
 
-  //         const result = await createCashAuditAction(state, formData);
+      // Add the receipt HTML to the page
+      document.body.insertAdjacentHTML("beforeend", receiptHtml);
 
-  //         if (result.success) {
-  //           if (onSuccess) onSuccess();
-  //           onClose();
-  //           router.refresh();
-  //         }
-  //       } else {
-  //         await showModal({
-  //           title: "Error",
-  //           type: "info",
-  //           text: "Código de supervisor incorrecto",
-  //           icon: "error",
-  //           showCancelButton: false,
-  //           confirmButtonText: "OK",
-  //         });
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Error submitting audit:", error);
-  //   } finally {
-  //     setSending(false);
-  //   }
-  // };
+      // Create print styles for the receipt
+      const printStyle = document.createElement("style");
+      printStyle.innerHTML = `
+        @media print {
+          body > *:not(#cash-audit-receipt) {
+            display: none !important;
+          }
+          
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+          
+          #cash-audit-receipt {
+            display: block !important;
+            position: static !important;
+            left: auto !important;
+            width: 100% !important;
+            max-width: 302px !important;
+            margin: 0 auto !important;
+            padding: 10px !important;
+            background: white !important;
+            color: black !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+          }
+          
+          @page {
+            size: 80mm auto;
+            margin: 3mm;
+          }
+        }
+      `;
+      document.head.appendChild(printStyle);
+
+      // Print immediately
+      window.print();
+
+      // Clean up after printing
+      setTimeout(() => {
+        const receiptDiv = document.getElementById("cash-audit-receipt");
+        if (receiptDiv) {
+          receiptDiv.remove();
+        }
+        if (printStyle && printStyle.parentNode) {
+          printStyle.parentNode.removeChild(printStyle);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Error printing cash audit receipt:", error);
+      // Simple fallback - just trigger browser print
+      window.print();
+    }
+  }, [cashBreakdown, selectedRegister]);
 
   // Handle supervisor verification for handoff
   const handleHandoffSubmit = async () => {
@@ -267,11 +361,19 @@ export default function SingleCashAuditModal({
         );
         handoffFormData.append("auditDate", formattedDate);
 
-        await createCashHandoffAction(state, handoffFormData);
+        const result = await createCashHandoffAction(state, handoffFormData);
 
-        if (onSuccess) onSuccess();
-        onClose();
-        router.refresh();
+        if (result.success) {
+          // Print receipt before closing
+          printCashAuditReceipt();
+
+          // Small delay to ensure print dialog opens
+          setTimeout(() => {
+            if (onSuccess) onSuccess();
+            onClose();
+            router.refresh();
+          }, 500);
+        }
       } else {
         await showModal({
           title: "Error",
@@ -453,6 +555,14 @@ export default function SingleCashAuditModal({
             Cancelar
           </button>
           <button
+            onClick={printCashAuditReceipt}
+            disabled={cashBreakdown.totalCash === 0}
+            className="flex-1 h-14 px-6 text-lg font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <Printer size={20} />
+            IMPRIMIR
+          </button>
+          <button
             onClick={handleHandoffSubmit}
             disabled={sending || cashBreakdown.totalCash === 0}
             className="flex-1 h-14 px-6 text-lg font-bold text-white bg-orange-600 rounded-lg hover:bg-orange-700 active:bg-orange-800 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
@@ -466,27 +576,6 @@ export default function SingleCashAuditModal({
               "ENTREGAR CAJA"
             )}
           </button>
-          {/* <form action={handleFormSubmit}>
-            <input
-              type="hidden"
-              name="cashRegisterId"
-              value={selectedRegister?.id || ""}
-            />
-            <button
-              type="submit"
-              disabled={sending || cashBreakdown.totalCash === 0}
-              className="flex-1 h-14 px-6 text-lg font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {sending ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Guardando...
-                </div>
-              ) : (
-                "COMPLETAR AUDITORÍA"
-              )}
-            </button>
-          </form> */}
         </div>
       </div>
     </div>
