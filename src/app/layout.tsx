@@ -23,9 +23,24 @@ export const metadata: Metadata = {
     template: `%s | Mx YUNUEN COMPANY`,
   },
   description: "Punto de Venta - YUNUEN COMPANY",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "YUNUEN CO",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: "/icons/yunuencompany-icon-192x192.png",
+    apple: "/icons/yunuencompany-icon-192x192.png",
+  },
 };
 export const viewport = {
   themeColor: "#0e192b",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

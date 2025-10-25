@@ -1,14 +1,15 @@
 /** @type {import('next').NextConfig} */
 import withPWA from "next-pwa";
-const withPWAs = withPWA({
+
+const withPWAConfig = withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
+  disable: process.env.NODE_ENV === "development",
 });
 
 const nextConfig = {
   reactStrictMode: true,
-  ...withPWAs,
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "minio.salvawebpro.com", port: "9000" },
@@ -29,4 +30,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWAConfig(nextConfig);
