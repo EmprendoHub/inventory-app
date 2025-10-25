@@ -801,7 +801,7 @@ export async function getAllPOSProductNoFilter() {
       },
       orderBy: [
         {
-          name: "asc", // Sort alphabetically by name
+          createdAt: "desc", // Sort by creation date, newest first
         },
       ],
     });
