@@ -7,7 +7,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useModal } from "@/app/context/ModalContext";
 import { verifySupervisorCode } from "@/app/_actions";
-import { BanknoteIcon, X, Plus, Minus, Printer } from "lucide-react";
+import { BanknoteIcon, X, Plus, Minus } from "lucide-react";
 import dayjs from "dayjs";
 import { CashBreakdown } from "@/types/pos";
 
