@@ -554,14 +554,14 @@ export default function SingleCashAuditModal({
           >
             Cancelar
           </button>
-          <button
+          {/* <button
             onClick={printCashAuditReceipt}
             disabled={cashBreakdown.totalCash === 0}
             className="flex-1 h-14 px-6 text-lg font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Printer size={20} />
             IMPRIMIR
-          </button>
+          </button> */}
           <button
             onClick={handleHandoffSubmit}
             disabled={sending || cashBreakdown.totalCash === 0}
@@ -573,7 +573,7 @@ export default function SingleCashAuditModal({
                 Procesando...
               </div>
             ) : (
-              "ENTREGAR CAJA"
+              "REALIZAR CORTE"
             )}
           </button>
         </div>
