@@ -307,8 +307,10 @@ export default function SingleCashAuditModal({
       `;
       document.head.appendChild(printStyle);
 
-      // Print immediately
-      window.print();
+      // Use requestAnimationFrame to ensure DOM is ready before printing
+      requestAnimationFrame(() => {
+        window.print();
+      });
 
       // Clean up after printing
       setTimeout(() => {
@@ -364,15 +366,18 @@ export default function SingleCashAuditModal({
         const result = await createCashHandoffAction(state, handoffFormData);
 
         if (result.success) {
-          // Print receipt before closing
-          printCashAuditReceipt();
+          // Delay closing to ensure print dialog can open
+          // Call print first, then wait for user interaction with print dialog
+          setTimeout(() => {
+            printCashAuditReceipt();
+          }, 100);
 
-          // Small delay to ensure print dialog opens
+          // Wait longer before closing modal to allow print dialog
           setTimeout(() => {
             if (onSuccess) onSuccess();
             onClose();
             router.refresh();
-          }, 500);
+          }, 800);
         }
       } else {
         await showModal({
