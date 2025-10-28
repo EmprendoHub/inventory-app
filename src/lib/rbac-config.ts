@@ -27,18 +27,19 @@ export const RBAC_CONFIG = {
     allowedRoutes: [
       "!/sistema/ventas/envios/nuevo", // Deny /sistema/ventas/envios/nuevo
       "!/sistema/contabilidad/*", // Deny /sistema/contabilidad/*
-      "!/sistema/cajas/*", // Deny /sistema/contabilidad/*
-      "!/sistema/negocio/*", // Deny /sistema/contabilidad/*
-      "!/sistema/ventas/pagos/nuevo", // Deny /sistema/contabilidad/*
+      "!/sistema/cajas/nueva", // Deny creating new cash registers
+      "!/sistema/cajas/auditoria", // Deny viewing all audits (but allow creating their own)
+      "!/sistema/negocio/*", // Deny /sistema/negocio/*
+      "!/sistema/ventas/pagos/nuevo", // Deny creating new payments
       "/sistema/home", // Allow all sistema routes
       "/sistema/ventas/clientes", // Allow all sistema routes
       "/sistema/ventas/pedidos",
       "/sistema/ventas/pagos",
       "/sistema/ventas/envios", // Only allow /sistema/ventas/envios
       "/sistema/ventas",
-      "/sistema/cajas/personal/", // Allow all sistema routes
+      "/sistema/cajas/personal/", // Allow personal cash register routes
+      "/sistema/cajas/auditoria/nueva", // Allow creating audits
       "/sistema/contabilidad/gastos", // Allow all sistema routes
-      "/sistema/cajas/auditoria/nueva",
       // POS routes
       "/sistema/pos",
       "/sistema/pos/register",
