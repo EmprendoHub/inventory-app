@@ -346,7 +346,7 @@ export default function SingleCashAuditModal({
 
     if (supervisorCodeResult.confirmed) {
       const supervisorVerification = await verifySupervisorCode(
-        supervisorCodeResult.data?.code
+        supervisorCodeResult.data?.code || ""
       );
 
       if (supervisorVerification.success) {
