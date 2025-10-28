@@ -276,13 +276,14 @@ export async function uploadImageBlobAction(imageBlob: Blob) {
 }
 
 export const verifySupervisorCode = async (
-  code: string
+  code: string = ""
 ): Promise<{ authUserId: string; success: boolean }> => {
   const authorizedUser = await prisma.user.findFirst({
     where: {
       authCode: code,
     },
   });
+  console.log(authorizedUser);
 
   if (!authorizedUser) {
     return { authUserId: "", success: false };

@@ -453,8 +453,8 @@ export const createCashHandoffAction = async (
   try {
     const createdAt = getMexicoGlobalUtcDate();
     await prisma.$transaction(async (prisma) => {
-      // Update driver register - subtract the handed off amount
-      const driverRegister = await prisma.cashRegister.update({
+      // Update user's register - subtract the audited cash amount
+      const userRegister = await prisma.cashRegister.update({
         where: { userId: user?.id || "" },
         data: {
           balance: {
@@ -464,54 +464,62 @@ export const createCashHandoffAction = async (
         },
       });
 
-      // Update manager register - add the received amount
-      const branchRegister = await prisma.cashRegister.update({
-        where: { userId: manager.id },
-        data: {
-          balance: {
-            increment: rawData.endBalance,
-          },
-          updatedAt: createdAt,
-        },
-      });
-
-      // Create transaction record for driver (withdrawal)
+      // Create transaction record for the withdrawal from user's register
       await prisma.cashTransaction.create({
         data: {
           type: "RETIRO",
           amount: Math.round(rawData.endBalance),
-          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager.name})`,
-          cashRegisterId: driverRegister.id,
-          userId: user?.id,
+          description: `CORTE DE CAJA (${userRegister.name}) AUTORIZADO POR: (${manager.name})`,
+          cashRegisterId: userRegister.id,
+          userId: rawData.managerId,
           createdAt,
           updatedAt: createdAt,
         },
       });
 
-      // Create transaction record for manager (deposit)
-      await prisma.cashTransaction.create({
+      // Find the main account (parent account)
+      const account = await prisma.account.findFirst({
+        where: {
+          parentAccount: null,
+        },
+      });
+
+      // Create accounting transaction to deposit into main account
+      await prisma.transaction.create({
         data: {
           type: "DEPOSITO",
+          date: createdAt,
           amount: Math.round(rawData.endBalance),
-          description: `ENTREGA DE EFECTIVO A (${branchRegister.name}) ENTREGADO POR: (${user?.name}) RECIBE: (${manager.name})`,
-          cashRegisterId: branchRegister.id,
-          userId: manager.id,
+          description: `CORTE DE CAJA (${userRegister.name}) DEPOSITADO POR: (${manager.name})`,
+          registerId: userRegister.id,
+          accountId: account?.id || "",
           createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      // Update main account balance
+      await prisma.account.update({
+        where: {
+          id: account?.id,
+        },
+        data: {
+          balance: { increment: Math.round(rawData.endBalance) },
           updatedAt: createdAt,
         },
       });
     });
 
     revalidatePath("/sistema/contabilidad/transacciones");
+    revalidatePath("/sistema/contabilidad/cuentas");
     revalidatePath("/sistema/cajas");
     revalidatePath("/sistema/cajas/auditoria");
     revalidatePath(`/sistema/cajas/personal/${user?.id}`);
-    revalidatePath(`/sistema/cajas/personal/${manager.id}`);
 
     return {
       errors: {},
       success: true,
-      message: "Cash handoff completed successfully!",
+      message: "Corte de caja completado exitosamente!",
     };
   } catch (error) {
     console.error("Error creating cash handoff:", error);
