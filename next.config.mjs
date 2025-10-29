@@ -10,6 +10,20 @@ const withPWAConfig = withPWA({
 
 const nextConfig = {
   reactStrictMode: true,
+  webpack: (config, { isServer }) => {
+    // Ignore optional dependencies that don't work in serverless
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push({
+        "webworker-threads": "commonjs webworker-threads",
+      });
+    }
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "webworker-threads": false,
+    };
+    return config;
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "minio.salvawebpro.com", port: "9000" },

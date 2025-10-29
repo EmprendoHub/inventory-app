@@ -30,31 +30,25 @@ export async function GET(request: Request) {
     const endOfToday = new Date(zonedDate);
     endOfToday.setHours(23, 59, 59, 999);
 
-    // Fetch orders with warehouse and payment information
-    const posOrders = await prisma.posOrder.findMany({
+    // Fetch orders with user (who has warehouse) and payments
+    const orders = await prisma.order.findMany({
       where: {
         createdAt: {
           gte: startOfToday,
           lte: endOfToday,
         },
         status: {
-          in: ["COMPLETED"],
+          in: ["COMPLETADO", "PAGADO", "ENTREGADO"],
         },
       },
       include: {
-        session: {
+        user: {
           include: {
-            cashRegister: {
-              include: {
-                user: {
-                  include: {
-                    warehouse: true,
-                  },
-                },
-              },
-            },
+            warehouse: true,
           },
         },
+        payments: true,
+        delivery: true,
       },
     });
 
@@ -99,26 +93,36 @@ export async function GET(request: Request) {
       };
     });
 
-    // Process POS orders and group by warehouse
-    posOrders.forEach((order) => {
-      const warehouseId = order.session.cashRegister.user.warehouseId;
+    // Process orders and group by warehouse
+    orders.forEach((order) => {
+      const warehouseId = order.user?.warehouseId;
 
       if (warehouseId && warehouseSummaries[warehouseId]) {
-        warehouseSummaries[warehouseId].totalSales += order.totalAmount;
+        // Calculate order total (totalAmount + delivery - discount)
+        const orderTotal =
+          order.totalAmount +
+          (order.delivery?.price ?? 0) -
+          (order.discount ?? 0);
+
+        warehouseSummaries[warehouseId].totalSales += orderTotal;
         warehouseSummaries[warehouseId].orderCount += 1;
 
-        // Categorize by payment type
-        switch (order.paymentType) {
-          case "CASH":
-            warehouseSummaries[warehouseId].cashSales += order.totalAmount;
-            break;
-          case "TRANSFER":
-            warehouseSummaries[warehouseId].transferSales += order.totalAmount;
-            break;
-          case "CARD":
-            warehouseSummaries[warehouseId].cardSales += order.totalAmount;
-            break;
-        }
+        // Categorize by payment method from payments
+        order.payments.forEach((payment) => {
+          const paymentAmount = payment.amount;
+
+          switch (payment.method) {
+            case "EFECTIVO":
+              warehouseSummaries[warehouseId].cashSales += paymentAmount;
+              break;
+            case "TRANSFERENCIA":
+              warehouseSummaries[warehouseId].transferSales += paymentAmount;
+              break;
+            case "TARJETA":
+              warehouseSummaries[warehouseId].cardSales += paymentAmount;
+              break;
+          }
+        });
       }
     });
 
@@ -228,7 +232,7 @@ export async function GET(request: Request) {
                   .join("")}
                 <tr style="background-color: #edf2f7; font-weight: bold;">
                   <td>TOTAL GENERAL</td>
-                  <td style="text-align: center;">${posOrders.length}</td>
+                  <td style="text-align: center;">${orders.length}</td>
                   <td style="text-align: right;">$${totalCashSales.toLocaleString(
                     undefined,
                     {
