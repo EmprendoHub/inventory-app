@@ -57,8 +57,17 @@ export default function RootLayout({
         <meta name="application-name" content="YUNUEN CO" />
         <meta name="apple-mobile-web-app-title" content="YUNUEN CO" />
         <meta name="msapplication-starturl" content="/" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icons/yunuencompany-icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icons/yunuencompany-icon-192x192.png" />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="192x192"
+          href="/icons/yunuencompany-icon-192x192.png"
+        />
+        <link
+          rel="apple-touch-icon"
+          sizes="192x192"
+          href="/icons/yunuencompany-icon-192x192.png"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

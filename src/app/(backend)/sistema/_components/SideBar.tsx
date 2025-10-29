@@ -55,7 +55,7 @@ export default function SideBar({
   const user = session?.user as UserType;
   return (
     <aside
-      className={`maxmd:hidden duration-300 ease-in-out min-h-screen bg-slate-800  text-slate-50 flex flex-col justify-between fixed ${
+      className={`maxlg:hidden duration-300 ease-in-out min-h-screen bg-slate-800  text-slate-50 flex flex-col justify-between fixed ${
         hidden ? "w-10" : "w-44"
       }`}
     >

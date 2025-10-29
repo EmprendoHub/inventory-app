@@ -89,6 +89,11 @@ export default function PosRegister({
   const [customerSearchKey, setCustomerSearchKey] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
 
+  // Manual barcode input state
+  const [manualBarcode, setManualBarcode] = useState("");
+  const [isBarcodeInputFocused, setIsBarcodeInputFocused] = useState(false);
+  const manualBarcodeRef = React.useRef<HTMLInputElement>(null);
+
   // Local state for customers to allow adding new ones
   const [localCustomers, setLocalCustomers] = useState<clientType[]>(customers);
 
@@ -188,6 +193,18 @@ export default function PosRegister({
       ...totals,
     }));
   }, [cart.items, calculateTotals]);
+
+  // Auto-focus barcode input on component mount
+  useEffect(() => {
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (manualBarcodeRef.current) {
+        manualBarcodeRef.current.focus();
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Add item to cart
   const addToCart = useCallback((item: ItemType) => {
@@ -707,6 +724,19 @@ export default function PosRegister({
     [items, addToCart]
   );
 
+  // Handle manual barcode submission
+  const handleManualBarcodeSubmit = useCallback(() => {
+    if (manualBarcode.trim()) {
+      const result: ScanResult = {
+        type: "barcode",
+        data: manualBarcode.trim(),
+        timestamp: new Date(),
+      };
+      handleScanResult(result);
+      setManualBarcode("");
+    }
+  }, [manualBarcode, handleScanResult]);
+
   // Handle discount application
   const handleApplyDiscount = useCallback(
     (
@@ -858,14 +888,49 @@ export default function PosRegister({
         <div className="flex-1 p-4 pr-[360px]">
           {/* Search and Categories */}
           <div className="mb-4 space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Buscar productos por nombre, SKU o código de barras..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 text-base py-3"
-              />
+            <div className="flex gap-2">
+              {/* Product Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar productos por nombre, SKU o código de barras..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 text-base py-3"
+                />
+              </div>
+
+              {/* Manual Barcode Input */}
+              <div className="relative w-80">
+                <div
+                  className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                    isBarcodeInputFocused ? "text-green-500" : "text-gray-400"
+                  } w-2 h-2 rounded-full ${
+                    isBarcodeInputFocused ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                />
+                <Input
+                  ref={manualBarcodeRef}
+                  type="text"
+                  placeholder="Escáner de código de barras..."
+                  value={manualBarcode}
+                  onChange={(e) => setManualBarcode(e.target.value)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleManualBarcodeSubmit()
+                  }
+                  onFocus={() => setIsBarcodeInputFocused(true)}
+                  onBlur={() => setIsBarcodeInputFocused(false)}
+                  className={`pl-8 text-base py-3 transition-all duration-200 ${
+                    isBarcodeInputFocused
+                      ? "border-green-500 ring-2 ring-green-200 shadow-md"
+                      : ""
+                  }`}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                />
+              </div>
             </div>
 
             {/* View Toggle */}

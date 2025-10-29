@@ -194,7 +194,7 @@ export default function FavoritesGrid({
                     }
                   }}
                 >
-                  <CardContent className="p-3 text-center relative">
+                  <CardContent className="p-1 text-center relative">
                     {/* Manage Mode Controls */}
                     {isManageMode && (
                       <>
@@ -288,22 +288,9 @@ export default function FavoritesGrid({
                       </div>
                     ) : (
                       <>
-                        <h3 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
-                          {favorite.name}
-                        </h3>
-                        <p className="text-lg font-semibold text-blue-600">
+                        <p className="text-lg font-semibold text-blue-500">
                           ${favorite.price.toFixed(2)}
                         </p>
-
-                        {/* Add to Cart Button - Remove individual click since card is clickable */}
-                        {!isManageMode && (
-                          <Button
-                            size="sm"
-                            className="w-full mt-2 pointer-events-none"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        )}
                       </>
                     )}
                   </CardContent>

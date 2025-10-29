@@ -17,7 +17,7 @@ export default function MobileMenu() {
   const user = session?.user as UserType;
   return (
     <div
-      className={`minmd:hidden duration-300 ease-in-out  bg-slate-800  text-slate-50 flex w-full justify-between fixed bottom-0 `}
+      className={`minlg:hidden duration-300 ease-in-out  bg-slate-800  text-slate-50 flex w-full justify-between fixed bottom-0 `}
     >
       {/* left */}
       <div className="flex flex-col text-sm justify-center">
