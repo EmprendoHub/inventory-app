@@ -165,7 +165,7 @@ export default function ExpenseForm() {
         }}
       >
         <div className="flex items-center gap-4">
-          <div className="flex-1">
+          <div className="w-full">
             <SelectInput
               label="Tipo"
               name="type"
