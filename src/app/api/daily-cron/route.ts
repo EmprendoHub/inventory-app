@@ -199,7 +199,7 @@ export async function GET(request: Request) {
                   <th>Sucursal</th>
                   <th>Pedidos</th>
                   <th>Efectivo</th>
-                  <th>Transferencias</th>
+                  <th>Transf.</th>
                   <th>Tarjeta</th>
                   <th>Total Ventas</th>
                   <th>Gastos</th>
