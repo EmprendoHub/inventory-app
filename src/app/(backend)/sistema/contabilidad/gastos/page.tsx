@@ -9,27 +9,24 @@ import SalesHeader from "../../ventas/_components/SalesHeader";
 export default async function ListTrucks() {
   const session = await getServerSession(options);
 
-  // Calculate total stock for each item
-  let expenses: ExpenseType[];
-  if (session.user.role === "GERENTE") {
-    expenses = await prisma.expense.findMany({
-      orderBy: {
-        createdAt: "desc", // Latest product
+  // Get user's warehouse
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { warehouseId: true },
+  });
+
+  // Fetch expenses filtered by warehouse and exclude cancelled
+  const expenses: ExpenseType[] = await prisma.expense.findMany({
+    where: {
+      warehouseId: user?.warehouseId || undefined,
+      status: {
+        not: "CANCELADO",
       },
-    });
-  } else if (session.user.role === "ADMIN") {
-    expenses = await prisma.expense.findMany({
-      orderBy: {
-        createdAt: "desc", // Latest product
-      },
-    });
-  } else {
-    expenses = await prisma.expense.findMany({
-      orderBy: {
-        createdAt: "desc", // Latest product
-      },
-    });
-  }
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
   return (
     <div className="flex flex-col items-start justify-start bg-backgroundTwo p-4 rounded-md">

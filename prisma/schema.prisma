@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -376,6 +377,9 @@ model Warehouse {
   notificationsTo   BranchNotification[] @relation("NotificationTo")
   transfersFrom     BranchStockTransfer[] @relation("TransferFrom")
   transfersTo       BranchStockTransfer[] @relation("TransferTo")
+  // Expense relations
+  expenses      Expense[]
+  customExpenseTypes CustomExpenseType[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -520,28 +524,32 @@ enum TransactionType {
 
 model Expense {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
-  type          ExpenseType
+  type          String    // Changed from enum to String to allow custom types
   amount        Float
   description   String?
   reference     String?   // Invoice or receipt number
-  status        ExpenseStatus @default(PENDING)
+  status        ExpenseStatus @default(PENDIENTE)
   paymentDate   DateTime?
   deliveryId    String?   
   driverId      String?   
   truckId       String?   
   externalShipId String?  
-  supplierId    String?   
+  supplierId    String?
+  warehouseId   String?   @db.ObjectId
+  warehouse     Warehouse? @relation(fields: [warehouseId], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
 
 enum ExpenseStatus {
-  PENDING
-  APPROVED
-  PAID
-  REJECTED
+  PENDIENTE
+  APROBADO
+  PAGADO
+  RECHAZADO
+  CANCELADO
 }
 
+// Keep enum for backward compatibility but also support custom types
 enum ExpenseType {
   NOMINA
   GASOLINA
@@ -549,6 +557,19 @@ enum ExpenseType {
   MANTENIMIENTO
   OFICINA
   OTRO
+}
+
+// New model to store custom expense types
+model CustomExpenseType {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    
+  description String?
+  warehouseId String    @db.ObjectId
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@unique([name, warehouseId])
 }
 
 model Accounting {

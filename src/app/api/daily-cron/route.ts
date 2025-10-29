@@ -322,11 +322,11 @@ export async function GET(request: Request) {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}\n` +
-          `  💳 Transferencias: $${summary.transferSales.toLocaleString(
+          `  🏦 Transferencias: $${summary.transferSales.toLocaleString(
             undefined,
             { minimumFractionDigits: 2, maximumFractionDigits: 2 }
           )}\n` +
-          `  🏦 Tarjeta: $${summary.cardSales.toLocaleString(undefined, {
+          ` 💳 Tarjeta: $${summary.cardSales.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}\n` +
@@ -348,11 +348,11 @@ ${warehouseBreakdown}
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}
-💳 Transferencias: $${totalTransferSales.toLocaleString(undefined, {
+🏦 Transferencias: $${totalTransferSales.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}
-🏦 Tarjeta: $${totalCardSales.toLocaleString(undefined, {
+💳 Tarjeta: $${totalCardSales.toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}
