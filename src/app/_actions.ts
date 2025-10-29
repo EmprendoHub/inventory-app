@@ -283,7 +283,6 @@ export const verifySupervisorCode = async (
       authCode: code,
     },
   });
-  console.log(authorizedUser);
 
   if (!authorizedUser) {
     return { authUserId: "", success: false };

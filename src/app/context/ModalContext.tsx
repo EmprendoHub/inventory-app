@@ -23,24 +23,94 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
     method: "",
     code: "",
   });
-  const [displayedCode, setDisplayedCode] = useState(""); // State for displayed value (dots)
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const supervisorCodeInputRef = useRef<HTMLInputElement>(null);
   const paymentInputRef = useRef<HTMLInputElement>(null);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [otpValues, setOtpValues] = useState<string[]>([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
 
-  const handleSupervisorCodeChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const newValue = e.target.value;
-    const lastChar = newValue.slice(-1);
+  const handleOtpChange = (index: number, value: string) => {
+    // Only allow digits
+    if (value && !/^\d$/.test(value)) return;
 
+    const newOtpValues = [...otpValues];
+    newOtpValues[index] = value;
+    setOtpValues(newOtpValues);
+
+    // Update the code in paymentData
     setPaymentData((prev) => ({
       ...prev,
-      code: prev.code + lastChar,
+      code: newOtpValues.join(""),
     }));
 
-    setDisplayedCode(newValue.replace(/./g, "•"));
+    // Auto-focus next input if value entered
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace") {
+      if (!otpValues[index] && index > 0) {
+        // If current input is empty, move to previous and clear it
+        const newOtpValues = [...otpValues];
+        newOtpValues[index - 1] = "";
+        setOtpValues(newOtpValues);
+        setPaymentData((prev) => ({
+          ...prev,
+          code: newOtpValues.join(""),
+        }));
+        otpInputRefs.current[index - 1]?.focus();
+      } else if (otpValues[index]) {
+        // Clear current input
+        const newOtpValues = [...otpValues];
+        newOtpValues[index] = "";
+        setOtpValues(newOtpValues);
+        setPaymentData((prev) => ({
+          ...prev,
+          code: newOtpValues.join(""),
+        }));
+      }
+      e.preventDefault();
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").slice(0, 6);
+    const digits = pastedData.replace(/\D/g, "").split("");
+
+    const newOtpValues = [...otpValues];
+    digits.forEach((digit, index) => {
+      if (index < 6) {
+        newOtpValues[index] = digit;
+      }
+    });
+
+    setOtpValues(newOtpValues);
+    setPaymentData((prev) => ({
+      ...prev,
+      code: newOtpValues.join(""),
+    }));
+
+    // Focus the next empty input or the last one
+    const nextEmptyIndex = newOtpValues.findIndex((val) => !val);
+    const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
+    otpInputRefs.current[focusIndex]?.focus();
   };
 
   const handleConfirm = () => {
@@ -97,11 +167,9 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
   // Auto-focus for supervisor code input
   useEffect(() => {
-    if (modal?.type === "supervisorCode" && supervisorCodeInputRef.current) {
+    if (modal?.type === "supervisorCode" && otpInputRefs.current[0]) {
       const timeoutId = setTimeout(() => {
-        if (supervisorCodeInputRef.current) {
-          supervisorCodeInputRef.current.focus();
-        }
+        otpInputRefs.current[0]?.focus();
       }, 50);
 
       return () => clearTimeout(timeoutId);
@@ -141,7 +209,9 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (modal?.type === "payment") {
       setPaymentData({ amount: "", reference: "", method: "", code: "" });
-      setDisplayedCode(""); // Reset displayed code
+    } else if (modal?.type === "supervisorCode") {
+      setOtpValues(["", "", "", "", "", ""]);
+      setPaymentData({ amount: "", reference: "", method: "", code: "" });
     }
   }, [modal]);
 
@@ -154,7 +224,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
         method: "",
         code: "",
       });
-      setDisplayedCode(""); // Reset displayed code
+      setOtpValues(["", "", "", "", "", ""]);
     }
   }, [modal]);
 
@@ -175,7 +245,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
       method: "",
       code: "",
     });
-    setDisplayedCode(""); // Reset displayed code
+    setOtpValues(["", "", "", "", "", ""]);
   };
 
   return (
@@ -194,7 +264,7 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
           <div
             ref={modalRef}
             className={`${
-              modal.icon === "warning" ? "bg-red-800" : "bg-card"
+              modal.icon === "warning" ? "bg-yellow-700" : "bg-card"
             } rounded-lg p-6 py-6 max-w-md w-96`}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -289,18 +359,27 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
                     <p className="text-slate-300 text-xs">{modal.text}</p>
                   </div>
 
-                  <div>
-                    <input
-                      ref={supervisorCodeInputRef}
-                      name="supervisorCode"
-                      type="text"
-                      placeholder="Código de Supervisor"
-                      value={displayedCode}
-                      onChange={handleSupervisorCodeChange}
-                      autoComplete="new-password"
-                      tabIndex={0}
-                      className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
-                    />
+                  <div className="flex gap-2 justify-center mt-4">
+                    {otpValues.map((value, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => {
+                          otpInputRefs.current[index] = el;
+                        }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={value}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        onPaste={index === 0 ? handleOtpPaste : undefined}
+                        autoComplete="off"
+                        className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-webkit-text-security:disc] [text-security:disc]"
+                        style={
+                          { WebkitTextSecurity: "disc" } as React.CSSProperties
+                        }
+                      />
+                    ))}
                   </div>
                 </div>
               ) : (
