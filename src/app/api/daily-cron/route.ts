@@ -66,6 +66,12 @@ export async function GET(request: Request) {
           gte: startOfToday,
           lte: endOfToday,
         },
+        status: {
+          not: "CANCELADO", // Exclude cancelled expenses
+        },
+      },
+      include: {
+        warehouse: true,
       },
     });
 
@@ -77,6 +83,7 @@ export async function GET(request: Request) {
       transferSales: number;
       cardSales: number;
       orderCount: number;
+      totalExpenses: number; // Add expenses to summary
     };
 
     const warehouseSummaries: { [key: string]: WarehouseSummary } = {};
@@ -90,6 +97,7 @@ export async function GET(request: Request) {
         transferSales: 0,
         cardSales: 0,
         orderCount: 0,
+        totalExpenses: 0,
       };
     });
 
@@ -126,27 +134,35 @@ export async function GET(request: Request) {
       }
     });
 
+    // Process expenses and group by warehouse
+    expenses.forEach((expense) => {
+      const warehouseId = expense.warehouseId;
+
+      if (warehouseId && warehouseSummaries[warehouseId]) {
+        warehouseSummaries[warehouseId].totalExpenses += expense.amount;
+      }
+    });
+
     // Calculate global totals
     let totalSales = 0;
     let totalCashSales = 0;
     let totalTransferSales = 0;
     let totalCardSales = 0;
+    let totalExpenses = 0;
 
     Object.values(warehouseSummaries).forEach((summary) => {
       totalSales += summary.totalSales;
       totalCashSales += summary.cashSales;
       totalTransferSales += summary.transferSales;
       totalCardSales += summary.cardSales;
+      totalExpenses += summary.totalExpenses;
     });
-
-    const totalExpenses = expenses.reduce((acc, item) => acc + item.amount, 0);
 
     const subject = "Resumen Diario de Ventas y Gastos por Sucursal";
     const greeting = `Resumen Diario de Ventas y Gastos por Sucursal:`;
     const title = `A continuación encontrarás un resumen de ventas y gastos diarios de tu negocio, organizados por sucursal.`;
     const todaysDate = `${getMexicoGlobalUtcDate().toLocaleString()}`;
     const bodyHeader = `Resumen por Sucursal:`;
-    const bodyTwoHeader = `Gastos del Día:`;
     const bestRegards =
       "¿Ocupas un reporte más detallado? Solicítalo a tu administrador.";
     const recipient_email = "emprendomex@gmail.com";
@@ -185,12 +201,16 @@ export async function GET(request: Request) {
                   <th>Efectivo</th>
                   <th>Transferencias</th>
                   <th>Tarjeta</th>
-                  <th>Total</th>
+                  <th>Total Ventas</th>
+                  <th>Gastos</th>
                 </tr>
               </thead>
               <tbody>
                 ${Object.values(warehouseSummaries)
-                  .filter((summary) => summary.orderCount > 0)
+                  .filter(
+                    (summary) =>
+                      summary.orderCount > 0 || summary.totalExpenses > 0
+                  )
                   .map(
                     (summary) => `
                       <tr>
@@ -226,6 +246,13 @@ export async function GET(request: Request) {
                             maximumFractionDigits: 2,
                           }
                         )}</strong></td>
+                        <td style="text-align: right; color: red;">-$${summary.totalExpenses.toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}</td>
                       </tr>
                     `
                   )
@@ -261,38 +288,7 @@ export async function GET(request: Request) {
                       maximumFractionDigits: 2,
                     }
                   )}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <h2>${bodyTwoHeader}</h2>
-            <table border="1" cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
-              <thead style="background-color: #4a5568; color: white;">
-                <tr>
-                  <th>Descripción</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${expenses
-                  .map(
-                    (item) => `
-                      <tr>
-                        <td>${item.description}</td>
-                        <td style="text-align: right;">$${item.amount.toLocaleString(
-                          undefined,
-                          {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }
-                        )}</td>
-                      </tr>
-                    `
-                  )
-                  .join("")}
-                <tr style="background-color: #edf2f7; font-weight: bold;">
-                  <td>TOTAL GASTOS</td>
-                  <td style="text-align: right;">$${totalExpenses.toLocaleString(
+                  <td style="text-align: right; color: red;">-$${totalExpenses.toLocaleString(
                     undefined,
                     {
                       minimumFractionDigits: 2,
@@ -302,6 +298,15 @@ export async function GET(request: Request) {
                 </tr>
               </tbody>
             </table>
+
+            <h3 style="text-align: center; margin-top: 20px;">
+              <span style="color: green;">💰 Ganancia Neta del Día: $${(
+                totalSales - totalExpenses
+              ).toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</span>
+            </h3>
     
             <p style="margin-top: 30px;">${bestRegards}</p>
           </body>
@@ -313,7 +318,7 @@ export async function GET(request: Request) {
 
     // Prepare WhatsApp message with warehouse breakdown
     const warehouseBreakdown = Object.values(warehouseSummaries)
-      .filter((summary) => summary.orderCount > 0)
+      .filter((summary) => summary.orderCount > 0 || summary.totalExpenses > 0)
       .map(
         (summary) =>
           `*${summary.warehouseName}*\n` +
@@ -330,7 +335,11 @@ export async function GET(request: Request) {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}\n` +
-          `  ✅ Total: $${summary.totalSales.toLocaleString(undefined, {
+          `  ✅ Ventas: $${summary.totalSales.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}\n` +
+          `  ❌ Gastos: -$${summary.totalExpenses.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`
@@ -362,6 +371,11 @@ ${warehouseBreakdown}
       maximumFractionDigits: 2,
     })}*
 ❌ *Total Gastos: -$${totalExpenses.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}*
+━━━━━━━━━━━━━━━━━
+💰 *Ganancia Neta: $${(totalSales - totalExpenses).toLocaleString(undefined, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}*
