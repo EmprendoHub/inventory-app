@@ -1,8 +1,8 @@
 "use client";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import lightImage from "../../public/logos/logo_icon_light.png";
-import darkImage from "../../public/logos/logo_icon_dark.png";
+import lightImage from "../../public/icons/co_logo.png";
+import darkImage from "../../public/icons/co_logo.png";
 import { useEffect, useState } from "react";
 
 const LogoIcon = ({ className }: { className: string }) => {

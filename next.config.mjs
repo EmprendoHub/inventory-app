@@ -5,7 +5,9 @@ const withPWAConfig = withPWA({
   dest: "public",
   register: true,
   skipWaiting: true,
-  disable: false, // Enable PWA in all environments for testing
+  disable: process.env.NODE_ENV === "development", // Disable in development, enable in production
+  buildExcludes: [/middleware-manifest\.json$/],
+  publicExcludes: ["!robots.txt", "!sitemap.xml"],
 });
 
 const nextConfig = {

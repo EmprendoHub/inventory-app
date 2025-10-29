@@ -3,12 +3,12 @@ import { BarChart, DollarSign, Home, Truck, Wallet2 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { FaDollyFlatbed } from "react-icons/fa";
-import { FaCashRegister } from "react-icons/fa6";
 import { usePathname } from "next/navigation";
 import { GiExpense } from "react-icons/gi";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
+import { TbReport } from "react-icons/tb";
 
 export default function MobileMenu() {
   const path = usePathname();
@@ -22,11 +22,11 @@ export default function MobileMenu() {
       {/* left */}
       <div className="flex flex-col text-sm justify-center">
         {/*   Links */}
-        <nav className="flex  gap-3 px-1 py-1.5 ">
+        <nav className="flex  gap-3 px-1 ">
           <Link
             className={`flex items-center gap-2 ${
               path === "/sistema/home" ? "bg-blue-600" : ""
-            } hover:bg-slate-900 p-2 rounded-md`}
+            } hover:bg-slate-900 p-4 rounded-md`}
             href={"/sistema/home"}
           >
             <Home size={24} />
@@ -50,7 +50,7 @@ export default function MobileMenu() {
           {/* Ventas */}
           {["SUPER_ADMIN", "ADMIN"].includes(user?.role || "") && (
             <Link
-              className={`flex w-full items-center gap-2 p-1.5    ${
+              className={`flex w-full items-center gap-2 p-4    ${
                 path === "/sistema/ventas" ? "bg-blue-600" : ""
               } hover:bg-slate-900 rounded-md`}
               href={"/sistema/ventas"}
@@ -90,7 +90,7 @@ export default function MobileMenu() {
           {!["SUPER_ADMIN", "ADMIN", "CHOFER"].includes(user?.role || "") && (
             <>
               <Link
-                className={`flex w-full items-center gap-2 p-1.5    ${
+                className={`flex w-full items-center gap-4 p-8    ${
                   path === "/sistema/ventas" ? "bg-blue-600" : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={"/sistema/ventas"}
@@ -99,18 +99,18 @@ export default function MobileMenu() {
                 <span className={`text-xl `}>Ventas</span>
               </Link>
               <Link
-                className={`flex w-full items-center gap-2 p-1.5   ${
+                className={`flex w-full items-center gap-2 p-8   ${
                   path === `/sistema/cajas/personal/${user?.id}`
                     ? "bg-blue-600"
                     : ""
                 } hover:bg-slate-900 rounded-md`}
                 href={`/sistema/cajas/personal/${user?.id}`}
               >
-                <FaCashRegister size={24} />
-                <span className={`text-xl `}>Caja</span>
+                <TbReport size={24} />
+                <span className={`text-xl `}>Corte</span>
               </Link>
               <Link
-                className={`flex w-full items-center gap-2  p-1.5  pl-2 pr-2
+                className={`flex w-full items-center gap-2 p-8 
                  ${
                    path === "/sistema/contabilidad/gastos" ? "bg-blue-600" : ""
                  } hover:bg-slate-900 rounded-md`}
@@ -138,7 +138,7 @@ export default function MobileMenu() {
 
           {["SUPER_ADMIN"].includes(user?.role || "") && (
             <Link
-              className={`flex items-center gap-2 hover:bg-slate-900 p-2 rounded-md ${
+              className={`flex items-center gap-2 hover:bg-slate-900 p-4 rounded-md ${
                 path === "/sistema/reportes" ? "bg-blue-600" : ""
               }`}
               href={"/sistema/reportes"}
