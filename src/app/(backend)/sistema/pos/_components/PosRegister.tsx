@@ -885,7 +885,7 @@ export default function PosRegister({
 
       <div className="flex flex-1 overflow-hidden mt-5">
         {/* Products Section */}
-        <div className="flex-1 p-4 pr-[360px]">
+        <div className="flex-1 pl-4 pr-[360px]">
           {/* Search and Categories */}
           <div className="mb-4 space-y-3">
             <div className="flex gap-2">
@@ -983,7 +983,7 @@ export default function PosRegister({
                     }`}
                     onClick={() => !isCurrentlyProcessing && addToCart(item)}
                   >
-                    <Card className="h-full hover:shadow-md transition-shadow">
+                    <Card className="h-full max-w-48 hover:shadow-md transition-shadow">
                       <CardContent className="p-3 text-center">
                         <div className="aspect-square bg-gray-100 rounded-lg mb-2 overflow-hidden">
                           {(item.images && item.images.length > 0) ||
