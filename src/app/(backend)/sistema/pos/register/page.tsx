@@ -3,12 +3,18 @@ import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import PosRegisterClient from "./PosRegisterClient";
 import prisma from "@/lib/db";
+import { headers } from "next/headers";
 
 // Force dynamic rendering to always fetch fresh data
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+// Disable caching completely for this route
+export const fetchCache = 'force-no-store';
 
 export default async function PosRegisterPage() {
+  // Set cache control headers to prevent any caching
+  const headersList = headers();
+  
   // Check authentication using the main app session
   const session = await getServerSession(options);
 
@@ -23,6 +29,8 @@ export default async function PosRegisterPage() {
   }
 
   // Get items for the POS - simplified for demo
+  console.log('[POS Register] Fetching items at:', new Date().toISOString());
+  
   const items = await prisma.item.findMany({
     where: {
       status: "ACTIVE",
@@ -34,9 +42,12 @@ export default async function PosRegisterPage() {
         },
       },
     },
-    take: 100,
+    take: 500, // Increased from 100 to support more products
     orderBy: { name: "asc" },
   });
+  
+  console.log('[POS Register] Found items:', items.length);
+  console.log('[POS Register] Item names:', items.map(i => i.name).join(', '));
 
   // Transform items to match ItemType interface
   const posItems = items.map((item) => ({
