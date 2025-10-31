@@ -4,6 +4,10 @@ import { options } from "@/app/api/auth/[...nextauth]/options";
 import PosRegisterClient from "./PosRegisterClient";
 import prisma from "@/lib/db";
 
+// Force dynamic rendering to always fetch fresh data
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function PosRegisterPage() {
   // Check authentication using the main app session
   const session = await getServerSession(options);
