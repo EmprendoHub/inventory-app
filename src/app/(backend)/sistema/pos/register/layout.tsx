@@ -1,13 +1,8 @@
-import { headers } from "next/headers";
-
 export default async function PosRegisterLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Force no-cache headers for this route
-  const headersList = headers();
-  
   return (
     <>
       {children}

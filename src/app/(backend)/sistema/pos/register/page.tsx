@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { options } from "@/app/api/auth/[...nextauth]/options";
 import PosRegisterClient from "./PosRegisterClient";
 import prisma from "@/lib/db";
-import { headers } from "next/headers";
 
 // Force dynamic rendering to always fetch fresh data
 export const dynamic = 'force-dynamic';
@@ -12,9 +11,6 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export default async function PosRegisterPage() {
-  // Set cache control headers to prevent any caching
-  const headersList = headers();
-  
   // Check authentication using the main app session
   const session = await getServerSession(options);
 

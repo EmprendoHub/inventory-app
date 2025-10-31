@@ -16,18 +16,12 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  manifest: "/manifest.json",
   metadataBase: new URL("https://www.mueblesyuny.com/"),
   title: {
     default: "YUNUEN COMPANY | Punto de Venta",
     template: `%s | Mx YUNUEN COMPANY`,
   },
   description: "Punto de Venta - YUNUEN COMPANY",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "YUNUEN CO",
-  },
   formatDetection: {
     telephone: false,
   },
@@ -51,12 +45,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="application-name" content="YUNUEN CO" />
-        <meta name="apple-mobile-web-app-title" content="YUNUEN CO" />
-        <meta name="msapplication-starturl" content="/" />
         <link
           rel="icon"
           type="image/png"
