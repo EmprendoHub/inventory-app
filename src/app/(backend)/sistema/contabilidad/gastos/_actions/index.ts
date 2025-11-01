@@ -45,7 +45,12 @@ export const createExpenseAction = async (
       const cashRegister = await prisma.cashRegister.findFirst({
         where: { userId: user.id || "" },
         include: {
-          user: true,
+          user: {
+            select: {
+              id: true,
+              warehouseId: true,
+            },
+          },
         },
       });
 

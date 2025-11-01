@@ -19,6 +19,7 @@ import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { BiMoneyWithdraw } from "react-icons/bi";
 // import { getMexicoGlobalUtcDate } from "@/lib/utils";
 // import ClockTime from "@/components/ClockComponent";
 
@@ -199,9 +200,15 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
         <div className="flex items-center gap-2">
           <Link
             href={"/sistema/pos/register"}
-            className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+            className="bg-muted text-white hover:text-accent p-1 rounded-lg mr-4"
           >
             <PlusCircleIcon size={20} />
+          </Link>
+           <Link
+            href={"/sistema/contabilidad/gastos/nuevo"}
+            className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+          >
+            <BiMoneyWithdraw size={20} />
           </Link>
           {/* <div className="flex items-center font-mono justify-center">
             {isMounted && currentDate ? (
