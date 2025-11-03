@@ -36,7 +36,7 @@ import { PiInvoice } from "react-icons/pi";
 import { GoSingleSelect } from "react-icons/go";
 import { TbBrandAmigo, TbTransactionDollar } from "react-icons/tb";
 import { BiPurchaseTag, BiSupport } from "react-icons/bi";
-import { GiExpense, GiPayMoney } from "react-icons/gi";
+import { GiExpense } from "react-icons/gi";
 import LogoIcon from "@/components/LogoIcon";
 import { useSession } from "next-auth/react";
 import { UserType } from "@/types/users";
@@ -383,7 +383,7 @@ export default function SideBar({
                     </span>
                   </Link>
 
-                  <Link
+                  {/* <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
                       hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
@@ -395,7 +395,7 @@ export default function SideBar({
                     <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                       Envíos
                     </span>
-                  </Link>
+                  </Link> */}
                   {/* <Link
                 className={`flex w-full items-center gap-2  p-1.5  ${
                   hidden ? "pl-2 pr-2" : "pl-4 pr-2"
@@ -423,7 +423,7 @@ export default function SideBar({
                 </span>
               </Link> */}
 
-                  <Link
+                  {/* <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
                       hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
@@ -435,7 +435,7 @@ export default function SideBar({
                     <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
                       Pagos
                     </span>
-                  </Link>
+                  </Link> */}
                   <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
                       hidden ? "pl-2 pr-2" : "pl-4 pr-2"

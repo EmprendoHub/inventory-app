@@ -21,7 +21,7 @@ export default async function page() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Caja Nueva</h1>
-      <CashRegisterForm users={users} />
+      <CashRegisterForm users={users as any} />
     </div>
   );
 }
