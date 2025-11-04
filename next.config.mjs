@@ -17,6 +17,8 @@ const nextConfig = {
     return config;
   },
   images: {
+    // Disable Next.js Image Optimization to eliminate Vercel image transformations
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "minio.salvawebpro.com", port: "9000" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
