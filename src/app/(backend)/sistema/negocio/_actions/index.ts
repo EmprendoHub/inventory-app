@@ -106,7 +106,7 @@ export const createAdjustment = async (
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
-    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/pos/register");
     revalidatePath("/sistema/negocio");
     revalidatePath("/sistema/qr/productos");
 
@@ -193,7 +193,7 @@ export const createAdjustment = async (
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
-    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/pos/register");
     revalidatePath("/sistema/negocio");
     revalidatePath("/sistema/qr/generador");
     revalidatePath("/sistema/qr/productos");
@@ -293,7 +293,7 @@ export const createAdjustment = async (
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/articulos");
     revalidatePath("/sistema/ventas/pedidos/nuevo");
-    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/pos/register");
     revalidatePath("/sistema/negocio");
     revalidatePath("/sistema/qr/generador");
     revalidatePath("/sistema/qr/productos");
