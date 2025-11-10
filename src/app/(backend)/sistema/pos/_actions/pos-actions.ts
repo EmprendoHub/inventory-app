@@ -83,233 +83,269 @@ export async function createPosOrder(
   }
 
   try {
-    // Get or create "PUBLICO GENERAL" client if no customerId provided
-    let finalCustomerId = customerId;
+    // Wrap entire operation in a transaction to ensure data consistency
+    const result = await prisma.$transaction(async (tx) => {
+      // Get or create "PUBLICO GENERAL" client if no customerId provided
+      let finalCustomerId = customerId;
 
-    if (!finalCustomerId) {
-      const publicClient = await prisma.client.upsert({
-        where: { email: "publico@general.com" },
-        update: {},
-        create: {
-          name: "PUBLICO GENERAL",
-          email: "publico@general.com",
-          phone: "0000000000",
-          address: "Dirección general",
-          image: "",
-          status: "ACTIVE",
-        },
+      if (!finalCustomerId) {
+        const publicClient = await tx.client.upsert({
+          where: { email: "publico@general.com" },
+          update: {},
+          create: {
+            name: "PUBLICO GENERAL",
+            email: "publico@general.com",
+            phone: "0000000000",
+            address: "Dirección general",
+            image: "",
+            status: "ACTIVE",
+          },
+        });
+        finalCustomerId = publicClient.id;
+      }
+
+      // Get user's current warehouse
+      const user = await tx.user.findUnique({
+        where: { id: session.user.id },
+        include: { warehouse: true },
       });
-      finalCustomerId = publicClient.id;
-    }
 
-    // Get user's current warehouse
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { warehouse: true },
-    });
+      const currentWarehouseId = user?.warehouseId;
 
-    const currentWarehouseId = user?.warehouseId;
+      // Use the same stock update logic as sistema/ventas/pedidos/nuevo
+      const orderItems = [];
+      const stockSuggestions = [];
 
-    // Use the same stock update logic as sistema/ventas/pedidos/nuevo
-    const orderItems = [];
-    const stockSuggestions = [];
-
-    for (const cartItem of cart.items) {
-      // Check stock availability in current warehouse or all warehouses if no specific warehouse
-      const stocks = await prisma.stock.findMany({
-        where: {
-          itemId: cartItem.itemId,
-          ...(currentWarehouseId && { warehouseId: currentWarehouseId }),
-        },
-        include: {
-          warehouse: {
-            select: {
-              id: true,
-              title: true,
+      for (const cartItem of cart.items) {
+        // Check stock availability in current warehouse - FRESH data from transaction
+        const stocks = await tx.stock.findMany({
+          where: {
+            itemId: cartItem.itemId,
+            ...(currentWarehouseId && { warehouseId: currentWarehouseId }),
+          },
+          include: {
+            warehouse: {
+              select: {
+                id: true,
+                title: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      const totalAvailable = stocks.reduce(
-        (sum, stock) => sum + stock.quantity,
-        0
-      );
-
-      // If user has no warehouse assigned, we need to handle this differently
-      let localStock = 0;
-      if (currentWarehouseId) {
-        // User has warehouse - count only local stock
-        localStock = stocks
-          .filter((s) => s.warehouseId === currentWarehouseId)
-          .reduce((sum, stock) => sum + stock.quantity, 0);
-      } else {
-        // User has no warehouse - treat all stock as local (this might be the issue)
-        localStock = totalAvailable;
-      }
-
-      if (localStock < cartItem.quantity) {
-        // Check if stock is available in other warehouses
-        const availableWarehouses = await checkStockInOtherWarehouses(
-          cartItem.itemId,
-          currentWarehouseId || null,
-          cartItem.quantity - localStock // Only need the deficit from LOCAL stock
+        console.log(
+          `🔍 Stock check for ${cartItem.name} (${cartItem.itemId}):`,
+          {
+            currentWarehouseId,
+            stocksFound: stocks.length,
+            stockDetails: stocks.map((s) => ({
+              warehouse: s.warehouseId,
+              quantity: s.quantity,
+            })),
+            requiredQuantity: cartItem.quantity,
+          }
         );
 
-        if (availableWarehouses.length > 0) {
-          // Stock available in other warehouses - allow sale but mark for notification
-          stockSuggestions.push({
-            itemName: cartItem.name,
-            itemId: cartItem.itemId,
-            requiredQuantity: cartItem.quantity - localStock, // Only the deficit from LOCAL stock
-            availableLocally: localStock, // Use LOCAL stock, not total
-            availableWarehouses,
-          });
+        const totalAvailable = stocks.reduce(
+          (sum, stock) => sum + stock.quantity,
+          0
+        );
+
+        // If user has no warehouse assigned, we need to handle this differently
+        let localStock = 0;
+        if (currentWarehouseId) {
+          // User has warehouse - count only local stock
+          localStock = stocks
+            .filter((s) => s.warehouseId === currentWarehouseId)
+            .reduce((sum, stock) => sum + stock.quantity, 0);
         } else {
-          // No stock available anywhere - fail the transaction
-          return {
-            success: false,
-            error: `Stock insuficiente para ${cartItem.name}. Disponible localmente: ${localStock}, Solicitado: ${cartItem.quantity}. No hay stock en otras sucursales.`,
-            isStockError: true,
-            stockSuggestions: undefined,
-          };
+          // User has no warehouse - treat all stock as local
+          localStock = totalAvailable;
         }
+
+        console.log(`📊 Stock calculation for ${cartItem.name}:`, {
+          localStock,
+          requiredQuantity: cartItem.quantity,
+          hasEnoughStock: localStock >= cartItem.quantity,
+        });
+
+        if (localStock < cartItem.quantity) {
+          // Check if stock is available in other warehouses
+          const availableWarehouses = await checkStockInOtherWarehouses(
+            cartItem.itemId,
+            currentWarehouseId || null,
+            cartItem.quantity - localStock // Only need the deficit from LOCAL stock
+          );
+
+          if (availableWarehouses.length > 0) {
+            // Stock available in other warehouses - allow sale but mark for notification
+            console.log(`⚠️ Adding stock suggestion for ${cartItem.name}:`, {
+              requiredFromOtherWarehouses: cartItem.quantity - localStock,
+              availableWarehouses: availableWarehouses.length,
+            });
+            stockSuggestions.push({
+              itemName: cartItem.name,
+              itemId: cartItem.itemId,
+              requiredQuantity: cartItem.quantity - localStock,
+              availableLocally: localStock,
+              availableWarehouses,
+            });
+          } else {
+            // No stock available anywhere - fail the transaction
+            throw new Error(
+              `Stock insuficiente para ${cartItem.name}. Disponible localmente: ${localStock}, Solicitado: ${cartItem.quantity}. No hay stock en otras sucursales.`
+            );
+          }
+        }
+
+        orderItems.push({
+          itemId: cartItem.itemId,
+          name: cartItem.name,
+          description: cartItem.name,
+          quantity: cartItem.quantity,
+          price: Math.round(cartItem.price),
+          image: cartItem.image || "",
+        });
       }
 
-      orderItems.push({
-        itemId: cartItem.itemId,
-        name: cartItem.name,
-        description: cartItem.name,
-        quantity: cartItem.quantity,
-        price: Math.round(cartItem.price),
-        image: cartItem.image || "",
-      });
-    }
+      // Generate order number
+      const orderNumber = await generateOrderId(tx);
 
-    // Generate order number
-    const orderNumber = await generateOrderId(prisma);
-
-    // Create the order using Order model with status "ENTREGADO"
-    const createdAt = getMexicoGlobalUtcDate();
-    const order = await prisma.order.create({
-      data: {
-        orderNo: orderNumber,
-        clientId: finalCustomerId,
-        userId: session.user.id,
-        totalAmount: Math.round(cart.totalAmount),
-        discount: cart.discountAmount || 0,
-        status: "ENTREGADO",
-        notes: "Venta POS",
-        dueDate: createdAt,
-        createdAt,
-        updatedAt: createdAt,
-        orderItems: {
-          create: orderItems,
+      // Create the order using Order model with status "ENTREGADO"
+      const createdAt = getMexicoGlobalUtcDate();
+      const order = await tx.order.create({
+        data: {
+          orderNo: orderNumber,
+          clientId: finalCustomerId,
+          userId: session.user.id,
+          totalAmount: Math.round(cart.totalAmount),
+          discount: cart.discountAmount || 0,
+          status: "ENTREGADO",
+          notes: "Venta POS",
+          dueDate: createdAt,
+          createdAt,
+          updatedAt: createdAt,
+          orderItems: {
+            create: orderItems,
+          },
         },
-      },
-      include: {
-        orderItems: true,
-      },
-    });
-
-    // Update stock using the same logic as createNewOrder
-    for (const cartItem of cart.items) {
-      let remainingToDeduct = cartItem.quantity;
-
-      const stocks = await prisma.stock.findMany({
-        where: { itemId: cartItem.itemId },
-        orderBy: { createdAt: "asc" },
+        include: {
+          orderItems: true,
+        },
       });
 
-      for (const stock of stocks) {
-        if (remainingToDeduct <= 0) break;
+      // Update stock using the same logic as createNewOrder
+      for (const cartItem of cart.items) {
+        let remainingToDeduct = cartItem.quantity;
 
-        const deductAmount = Math.min(stock.quantity, remainingToDeduct);
-
-        await prisma.stock.update({
-          where: { id: stock.id },
-          data: {
-            quantity: stock.quantity - deductAmount,
-            availableQty: stock.availableQty - deductAmount,
-          },
+        const stocks = await tx.stock.findMany({
+          where: { itemId: cartItem.itemId },
+          orderBy: { createdAt: "asc" },
         });
 
-        remainingToDeduct -= deductAmount;
-      }
-    }
+        for (const stock of stocks) {
+          if (remainingToDeduct <= 0) break;
 
-    // Create payment record
-    const paymentMethodMap = {
-      [PaymentType.CASH]: "EFECTIVO",
-      [PaymentType.CARD]: "TARJETA",
-      [PaymentType.TRANSFER]: "TRANSFERENCIA",
-      [PaymentType.ACCOUNT]: "CUENTA",
-    };
+          const deductAmount = Math.min(stock.quantity, remainingToDeduct);
 
-    await prisma.payment.create({
-      data: {
-        orderId: order.id,
-        orderNo: order.orderNo,
-        method: paymentMethodMap[paymentMethod],
-        amount: Math.round(cart.totalAmount),
-        status: "PAGADO",
-        reference: referenceNumber || `POS-${Date.now()}`,
-        createdAt,
-        updatedAt: createdAt,
-      },
-    });
+          await tx.stock.update({
+            where: { id: stock.id },
+            data: {
+              quantity: stock.quantity - deductAmount,
+              availableQty: stock.availableQty - deductAmount,
+            },
+          });
 
-    // Variables to store change information
-    let changeAmount: number | undefined;
-
-    // Handle cash register updates for cash payments
-    if (paymentMethod === PaymentType.CASH) {
-      // Get the user's cash register
-      const cashRegister = await prisma.cashRegister.findFirst({
-        where: { userId: session.user.id },
-      });
-
-      if (cashRegister) {
-        // Calculate simple change for receipt display
-        if (cashReceived && cashReceived > cart.totalAmount) {
-          changeAmount = cashReceived - cart.totalAmount;
+          remainingToDeduct -= deductAmount;
         }
-
-        // Update cash register balance only (no denominations tracking)
-        await prisma.cashRegister.update({
-          where: { id: cashRegister.id },
-          data: {
-            balance: cashRegister.balance + cart.totalAmount,
-            updatedAt: createdAt,
-          },
-        });
-
-        // Create cash transaction record
-        await prisma.cashTransaction.create({
-          data: {
-            type: "DEPOSITO",
-            amount: cart.totalAmount,
-            description: `Venta POS - ${order.orderNo}`,
-            cashRegisterId: cashRegister.id,
-            userId: session.user.id,
-            createdAt,
-            updatedAt: createdAt,
-          },
-        });
       }
-    }
+
+      // Create payment record
+      const paymentMethodMap = {
+        [PaymentType.CASH]: "EFECTIVO",
+        [PaymentType.CARD]: "TARJETA",
+        [PaymentType.TRANSFER]: "TRANSFERENCIA",
+        [PaymentType.ACCOUNT]: "CUENTA",
+      };
+
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          orderNo: order.orderNo,
+          method: paymentMethodMap[paymentMethod],
+          amount: Math.round(cart.totalAmount),
+          status: "PAGADO",
+          reference: referenceNumber || `POS-${Date.now()}`,
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      // Variables to store change information
+      let changeAmount: number | undefined;
+
+      // Handle cash register updates for cash payments
+      if (paymentMethod === PaymentType.CASH) {
+        // Get the user's cash register
+        const cashRegister = await tx.cashRegister.findFirst({
+          where: { userId: session.user.id },
+        });
+
+        if (cashRegister) {
+          // Calculate simple change for receipt display
+          if (cashReceived && cashReceived > cart.totalAmount) {
+            changeAmount = cashReceived - cart.totalAmount;
+          }
+
+          // Update cash register balance only (no denominations tracking)
+          await tx.cashRegister.update({
+            where: { id: cashRegister.id },
+            data: {
+              balance: cashRegister.balance + cart.totalAmount,
+              updatedAt: createdAt,
+            },
+          });
+
+          // Create cash transaction record
+          await tx.cashTransaction.create({
+            data: {
+              type: "DEPOSITO",
+              amount: cart.totalAmount,
+              description: `Venta POS - ${order.orderNo}`,
+              cashRegisterId: cashRegister.id,
+              userId: session.user.id,
+              createdAt,
+              updatedAt: createdAt,
+            },
+          });
+        }
+      }
+
+      return {
+        order,
+        changeAmount,
+        stockSuggestions,
+      };
+    }); // End of transaction
 
     revalidatePath("/sistema/pos");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/negocio/articulos");
 
+    console.log(
+      `✅ Order ${result.order.orderNo} completed successfully. Stock suggestions:`,
+      result.stockSuggestions.length
+    );
+
     return {
       success: true,
-      orderId: order.id,
-      orderNumber: order.orderNo,
-      changeAmount,
+      orderId: result.order.id,
+      orderNumber: result.order.orderNo,
+      changeAmount: result.changeAmount,
       stockSuggestions:
-        stockSuggestions.length > 0 ? stockSuggestions : undefined,
+        result.stockSuggestions.length > 0
+          ? result.stockSuggestions
+          : undefined,
     };
   } catch (error) {
     console.error("Error creating POS order:", error);

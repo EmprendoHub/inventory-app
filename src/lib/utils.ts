@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { BanknoteIcon, FilesIcon, Shirt, UserPlus } from "lucide-react";
@@ -39,7 +38,7 @@ export function formatCurrency({ amount, currency }: iAppProps) {
   }).format(amount);
 }
 
-export async function generateOrderId(prisma: PrismaClient) {
+export async function generateOrderId(prisma: any) {
   const counterId = "order_counter";
 
   // Check if the counter already exists
@@ -67,7 +66,7 @@ export async function generateOrderId(prisma: PrismaClient) {
   return counter.sequence.toString().padStart(6, "0");
 }
 
-export async function generatePurchaseOrderId(prisma: PrismaClient) {
+export async function generatePurchaseOrderId(prisma: any) {
   const counterId = "po_counter";
 
   // Check if the counter already exists
