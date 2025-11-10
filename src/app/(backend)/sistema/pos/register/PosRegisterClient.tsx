@@ -10,7 +10,9 @@ import {
   createPosOrder,
   updateFavorites,
   createBranchNotificationFromPos,
+  verifyOrderExists,
 } from "../_actions/pos-actions";
+import { printReceipt as printReceiptUtil } from "@/lib/receiptPrinter";
 
 // Cross-warehouse fulfillment is now handled directly in the POS order creation
 
@@ -28,191 +30,6 @@ export default function PosRegisterClient({
   discounts,
 }: PosRegisterClientProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Print receipt function - Direct to printer without popup
-  const printReceipt = (receiptData: any) => {
-    try {
-      // Create a hidden div with the receipt content
-      const receiptHtml = `
-        <div id="receipt-print" style="
-          position: absolute;
-          left: -9999px;
-          width: 302px;
-          font-family: Arial, sans-serif;
-          font-size: 12px;
-          line-height: 1.4;
-          color: black;
-          background: white;
-          padding: 10px;
-          box-sizing: border-box;
-        ">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="margin: 0; font-size: 16px; font-weight: bold;">RECIBO DE VENTA</h2>
-            <p style="margin: 5px 0;">Orden: ${receiptData.orderNumber}</p>
-            <p style="margin: 5px 0;">Fecha: ${receiptData.date}</p>
-            <p style="margin: 5px 0;">Cliente: ${receiptData.customer}</p>
-          </div>
-          
-          <div style="margin-bottom: 15px;">
-            ${receiptData.items
-              .map(
-                (item: any) => `
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <span>${item.name} x ${item.quantity}</span>
-                <span>$${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-          
-          <div style="border-top: 2px solid black; padding-top: 10px; font-weight: bold;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Subtotal:</span>
-              <span>$${receiptData.subtotal.toFixed(2)}</span>
-            </div>
-            ${
-              receiptData.tax > 0
-                ? `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>IVA (16%):</span>
-              <span>$${receiptData.tax.toFixed(2)}</span>
-            </div>
-            `
-                : ""
-            }
-            ${
-              receiptData.discount > 0
-                ? `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Descuento:</span>
-              <span>-$${receiptData.discount.toFixed(2)}</span>
-            </div>
-            `
-                : ""
-            }
-            ${
-              receiptData.tip > 0
-                ? `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Propina:</span>
-              <span>$${receiptData.tip.toFixed(2)}</span>
-            </div>
-            `
-                : ""
-            }
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
-              <span><strong>TOTAL:</strong></span>
-              <span><strong>$${receiptData.total.toFixed(2)}</strong></span>
-            </div>
-            ${
-              receiptData.paymentType === PaymentType.CASH &&
-              receiptData.cashReceived
-                ? `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Efectivo recibido:</span>
-              <span>$${receiptData.cashReceived.toFixed(2)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Cambio:</span>
-              <span>$${receiptData.changeAmount?.toFixed(2) || "0.00"}</span>
-            </div>
-            `
-                : ""
-            }
-            ${
-              (receiptData.paymentType === PaymentType.CARD ||
-                receiptData.paymentType === PaymentType.TRANSFER) &&
-              receiptData.referenceNumber
-                ? `
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Método de pago:</span>
-              <span>${
-                receiptData.paymentType === PaymentType.CARD
-                  ? "Tarjeta"
-                  : "Transferencia"
-              }</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <span>Referencia:</span>
-              <span>${receiptData.referenceNumber}</span>
-            </div>
-            `
-                : ""
-            }
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px;">
-            <p style="margin: 0;">¡Gracias por su compra!</p>
-          </div>
-        </div>
-      `;
-
-      // Remove any existing receipt div
-      const existingReceipt = document.getElementById("receipt-print");
-      if (existingReceipt) {
-        existingReceipt.remove();
-      }
-
-      // Add the receipt HTML to the page
-      document.body.insertAdjacentHTML("beforeend", receiptHtml);
-
-      // Create print styles for the receipt
-      const printStyle = document.createElement("style");
-      printStyle.innerHTML = `
-        @media print {
-          body > *:not(#receipt-print) {
-            display: none !important;
-          }
-          
-          body {
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-          }
-          
-          #receipt-print {
-            display: block !important;
-            position: static !important;
-            left: auto !important;
-            width: 100% !important;
-            max-width: 302px !important;
-            margin: 0 auto !important;
-            padding: 10px !important;
-            background: white !important;
-            color: black !important;
-            font-family: Arial, sans-serif !important;
-            font-size: 12px !important;
-            line-height: 1.4 !important;
-          }
-          
-          @page {
-            size: 80mm auto;
-            margin: 3mm;
-          }
-        }
-      `;
-      document.head.appendChild(printStyle);
-
-      // Print immediately
-      window.print();
-
-      // Clean up after printing
-      setTimeout(() => {
-        const receiptDiv = document.getElementById("receipt-print");
-        if (receiptDiv) {
-          receiptDiv.remove();
-        }
-        if (printStyle && printStyle.parentNode) {
-          printStyle.parentNode.removeChild(printStyle);
-        }
-      }, 1000);
-    } catch (error) {
-      console.error("Error printing receipt:", error);
-      // Simple fallback - just trigger browser print
-      window.print();
-    }
-  };
 
   // Helper function to show success modal with cross-warehouse notifications
   const showSuccessModalWithNotifications = (crossWarehouseNeeds: any[]) => {
@@ -728,24 +545,31 @@ export default function PosRegisterClient({
     const receiptData = {
       orderNumber: orderNumber || `POS-${Date.now()}`,
       date: new Date().toLocaleString("es-ES"),
-      items: cartData.items,
+      customer: cartData.customer?.name || "Cliente General",
+      items: cartData.items.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      })),
       subtotal: cartData.subtotal,
       tax: cartData.taxAmount,
       discount: cartData.discountAmount,
       tip: cartData.tipAmount,
       total: cartData.totalAmount,
-      paymentType,
+      paymentType: paymentType === PaymentType.CASH ? "CASH" : undefined,
       cashReceived,
       changeAmount,
       referenceNumber,
-      customer: cartData.customer?.name || "Cliente General",
+      paymentMethod:
+        paymentType === PaymentType.CARD
+          ? "CARD"
+          : paymentType === PaymentType.TRANSFER
+          ? "TRANSFER"
+          : undefined,
     };
 
-    // For now, just log the receipt data - in production you'd send to printer
-    console.log("Receipt Data:", receiptData);
-
-    // You can also trigger browser print dialog
-    printReceipt(receiptData);
+    // Use the shared receipt printer utility
+    printReceiptUtil(receiptData);
   };
 
   const handleCheckout = async (
@@ -769,8 +593,18 @@ export default function PosRegisterClient({
         referenceNumber // Payment reference number for cards/transfers
       );
 
-      if (result.success) {
-        // Generate and print receipt for all payments FIRST
+      if (result.success && result.orderNumber) {
+        // CRITICAL FIX: Verify the order exists in database before printing receipt
+        // This prevents race conditions where receipt prints but transaction fails
+        const verification = await verifyOrderExists(result.orderNumber);
+
+        if (!verification.exists) {
+          throw new Error(
+            "Error: La orden no se registró correctamente en la base de datos"
+          );
+        }
+
+        // Only print receipt AFTER database verification confirms order exists
         if (paymentType === PaymentType.CASH && cashReceived) {
           const changeAmount = result.changeAmount || 0;
           generateReceipt(

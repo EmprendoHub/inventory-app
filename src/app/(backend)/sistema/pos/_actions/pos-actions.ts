@@ -603,3 +603,27 @@ export async function confirmAndTransferStock(
     };
   }
 }
+
+/**
+ * Verifies that an order exists in the database
+ * This should be called after createPosOrder but before printing the receipt
+ * to ensure the order was successfully committed to the database
+ */
+export async function verifyOrderExists(
+  orderNumber: string
+): Promise<{ exists: boolean; orderId?: string }> {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { orderNo: orderNumber },
+      select: { id: true, orderNo: true, status: true },
+    });
+
+    return {
+      exists: !!order,
+      orderId: order?.id,
+    };
+  } catch (error) {
+    console.error("❌ Error verifying order:", error);
+    return { exists: false };
+  }
+}

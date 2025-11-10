@@ -25,7 +25,7 @@ import {
   FaRegFileArchive,
   FaShippingFast,
 } from "react-icons/fa";
-import { FaCashRegister, FaShop } from "react-icons/fa6";
+import { FaCashRegister } from "react-icons/fa6";
 import {
   Collapsible,
   CollapsibleContent,
@@ -339,51 +339,35 @@ export default function SideBar({
 
           {/* Ventas */}
           {["SUPER_ADMIN", "ADMIN", "GERENTE"].includes(user?.role || "") && (
-            <>
-              <Collapsible className="w-full">
-                <CollapsibleTrigger className="w-full">
-                  <div className="flex  items-center gap-1 hover:bg-slate-900 p-2 rounded-md justify-between">
-                    <div className="flex items-center gap-2 ">
-                      <FaShop size={16} />
-                      <span
-                        className={`text-xs ${hidden ? "hidden" : "block"}`}
-                      >
-                        Ventas
-                      </span>
-                    </div>
+            <div className="flex flex-col gap-1">
+              <Link
+                className={`flex w-full items-center gap-2 p-1.5  ${
+                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                }  ${
+                  path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/ventas/clientes"}
+              >
+                <Users2 size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Clientes
+                </span>
+              </Link>
+              <Link
+                className={`flex w-full items-center gap-2  p-1.5  ${
+                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                } ${
+                  path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/ventas/pedidos"}
+              >
+                <PiInvoice size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Pedidos
+                </span>
+              </Link>
 
-                    <ChevronRight size={25} />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="flex flex-col gap-1">
-                  <Link
-                    className={`flex w-full items-center gap-2 p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    }  ${
-                      path === "/sistema/ventas/clientes" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/ventas/clientes"}
-                  >
-                    <Users2 size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Clientes
-                    </span>
-                  </Link>
-                  <Link
-                    className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
-                      path === "/sistema/ventas/pedidos" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/ventas/pedidos"}
-                  >
-                    <PiInvoice size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Pedidos
-                    </span>
-                  </Link>
-
-                  {/* <Link
+              {/* <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
                       hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
@@ -396,34 +380,34 @@ export default function SideBar({
                       Envíos
                     </span>
                   </Link> */}
-                  {/* <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                } ${
-                  path === "/sistema/ventas/facturas" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/facturas"}
-              >
-                <PiInvoice size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Facturas
-                </span>
-              </Link> */}
-                  {/* <Link
-                className={`flex w-full items-center gap-2  p-1.5  ${
-                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                } ${
-                  path === "/sistema/ventas/recibos" ? "bg-blue-600" : ""
-                } hover:bg-slate-900 rounded-md`}
-                href={"/sistema/ventas/recibos"}
-              >
-                <Receipt size={16} />
-                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                  Recibos
-                </span>
-              </Link> */}
+              {/* <Link
+                    className={`flex w-full items-center gap-2  p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                    } ${
+                      path === "/sistema/ventas/facturas" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/ventas/facturas"}
+                  >
+                    <PiInvoice size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Facturas
+                    </span>
+                  </Link> */}
+              {/* <Link
+                    className={`flex w-full items-center gap-2  p-1.5  ${
+                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                    } ${
+                      path === "/sistema/ventas/recibos" ? "bg-blue-600" : ""
+                    } hover:bg-slate-900 rounded-md`}
+                    href={"/sistema/ventas/recibos"}
+                  >
+                    <Receipt size={16} />
+                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                      Recibos
+                    </span>
+                  </Link> */}
 
-                  {/* <Link
+              {/* <Link
                     className={`flex w-full items-center gap-2  p-1.5  ${
                       hidden ? "pl-2 pr-2" : "pl-4 pr-2"
                     } ${
@@ -436,22 +420,20 @@ export default function SideBar({
                       Pagos
                     </span>
                   </Link> */}
-                  <Link
-                    className={`flex w-full items-center gap-2  p-1.5  ${
-                      hidden ? "pl-2 pr-2" : "pl-4 pr-2"
-                    } ${
-                      path === "/sistema/pos/register" ? "bg-blue-600" : ""
-                    } hover:bg-slate-900 rounded-md`}
-                    href={"/sistema/pos/register"}
-                  >
-                    <FaCashRegister size={16} />
-                    <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
-                      Registradora
-                    </span>
-                  </Link>
-                </CollapsibleContent>
-              </Collapsible>
-            </>
+              <Link
+                className={`flex w-full items-center gap-2  p-1.5  ${
+                  hidden ? "pl-2 pr-2" : "pl-4 pr-2"
+                } ${
+                  path === "/sistema/pos/register" ? "bg-blue-600" : ""
+                } hover:bg-slate-900 rounded-md`}
+                href={"/sistema/pos/register"}
+              >
+                <FaCashRegister size={16} />
+                <span className={`text-xs ${hidden ? "hidden" : "block"}`}>
+                  Registradora
+                </span>
+              </Link>
+            </div>
           )}
 
           {/* CHOFER */}

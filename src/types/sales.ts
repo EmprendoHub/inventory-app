@@ -118,6 +118,7 @@ export type SearchSelectInputProps = {
 
 export type ordersAndItem = {
   id: string;
+  orderNo: string;
   clientId: string;
   status: string;
   totalAmount: number;

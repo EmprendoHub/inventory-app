@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Eye, MoreHorizontal, RefreshCw, X } from "lucide-react";
+import { Eye, MoreHorizontal, RefreshCw, X, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,6 +49,7 @@ import { UserType } from "@/types/users";
 // import { DeliveryType } from "@/types/delivery";
 import { GiCheckMark } from "react-icons/gi";
 import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
+import { printReceipt } from "@/lib/receiptPrinter";
 // import { FaTruckFast } from "react-icons/fa6";
 
 function calculatePaymentsTotal(payments: paymentType[]) {
@@ -447,6 +448,52 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
               router.push(`/sistema/ventas/pedidos/ver/${row.original.id}`);
             }, []);
 
+            const handlePrintReceipt = React.useCallback(() => {
+              const order = row.original;
+
+              // Calculate subtotal from order items
+              const itemsSubtotal = order.orderItems.reduce(
+                (sum, item) => sum + item.price * item.quantity,
+                0
+              );
+
+              // Calculate tax (16% IVA)
+              const tax = itemsSubtotal * 0.16;
+
+              // Get discount
+              const discount = order.discount || 0;
+
+              // Calculate total (should match order.totalAmount)
+              const total = order.totalAmount;
+
+              // Get payment information
+              const firstPayment = order.payments?.[0];
+              const paymentMethod = firstPayment?.method;
+              const referenceNumber = firstPayment?.reference || undefined;
+
+              // Prepare receipt data
+              const receiptData = {
+                orderNumber: order.orderNo,
+                date: new Date(order.createdAt).toLocaleString("es-ES"),
+                customer: order.client?.name || "Cliente General",
+                items: order.orderItems.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  price: item.price,
+                })),
+                subtotal: itemsSubtotal,
+                tax: tax,
+                discount: discount,
+                total: total,
+                paymentMethod: paymentMethod,
+                referenceNumber: referenceNumber,
+              };
+
+              // Print the receipt
+              printReceipt(receiptData);
+              //eslint-disable-next-line
+            }, []);
+
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -465,6 +512,13 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
                   >
                     <Eye />
                     Ver detalles
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handlePrintReceipt}
+                    className="text-xs cursor-pointer"
+                  >
+                    <Printer />
+                    Imprimir recibo
                   </DropdownMenuItem>
                   {row.original.status !== "CANCELADO" && mounted && (
                     <>
