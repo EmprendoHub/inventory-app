@@ -24,9 +24,6 @@ export default async function PosRegisterPage() {
     redirect("/no-autorizado");
   }
 
-  // Get items for the POS - simplified for demo
-  console.log("[POS Register] Fetching items at:", new Date().toISOString());
-
   // Fetch all stocks with warehouse information (similar to articulos page)
   const allStocks = await prisma.stock.findMany({
     include: {
@@ -49,9 +46,6 @@ export default async function PosRegisterPage() {
     take: 500,
     orderBy: { name: "asc" },
   });
-
-  console.log("[POS Register] Found items:", items.length);
-  console.log("[POS Register] Total stock records:", allStocks.length);
 
   // Transform items to match ItemType interface with accurate stock data
   const posItems = items.map((item) => {

@@ -98,22 +98,6 @@ export async function createPosOrder(
           },
         });
 
-        console.log(
-          `🔍 Stock check for ${cartItem.name} (${cartItem.itemId}):`,
-          {
-            currentWarehouseId,
-            totalStockRecords: allItemStocks.length,
-            stockDetails: allItemStocks.map((s) => ({
-              warehouse: s.warehouse?.title,
-              warehouseId: s.warehouseId,
-              availableQty: s.availableQty,
-              quantity: s.quantity,
-              reservedQty: s.reservedQty,
-            })),
-            requiredQuantity: cartItem.quantity,
-          }
-        );
-
         // Calculate local stock (user's warehouse only) using availableQty
         let localStock = 0;
         if (currentWarehouseId) {
@@ -132,15 +116,6 @@ export async function createPosOrder(
             .reduce((sum, stock) => sum + stock.availableQty, 0);
         }
 
-        console.log(`📊 Stock calculation for ${cartItem.name}:`, {
-          localStock,
-          requiredQuantity: cartItem.quantity,
-          hasEnoughStock: localStock >= cartItem.quantity,
-          calculationNote: currentWarehouseId
-            ? "Counted from user's warehouse only"
-            : "Counted from ALL warehouses (no warehouse assigned)",
-        });
-
         if (localStock < cartItem.quantity) {
           // Not enough in local warehouse, check other warehouses
           const otherWarehouses = allItemStocks.filter(
@@ -157,14 +132,6 @@ export async function createPosOrder(
               warehouseCode: s.warehouse?.code || "",
               availableStock: s.availableQty,
             }));
-
-            // Stock available in other warehouses - allow sale but mark for notification
-            console.log(`⚠️ Adding stock suggestion for ${cartItem.name}:`, {
-              localStock,
-              requiredQuantity: cartItem.quantity,
-              deficit: cartItem.quantity - localStock,
-              availableInOtherWarehouses: availableWarehouses.length,
-            });
 
             stockSuggestions.push({
               itemName: cartItem.name,
@@ -314,11 +281,6 @@ export async function createPosOrder(
     revalidatePath("/sistema/pos");
     revalidatePath("/sistema/ventas/pedidos");
     revalidatePath("/sistema/negocio/articulos");
-
-    console.log(
-      `✅ Order ${result.order.orderNo} completed successfully. Stock suggestions:`,
-      result.stockSuggestions.length
-    );
 
     return {
       success: true,
