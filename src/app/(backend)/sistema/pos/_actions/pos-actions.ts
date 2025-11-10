@@ -15,43 +15,6 @@ interface WarehouseStockInfo {
   availableStock: number;
 }
 
-// Check stock availability in other warehouses
-async function checkStockInOtherWarehouses(
-  itemId: string,
-  currentWarehouseId: string | null,
-  requiredQuantity: number
-): Promise<WarehouseStockInfo[]> {
-  const warehouseStocks = await prisma.stock.findMany({
-    where: {
-      itemId,
-      quantity: { gt: 0 },
-      ...(currentWarehouseId && {
-        warehouseId: { not: currentWarehouseId },
-      }),
-    },
-    include: {
-      warehouse: {
-        select: {
-          id: true,
-          title: true,
-          code: true,
-          status: true,
-        },
-      },
-    },
-  });
-
-  return warehouseStocks
-    .filter((stock) => stock.warehouse.status === "ACTIVE")
-    .map((stock) => ({
-      warehouseId: stock.warehouse.id,
-      warehouseName: stock.warehouse.title,
-      warehouseCode: stock.warehouse.code,
-      availableStock: stock.quantity,
-    }))
-    .filter((info) => info.availableStock >= requiredQuantity);
-}
-
 // Result interface for POS operations
 interface PosOrderResult {
   success: boolean;
@@ -117,17 +80,19 @@ export async function createPosOrder(
       const stockSuggestions = [];
 
       for (const cartItem of cart.items) {
-        // Check stock availability in current warehouse - FRESH data from transaction
-        const stocks = await tx.stock.findMany({
+        // Fetch ALL stocks for this item with warehouse info (like articulos page does)
+        const allItemStocks = await tx.stock.findMany({
           where: {
             itemId: cartItem.itemId,
-            ...(currentWarehouseId && { warehouseId: currentWarehouseId }),
           },
           include: {
             warehouse: {
               select: {
                 id: true,
                 title: true,
+                code: true,
+                type: true,
+                status: true,
               },
             },
           },
@@ -137,52 +102,70 @@ export async function createPosOrder(
           `🔍 Stock check for ${cartItem.name} (${cartItem.itemId}):`,
           {
             currentWarehouseId,
-            stocksFound: stocks.length,
-            stockDetails: stocks.map((s) => ({
-              warehouse: s.warehouseId,
+            totalStockRecords: allItemStocks.length,
+            stockDetails: allItemStocks.map((s) => ({
+              warehouse: s.warehouse?.title,
+              warehouseId: s.warehouseId,
+              availableQty: s.availableQty,
               quantity: s.quantity,
+              reservedQty: s.reservedQty,
             })),
             requiredQuantity: cartItem.quantity,
           }
         );
 
-        const totalAvailable = stocks.reduce(
-          (sum, stock) => sum + stock.quantity,
-          0
-        );
-
-        // If user has no warehouse assigned, we need to handle this differently
+        // Calculate local stock (user's warehouse only) using availableQty
         let localStock = 0;
         if (currentWarehouseId) {
-          // User has warehouse - count only local stock
-          localStock = stocks
-            .filter((s) => s.warehouseId === currentWarehouseId)
-            .reduce((sum, stock) => sum + stock.quantity, 0);
+          // User has warehouse - count AVAILABLE stock in that warehouse only
+          localStock = allItemStocks
+            .filter(
+              (s) =>
+                s.warehouseId === currentWarehouseId &&
+                s.warehouse?.status === "ACTIVE"
+            )
+            .reduce((sum, stock) => sum + stock.availableQty, 0);
         } else {
-          // User has no warehouse - treat all stock as local
-          localStock = totalAvailable;
+          // User has no warehouse - count ALL available stock from ALL active warehouses
+          localStock = allItemStocks
+            .filter((s) => s.warehouse?.status === "ACTIVE")
+            .reduce((sum, stock) => sum + stock.availableQty, 0);
         }
 
         console.log(`📊 Stock calculation for ${cartItem.name}:`, {
           localStock,
           requiredQuantity: cartItem.quantity,
           hasEnoughStock: localStock >= cartItem.quantity,
+          calculationNote: currentWarehouseId
+            ? "Counted from user's warehouse only"
+            : "Counted from ALL warehouses (no warehouse assigned)",
         });
 
         if (localStock < cartItem.quantity) {
-          // Check if stock is available in other warehouses
-          const availableWarehouses = await checkStockInOtherWarehouses(
-            cartItem.itemId,
-            currentWarehouseId || null,
-            cartItem.quantity - localStock // Only need the deficit from LOCAL stock
+          // Not enough in local warehouse, check other warehouses
+          const otherWarehouses = allItemStocks.filter(
+            (s) =>
+              s.warehouseId !== currentWarehouseId &&
+              s.warehouse?.status === "ACTIVE" &&
+              s.availableQty > 0
           );
 
-          if (availableWarehouses.length > 0) {
+          if (otherWarehouses.length > 0) {
+            const availableWarehouses = otherWarehouses.map((s) => ({
+              warehouseId: s.warehouseId,
+              warehouseName: s.warehouse?.title || "Unknown",
+              warehouseCode: s.warehouse?.code || "",
+              availableStock: s.availableQty,
+            }));
+
             // Stock available in other warehouses - allow sale but mark for notification
             console.log(`⚠️ Adding stock suggestion for ${cartItem.name}:`, {
-              requiredFromOtherWarehouses: cartItem.quantity - localStock,
-              availableWarehouses: availableWarehouses.length,
+              localStock,
+              requiredQuantity: cartItem.quantity,
+              deficit: cartItem.quantity - localStock,
+              availableInOtherWarehouses: availableWarehouses.length,
             });
+
             stockSuggestions.push({
               itemName: cartItem.name,
               itemId: cartItem.itemId,

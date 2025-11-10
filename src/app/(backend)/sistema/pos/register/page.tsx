@@ -5,10 +5,10 @@ import PosRegisterClient from "./PosRegisterClient";
 import prisma from "@/lib/db";
 
 // Force dynamic rendering to always fetch fresh data
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 // Disable caching completely for this route
-export const fetchCache = 'force-no-store';
+export const fetchCache = "force-no-store";
 
 export default async function PosRegisterPage() {
   // Check authentication using the main app session
@@ -25,55 +25,74 @@ export default async function PosRegisterPage() {
   }
 
   // Get items for the POS - simplified for demo
-  console.log('[POS Register] Fetching items at:', new Date().toISOString());
-  
+  console.log("[POS Register] Fetching items at:", new Date().toISOString());
+
+  // Fetch all stocks with warehouse information (similar to articulos page)
+  const allStocks = await prisma.stock.findMany({
+    include: {
+      warehouse: {
+        select: {
+          id: true,
+          title: true,
+          code: true,
+          type: true,
+          status: true,
+        },
+      },
+    },
+  });
+
   const items = await prisma.item.findMany({
     where: {
       status: "ACTIVE",
     },
-    include: {
-      stocks: {
-        select: {
-          quantity: true,
-        },
-      },
-    },
-    take: 500, // Increased from 100 to support more products
+    take: 500,
     orderBy: { name: "asc" },
   });
-  
-  console.log('[POS Register] Found items:', items.length);
-  console.log('[POS Register] Item names:', items.map(i => i.name).join(', '));
 
-  // Transform items to match ItemType interface
-  const posItems = items.map((item) => ({
-    id: item.id,
-    name: item.name,
-    mainImage: item.mainImage,
-    status: item.status,
-    description: item.description,
-    sku: item.sku,
-    barcode: item.barcode,
-    dimensions: item.dimensions,
-    price: item.price,
-    cost: item.cost,
-    minStock: item.minStock,
-    images: item.images,
-    weight: item.weight,
-    maxStock: item.maxStock,
-    reorderPoint: item.reorderPoint,
-    tax: item.tax,
-    notes: item.notes,
-    supplierId: item.supplierId,
-    isDigital: item.isDigital,
-    categoryId: item.categoryId,
-    brandId: item.brandId,
-    unitId: item.unitId,
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-    // Add computed stock for POS usage
-    totalStock: item.stocks.reduce((total, stock) => total + stock.quantity, 0),
-  }));
+  console.log("[POS Register] Found items:", items.length);
+  console.log("[POS Register] Total stock records:", allStocks.length);
+
+  // Transform items to match ItemType interface with accurate stock data
+  const posItems = items.map((item) => {
+    // Filter stocks for this item
+    const itemStocks = allStocks.filter((stock) => stock.itemId === item.id);
+
+    // Calculate total available stock across all warehouses
+    const totalStock = itemStocks.reduce(
+      (sum, stock) => sum + stock.availableQty,
+      0
+    );
+
+    return {
+      id: item.id,
+      name: item.name,
+      mainImage: item.mainImage,
+      status: item.status,
+      description: item.description,
+      sku: item.sku,
+      barcode: item.barcode,
+      dimensions: item.dimensions,
+      price: item.price,
+      cost: item.cost,
+      minStock: item.minStock,
+      images: item.images,
+      weight: item.weight,
+      maxStock: item.maxStock,
+      reorderPoint: item.reorderPoint,
+      tax: item.tax,
+      notes: item.notes,
+      supplierId: item.supplierId,
+      isDigital: item.isDigital,
+      categoryId: item.categoryId,
+      brandId: item.brandId,
+      unitId: item.unitId,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      // Add computed stock from actual stock records
+      totalStock,
+    };
+  });
 
   // Get customers for the POS
   const customers = await prisma.client.findMany({
