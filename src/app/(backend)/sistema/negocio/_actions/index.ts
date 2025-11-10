@@ -42,19 +42,44 @@ export const createAdjustment = async (
     try {
       const createdAt = getMexicoGlobalUtcDate();
       await prisma.$transaction(async (prisma) => {
-        await prisma.stock.update({
+        // Check if stock record exists
+        const existingStock = await prisma.stock.findUnique({
           where: {
             itemId_warehouseId: {
               itemId: validatedData.data.articulo,
               warehouseId: validatedData.data.sendingWarehouse,
             },
           },
-          data: {
-            availableQty: { increment: validatedData.data.transAmount },
-            quantity: { increment: validatedData.data.transAmount },
-            updatedAt: createdAt,
-          },
         });
+
+        if (existingStock) {
+          // Update existing stock
+          await prisma.stock.update({
+            where: {
+              itemId_warehouseId: {
+                itemId: validatedData.data.articulo,
+                warehouseId: validatedData.data.sendingWarehouse,
+              },
+            },
+            data: {
+              availableQty: { increment: validatedData.data.transAmount },
+              quantity: { increment: validatedData.data.transAmount },
+              updatedAt: createdAt,
+            },
+          });
+        } else {
+          // Create new stock record
+          await prisma.stock.create({
+            data: {
+              itemId: validatedData.data.articulo,
+              warehouseId: validatedData.data.sendingWarehouse,
+              quantity: validatedData.data.transAmount,
+              availableQty: validatedData.data.transAmount,
+              createdAt,
+              updatedAt: createdAt,
+            },
+          });
+        }
 
         await prisma.stockMovement.create({
           data: {
@@ -71,6 +96,11 @@ export const createAdjustment = async (
       });
     } catch (error) {
       console.log(error);
+      return {
+        errors: {},
+        success: false,
+        message: "Error al agregar inventario",
+      };
     }
     revalidatePath("/sistema/negocio/ajustes/nuevo");
     revalidatePath("/sistema/negocio/articulos/nuevo");

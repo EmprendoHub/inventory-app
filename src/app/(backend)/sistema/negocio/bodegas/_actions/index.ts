@@ -59,6 +59,7 @@ export const createWarehouse = async (
   revalidatePath(`/sistema/negocio/bodegas`);
   revalidatePath("/sistema/negocio/articulos/nuevo");
   revalidatePath("/sistema/negocio/ajustes/nuevo");
+  revalidatePath("/sistema/negocio/usuarios/nuevo");
 
   return { success: true, message: "Bodega creada exitosamente!" };
 };
@@ -123,9 +124,10 @@ export async function updateWarehouseAction(
         updatedAt: createdAt,
       },
     });
-    revalidatePath(`/sistema/negocio/bodegas/editar/${rawData.warehouseId}`);
+    revalidatePath(`/sistema/negocio/bodegas`);
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/negocio/usuarios/nuevo");
 
     return {
       errors: {},
@@ -174,6 +176,7 @@ export async function deleteWarehouseAction(formData: FormData) {
     revalidatePath("/sistema/negocio/bodegas");
     revalidatePath("/sistema/negocio/articulos/nuevo");
     revalidatePath("/sistema/negocio/ajustes/nuevo");
+    revalidatePath("/sistema/negocio/usuarios/nuevo");
     return {
       errors: {},
       success: true,
