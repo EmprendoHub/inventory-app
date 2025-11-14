@@ -13,6 +13,7 @@ import {
   verifyOrderExists,
 } from "../_actions/pos-actions";
 import { printReceipt as printReceiptUtil } from "@/lib/receiptPrinter";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 // Cross-warehouse fulfillment is now handled directly in the POS order creation
 
@@ -544,7 +545,7 @@ export default function PosRegisterClient({
   ) => {
     const receiptData = {
       orderNumber: orderNumber || `POS-${Date.now()}`,
-      date: new Date().toLocaleString("es-ES"),
+      date: getMexicoGlobalUtcSelectedDate(new Date()),
       customer: cartData.customer?.name || "Cliente General",
       items: cartData.items.map((item) => ({
         name: item.name,
