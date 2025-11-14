@@ -268,8 +268,7 @@ export default function SingleCashAudit({
 
   // Print receipt function
   const printCashBreakdownReceipt = () => {
-    const currentDate = new Date();
-    const formattedDateTime = currentDate.toLocaleString("es-MX");
+    const formattedDateTime = new Date().toLocaleString("es-ES");
 
     const receiptContent = `
       <html>
