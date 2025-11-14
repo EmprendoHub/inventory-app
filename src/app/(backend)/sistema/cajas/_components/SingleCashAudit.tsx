@@ -12,6 +12,7 @@ import { UserType } from "@/types/users";
 import { BanknoteIcon } from "lucide-react";
 import dayjs from "dayjs";
 import { CashBreakdown } from "@/types/pos";
+import { getMexicoGlobalUtcSelectedDate } from "@/lib/utils";
 
 export default function SingleCashAudit({
   cashRegister,
@@ -268,7 +269,7 @@ export default function SingleCashAudit({
 
   // Print receipt function
   const printCashBreakdownReceipt = () => {
-    const formattedDateTime = new Date().toLocaleString("es-ES");
+    const formattedDateTime = getMexicoGlobalUtcSelectedDate(new Date());
 
     const receiptContent = `
       <html>

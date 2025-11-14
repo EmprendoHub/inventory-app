@@ -474,7 +474,7 @@ export function OrderList({ orders }: { orders: ordersAndItem[] }) {
               // Prepare receipt data
               const receiptData = {
                 orderNumber: order.orderNo,
-                date: new Date(order.createdAt).toLocaleString("es-ES"),
+                date: getMexicoGlobalUtcSelectedDate(order.createdAt),
                 customer: order.client?.name || "Cliente General",
                 items: order.orderItems.map((item) => ({
                   name: item.name,
