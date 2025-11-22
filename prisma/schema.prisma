@@ -5,6 +5,8 @@ generator client {
 
 datasource db {
   provider = "mongodb"
+  // eslint-disable-next-line no-undef
+  url      = env("DATABASE_URL") // Required for Prisma 6.x
 }
 
 
