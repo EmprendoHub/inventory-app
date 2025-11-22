@@ -5,7 +5,7 @@ import SelectInput from "@/components/SelectInput";
 import TextInput from "@/components/TextInput";
 import { useDropzone } from "react-dropzone";
 import Image from "next/image";
-import TextAreaInput from "@/components/TextAreaInput";
+// import TextAreaInput from "@/components/TextAreaInput";
 import NumericInput from "@/components/NumericInput";
 import { SearchSelectInput } from "@/components/SearchSelectInput";
 import { CloudUpload } from "lucide-react";
@@ -39,7 +39,7 @@ export default function ProductForm({
   const { showModal } = useModal();
 
   const [productImage, setProductImage] = useState<string>(
-    "/images/item_placeholder.png"
+    "/images/placeholder.png"
   );
   const [fileData, setFileData] = useState<File | null>(null);
 
@@ -124,7 +124,7 @@ export default function ProductForm({
       category: "",
     });
     setIsDescriptionManuallyEdited(false);
-    setProductImage("/images/item_placeholder.png");
+    setProductImage("/images/placeholder.png");
     setFileData(null);
     setCategorySearchKey(Math.random().toString(36).substring(7));
   };
@@ -188,9 +188,11 @@ export default function ProductForm({
       const formElement = e.currentTarget;
       const submitFormData = new FormData(formElement);
 
-      // Add file if present
+      // Add file if present, otherwise set placeholder path
       if (fileData) {
         submitFormData.set("image", fileData);
+      } else {
+        submitFormData.set("imagePath", "/images/placeholder.png");
       }
 
       // Add user ID
@@ -390,13 +392,6 @@ export default function ProductForm({
               value={formData.name}
               onChange={handleTextInputChange}
             />
-            <TextAreaInput
-              name="description"
-              label="Description"
-              state={state}
-              value={formData.description}
-              onChange={handleTextInputChange}
-            />
 
             <div className="w-full flex maxmd:flex-col gap-3">
               <SelectInput
@@ -471,25 +466,23 @@ export default function ProductForm({
               )}
               state={state}
             />
+            <SelectInput
+              label="Proveedor"
+              name="supplier"
+              options={suppliers.map(
+                (supplier: { id: string; name: string; notes: string }) => ({
+                  value: supplier.id,
+                  name: supplier.name,
+                  description: supplier.notes,
+                })
+              )}
+              state={state}
+            />
           </div>
-          <TextInput
-            name="dimensions"
-            label="Unidad de Medida (Ej: 1, 0.5, etc)"
-            state={state}
-            value={formData.dimensions}
-            onChange={handleTextInputChange}
-          />
         </div>
 
         {/* Numeric inputs with controllable values */}
         <div className="flex maxmd:flex-col gap-3">
-          <NumericInput
-            name="cost"
-            label="Costo de Compra"
-            state={state}
-            value={formData.cost}
-            onChange={(value) => handleInputChange("cost", value)}
-          />
           <NumericInput
             name="price"
             label="Precio de Venta"
@@ -501,41 +494,12 @@ export default function ProductForm({
         <div className="flex maxmd:flex-col gap-3">
           <NumericInput
             name="stock"
-            label="Stock"
+            label="Existencias Iniciales"
             state={state}
             value={formData.stock}
             onChange={(value) => handleInputChange("stock", value)}
           />
-          <NumericInput
-            name="minStock"
-            label="Stock Mínimo"
-            state={state}
-            value={formData.minStock}
-            onChange={(value) => handleInputChange("minStock", value)}
-          />
         </div>
-        <div className="flex maxmd:flex-col gap-3">
-          <NumericInput
-            name="tax"
-            label="Impuesto"
-            state={state}
-            value={formData.tax}
-            onChange={(value) => handleInputChange("tax", value)}
-          />
-          <SelectInput
-            label="Proveedor"
-            name="supplier"
-            options={suppliers.map(
-              (supplier: { id: string; name: string; notes: string }) => ({
-                value: supplier.id,
-                name: supplier.name,
-                description: supplier.notes,
-              })
-            )}
-            state={state}
-          />
-        </div>
-        <TextAreaInput name="notes" label="Notas" state={state} />
 
         <button
           type="submit"

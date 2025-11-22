@@ -19,7 +19,8 @@ import { signOut, useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { BiMoneyWithdraw } from "react-icons/bi";
+import { BiMoneyWithdraw, BiQr } from "react-icons/bi";
+import { FaRightLeft } from "react-icons/fa6";
 // import { getMexicoGlobalUtcDate } from "@/lib/utils";
 // import ClockTime from "@/components/ClockComponent";
 
@@ -197,29 +198,44 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
   return (
     <div className="fixed w-full bg-primary h-12 flex items-center justify-between pl-4 pr-16 maxmd:px-4  z-30">
       <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-2">
-          <Link
-            href={"/sistema/pos/register"}
-            className="bg-muted text-white hover:text-accent p-1 rounded-lg mr-4"
-          >
-            <PlusCircleIcon size={20} />
-          </Link>
-           <Link
-            href={"/sistema/contabilidad/gastos/nuevo"}
-            className="bg-muted text-white hover:text-accent p-1 rounded-lg"
-          >
-            <BiMoneyWithdraw size={20} />
-          </Link>
-          {/* <div className="flex items-center font-mono justify-center">
-            {isMounted && currentDate ? (
-              <>
-                {currentDate.toLocaleDateString()} - <ClockTime />
-              </>
-            ) : (
-              <span>--</span>
-            )}
-          </div> */}
-        </div>
+        {(session?.user as any)?.role === "ADMIN" ||
+        (session?.user as any)?.role === "MANAGER" ? (
+          <div className="flex items-center gap-2">
+            <Link
+              href={"/sistema/negocio/articulos/nuevo"}
+              className="bg-muted text-white hover:text-accent p-1 rounded-lg mr-4"
+            >
+              <PlusCircleIcon size={20} />
+            </Link>
+            <Link
+              href={"/sistema/negocio/ajustes/nuevo"}
+              className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+            >
+              <FaRightLeft size={20} />
+            </Link>
+            <Link
+              href={"/sistema/qr/productos"}
+              className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+            >
+              <BiQr size={20} />
+            </Link>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Link
+              href={"/sistema/pos/register"}
+              className="bg-muted text-white hover:text-accent p-1 rounded-lg mr-4"
+            >
+              <PlusCircleIcon size={20} />
+            </Link>
+            <Link
+              href={"/sistema/contabilidad/gastos/nuevo"}
+              className="bg-muted text-white hover:text-accent p-1 rounded-lg"
+            >
+              <BiMoneyWithdraw size={20} />
+            </Link>
+          </div>
+        )}
 
         <div className="flex items-center gap-4">
           {/* Notifications Bell */}

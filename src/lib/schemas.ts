@@ -24,7 +24,6 @@ export const ProductSchema = z.object({
     .nonnegative("Stock mínimo  must be a non-negative integer"),
   supplier: z.string().min(1, "Se requiere el proveedor"),
   tax: z.number(),
-  notes: z.string(),
   image: z
     .instanceof(File)
     .refine((file) => !file || file.size > 0, "Image file must have content")

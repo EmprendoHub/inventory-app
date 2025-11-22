@@ -20,7 +20,8 @@ export default function NumericInput({
   onChange,
 }: NumericInputType) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const numericValue = parseFloat(e.target.value) || 0;
+    const inputValue = e.target.value;
+    const numericValue = inputValue === "" ? 0 : parseFloat(inputValue);
     if (onChange) {
       onChange(numericValue);
     }
@@ -28,7 +29,9 @@ export default function NumericInput({
 
   // Use controlled component if value is provided, otherwise uncontrolled with defaultValue
   const inputProps =
-    value !== undefined ? { value: value } : { defaultValue: defaultValue };
+    value !== undefined
+      ? { value: value || "" }
+      : { defaultValue: defaultValue || "" };
 
   return (
     <div className={`${className ? className : "w-full"}`}>

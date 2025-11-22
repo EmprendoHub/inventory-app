@@ -36,6 +36,7 @@ export const createItemAction = async (
     notes: formData.get("notes"),
     stock: parseInt(formData.get("stock") as string), // Stock is now stored separately
     image: formData.get("image") as File,
+    imagePath: formData.get("imagePath") as string | null,
   };
 
   // Validate the data using Zod
@@ -57,7 +58,13 @@ export const createItemAction = async (
       message: "Error al validar campos del producto",
     };
 
-  // Convert the image file to Base64
+  let savedImageUrl = rawData.imagePath || "/images/placeholder.png"; // Default to placeholder
+  let tempFilePath: string | null = null;
+  const generatedBarcode = await generateUniqueBarcode();
+  const generatedSku = await generateUniqueSKU();
+  const createdAt = getMexicoGlobalUtcDate();
+
+  // Process image file if provided
   if (
     rawData.image &&
     rawData.image instanceof File &&
@@ -86,95 +93,91 @@ export const createItemAction = async (
     const newFilename = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.png`;
-    const path = join("/", "tmp", newFilename);
+    tempFilePath = join("/", "tmp", newFilename);
 
     // Save the optimized image to a temporary file
-    await writeFile(path, optimizedImageBuffer);
+    await writeFile(tempFilePath, optimizedImageBuffer);
 
     // Upload the optimized image to Minio
-    await uploadToBucket("inventario", "products/" + newFilename, path);
-    const savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
-    const generatedBarcode = await generateUniqueBarcode();
-    const generatedSku = await generateUniqueSKU();
-    try {
-      const createdAt = getMexicoGlobalUtcDate();
-      await prisma.$transaction(async (prisma: any) => {
-        // Step 1: Create Product
-        const newProduct = await prisma.item.create({
-          data: {
-            name: validatedData.data.name,
-            description: validatedData.data.description,
-            categoryId: validatedData.data.category,
-            brandId: validatedData.data.brand,
-            unitId: validatedData.data.unit,
-            dimensions: validatedData.data.dimensions,
-            sku: generatedSku,
-            barcode: generatedBarcode,
-            cost: validatedData.data.cost,
-            price: validatedData.data.price,
-            minStock: validatedData.data.minStock,
-            tax: validatedData.data.tax,
-            supplierId: validatedData.data.supplier,
-            notes: validatedData.data.notes,
-            mainImage: savedImageUrl,
-            createdAt,
-            updatedAt: createdAt,
-          },
-        });
+    await uploadToBucket("inventario", "products/" + newFilename, tempFilePath);
+    savedImageUrl = `${process.env.MINIO_URL}products/${newFilename}`;
+  }
 
-        // Step 2: Create Stock Entry for the Warehouse
-        await prisma.stock.create({
-          data: {
-            itemId: newProduct.id,
-            warehouseId: validatedData.data.warehouse,
-            quantity: validatedData.data.stock || 0, // Store stock in the Stock table
-            availableQty: validatedData.data.stock || 0, // Set available quantity
-            reservedQty: 0, // Initially, no reserved quantity
-            createdAt,
-            updatedAt: createdAt,
-          },
-        });
-
-        // Step 3: Create Stock Movement Record
-        await prisma.stockMovement.create({
-          data: {
-            itemId: newProduct.id,
-            type: "PURCHASE", // Assuming the initial stock is added via a purchase
-            quantity: validatedData.data.stock || 0,
-            toWarehouseId: validatedData.data.warehouse,
-            reference: `Existencia inicial al crear producto`,
-            status: "COMPLETED",
-            createdBy: validatedData.data.userId ?? "", // Or the user ID who created the product
-            createdAt,
-            updatedAt: createdAt,
-          },
-        });
-
-        return newProduct;
+  try {
+    await prisma.$transaction(async (prisma: any) => {
+      // Step 1: Create Product
+      const newProduct = await prisma.item.create({
+        data: {
+          name: validatedData.data.name,
+          description: validatedData.data.description,
+          categoryId: validatedData.data.category,
+          brandId: validatedData.data.brand,
+          unitId: validatedData.data.unit,
+          dimensions: validatedData.data.dimensions,
+          sku: generatedSku,
+          barcode: generatedBarcode,
+          cost: validatedData.data.cost,
+          price: validatedData.data.price,
+          minStock: validatedData.data.minStock,
+          tax: validatedData.data.tax,
+          supplierId: validatedData.data.supplier,
+          notes: "",
+          mainImage: savedImageUrl,
+          createdAt,
+          updatedAt: createdAt,
+        },
       });
 
-      // Clean up the temporary file
-      await unlink(path);
-      revalidatePath("/sistema/negocio/articulos/nuevo");
-      revalidatePath("/sistema/negocio/articulos");
-      revalidatePath("/sistema/ventas/pedidos/nuevo");
-      revalidatePath("/sistema/ventas/pos/register");
-      revalidatePath("/sistema/qr/generador");
-      revalidatePath("/sistema/qr/productos");
-      revalidatePath("/sistema/negocio/ajustes/nuevo");
-      return {
-        success: true,
-        message: "Producto creado exitosamente!",
-      };
-    } catch (error) {
-      console.error("Error creating product:", error);
-      return { success: false, message: "Error al crear producto." };
+      // Step 2: Create Stock Entry for the Warehouse
+      await prisma.stock.create({
+        data: {
+          itemId: newProduct.id,
+          warehouseId: validatedData.data.warehouse,
+          quantity: validatedData.data.stock || 0, // Store stock in the Stock table
+          availableQty: validatedData.data.stock || 0, // Set available quantity
+          reservedQty: 0, // Initially, no reserved quantity
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      // Step 3: Create Stock Movement Record
+      await prisma.stockMovement.create({
+        data: {
+          itemId: newProduct.id,
+          type: "PURCHASE", // Assuming the initial stock is added via a purchase
+          quantity: validatedData.data.stock || 0,
+          toWarehouseId: validatedData.data.warehouse,
+          reference: `Existencia inicial al crear producto`,
+          status: "COMPLETED",
+          createdBy: validatedData.data.userId ?? "", // Or the user ID who created the product
+          createdAt,
+          updatedAt: createdAt,
+        },
+      });
+
+      return newProduct;
+    });
+
+    // Clean up the temporary file if it was created
+    if (tempFilePath) {
+      await unlink(tempFilePath);
     }
-  } else {
+
+    revalidatePath("/sistema/negocio/articulos/nuevo");
+    revalidatePath("/sistema/negocio/articulos");
+    revalidatePath("/sistema/ventas/pedidos/nuevo");
+    revalidatePath("/sistema/ventas/pos/register");
+    revalidatePath("/sistema/qr/generador");
+    revalidatePath("/sistema/qr/productos");
+    revalidatePath("/sistema/negocio/ajustes/nuevo");
     return {
-      success: false,
-      message: "Falto una imagen!",
+      success: true,
+      message: "Producto creado exitosamente!",
     };
+  } catch (error) {
+    console.error("Error creating product:", error);
+    return { success: false, message: "Error al crear producto." };
   }
 };
 

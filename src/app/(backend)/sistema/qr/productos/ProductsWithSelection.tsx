@@ -232,9 +232,8 @@ export default function ProductsWithSelection({
                   </th>
                   <th className="text-left p-4 w-20">Imagen</th>
                   <th className="text-left p-4 min-w-[200px]">Producto</th>
-                  <th className="text-left p-4">SKU</th>
                   <th className="text-left p-4">Código</th>
-                  <th className="text-right p-4">Stock</th>
+                  <th className="text-right p-4">Existencias</th>
                   <th className="text-right p-4">Precio</th>
                   <th className="text-left p-4 w-20">Acciones</th>
                 </tr>
@@ -243,8 +242,10 @@ export default function ProductsWithSelection({
                 {paginatedProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className={`border-b hover:bg-gray-50 ${
-                      selectedProducts.has(product.id) ? "bg-blue-50" : ""
+                    className={`border-b hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      selectedProducts.has(product.id)
+                        ? "bg-blue-50 dark:bg-blue-900"
+                        : ""
                     }`}
                   >
                     {/* Checkbox */}
@@ -275,21 +276,14 @@ export default function ProductsWithSelection({
 
                     {/* Product Name */}
                     <td className="p-4">
-                      <div className="font-medium text-sm text-gray-900 line-clamp-2">
+                      <div className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2">
                         {product.name}
                       </div>
                     </td>
 
-                    {/* SKU */}
-                    <td className="p-4">
-                      <span className="text-sm text-gray-600 font-mono">
-                        {product.sku || "-"}
-                      </span>
-                    </td>
-
                     {/* Barcode */}
                     <td className="p-4">
-                      <span className="text-sm text-gray-600 font-mono">
+                      <span className="text-sm text-gray-400 font-mono">
                         {product.barcode || "-"}
                       </span>
                     </td>
