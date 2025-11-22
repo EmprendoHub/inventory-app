@@ -434,50 +434,52 @@ export default function ProductForm({
                 onChange={(value) => handleInputChange("category", value)}
               />
             </div>
-          </div>
-        </div>
-        <div className="w-full flex items-center maxmd:flex-col gap-3">
-          <div className="flex w-full gap-3 maxmd:flex-col">
-            <SelectInput
-              label="Marca"
-              name="brand"
-              options={brands.map(
-                (brand: { id: string; name: string; description: string }) => ({
-                  value: brand.id,
-                  name: brand.name,
-                  description: brand.description,
-                })
-              )}
-              state={state}
-            />
-            <SelectInput
-              label="Unidad de Medida"
-              name="unit"
-              options={units.map(
-                (unit: {
-                  id: string;
-                  title: string;
-                  abbreviation: string;
-                }) => ({
-                  value: unit.id,
-                  name: unit.title,
-                  abbreviation: unit.abbreviation,
-                })
-              )}
-              state={state}
-            />
-            <SelectInput
-              label="Proveedor"
-              name="supplier"
-              options={suppliers.map(
-                (supplier: { id: string; name: string; notes: string }) => ({
-                  value: supplier.id,
-                  name: supplier.name,
-                  description: supplier.notes,
-                })
-              )}
-              state={state}
-            />
+            <div className="flex w-full gap-3 maxmd:flex-col">
+              <SelectInput
+                label="Marca"
+                name="brand"
+                options={brands.map(
+                  (brand: {
+                    id: string;
+                    name: string;
+                    description: string;
+                  }) => ({
+                    value: brand.id,
+                    name: brand.name,
+                    description: brand.description,
+                  })
+                )}
+                state={state}
+              />
+              <SelectInput
+                label="Unidad de Medida"
+                name="unit"
+                options={units.map(
+                  (unit: {
+                    id: string;
+                    title: string;
+                    abbreviation: string;
+                  }) => ({
+                    value: unit.id,
+                    name: unit.title,
+                    abbreviation: unit.abbreviation,
+                  })
+                )}
+                state={state}
+              />
+              <SelectInput
+                label="Proveedor"
+                name="supplier"
+                options={suppliers.map(
+                  (supplier: { id: string; name: string; notes: string }) => ({
+                    value: supplier.id,
+                    name: supplier.name,
+                    description: supplier.notes,
+                  })
+                )}
+                state={state}
+              />
+            </div>
           </div>
         </div>
 
@@ -490,8 +492,6 @@ export default function ProductForm({
             value={formData.price}
             onChange={(value) => handleInputChange("price", value)}
           />
-        </div>
-        <div className="flex maxmd:flex-col gap-3">
           <NumericInput
             name="stock"
             label="Existencias Iniciales"
@@ -504,7 +504,7 @@ export default function ProductForm({
         <button
           type="submit"
           disabled={sending}
-          className={`inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-white transition-colors duration-200 ${
+          className={`inline-flex items-center justify-center gap-2 px-6 py-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white transition-colors duration-200 ${
             sending
               ? "bg-blue-400 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

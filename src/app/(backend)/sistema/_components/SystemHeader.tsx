@@ -199,10 +199,10 @@ const SystemHeader = ({ hidden }: { hidden: boolean }) => {
     <div className="fixed w-full bg-primary h-12 flex items-center justify-between pl-4 pr-16 maxmd:px-4  z-30">
       <div className="flex items-center justify-between w-full">
         {(session?.user as any)?.role === "SUPER_ADMIN" ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-y-6">
             <Link
               href={"/sistema/negocio/articulos/nuevo"}
-              className="bg-muted text-white hover:text-accent p-1 rounded-lg mr-4"
+              className="bg-muted text-white hover:text-accent p-1 rounded-lg"
             >
               <PlusCircleIcon size={20} />
             </Link>

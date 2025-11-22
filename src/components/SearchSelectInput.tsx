@@ -78,12 +78,9 @@ export function SearchSelectInput({
 
   return (
     <div className={className}>
-      {/* <label
-        htmlFor={name}
-        className="block mb-2 text-sm font-medium text-muted"
-      >
+      <label className="block mb-2 text-sm font-medium text-muted">
         {label}
-      </label> */}
+      </label>
       <Popover
         open={open}
         onOpenChange={(newOpen) => {
