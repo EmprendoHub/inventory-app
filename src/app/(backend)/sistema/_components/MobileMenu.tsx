@@ -42,7 +42,6 @@ export default function MobileMenu() {
             >
               <div className="flex items-center gap-1">
                 <FaDollyFlatbed size={24} />
-                <span className={`text-xl $`}>Negocio</span>
               </div>
             </Link>
           )}
@@ -56,7 +55,6 @@ export default function MobileMenu() {
               href={"/sistema/ventas"}
             >
               <DollarSign size={24} />
-              <span className={`text-xl `}>Ventas</span>
             </Link>
           )}
 
@@ -96,7 +94,6 @@ export default function MobileMenu() {
                 href={"/sistema/ventas"}
               >
                 <DollarSign size={24} />
-                <span className={`text-xl `}>Ventas</span>
               </Link>
               <Link
                 className={`flex w-full items-center gap-2 p-8   ${
@@ -132,7 +129,6 @@ export default function MobileMenu() {
               href={"/sistema/contabilidad"}
             >
               <GiExpense size={24} />
-              <span className={`text-xl `}>ACCG</span>
             </Link>
           )}
 
@@ -144,7 +140,6 @@ export default function MobileMenu() {
               href={"/sistema/reportes"}
             >
               <BarChart size={24} />
-              <span className={`text-xl `}>Reportes</span>
             </Link>
           )}
         </nav>
