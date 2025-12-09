@@ -436,15 +436,14 @@ const QRGenerator = ({ products }: { products: any[] }) => {
                   height={codeType === "qr" ? 80 : 40}
                   className="mx-auto print:w-[3.8cm] print:h-auto print:max-h-[1.5cm] object-contain"
                 />
-                <div className="text-center print:mt-0 flex-grow flex flex-col justify-center">
+                <div className="text-center print:mt-1 flex-grow flex flex-col justify-center">
                   <p
-                    className="text-xs font-medium truncate w-full print:text-[6px] print:leading-tight uppercase"
-                    title={item.title}
+                    className="text-base font-bold w-full print:text-[12px] print:leading-tight"
+                    title={formatCurrency({
+                      amount: item.price,
+                      currency: "MXN",
+                    })}
                   >
-                    {item.title.length > 12
-                      ? `${item.title.substring(0, 12)}`
-                      : item.title}
-                    {" - "}
                     {formatCurrency({ amount: item.price, currency: "MXN" })}
                   </p>
                 </div>
