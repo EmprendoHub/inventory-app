@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 // import { SearchSelectInput } from "@/components/SearchSelectInput";
 import {
   CartState,
@@ -865,22 +865,11 @@ export default function PosRegister({
     <div className="min-h-screen bg-card flex flex-col">
       {/* Header */}
       <header className="bg-card shadow-sm border-b px-4 py-3 flex items-center gap-x-14 justify-between fixed top-12 right-10 z-20 ">
-        <div className="flex items-center gap-4">
+        {/* <div className="flex items-center gap-4">
           <Badge variant="outline" className="bg-green-50 text-green-700">
             Sesión Activa
           </Badge>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowBarcodeScanner(true)}
-          >
-            <QrCode className="w-4 h-4 mr-2" />
-            Scanner
-          </Button>
-        </div>
+        </div> */}
       </header>
 
       <div className="flex flex-1 overflow-hidden mt-5">
@@ -949,6 +938,16 @@ export default function PosRegister({
               >
                 Todos los Productos
               </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowBarcodeScanner(true)}
+                >
+                  <QrCode className="w-4 h-4 mr-2" />
+                  Scanner
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -1034,7 +1033,7 @@ export default function PosRegister({
         </div>
 
         {/* Cart Section */}
-        <div className="w-80 bg-card border-l flex flex-col fixed top-32 right-4 h-[calc(100vh-7.0rem)]">
+        <div className="w-80 bg-card border-l flex flex-col fixed top-20 right-4 h-[calc(100vh-7.0rem)]">
           {/* Cart Header */}
           {/* <div className="p-4 border-b"> */}
           {/* <div className="flex items-center justify-between mb-3">
