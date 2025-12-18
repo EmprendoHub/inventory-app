@@ -236,8 +236,8 @@ export default function FavoritesGrid({
                         <Image
                           src={favorite.image}
                           alt={favorite.name}
-                          width={120}
-                          height={120}
+                          width={80}
+                          height={80}
                           className="w-full h-full object-cover"
                         />
                       ) : (

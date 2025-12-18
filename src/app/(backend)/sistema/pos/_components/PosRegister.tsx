@@ -15,14 +15,14 @@ import {
   Tag,
   // PauseCircle,
   // MoreHorizontal,
-  Trash2,
+  // Trash2,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { SearchSelectInput } from "@/components/SearchSelectInput";
+// import { SearchSelectInput } from "@/components/SearchSelectInput";
 import {
   CartState,
   CartItemType,
@@ -67,7 +67,7 @@ interface PosRegisterProps {
 export default function PosRegister({
   items,
   favorites,
-  customers,
+  // customers,
   discounts = [],
   onCheckout,
   // onHoldOrder,
@@ -86,7 +86,7 @@ export default function PosRegister({
   });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [customerSearchKey, setCustomerSearchKey] = useState("");
+  // const [customerSearchKey, setCustomerSearchKey] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
 
   // Manual barcode input state
@@ -95,13 +95,13 @@ export default function PosRegister({
   const manualBarcodeRef = React.useRef<HTMLInputElement>(null);
 
   // Local state for customers to allow adding new ones
-  const [localCustomers, setLocalCustomers] = useState<clientType[]>(customers);
+  // const [localCustomers, setLocalCustomers] = useState<clientType[]>(customers);
 
   // Sync local customers with prop changes
-  useEffect(() => {
-    setLocalCustomers(customers);
-    // No need to handle temporary customers anymore since we create real ones directly
-  }, [customers]);
+  // useEffect(() => {
+  //   setLocalCustomers(customers);
+
+  // }, [customers]);
 
   // Cleanup effect to prevent state updates after unmount
   useEffect(() => {
@@ -130,11 +130,11 @@ export default function PosRegister({
   }, [cart.customer, selectedCustomerId]);
 
   // Form state for SearchSelectInput (even though we don't use it for validation)
-  const [formState] = useState({
-    errors: {},
-    success: false,
-    message: "",
-  });
+  // const [formState] = useState({
+  //   errors: {},
+  //   success: false,
+  //   message: "",
+  // });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCashCalculator, setShowCashCalculator] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
@@ -281,7 +281,7 @@ export default function PosRegister({
       customer: undefined,
     });
     // Reset customer selection by generating new key and clearing selected ID
-    setCustomerSearchKey(Math.random().toString(36).substring(7));
+    // setCustomerSearchKey(Math.random().toString(36).substring(7));
     setSelectedCustomerId("");
   }, []);
 
@@ -344,24 +344,24 @@ export default function PosRegister({
 
       if (result.success) {
         // Use the actual client data returned from the database
-        const newClient: clientType = result.data!;
+        // const newClient: clientType = result.data!;
 
         // Add the real client to local state
-        setLocalCustomers((prev) => {
-          const updatedCustomers = [...prev, newClient];
+        // setLocalCustomers((prev) => {
+        //   const updatedCustomers = [...prev, newClient];
 
-          // Set the new customer in the cart and selection after state update
-          setCart((prevCart) => ({
-            ...prevCart,
-            customer: newClient,
-          }));
-          setSelectedCustomerId(newClient.id);
+        //   // Set the new customer in the cart and selection after state update
+        //   setCart((prevCart) => ({
+        //     ...prevCart,
+        //     customer: newClient,
+        //   }));
+        //   setSelectedCustomerId(newClient.id);
 
-          // Force re-render of SearchSelectInput with new client selected
-          setCustomerSearchKey(Math.random().toString(36).substring(7));
+        //   // Force re-render of SearchSelectInput with new client selected
+        //   setCustomerSearchKey(Math.random().toString(36).substring(7));
 
-          return updatedCustomers;
-        });
+        //   return updatedCustomers;
+        // });
 
         // Reset form and close modal
         setCustomerName("");
@@ -845,21 +845,21 @@ export default function PosRegister({
   // );
 
   // Prepare customer options with enhanced search capability
-  const customerOptions = React.useMemo(() => {
-    return [
-      {
-        value: "",
-        name: "Cliente Ocasional",
-        description: "",
-      },
-      ...localCustomers.map((customer) => ({
-        value: customer.id,
-        // Combine name and phone in the name field for searchability
-        name: `${customer.name}${customer.phone ? ` - ${customer.phone}` : ""}`,
-        description: customer.phone || "",
-      })),
-    ];
-  }, [localCustomers]);
+  // const customerOptions = React.useMemo(() => {
+  //   return [
+  //     {
+  //       value: "",
+  //       name: "Cliente Ocasional",
+  //       description: "",
+  //     },
+  //     ...localCustomers.map((customer) => ({
+  //       value: customer.id,
+  //       // Combine name and phone in the name field for searchability
+  //       name: `${customer.name}${customer.phone ? ` - ${customer.phone}` : ""}`,
+  //       description: customer.phone || "",
+  //     })),
+  //   ];
+  // }, [localCustomers]);
 
   return (
     <div className="min-h-screen bg-card flex flex-col">
@@ -1036,8 +1036,8 @@ export default function PosRegister({
         {/* Cart Section */}
         <div className="w-80 bg-card border-l flex flex-col fixed top-32 right-4 h-[calc(100vh-10.0rem)]">
           {/* Cart Header */}
-          <div className="p-4 border-b">
-            <div className="flex items-center justify-between mb-3">
+          {/* <div className="p-4 border-b"> */}
+          {/* <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 Carrito ({cart.items.length})
@@ -1047,11 +1047,11 @@ export default function PosRegister({
                   <Trash2 className="w-4 h-4" />
                 </Button>
               )}
-            </div>
+            </div> */}
 
-            {/* Enhanced Customer Selection */}
-            <div className="space-y-2">
-              <SearchSelectInput
+          {/* Enhanced Customer Selection */}
+          {/* <div className="space-y-2"> */}
+          {/* <SearchSelectInput
                 key={customerSearchKey} // Force re-render when cart is cleared
                 label="Cliente"
                 name="customer"
@@ -1068,9 +1068,9 @@ export default function PosRegister({
                     customer: customer || undefined,
                   }));
                 }}
-              />
+              /> */}
 
-              <Button
+          {/* <Button
                 type="button"
                 variant="outline"
                 size="sm"
@@ -1078,9 +1078,9 @@ export default function PosRegister({
                 className="w-full text-xs"
               >
                 + Agregar nuevo cliente
-              </Button>
-            </div>
-          </div>
+              </Button> */}
+          {/* </div> */}
+          {/* </div> */}
 
           {/* Cart Items */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
