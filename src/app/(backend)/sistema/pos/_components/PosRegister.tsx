@@ -995,8 +995,8 @@ export default function PosRegister({
                                   : item.mainImage
                               }
                               alt={item.name}
-                              width={120}
-                              height={120}
+                              width={80}
+                              height={80}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -1005,9 +1005,9 @@ export default function PosRegister({
                             </div>
                           )}
                         </div>
-                        <h3 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
+                        {/* <h3 className="font-medium text-sm leading-tight mb-1 line-clamp-2">
                           {item.name}
-                        </h3>
+                        </h3> */}
                         <p className="text-lg font-semibold text-blue-600">
                           ${item.price.toFixed(2)}
                         </p>
@@ -1034,7 +1034,7 @@ export default function PosRegister({
         </div>
 
         {/* Cart Section */}
-        <div className="w-80 bg-card border-l flex flex-col fixed top-32 right-4 h-[calc(100vh-10.0rem)]">
+        <div className="w-80 bg-card border-l flex flex-col fixed top-32 right-4 h-[calc(100vh-7.0rem)]">
           {/* Cart Header */}
           {/* <div className="p-4 border-b"> */}
           {/* <div className="flex items-center justify-between mb-3">
@@ -1083,7 +1083,7 @@ export default function PosRegister({
           {/* </div> */}
 
           {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto  ">
             <AnimatePresence>
               {cart.items.map((item) => (
                 <motion.div
@@ -1091,9 +1091,9 @@ export default function PosRegister({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-card rounded-lg p-3"
+                  className="bg-card rounded-lg p-2"
                 >
-                  <div className="flex items-start justify-between mb-2">
+                  {/* <div className="flex items-start justify-between mb-2">
                     <Image
                       src={
                         item.image ||
@@ -1109,7 +1109,7 @@ export default function PosRegister({
                         {item.name.substring(0, 20)}...
                       </h4>
                       <p className="text-xs text-gray-500">
-                        ${item.price.toFixed(2)} each
+                        ${item.price.toFixed(2)}
                       </p>
                     </div>
                     <Button
@@ -1120,7 +1120,7 @@ export default function PosRegister({
                     >
                       <X className="w-3 h-3" />
                     </Button>
-                  </div>
+                  </div> */}
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1151,6 +1151,14 @@ export default function PosRegister({
                     <span className="font-semibold">
                       ${(item.price * item.quantity - item.discount).toFixed(2)}
                     </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFromCart(item.id)}
+                      className="p-1 h-auto"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
                 </motion.div>
               ))}
@@ -1174,10 +1182,10 @@ export default function PosRegister({
                   <span>Subtotal:</span>
                   <span>${cart.subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
+                {/* <div className="flex justify-between">
                   <span>Impuesto (16%):</span>
                   <span>${cart.taxAmount.toFixed(2)}</span>
-                </div>
+                </div> */}
                 <div className="flex justify-between items-center">
                   <span>Descuento:</span>
                   <div className="flex items-center gap-2">

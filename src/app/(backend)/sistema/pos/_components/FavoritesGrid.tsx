@@ -164,7 +164,7 @@ export default function FavoritesGrid({
       </div>
 
       {/* Favorites Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      <div className="flex flex-wrap  gap-3">
         <AnimatePresence>
           {sortedFavorites.map((favorite) => {
             const item = getItemDetails(favorite);
@@ -194,7 +194,7 @@ export default function FavoritesGrid({
                     }
                   }}
                 >
-                  <CardContent className="p-1 text-center relative">
+                  <CardContent className="p-0 text-center relative">
                     {/* Manage Mode Controls */}
                     {isManageMode && (
                       <>
@@ -236,9 +236,9 @@ export default function FavoritesGrid({
                         <Image
                           src={favorite.image}
                           alt={favorite.name}
-                          width={80}
-                          height={80}
-                          className="w-full h-full object-cover"
+                          width={60}
+                          height={60}
+                          className="w-28 h-28 object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -288,7 +288,7 @@ export default function FavoritesGrid({
                       </div>
                     ) : (
                       <>
-                        <p className="text-lg font-semibold text-blue-500">
+                        <p className="text-base font-semibold text-blue-500">
                           ${favorite.price.toFixed(2)}
                         </p>
                       </>
