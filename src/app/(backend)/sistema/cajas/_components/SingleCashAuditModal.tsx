@@ -351,7 +351,7 @@ export default function SingleCashAuditModal({
 
       if (supervisorVerification.success) {
         const handoffFormData = new FormData();
-        handoffFormData.append("register", JSON.stringify(selectedRegister));
+        handoffFormData.append("register", JSON.stringify({ id: selectedRegister?.id }));
         handoffFormData.append("managerId", supervisorVerification.authUserId); // Use verified supervisor as manager
         handoffFormData.append(
           "startBalance",

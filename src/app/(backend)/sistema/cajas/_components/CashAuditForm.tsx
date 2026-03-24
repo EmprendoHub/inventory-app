@@ -56,7 +56,7 @@ export default function CashAuditForm({
 
       if (isAuthorized.success) {
         formData.set("managerId", isAuthorized.authUserId.toString());
-        formData.set("register", JSON.stringify(selectedRegister));
+        formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
           selectedRegister?.balance?.toString() || ""
@@ -108,7 +108,7 @@ export default function CashAuditForm({
 
       if (isAuthorized.success) {
         formData.set("managerId", isAuthorized.authUserId.toString());
-        formData.set("register", JSON.stringify(selectedRegister));
+        formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
           selectedRegister?.balance?.toString() || ""

@@ -412,7 +412,7 @@ export default function SingleCashAudit({
         formData.set("endBalance", cashBreakdown.totalCash.toString());
 
         formData.set("managerId", isAuthorized.authUserId.toString());
-        formData.set("register", JSON.stringify(selectedRegister));
+        formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
           selectedRegister?.balance?.toString() || ""
@@ -478,7 +478,7 @@ export default function SingleCashAudit({
         formData.set("endBalance", cashBreakdown.totalCash.toString());
 
         formData.set("managerId", isAuthorized.authUserId.toString());
-        formData.set("register", JSON.stringify(selectedRegister));
+        formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
           selectedRegister?.balance?.toString() || ""
