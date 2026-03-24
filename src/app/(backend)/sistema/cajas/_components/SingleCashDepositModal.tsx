@@ -72,11 +72,11 @@ export default function SingleCashDepositModal({
   const calculateTotal = useCallback((breakdown: CashBreakdown): number => {
     const billTotal = Object.values(breakdown.bills).reduce(
       (sum, bill) => sum + bill.total,
-      0
+      0,
     );
     const coinTotal = Object.values(breakdown.coins).reduce(
       (sum, coin) => sum + coin.total,
-      0
+      0,
     );
     return billTotal + coinTotal;
   }, []);
@@ -99,7 +99,7 @@ export default function SingleCashDepositModal({
         return newBreakdown;
       });
     },
-    [calculateTotal]
+    [calculateTotal],
   );
 
   // Increment/Decrement helpers for touch-friendly buttons
@@ -135,7 +135,7 @@ export default function SingleCashDepositModal({
 
     if (supervisorCodeResult.confirmed) {
       const isAuthorized = await verifySupervisorCode(
-        supervisorCodeResult.data?.code
+        supervisorCodeResult.data?.code,
       );
 
       if (isAuthorized.success && user.role === "GERENTE") {
@@ -145,7 +145,7 @@ export default function SingleCashDepositModal({
         formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
-          selectedRegister?.balance?.toString() || ""
+          selectedRegister?.balance?.toString() || "",
         );
         formData.set("auditDate", formattedDate);
 
@@ -231,7 +231,7 @@ export default function SingleCashDepositModal({
               updateDenomination(
                 category,
                 denominationKey,
-                parseInt(e.target.value, 10) || 0
+                parseInt(e.target.value, 10) || 0,
               )
             }
             className="w-20 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg text-gray-800 bg-white focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"

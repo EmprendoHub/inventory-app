@@ -75,11 +75,11 @@ export default function SingleCashAudit({
   const calculateTotal = (breakdown: CashBreakdown): number => {
     const billTotal = Object.values(breakdown.bills).reduce(
       (sum, bill) => sum + bill.total,
-      0
+      0,
     );
     const coinTotal = Object.values(breakdown.coins).reduce(
       (sum, coin) => sum + coin.total,
-      0
+      0,
     );
     return billTotal + coinTotal;
   };
@@ -87,7 +87,7 @@ export default function SingleCashAudit({
   // Function to subtract cash breakdown amounts (for updating register after audit)
   const subtractCashBreakdowns = (
     existing: CashBreakdown | null,
-    toSubtract: CashBreakdown
+    toSubtract: CashBreakdown,
   ): CashBreakdown => {
     if (!existing) {
       // If no existing breakdown, return zero breakdown
@@ -124,7 +124,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.bills?.thousands?.count || 0) -
-              toSubtract.bills.thousands.count
+              toSubtract.bills.thousands.count,
           ),
           total: 0,
         },
@@ -133,7 +133,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.bills?.fiveHundreds?.count || 0) -
-              toSubtract.bills.fiveHundreds.count
+              toSubtract.bills.fiveHundreds.count,
           ),
           total: 0,
         },
@@ -142,7 +142,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.bills?.twoHundreds?.count || 0) -
-              toSubtract.bills.twoHundreds.count
+              toSubtract.bills.twoHundreds.count,
           ),
           total: 0,
         },
@@ -151,7 +151,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.bills?.hundreds?.count || 0) -
-              toSubtract.bills.hundreds.count
+              toSubtract.bills.hundreds.count,
           ),
           total: 0,
         },
@@ -160,7 +160,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.bills?.fifties?.count || 0) -
-              toSubtract.bills.fifties.count
+              toSubtract.bills.fifties.count,
           ),
           total: 0,
         },
@@ -169,7 +169,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.bills?.twenties?.count || 0) -
-              toSubtract.bills.twenties.count
+              toSubtract.bills.twenties.count,
           ),
           total: 0,
         },
@@ -182,7 +182,8 @@ export default function SingleCashAudit({
           value: 20,
           count: Math.max(
             0,
-            (existing.coins?.peso20?.count || 0) - toSubtract.coins.peso20.count
+            (existing.coins?.peso20?.count || 0) -
+              toSubtract.coins.peso20.count,
           ),
           total: 0,
         },
@@ -190,7 +191,8 @@ export default function SingleCashAudit({
           value: 10,
           count: Math.max(
             0,
-            (existing.coins?.peso10?.count || 0) - toSubtract.coins.peso10.count
+            (existing.coins?.peso10?.count || 0) -
+              toSubtract.coins.peso10.count,
           ),
           total: 0,
         },
@@ -198,7 +200,7 @@ export default function SingleCashAudit({
           value: 5,
           count: Math.max(
             0,
-            (existing.coins?.peso5?.count || 0) - toSubtract.coins.peso5.count
+            (existing.coins?.peso5?.count || 0) - toSubtract.coins.peso5.count,
           ),
           total: 0,
         },
@@ -206,7 +208,7 @@ export default function SingleCashAudit({
           value: 2,
           count: Math.max(
             0,
-            (existing.coins?.peso2?.count || 0) - toSubtract.coins.peso2.count
+            (existing.coins?.peso2?.count || 0) - toSubtract.coins.peso2.count,
           ),
           total: 0,
         },
@@ -214,7 +216,7 @@ export default function SingleCashAudit({
           value: 1,
           count: Math.max(
             0,
-            (existing.coins?.peso1?.count || 0) - toSubtract.coins.peso1.count
+            (existing.coins?.peso1?.count || 0) - toSubtract.coins.peso1.count,
           ),
           total: 0,
         },
@@ -223,7 +225,7 @@ export default function SingleCashAudit({
           count: Math.max(
             0,
             (existing.coins?.centavos50?.count || 0) -
-              toSubtract.coins.centavos50.count
+              toSubtract.coins.centavos50.count,
           ),
           total: 0,
         },
@@ -249,7 +251,7 @@ export default function SingleCashAudit({
   const updateDenomination = (
     category: "bills" | "coins",
     key: string,
-    count: number
+    count: number,
   ) => {
     setCashBreakdown((prev) => {
       const newBreakdown = { ...prev };
@@ -404,7 +406,7 @@ export default function SingleCashAudit({
 
     if (supervisorCodeResult.confirmed) {
       const isAuthorized = await verifySupervisorCode(
-        supervisorCodeResult.data?.code
+        supervisorCodeResult.data?.code,
       );
 
       if (isAuthorized.success && user.role === "GERENTE") {
@@ -415,13 +417,13 @@ export default function SingleCashAudit({
         formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
-          selectedRegister?.balance?.toString() || ""
+          selectedRegister?.balance?.toString() || "",
         );
 
         // Update the cash register's billBreakdown by subtracting the counted amounts
         const updatedRegisterBreakdown = subtractCashBreakdowns(
           expectedBreakdown,
-          cashBreakdown
+          cashBreakdown,
         );
         formData.set("billBreakdown", JSON.stringify(updatedRegisterBreakdown));
 
@@ -465,7 +467,7 @@ export default function SingleCashAudit({
           });
 
           const formElement = document.getElementById(
-            "single-audit-register-form"
+            "single-audit-register-form",
           ) as HTMLFormElement;
           formElement.reset();
           setSelectedRegister(cashRegister);
@@ -481,13 +483,13 @@ export default function SingleCashAudit({
         formData.set("register", JSON.stringify({ id: selectedRegister?.id }));
         formData.set(
           "startBalance",
-          selectedRegister?.balance?.toString() || ""
+          selectedRegister?.balance?.toString() || "",
         );
 
         // Update the cash register's billBreakdown by subtracting the counted amounts
         const updatedRegisterBreakdown = subtractCashBreakdowns(
           expectedBreakdown,
-          cashBreakdown
+          cashBreakdown,
         );
         formData.set("billBreakdown", JSON.stringify(updatedRegisterBreakdown));
 
@@ -531,7 +533,7 @@ export default function SingleCashAudit({
           });
 
           const formElement = document.getElementById(
-            "single-audit-register-form"
+            "single-audit-register-form",
           ) as HTMLFormElement;
           formElement.reset();
           setSelectedRegister(cashRegister);
@@ -616,7 +618,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "bills",
                           "thousands",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -655,7 +657,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "bills",
                           "fiveHundreds",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -695,7 +697,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "bills",
                           "twoHundreds",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -734,7 +736,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "bills",
                           "hundreds",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -773,7 +775,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "bills",
                           "fifties",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -812,7 +814,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "bills",
                           "twenties",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -870,7 +872,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "coins",
                           "peso20",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -909,7 +911,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "coins",
                           "peso10",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -948,7 +950,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "coins",
                           "peso5",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -987,7 +989,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "coins",
                           "peso2",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -1026,7 +1028,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "coins",
                           "peso1",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"
@@ -1065,7 +1067,7 @@ export default function SingleCashAudit({
                         updateDenomination(
                           "coins",
                           "centavos50",
-                          parseInt(e.target.value) || 0
+                          parseInt(e.target.value) || 0,
                         )
                       }
                       className="w-16 px-2 py-1 border rounded text-xs bg-background"

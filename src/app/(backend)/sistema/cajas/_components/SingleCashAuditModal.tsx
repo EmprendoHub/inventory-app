@@ -36,7 +36,7 @@ export default function SingleCashAuditModal({
   const [sending, setSending] = useState(false);
 
   const [selectedRegister] = useState<CashRegisterResponse | null>(
-    cashRegister
+    cashRegister,
   );
 
   // State for cash breakdown
@@ -69,11 +69,11 @@ export default function SingleCashAuditModal({
   const calculateTotal = useCallback((breakdown: CashBreakdown): number => {
     const billTotal = Object.values(breakdown.bills).reduce(
       (sum, bill) => sum + bill.total,
-      0
+      0,
     );
     const coinTotal = Object.values(breakdown.coins).reduce(
       (sum, coin) => sum + coin.total,
-      0
+      0,
     );
     return billTotal + coinTotal;
   }, []);
@@ -96,7 +96,7 @@ export default function SingleCashAuditModal({
         return newBreakdown;
       });
     },
-    [calculateTotal]
+    [calculateTotal],
   );
 
   // Increment/Decrement helpers for touch-friendly buttons
@@ -152,7 +152,7 @@ export default function SingleCashAuditModal({
               updateDenomination(
                 category,
                 denominationKey,
-                parseInt(e.target.value, 10) || 0
+                parseInt(e.target.value, 10) || 0,
               )
             }
             className="w-20 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg text-gray-800 bg-white focus:border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -196,7 +196,7 @@ export default function SingleCashAuditModal({
             <h2 style="margin: 0; font-size: 16px; font-weight: bold;">CORTE DE CAJA</h2>
             <p style="margin: 5px 0;">Caja: ${selectedRegister?.name}</p>
             <p style="margin: 5px 0;">Fecha: ${dayjs().format(
-              "DD/MM/YYYY HH:mm"
+              "DD/MM/YYYY HH:mm",
             )}</p>
           </div>
 
@@ -217,7 +217,7 @@ export default function SingleCashAuditModal({
                 <span>$${bill.value.toFixed(0)} x ${bill.count}</span>
                 <span>$${bill.total.toFixed(2)}</span>
               </div>
-            `
+            `,
               )
               .join("")}
             
@@ -234,7 +234,7 @@ export default function SingleCashAuditModal({
                 } x ${coin.count}</span>
                 <span>$${coin.total.toFixed(2)}</span>
               </div>
-            `
+            `,
               )
               .join("")}
           </div>
@@ -243,7 +243,7 @@ export default function SingleCashAuditModal({
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px;">
               <span><strong>TOTAL CONTADO:</strong></span>
               <span><strong>$${cashBreakdown.totalCash.toFixed(
-                2
+                2,
               )}</strong></span>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
@@ -346,20 +346,23 @@ export default function SingleCashAuditModal({
 
     if (supervisorCodeResult.confirmed) {
       const supervisorVerification = await verifySupervisorCode(
-        supervisorCodeResult.data?.code || ""
+        supervisorCodeResult.data?.code || "",
       );
 
       if (supervisorVerification.success) {
         const handoffFormData = new FormData();
-        handoffFormData.append("register", JSON.stringify({ id: selectedRegister?.id }));
+        handoffFormData.append(
+          "register",
+          JSON.stringify({ id: selectedRegister?.id }),
+        );
         handoffFormData.append("managerId", supervisorVerification.authUserId); // Use verified supervisor as manager
         handoffFormData.append(
           "startBalance",
-          selectedRegister?.balance?.toString() || "0"
+          selectedRegister?.balance?.toString() || "0",
         );
         handoffFormData.append(
           "endBalance",
-          cashBreakdown.totalCash.toString()
+          cashBreakdown.totalCash.toString(),
         );
         handoffFormData.append("auditDate", formattedDate);
 
